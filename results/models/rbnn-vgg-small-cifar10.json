@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "rbnn-vgg-small-cifar10",
+ "registry_model_id": "rbnn-vgg-small-cifar10",
+ "name": "RBNN VGG-Small 1W1A (CIFAR-10)",
+ "family": "RBNN",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_irnet",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 943488,
+   "data_sha256": "6d8a8a21ac8fecd91f3049a85fdd9313be96b822c73cecf8b66a37f1b326588e"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 923776,
+   "data_sha256": "82656056fc1837d4aaea100fe1eb3275c815733f0500d320987d4a02803c3882"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_imagenet_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9140625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9140625,
+   "reference_fp64": 0.9140625,
+   "runtime": 0.9140625,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.913
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9126,
+    "b_top1": 0.9104,
+    "delta_pt": -0.22,
+    "ci95_pt": [
+     -0.609,
+     0.169
+    ],
+    "mcnemar_p": 0.2900596801985414,
+    "agreement": 0.9513,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9126,
+    "b_top1": 0.9076,
+    "delta_pt": -0.5,
+    "ci95_pt": [
+     -0.923,
+     -0.077
+    ],
+    "mcnemar_p": 0.023112331240319348,
+    "agreement": 0.9431,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 21.138,
+   "optimized": 22.172
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "rbnn-vgg-small-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 2.58209491,
+    "median_range_ms": [
+     2.56684995,
+     2.58386779
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "rbnn-vgg-small-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.713186264,
+    "median_range_ms": [
+     0.712500095,
+     0.715323925
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "rbnn-vgg-small-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 2.51073289,
+    "median_range_ms": [
+     2.50957346,
+     2.51157045
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

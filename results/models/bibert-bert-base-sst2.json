@@ -1,0 +1,165 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bibert-bert-base-sst2",
+ "registry_model_id": "bibert-bert-base-sst2",
+ "name": "BiBERT (fully binarized BERT-base) fine-tuned on SST-2",
+ "family": "binary-bert-language",
+ "task": "glue-sst2",
+ "dataset": "GLUE SST-2 (teacher: fine-tuned FP DynaBERT per README)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bibert",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending (S22 unavailable 2026-10-29)",
+ "files": {
+  "model.bitino": {
+   "bytes": 20050752,
+   "data_sha256": "156acc2040dadf701d896620ec34d8d83c632e721769143e2834ba8e353f6610"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 18718464,
+   "data_sha256": "79dbf4df8b7dc39ddc3fa59998d5dec5acb05e38620582033c4c563a1cd96677"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "sst2-dev-128 (first 128 GLUE SST-2 dev sentences)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.8984375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.8515625,
+   "reference_fp64": 0.8984375,
+   "runtime": 0.8984375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "sst2-dev-872",
+    "n": 872,
+    "a_top1": 0.8795871559633027,
+    "b_top1": 0.8784403669724771,
+    "delta_pt": -0.115,
+    "ci95_pt": [
+     -0.339,
+     0.11
+    ],
+    "mcnemar_p": 1.0,
+    "agreement": 0.9988532110091743,
+    "study": "exact_vs_int8-final_sst2dev872",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "sst2-dev-872",
+    "n": 872,
+    "a_top1": 0.8795871559633027,
+    "b_top1": 0.8761467889908257,
+    "delta_pt": -0.344,
+    "ci95_pt": [
+     -1.95,
+     1.262
+    ],
+    "mcnemar_p": 0.7797679305530743,
+    "agreement": 0.9415137614678899,
+    "study": "exact_vs_int8_full_sst2dev872",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "with_gelu/model.bitino:neon",
+    "b": "no_gelu/model.bitino:neon",
+    "eval_set": "sst2-dev-872",
+    "n": 872,
+    "a_top1": 0.8795871559633027,
+    "b_top1": 0.8612385321100917,
+    "delta_pt": -1.835,
+    "ci95_pt": [
+     -3.543,
+     -0.126
+    ],
+    "mcnemar_p": 0.04794032407166697,
+    "agreement": 0.9334862385321101,
+    "study": "exact_vs_nogelu_sst2dev872",
+    "date": "2026-11-02"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 314.599,
+   "optimized": 302.659
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 31.9139915,
+    "median_range_ms": [
+     31.883873,
+     31.9270921
+    ],
+    "iterations": 46,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 7.71930099,
+    "median_range_ms": [
+     7.69568348,
+     7.74927521
+    ],
+    "iterations": 180,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 31.8265128,
+    "median_range_ms": [
+     31.7835171,
+     31.8767269
+    ],
+    "iterations": 46,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

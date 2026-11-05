@@ -1,0 +1,18 @@
+Bitino
+Copyright 2026 Federico Fontana
+
+This product includes software developed by Federico Fontana (https://federicofontana.dev).
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Parts of the conversion tooling are ports or re-implementations of third-party reference code, used only to
+compute reference outputs while converting models; they are listed with their licences in THIRD_PARTY.md:
+
+  * tools/dorefa_alexnet_reference.py: PyTorch port of the DoReFa-Net AlexNet of tensorpack
+    (https://github.com/tensorpack/tensorpack, Apache License 2.0, Copyright (c) Tensorpack Contributors).
+  * tools/fdabnn_reference.py: PyTorch port of FDA-BNN ResNet-20 from the MindSpore model zoo
+    (https://gitee.com/mindspore/models, research/cv/FDA-BNN, Apache License 2.0, Copyright 2021 Huawei Technologies Co., Ltd).
+  * tools/eval_sets/timm_bicubic_crop095.py: re-implementation of the timm evaluation transform
+    (https://github.com/huggingface/pytorch-image-models, Apache License 2.0; behaviour re-implemented, no code copied).
+
+Model weights are NOT part of this product and are not covered by its licence. Converted model files attached to
+releases carry their own licence and attribution files (<model-id>.LICENSE.txt).

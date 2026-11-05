@@ -1,0 +1,224 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bbcu-sr-m-x2",
+ "registry_model_id": "bbcu-sr-m-x2",
+ "name": "BBCU-M x2 super-resolution",
+ "family": "BBCU (Basic Binary Convolution Unit)",
+ "task": "single-image-super-resolution-x2",
+ "dataset": "DIV2K; standard SR benchmarks",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bbcu",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 362624,
+   "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "set5-set14-b100-x2-lr48 (crops, Level 3/4) and full images (tools/restoration_eval.py)",
+   "n": 64,
+   "metric": "PSNR (dB, crops)",
+   "reference": 31.8925,
+   "runtime": 31.8926,
+   "delta_vs_reference": 0.0001,
+   "delta_unit": "dB",
+   "author_claim": {
+    "claim_source": "paper Table 1"
+   }
+  }
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 183.048
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:11:23Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 25.647266,
+    "median_range_ms": [
+     25.630417,
+     25.678203
+    ],
+    "p90_ms": 25.7908439,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13392,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:11:27Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 13.2716665,
+    "median_range_ms": [
+     13.247864,
+     14.05
+    ],
+    "p90_ms": 14.138703499999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 18056,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:11:32Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 21.8784115,
+    "median_range_ms": [
+     14.681823,
+     22.0029425
+    ],
+    "p90_ms": 24.22682261,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22724,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:11:38Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 25.2079165,
+    "median_range_ms": [
+     25.112891,
+     25.287943
+    ],
+    "p90_ms": 25.385572699999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19396,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 20.4043307,
+    "median_range_ms": [
+     20.4022269,
+     20.4064794
+    ],
+    "iterations": 73,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 4.83034658,
+    "median_range_ms": [
+     4.8284831,
+     4.87124252
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bbcu-sr-m-x2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 19.7618544,
+    "median_range_ms": [
+     19.7596118,
+     19.7763791
+    ],
+    "iterations": 76,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,1040 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larq-zoo-quicknet-small",
+ "registry_model_id": "larq-zoo-quicknet-small",
+ "name": "QuickNetSmall (Larq Zoo sota, v1.0)",
+ "family": "larq-zoo",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet ILSVRC-2012",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + device)",
+ "files": {
+  "model.bitino": {
+   "bytes": 4222272,
+   "data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 2505664,
+   "data_sha256": "98c4eb6929592c4b3687b212915f9d33204129f8f05d06654ca4d434abd1cf25"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 (100 classes)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.59375,
+   "reference_kind": "source framework, float32",
+   "reference_fp32": 0.59375,
+   "reference_fp64": null,
+   "runtime": 0.5859375,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "note": "Bitino top-1 equals the fp64 reference; the 1-sample difference to fp32 reference is the source model's own fp32 noise floor"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5666,
+    "delta_pt": 0.24,
+    "ci95_pt": [
+     -0.612,
+     1.092
+    ],
+    "mcnemar_p": 0.6126816587526724,
+    "agreement": 0.7858,
+    "study": "exact_vs_int8-device-config_eval5000",
+    "date": "2026-10-29"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5666,
+    "delta_pt": 0.24,
+    "ci95_pt": [
+     -0.612,
+     1.092
+    ],
+    "mcnemar_p": 0.6126816587526724,
+    "agreement": 0.7858,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5592,
+    "delta_pt": -0.5,
+    "ci95_pt": [
+     -1.405,
+     0.405
+    ],
+    "mcnemar_p": 0.2985405925560579,
+    "agreement": 0.7558,
+    "study": "exact_vs_int8-incl-depthwise_eval5000",
+    "date": "2026-10-29"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5446,
+    "delta_pt": -1.96,
+    "ci95_pt": [
+     -2.953,
+     -0.967
+    ],
+    "mcnemar_p": 0.00012860078177292074,
+    "agreement": 0.7134,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "rejected_log2_pre/model_int8_full_log2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5542,
+    "delta_pt": -1.0,
+    "ci95_pt": [
+     -1.917,
+     -0.083
+    ],
+    "mcnemar_p": 0.03623725672256422,
+    "agreement": 0.7554,
+    "study": "exact_vs_int8_full_log2_pre_eval5000",
+    "date": "2026-11-05"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5642,
+    "b_top1": 0.5038,
+    "delta_pt": -6.04,
+    "ci95_pt": [
+     -7.158,
+     -4.922
+    ],
+    "mcnemar_p": 4.8802491227249007e-26,
+    "agreement": 0.642,
+    "study": "exact_vs_int8_full_poolbug_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "rejected_log2_pre/model_int8_full_log2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5446,
+    "b_top1": 0.5542,
+    "delta_pt": 0.96,
+    "ci95_pt": [
+     -0.022,
+     1.942
+    ],
+    "mcnemar_p": 0.060637213226884,
+    "agreement": 0.7192,
+    "study": "int8_full_vs_int8_full_log2_pre_eval5000",
+    "date": "2026-11-05"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 54.46% vs exact 56.42% (-1.96 pt, McNemar p=0.00013); before 50.38% (-6.04 pt); emulated 67.26 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.5446,
+    "exact_top1": 0.5642,
+    "delta_vs_exact_pt": -1.96,
+    "mcnemar_p": 0.00013,
+    "instructions_M": 67.26
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 67.26,
+   "optimized": 50.623
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:05:50Z",
+    "plan": "stages_20261029_1605",
+    "config": "01_reference_O0",
+    "model_file": "model_unfused.bitino",
+    "stage": "reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 4996.61786,
+    "median_range_ms": [
+     4593.39583,
+     5720.7675
+    ],
+    "p90_ms": 5722.24575,
+    "repeats": 3,
+    "iterations": 5,
+    "warmup": 1,
+    "peak_rss_kb": 23816,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:06:08Z",
+    "plan": "stages_20261029_1605",
+    "config": "02_reference_O3",
+    "model_file": "model_unfused.bitino",
+    "stage": "reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 217.342396,
+    "median_range_ms": [
+     217.097318,
+     247.555208
+    ],
+    "p90_ms": 247.6216355,
+    "repeats": 3,
+    "iterations": 10,
+    "warmup": 2,
+    "peak_rss_kb": 23244,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:06:26Z",
+    "plan": "stages_20261029_1605",
+    "config": "03_packed_naive",
+    "model_file": "model_unfused.bitino",
+    "stage": "packed_naive",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 38.6867445,
+    "median_range_ms": [
+     38.67151,
+     44.0147915
+    ],
+    "p90_ms": 44.049682499999996,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13624,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:06:43Z",
+    "plan": "stages_20261029_1605",
+    "config": "04_binary_scalar",
+    "model_file": "model_unfused.bitino",
+    "stage": "binary_scalar",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 39.347786,
+    "median_range_ms": [
+     39.2378125,
+     44.866953
+    ],
+    "p90_ms": 44.916729800000006,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13536,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:07:01Z",
+    "plan": "stages_20261029_1605",
+    "config": "05_neon",
+    "model_file": "model_unfused.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 32.296953,
+    "median_range_ms": [
+     32.0932556,
+     36.5207816
+    ],
+    "p90_ms": 36.6279846,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 12496,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:07:18Z",
+    "plan": "stages_20261029_1605",
+    "config": "06_int8_reference",
+    "model_file": "model_unfused.bitino",
+    "stage": "int8_reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 25.9189591,
+    "median_range_ms": [
+     25.618724,
+     29.1665105
+    ],
+    "p90_ms": 29.32559839,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13700,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:07:34Z",
+    "plan": "stages_20261029_1605",
+    "config": "07_int8_neon",
+    "model_file": "model_unfused.bitino",
+    "stage": "int8_neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 19.0268489,
+    "median_range_ms": [
+     16.8440625,
+     19.3165885
+    ],
+    "p90_ms": 19.370619499999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14512,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:07:50Z",
+    "plan": "stages_20261029_1605",
+    "config": "08_float_opt",
+    "model_file": "model_unfused.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.52705753,
+    "median_range_ms": [
+     6.02486998,
+     9.71916693
+    ],
+    "p90_ms": 9.741786131,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15048,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:08:06Z",
+    "plan": "stages_20261029_1605",
+    "config": "09_fusion",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.18028653,
+    "median_range_ms": [
+     6.48606747,
+     9.3967185
+    ],
+    "p90_ms": 9.442323276,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14964,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:08:22Z",
+    "plan": "stages_20261029_1605",
+    "config": "10_no_memory_reuse",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.61195302,
+    "median_range_ms": [
+     7.22382802,
+     9.64273447
+    ],
+    "p90_ms": 9.692010593000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27908,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:08:38Z",
+    "plan": "stages_20261029_1605",
+    "config": "11_final_exact",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.83742201,
+    "median_range_ms": [
+     8.24937499,
+     9.41697949
+    ],
+    "p90_ms": 9.462025962999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14884,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:08:54Z",
+    "plan": "stages_20261029_1605",
+    "config": "12_final_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 10.8588285,
+    "median_range_ms": [
+     10.2546355,
+     13.1591925
+    ],
+    "p90_ms": 13.2827912,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14364,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:16:52Z",
+    "plan": "threads_20261029_1605",
+    "config": "t1_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "unpinned",
+    "median_ms": 6.70005149,
+    "median_range_ms": [
+     6.33406246,
+     8.118698
+    ],
+    "p90_ms": 8.212099635,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14964,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:17:08Z",
+    "plan": "threads_20261029_1605",
+    "config": "t2_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 2,
+    "affinity": "unpinned",
+    "median_ms": 8.33393246,
+    "median_range_ms": [
+     6.1078639,
+     12.181901
+    ],
+    "p90_ms": 12.4529848,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16272,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:17:24Z",
+    "plan": "threads_20261029_1605",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 6.283333,
+    "median_range_ms": [
+     5.43900996,
+     8.57929701
+    ],
+    "p90_ms": 8.634370183,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17716,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:17:40Z",
+    "plan": "threads_20261029_1605",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 13.5655985,
+    "median_range_ms": [
+     9.95916653,
+     15.9680991
+    ],
+    "p90_ms": 16.47204779,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20176,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:17:56Z",
+    "plan": "threads_20261029_1605",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 9.2617445,
+    "median_range_ms": [
+     8.08851552,
+     12.8082295
+    ],
+    "p90_ms": 12.8327662,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15028,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:18:12Z",
+    "plan": "threads_20261029_1605",
+    "config": "t1_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "4",
+    "median_ms": 18.320104,
+    "median_range_ms": [
+     15.6402605,
+     19.9334379
+    ],
+    "p90_ms": 19.96490661,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14944,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:18:31Z",
+    "plan": "threads_20261029_1605",
+    "config": "t1_a510",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "0",
+    "median_ms": 53.9065886,
+    "median_range_ms": [
+     53.8710675,
+     54.039401
+    ],
+    "p90_ms": 55.9820835,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14964,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:18:47Z",
+    "plan": "threads_20261029_1605",
+    "config": "t2_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 2,
+    "affinity": "4,5",
+    "median_ms": 16.74875,
+    "median_range_ms": [
+     16.426901,
+     19.3619791
+    ],
+    "p90_ms": 19.40397348,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16324,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:19:03Z",
+    "plan": "threads_20261029_1605",
+    "config": "t3_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 3,
+    "affinity": "4,5,6",
+    "median_ms": 12.644922,
+    "median_range_ms": [
+     11.2546874,
+     16.0692705
+    ],
+    "p90_ms": 34.2830254,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16868,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:19:19Z",
+    "plan": "threads_20261029_1605",
+    "config": "t4_x2_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "7,4,5,6",
+    "median_ms": 6.05695301,
+    "median_range_ms": [
+     5.41367143,
+     8.69497353
+    ],
+    "p90_ms": 8.919312129,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17684,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:19:37Z",
+    "plan": "threads_20261029_1605",
+    "config": "t4_a510",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "0,1,2,3",
+    "median_ms": 34.3752345,
+    "median_range_ms": [
+     33.47099,
+     36.8524225
+    ],
+    "p90_ms": 41.36891161,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17664,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-10-29",
+    "timestamp_utc": "2026-10-29T15:19:56Z",
+    "plan": "threads_20261029_1605",
+    "config": "t8_all_pinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "7,4,5,6,0,1,2,3",
+    "median_ms": 54.8972915,
+    "median_range_ms": [
+     25.044453,
+     56.333177
+    ],
+    "p90_ms": 62.136114809999995,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20144,
+    "validity": "unknown-caps",
+    "caps_seen": null,
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-10-29"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:41:15Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "qnsmall_t1_x2",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "spin_run": true,
+    "median_ms": 8.1401,
+    "median_range_ms": [
+     8.0408,
+     9.2371
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:41:17Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "qnsmall_t4",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "unpinned",
+    "spin_run": true,
+    "median_ms": 4.1747,
+    "median_range_ms": [
+     3.8301,
+     6.3119
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:41:26Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "qnsmall_t4_nospin",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "unpinned",
+    "spin_run": false,
+    "median_ms": 6.1618,
+    "median_range_ms": [
+     5.7499,
+     7.0459
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:41:20Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "qnsmall_t4_pin",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "7,4,5,6",
+    "spin_run": true,
+    "median_ms": 4.1459,
+    "median_range_ms": [
+     3.8235,
+     4.5856
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 5.35810614,
+    "median_range_ms": [
+     5.35064316,
+     5.36329794
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 1.44142818,
+    "median_range_ms": [
+     1.43199253,
+     1.44467902
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 5.2567184,
+    "median_range_ms": [
+     5.24917912,
+     5.27017498
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

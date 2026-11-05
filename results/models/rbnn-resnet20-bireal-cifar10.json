@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "rbnn-resnet20-bireal-cifar10",
+ "registry_model_id": "rbnn-resnet20-bireal-cifar10",
+ "name": "RBNN ResNet-20 Bi-Real variant 1W1A (CIFAR-10)",
+ "family": "RBNN",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_irnet",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 90304,
+   "data_sha256": "c76835af7d6b212059b557198837402700b269be6b449132a45c3030c98e2ad3"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 132416,
+   "data_sha256": "dbb48d1458fae686edb6bc01ef977ee3b74a5cd7a6884724e53b405ad8408fc7"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_imagenet_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.8984375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.8984375,
+   "reference_fp64": 0.8984375,
+   "runtime": 0.8984375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.878
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8781,
+    "b_top1": 0.8718,
+    "delta_pt": -0.63,
+    "ci95_pt": [
+     -1.124,
+     -0.136
+    ],
+    "mcnemar_p": 0.013815236823435379,
+    "agreement": 0.9219,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8781,
+    "b_top1": 0.8668,
+    "delta_pt": -1.13,
+    "ci95_pt": [
+     -1.65,
+     -0.61
+    ],
+    "mcnemar_p": 2.3723381917927384e-05,
+    "agreement": 0.9128,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 7.045,
+   "optimized": 8.105
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "rbnn-resnet20-bireal-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.687532425,
+    "median_range_ms": [
+     0.685497046,
+     0.687541246
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "rbnn-resnet20-bireal-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.637702465,
+    "median_range_ms": [
+     0.625811338,
+     0.638109207
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "rbnn-resnet20-bireal-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.681585789,
+    "median_range_ms": [
+     0.680962324,
+     0.682749987
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

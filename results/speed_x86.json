@@ -1,0 +1,6867 @@
+{
+ "schema": "bitino.results.v1.speed",
+ "host": {
+  "cpu": "Intel(R) Core(TM) i9-14900K",
+  "kernel": "7.0.0-34-generic",
+  "governor": "powersave",
+  "turbo": "off",
+  "scaling_max_freq_ghz": 3.2,
+  "loadavg_start": "3.65 5.34 4.07",
+  "loadavg_end": "2.65 2.47 2.90",
+  "pin_t1": "2",
+  "pcores_t8": "0,2,4,6,8,10,12,14",
+  "repeats": 3,
+  "note": "combined: 86 models from all_models_20261031_1025 + 18 S6/S8 models from earlier runs (same host settings; S6/S8 run load 2.85 15.64 11.99 1/2856 2713221); + 3 S12 models from earlier runs (1-min load at start 6.84); + 4 S13-BNAS models (re-run at low load) from earlier runs (1-min load at start 0.78); + 3 S11 existing-ops models from earlier runs (1-min load at start 0.94)"
+ },
+ "generated": "2026-11-05",
+ "method": {
+  "tool": "bitino_bench on the host (tools/bench_host_all.py)",
+  "statistic": "median latency of one inference (batch 1), median of repeats"
+ },
+ "runs": [
+  {
+   "model_id": "ab-bnn-cifar10-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.54685593,
+   "median_range_ms": [
+    2.54547262,
+    2.55132914
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar10-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.862100124,
+   "median_range_ms": [
+    0.84663868,
+    0.865747929
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar10-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.43672442,
+   "median_range_ms": [
+    2.43606162,
+    2.43690443
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar10-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.79956746,
+   "median_range_ms": [
+    1.77374506,
+    1.80332351
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar10-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.906843901,
+   "median_range_ms": [
+    0.899556875,
+    0.907421827
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar10-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.76368046,
+   "median_range_ms": [
+    1.76236343,
+    1.76642203
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.55478859,
+   "median_range_ms": [
+    2.55112505,
+    2.56041503
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.869514942,
+   "median_range_ms": [
+    0.868865252,
+    0.872720957
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.43805933,
+   "median_range_ms": [
+    2.43592715,
+    2.44037294
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.80799937,
+   "median_range_ms": [
+    1.78443456,
+    1.81048465
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.927535057,
+   "median_range_ms": [
+    0.918287516,
+    0.934993029
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-cifar100-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.76994348,
+   "median_range_ms": [
+    1.7667985,
+    1.77105546
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.7833424,
+   "median_range_ms": [
+    10.7566218,
+    11.1130037
+   ],
+   "iterations": 137,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.2832284,
+   "median_range_ms": [
+    2.27784061,
+    2.29793453
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.68351007,
+   "median_range_ms": [
+    8.60235667,
+    8.84707761
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet34",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 18.1851859,
+   "median_range_ms": [
+    18.1516039,
+    18.3316982
+   ],
+   "iterations": 82,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet34",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.87360334,
+   "median_range_ms": [
+    3.86568928,
+    3.88480043
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactnet34",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.9689488,
+   "median_range_ms": [
+    15.963141,
+    15.9775939
+   ],
+   "iterations": 93,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.7572002,
+   "median_range_ms": [
+    21.7276459,
+    22.0124121
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.02229047,
+   "median_range_ms": [
+    5.0178268,
+    5.18577933
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ab-bnn-imagenet-reactneta",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.5852261,
+   "median_range_ms": [
+    21.5794873,
+    21.6039166
+   ],
+   "iterations": 69,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.340583563,
+   "median_range_ms": [
+    0.340509892,
+    0.341498137
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.175766468,
+   "median_range_ms": [
+    0.174069405,
+    0.183979034
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.320971012,
+   "median_range_ms": [
+    0.320810556,
+    0.321182966
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 45.4703808,
+   "median_range_ms": [
+    45.4566014,
+    45.518476
+   ],
+   "iterations": 32,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 15.5192599,
+   "median_range_ms": [
+    15.4671879,
+    15.5283818
+   ],
+   "iterations": 97,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 45.1097908,
+   "median_range_ms": [
+    45.0335379,
+    45.1637759
+   ],
+   "iterations": 33,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 47.028656,
+   "median_range_ms": [
+    46.9253197,
+    47.072998
+   ],
+   "iterations": 31,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 15.7766223,
+   "median_range_ms": [
+    15.675118,
+    15.8201609
+   ],
+   "iterations": 95,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-small-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 45.4548867,
+   "median_range_ms": [
+    45.4320021,
+    45.4845755
+   ],
+   "iterations": 32,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 29.26653,
+   "median_range_ms": [
+    29.1706934,
+    29.4085822
+   ],
+   "iterations": 51,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 10.2921672,
+   "median_range_ms": [
+    10.187516,
+    10.6044736
+   ],
+   "iterations": 146,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-binary",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 28.8815298,
+   "median_range_ms": [
+    28.8472161,
+    28.8855281
+   ],
+   "iterations": 51,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 30.4577296,
+   "median_range_ms": [
+    30.4542859,
+    30.4652762
+   ],
+   "iterations": 48,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 10.288579,
+   "median_range_ms": [
+    10.247457,
+    10.4244094
+   ],
+   "iterations": 129,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bhvit-tiny-somefp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 28.9667931,
+   "median_range_ms": [
+    28.9559302,
+    29.0486693
+   ],
+   "iterations": 51,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 41.9481001,
+   "median_range_ms": [
+    41.8901653,
+    41.9734249
+   ],
+   "iterations": 35,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 22.5210781,
+   "median_range_ms": [
+    22.4968133,
+    22.8040428
+   ],
+   "iterations": 65,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 40.9076555,
+   "median_range_ms": [
+    40.8831191,
+    40.960866
+   ],
+   "iterations": 36,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 16.986866,
+   "median_range_ms": [
+    16.9590921,
+    17.0107775
+   ],
+   "iterations": 88,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 10.9117441,
+   "median_range_ms": [
+    10.7997642,
+    11.0447259
+   ],
+   "iterations": 127,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bi-vit-deit-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 16.4991834,
+   "median_range_ms": [
+    16.4901454,
+    16.5663526
+   ],
+   "iterations": 90,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mnli",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 65.7189019,
+   "median_range_ms": [
+    65.6812387,
+    65.9702225
+   ],
+   "iterations": 22,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mnli",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 12.8738112,
+   "median_range_ms": [
+    12.8034,
+    12.894814
+   ],
+   "iterations": 116,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mnli",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 65.715543,
+   "median_range_ms": [
+    65.6573882,
+    65.7425203
+   ],
+   "iterations": 22,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mrpc",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 63.516634,
+   "median_range_ms": [
+    63.4705238,
+    63.5679913
+   ],
+   "iterations": 23,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mrpc",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 12.2784917,
+   "median_range_ms": [
+    12.2712328,
+    12.3240466
+   ],
+   "iterations": 116,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-mrpc",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 63.4916711,
+   "median_range_ms": [
+    63.456635,
+    63.5349312
+   ],
+   "iterations": 23,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-qqp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 70.476233,
+   "median_range_ms": [
+    70.4210029,
+    70.5108562
+   ],
+   "iterations": 21,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-qqp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 13.5286789,
+   "median_range_ms": [
+    13.4336252,
+    13.608427
+   ],
+   "iterations": 109,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-qqp",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 70.3920794,
+   "median_range_ms": [
+    70.3837399,
+    70.4923358
+   ],
+   "iterations": 21,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-sst2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 31.9139915,
+   "median_range_ms": [
+    31.883873,
+    31.9270921
+   ],
+   "iterations": 46,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-sst2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 7.71930099,
+   "median_range_ms": [
+    7.69568348,
+    7.74927521
+   ],
+   "iterations": 180,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bibert-bert-base-sst2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 31.8265128,
+   "median_range_ms": [
+    31.7835171,
+    31.8767269
+   ],
+   "iterations": 46,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.30981398,
+   "median_range_ms": [
+    2.30467892,
+    2.31120062
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.798763752,
+   "median_range_ms": [
+    0.79835844,
+    0.803712606
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.29057312,
+   "median_range_ms": [
+    2.29037881,
+    2.29204845
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.638999,
+   "median_range_ms": [
+    10.6369405,
+    10.6537752
+   ],
+   "iterations": 140,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.27104044,
+   "median_range_ms": [
+    2.26820254,
+    2.2788651
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.57036042,
+   "median_range_ms": [
+    8.56442714,
+    8.63392591
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.557411432,
+   "median_range_ms": [
+    0.554689169,
+    0.561070442
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.527040005,
+   "median_range_ms": [
+    0.525121212,
+    0.528653622
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.551672459,
+   "median_range_ms": [
+    0.549616337,
+    0.553937197
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 17.8323622,
+   "median_range_ms": [
+    17.8137951,
+    17.8558741
+   ],
+   "iterations": 83,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.78906751,
+   "median_range_ms": [
+    3.78350592,
+    3.80170989
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.7642884,
+   "median_range_ms": [
+    15.7455442,
+    15.8105671
+   ],
+   "iterations": 94,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.3648138,
+   "median_range_ms": [
+    2.36072326,
+    2.37168741
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.53465271,
+   "median_range_ms": [
+    0.533858538,
+    0.558457375
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "biper-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.31021738,
+   "median_range_ms": [
+    2.30656004,
+    2.311203
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-densenet28-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.9954724,
+   "median_range_ms": [
+    21.9767106,
+    22.0005615
+   ],
+   "iterations": 68,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-densenet28-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 4.99186587,
+   "median_range_ms": [
+    4.98114705,
+    4.99622893
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-densenet28-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 18.9387522,
+   "median_range_ms": [
+    18.9257922,
+    18.969883
+   ],
+   "iterations": 79,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-meliusnet22-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 26.9588532,
+   "median_range_ms": [
+    26.9386344,
+    26.9591451
+   ],
+   "iterations": 55,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-meliusnet22-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.68685794,
+   "median_range_ms": [
+    6.66860533,
+    6.69044447
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-meliusnet22-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 24.1739378,
+   "median_range_ms": [
+    24.1691256,
+    24.219173
+   ],
+   "iterations": 61,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-resnete18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.4042706,
+   "median_range_ms": [
+    10.3728199,
+    10.4106498
+   ],
+   "iterations": 143,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-resnete18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.20889306,
+   "median_range_ms": [
+    2.2086401,
+    2.21638846
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bitorch-resnete18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.28175163,
+   "median_range_ms": [
+    8.27450371,
+    8.30558586
+   ],
+   "iterations": 179,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 209.264186,
+   "median_range_ms": [
+    209.168868,
+    209.34821
+   ],
+   "iterations": 7,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 40.8919885,
+   "median_range_ms": [
+    40.8157487,
+    40.9009058
+   ],
+   "iterations": 36,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 206.261561,
+   "median_range_ms": [
+    206.215951,
+    206.26656
+   ],
+   "iterations": 7,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-middle",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 88.5341625,
+   "median_range_ms": [
+    88.5176156,
+    88.5459394
+   ],
+   "iterations": 16,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-middle",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 19.346621,
+   "median_range_ms": [
+    19.255002,
+    19.3710294
+   ],
+   "iterations": 77,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-middle",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 87.031734,
+   "median_range_ms": [
+    86.9615011,
+    87.1342921
+   ],
+   "iterations": 17,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 50.0601439,
+   "median_range_ms": [
+    49.9971871,
+    50.0830173
+   ],
+   "iterations": 29,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 11.3238792,
+   "median_range_ms": [
+    11.2655287,
+    11.3750281
+   ],
+   "iterations": 131,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 49.1472795,
+   "median_range_ms": [
+    49.0658627,
+    49.1683028
+   ],
+   "iterations": 30,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 24.6807199,
+   "median_range_ms": [
+    24.6108828,
+    25.021184
+   ],
+   "iterations": 59,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 7.23054147,
+   "median_range_ms": [
+    7.22551584,
+    7.24423575
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnext-tiny",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 24.284471,
+   "median_range_ms": [
+    24.2501893,
+    24.3198462
+   ],
+   "iterations": 61,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.343304396,
+   "median_range_ms": [
+    0.341370583,
+    0.343395472
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.173126459,
+   "median_range_ms": [
+    0.172890902,
+    0.173542976
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.32279563,
+   "median_range_ms": [
+    0.322107077,
+    0.322936535
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.342927933,
+   "median_range_ms": [
+    0.341124058,
+    0.34404397
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.175042868,
+   "median_range_ms": [
+    0.174119473,
+    0.175323248
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.323040485,
+   "median_range_ms": [
+    0.321727991,
+    0.323141336
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-lfc-w1a1-mnist",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.0137870312,
+   "median_range_ms": [
+    0.0137598515,
+    0.0138139725
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-lfc-w1a1-mnist",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.0137290955,
+   "median_range_ms": [
+    0.0136833191,
+    0.0137665272
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnn-pynq-lfc-w1a1-mnist",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.0138523579,
+   "median_range_ms": [
+    0.0138428211,
+    0.0139188766
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.341099739,
+   "median_range_ms": [
+    0.340334415,
+    0.34213686
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.173408985,
+   "median_range_ms": [
+    0.171505213,
+    0.174570799
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.321473837,
+   "median_range_ms": [
+    0.321322918,
+    0.321704865
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-lfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.0137832165,
+   "median_range_ms": [
+    0.0137791634,
+    0.0137858391
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-lfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.0137453079,
+   "median_range_ms": [
+    0.0137434006,
+    0.0137798786
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-lfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.0138130188,
+   "median_range_ms": [
+    0.0137896538,
+    0.0138318539
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.00220870972,
+   "median_range_ms": [
+    0.00220274925,
+    0.00224685669
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.00289344788,
+   "median_range_ms": [
+    0.00288009644,
+    0.00293636322
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.00217723846,
+   "median_range_ms": [
+    0.00213432312,
+    0.00222086906
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-tfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.00083899498,
+   "median_range_ms": [
+    0.000835180283,
+    0.000884532928
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-tfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.000785112381,
+   "median_range_ms": [
+    0.000781059265,
+    0.001060009
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brevitas-bnn-pynq-tfc-1w1a",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.000865936279,
+   "median_range_ms": [
+    0.000635623932,
+    0.000877857208
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.3795083,
+   "median_range_ms": [
+    10.3755054,
+    10.4948494
+   ],
+   "iterations": 142,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.2083075,
+   "median_range_ms": [
+    2.20715904,
+    2.20916438
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.23527384,
+   "median_range_ms": [
+    8.22876,
+    8.2661891
+   ],
+   "iterations": 182,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18-stem",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.49918008,
+   "median_range_ms": [
+    8.4984479,
+    8.55372643
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18-stem",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.92691255,
+   "median_range_ms": [
+    1.92272496,
+    1.93461323
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "dabnn-bireal18-stem",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 7.98348475,
+   "median_range_ms": [
+    7.97743797,
+    7.98743629
+   ],
+   "iterations": 187,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.341203213,
+   "median_range_ms": [
+    0.340411425,
+    0.341963053
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.173892975,
+   "median_range_ms": [
+    0.172264338,
+    0.174623489
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.321427584,
+   "median_range_ms": [
+    0.32089591,
+    0.321883917
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-tfc-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.000848770142,
+   "median_range_ms": [
+    0.000649452209,
+    0.00087594986
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-tfc-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.00106096268,
+   "median_range_ms": [
+    0.000780105591,
+    0.00106811523
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-bnn-pynq-tfc-w1a1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.000869274139,
+   "median_range_ms": [
+    0.000820636749,
+    0.000881195068
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.341233969,
+   "median_range_ms": [
+    0.341006041,
+    0.342090607
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.174157381,
+   "median_range_ms": [
+    0.172707558,
+    0.175189734
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "finn-examples-cnv-w1a1-gtsrb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.321938992,
+   "median_range_ms": [
+    0.32140851,
+    0.323349237
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "gsb-deit-s-cifar100-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 84.7879994,
+   "median_range_ms": [
+    84.7283957,
+    88.5302339
+   ],
+   "iterations": 16,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "gsb-deit-s-cifar100-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 23.5155277,
+   "median_range_ms": [
+    23.3851175,
+    23.523514
+   ],
+   "iterations": 58,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "gsb-deit-s-cifar100-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 83.84764,
+   "median_range_ms": [
+    83.760181,
+    87.6304359
+   ],
+   "iterations": 17,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ida-det-bires18-imagenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.770756,
+   "median_range_ms": [
+    10.7451837,
+    10.8051095
+   ],
+   "iterations": 138,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ida-det-bires18-imagenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.29399443,
+   "median_range_ms": [
+    2.28701377,
+    2.29653597
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "ida-det-bires18-imagenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.6149075,
+   "median_range_ms": [
+    8.59511685,
+    8.6607759
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-alexnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 4.67771268,
+   "median_range_ms": [
+    4.67137742,
+    4.67882299
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-alexnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.860003948,
+   "median_range_ms": [
+    0.859964371,
+    0.861586332
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-alexnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 3.54561353,
+   "median_range_ms": [
+    3.54533696,
+    3.54763246
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.9830182,
+   "median_range_ms": [
+    21.9707007,
+    22.0152137
+   ],
+   "iterations": 68,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 4.97820616,
+   "median_range_ms": [
+    4.96891451,
+    4.99954391
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 18.9611371,
+   "median_range_ms": [
+    18.9570811,
+    18.9718504
+   ],
+   "iterations": 78,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 25.8111243,
+   "median_range_ms": [
+    25.7539401,
+    26.0373006
+   ],
+   "iterations": 57,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.15277553,
+   "median_range_ms": [
+    6.12579107,
+    6.16210318
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 22.8075891,
+   "median_range_ms": [
+    22.7859278,
+    22.830287
+   ],
+   "iterations": 65,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37-dilated",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 46.0744593,
+   "median_range_ms": [
+    45.967376,
+    46.4848163
+   ],
+   "iterations": 32,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37-dilated",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 9.82139397,
+   "median_range_ms": [
+    9.80360699,
+    9.86118317
+   ],
+   "iterations": 151,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet37-dilated",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 39.4498649,
+   "median_range_ms": [
+    39.4384441,
+    39.4513159
+   ],
+   "iterations": 37,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet45",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 35.6050496,
+   "median_range_ms": [
+    35.5563579,
+    35.8367236
+   ],
+   "iterations": 42,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet45",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 8.26164293,
+   "median_range_ms": [
+    8.25893998,
+    8.26438928
+   ],
+   "iterations": 180,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-densenet45",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 31.6279509,
+   "median_range_ms": [
+    31.6106648,
+    32.7035639
+   ],
+   "iterations": 46,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-resnet-e18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.4039724,
+   "median_range_ms": [
+    10.3953834,
+    10.4087172
+   ],
+   "iterations": 142,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-resnet-e18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.22508454,
+   "median_range_ms": [
+    2.22444439,
+    2.23180532
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-binary-resnet-e18",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.28838015,
+   "median_range_ms": [
+    8.27220297,
+    8.29855299
+   ],
+   "iterations": 179,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-birealnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.3906679,
+   "median_range_ms": [
+    10.3706036,
+    10.5103045
+   ],
+   "iterations": 144,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-birealnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.19637823,
+   "median_range_ms": [
+    2.19536161,
+    2.19639111
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-birealnet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.23212767,
+   "median_range_ms": [
+    8.20717335,
+    8.23329782
+   ],
+   "iterations": 178,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-dorefanet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 25.2825494,
+   "median_range_ms": [
+    25.2452245,
+    25.3946366
+   ],
+   "iterations": 58,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-dorefanet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.68631935,
+   "median_range_ms": [
+    3.67163849,
+    3.70755434
+   ],
+   "iterations": 160,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-dorefanet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 22.8687489,
+   "median_range_ms": [
+    22.8563282,
+    23.0726924
+   ],
+   "iterations": 64,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 27.097302,
+   "median_range_ms": [
+    26.8877678,
+    27.7598338
+   ],
+   "iterations": 55,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.63559294,
+   "median_range_ms": [
+    6.63066912,
+    6.79651237
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 25.7949135,
+   "median_range_ms": [
+    25.7941613,
+    25.8310947
+   ],
+   "iterations": 58,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.33833981,
+   "median_range_ms": [
+    8.31486988,
+    8.38641214
+   ],
+   "iterations": 177,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.92227602,
+   "median_range_ms": [
+    1.9096005,
+    1.92340446
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.03546143,
+   "median_range_ms": [
+    8.01581478,
+    8.03928781
+   ],
+   "iterations": 186,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.4371769,
+   "median_range_ms": [
+    15.4228754,
+    15.4447024
+   ],
+   "iterations": 96,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.42999887,
+   "median_range_ms": [
+    3.40361953,
+    3.4341805
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-large",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.1247139,
+   "median_range_ms": [
+    15.1186719,
+    15.1388631
+   ],
+   "iterations": 99,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 5.35810614,
+   "median_range_ms": [
+    5.35064316,
+    5.36329794
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.44142818,
+   "median_range_ms": [
+    1.43199253,
+    1.44467902
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-small",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 5.2567184,
+   "median_range_ms": [
+    5.24917912,
+    5.27017498
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-xl-legacy",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.818913,
+   "median_range_ms": [
+    15.8092284,
+    15.8851719
+   ],
+   "iterations": 93,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-xl-legacy",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 4.19486904,
+   "median_range_ms": [
+    4.19409585,
+    4.19820094
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-quicknet-xl-legacy",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 14.8485477,
+   "median_range_ms": [
+    14.8319061,
+    14.8610256
+   ],
+   "iterations": 100,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-real-to-binary-net",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 11.1807711,
+   "median_range_ms": [
+    11.1547241,
+    11.2875156
+   ],
+   "iterations": 132,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-real-to-binary-net",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.74604201,
+   "median_range_ms": [
+    2.73808551,
+    2.76063251
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-real-to-binary-net",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.99012613,
+   "median_range_ms": [
+    8.98387718,
+    9.04446268
+   ],
+   "iterations": 166,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-xnornet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 6.87842155,
+   "median_range_ms": [
+    6.8636446,
+    6.98963404
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-xnornet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.19264126,
+   "median_range_ms": [
+    1.19114947,
+    1.19724298
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larq-zoo-xnornet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 4.86317158,
+   "median_range_ms": [
+    4.77978086,
+    4.86901283
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-dorefa",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 11.961679,
+   "median_range_ms": [
+    11.8497391,
+    11.9747968
+   ],
+   "iterations": 125,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-dorefa",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.34862876,
+   "median_range_ms": [
+    2.34621477,
+    2.35009384
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-dorefa",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.88932085,
+   "median_range_ms": [
+    8.85685205,
+    8.88933277
+   ],
+   "iterations": 169,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-xnor",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 14.8245959,
+   "median_range_ms": [
+    14.8236718,
+    14.9495139
+   ],
+   "iterations": 99,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-xnor",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.79668069,
+   "median_range_ms": [
+    2.79667854,
+    2.80785012
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "nncf-resnet18-binarization-xnor",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.91046309,
+   "median_range_ms": [
+    8.87834001,
+    8.92507625
+   ],
+   "iterations": 168,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.6237783,
+   "median_range_ms": [
+    10.4914031,
+    10.6272399
+   ],
+   "iterations": 142,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.09241009,
+   "median_range_ms": [
+    2.08103609,
+    2.09724927
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.40694809,
+   "median_range_ms": [
+    8.40295911,
+    8.40887332
+   ],
+   "iterations": 178,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.4905901,
+   "median_range_ms": [
+    10.4807072,
+    10.5202351
+   ],
+   "iterations": 141,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.07876754,
+   "median_range_ms": [
+    2.07372904,
+    2.08308506
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.4239459,
+   "median_range_ms": [
+    8.40032864,
+    8.42568779
+   ],
+   "iterations": 177,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 29.4848108,
+   "median_range_ms": [
+    29.413691,
+    29.8837481
+   ],
+   "iterations": 49,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.77280045,
+   "median_range_ms": [
+    5.74759722,
+    5.77903605
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.931839,
+   "median_range_ms": [
+    21.9226651,
+    22.2506599
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 29.5081019,
+   "median_range_ms": [
+    29.4620728,
+    30.0593128
+   ],
+   "iterations": 49,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.75267792,
+   "median_range_ms": [
+    5.74739504,
+    5.75973296
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "omz-resnet50-binary-0001-fp16",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 22.0155559,
+   "median_range_ms": [
+    22.0019779,
+    22.36414
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.83395648,
+   "median_range_ms": [
+    2.82566309,
+    2.83810115
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.22136378,
+   "median_range_ms": [
+    1.21666694,
+    1.2230494
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.79961944,
+   "median_range_ms": [
+    2.79699898,
+    2.7999413
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 11.9143736,
+   "median_range_ms": [
+    11.8974156,
+    12.0607197
+   ],
+   "iterations": 124,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.50163484,
+   "median_range_ms": [
+    3.49951434,
+    3.50860453
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 9.83525181,
+   "median_range_ms": [
+    9.82258129,
+    9.85390091
+   ],
+   "iterations": 151,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-bireal-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.687532425,
+   "median_range_ms": [
+    0.685497046,
+    0.687541246
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-bireal-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.637702465,
+   "median_range_ms": [
+    0.625811338,
+    0.638109207
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-bireal-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.681585789,
+   "median_range_ms": [
+    0.680962324,
+    0.682749987
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.680644035,
+   "median_range_ms": [
+    0.679996967,
+    0.680844784
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.641128778,
+   "median_range_ms": [
+    0.636609077,
+    0.643357038
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.678692341,
+   "median_range_ms": [
+    0.67621398,
+    0.683384657
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 20.045912,
+   "median_range_ms": [
+    20.0090294,
+    20.2011545
+   ],
+   "iterations": 74,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.8698442,
+   "median_range_ms": [
+    5.84944701,
+    6.09389353
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 17.9926128,
+   "median_range_ms": [
+    17.9185791,
+    17.9958477
+   ],
+   "iterations": 83,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.58209491,
+   "median_range_ms": [
+    2.56684995,
+    2.58386779
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.713186264,
+   "median_range_ms": [
+    0.712500095,
+    0.715323925
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbnn-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.51073289,
+   "median_range_ms": [
+    2.50957346,
+    2.51157045
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbonn-reactnet-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.755857,
+   "median_range_ms": [
+    10.7534401,
+    10.7604916
+   ],
+   "iterations": 138,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbonn-reactnet-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.30444598,
+   "median_range_ms": [
+    2.30017996,
+    2.31135106
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "rbonn-reactnet-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.63598299,
+   "median_range_ms": [
+    8.62507534,
+    8.67167902
+   ],
+   "iterations": 173,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.35531688,
+   "median_range_ms": [
+    2.34082723,
+    2.35945344
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.815922022,
+   "median_range_ms": [
+    0.808502674,
+    0.817195654
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.31807113,
+   "median_range_ms": [
+    2.31626701,
+    2.32371306
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.636704,
+   "median_range_ms": [
+    10.6272812,
+    10.6471057
+   ],
+   "iterations": 138,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.27031946,
+   "median_range_ms": [
+    2.26601815,
+    2.2780149
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.56646013,
+   "median_range_ms": [
+    8.54010344,
+    8.59309459
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.564091921,
+   "median_range_ms": [
+    0.560764551,
+    0.565082312
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.536924124,
+   "median_range_ms": [
+    0.53598237,
+    0.540397644
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.556558609,
+   "median_range_ms": [
+    0.556399345,
+    0.558729172
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 17.874851,
+   "median_range_ms": [
+    17.8107145,
+    18.0208862
+   ],
+   "iterations": 82,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.83734202,
+   "median_range_ms": [
+    3.82296491,
+    3.96105599
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.7363133,
+   "median_range_ms": [
+    15.7203784,
+    15.7517171
+   ],
+   "iterations": 95,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.37071109,
+   "median_range_ms": [
+    2.35598111,
+    2.37193918
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.532254934,
+   "median_range_ms": [
+    0.530714035,
+    0.533383846
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "recu-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.30747914,
+   "median_range_ms": [
+    2.30657125,
+    2.3090322
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "sa-bnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.8826525,
+   "median_range_ms": [
+    10.8654883,
+    10.8829429
+   ],
+   "iterations": 136,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "sa-bnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.36983347,
+   "median_range_ms": [
+    2.36298704,
+    2.3811605
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "sa-bnn-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.73626184,
+   "median_range_ms": [
+    8.71681261,
+    8.73841381
+   ],
+   "iterations": 171,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "shuaiz-bireal20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.539319277,
+   "median_range_ms": [
+    0.538985968,
+    0.541518927
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "shuaiz-bireal20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.519173145,
+   "median_range_ms": [
+    0.51624918,
+    0.52061224
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "shuaiz-bireal20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.536240339,
+   "median_range_ms": [
+    0.535630941,
+    0.537721872
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.83594942,
+   "median_range_ms": [
+    2.83496428,
+    2.84743047
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.21917605,
+   "median_range_ms": [
+    1.21507764,
+    1.22723889
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.81457233,
+   "median_range_ms": [
+    2.81322956,
+    2.81680727
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 11.7235777,
+   "median_range_ms": [
+    11.7146304,
+    11.8791163
+   ],
+   "iterations": 126,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.43671155,
+   "median_range_ms": [
+    3.4291296,
+    3.43711972
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet18-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 9.69590187,
+   "median_range_ms": [
+    9.68849421,
+    9.70729399
+   ],
+   "iterations": 155,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.694680929,
+   "median_range_ms": [
+    0.692471743,
+    0.695637941
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.632154703,
+   "median_range_ms": [
+    0.632113457,
+    0.635453939
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.689918995,
+   "median_range_ms": [
+    0.689356089,
+    0.690626144
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 19.8713779,
+   "median_range_ms": [
+    19.8294835,
+    19.8751519
+   ],
+   "iterations": 74,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.78688169,
+   "median_range_ms": [
+    5.78188658,
+    5.81106758
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-resnet34-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 17.8343711,
+   "median_range_ms": [
+    17.8231559,
+    17.8626871
+   ],
+   "iterations": 83,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.5799768,
+   "median_range_ms": [
+    2.5649755,
+    2.58080602
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.717772007,
+   "median_range_ms": [
+    0.716144085,
+    0.719930172
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "siman-vgg-small-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.51342726,
+   "median_range_ms": [
+    2.51174903,
+    2.51420259
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.7683506,
+   "median_range_ms": [
+    10.7620196,
+    10.9059744
+   ],
+   "iterations": 137,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.28251243,
+   "median_range_ms": [
+    2.28126216,
+    2.30134416
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.60137892,
+   "median_range_ms": [
+    8.60087371,
+    8.61065769
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w1a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.8008094,
+   "median_range_ms": [
+    10.7515583,
+    10.9136033
+   ],
+   "iterations": 137,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w1a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.28700757,
+   "median_range_ms": [
+    2.2863307,
+    2.30167222
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "snn-subbit-reactnet18-w1a1-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.63597488,
+   "median_range_ms": [
+    8.60765219,
+    8.63745594
+   ],
+   "iterations": 173,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-binarydensenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.43842936,
+   "median_range_ms": [
+    2.43796253,
+    2.4393692
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-binarydensenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.19590139,
+   "median_range_ms": [
+    1.19188118,
+    1.2034421
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-binarydensenet28",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 2.20103192,
+   "median_range_ms": [
+    2.20089245,
+    2.20515442
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 3.31498337,
+   "median_range_ms": [
+    3.31101155,
+    3.31802177
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.78808498,
+   "median_range_ms": [
+    1.78410339,
+    1.80890799
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-meliusnet22",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 3.14797258,
+   "median_range_ms": [
+    3.14042807,
+    3.14954686
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.08631968,
+   "median_range_ms": [
+    1.08621049,
+    1.09623265
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.608381748,
+   "median_range_ms": [
+    0.60630703,
+    0.610212564
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "brillsson-quicknet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.02093387,
+   "median_range_ms": [
+    1.0206635,
+    1.02173686
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet28-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 5.25978565,
+   "median_range_ms": [
+    5.25390053,
+    5.26905823
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet28-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.87845922,
+   "median_range_ms": [
+    1.87611675,
+    1.88192248
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet28-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 4.5012486,
+   "median_range_ms": [
+    4.49669385,
+    4.51088381
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet37-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 6.18195772,
+   "median_range_ms": [
+    6.14992762,
+    6.19776797
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet37-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 2.34474468,
+   "median_range_ms": [
+    2.3383975,
+    2.37529731
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet37-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 5.40072036,
+   "median_range_ms": [
+    5.39931297,
+    5.45793104
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet45-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.37275839,
+   "median_range_ms": [
+    8.37165141,
+    8.39408898
+   ],
+   "iterations": 174,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet45-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.11664295,
+   "median_range_ms": [
+    3.08812642,
+    3.14327931
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binarydensenet45-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 7.42867422,
+   "median_range_ms": [
+    7.42603874,
+    7.43403935
+   ],
+   "iterations": 198,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binaryfacenet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 12.3030481,
+   "median_range_ms": [
+    12.2880821,
+    12.317668
+   ],
+   "iterations": 119,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binaryfacenet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.62405062,
+   "median_range_ms": [
+    5.60485101,
+    5.62930202
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-binaryfacenet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 12.3381929,
+   "median_range_ms": [
+    12.3377552,
+    12.341856
+   ],
+   "iterations": 121,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-quicknet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 3.03383446,
+   "median_range_ms": [
+    3.01648569,
+    3.03726649
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-quicknet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.961302042,
+   "median_range_ms": [
+    0.954273462,
+    0.966897488
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "larqface-quicknet-msceleb",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.99985933,
+   "median_range_ms": [
+    1.99914765,
+    2.00007486
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-deblocking",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 33.1496119,
+   "median_range_ms": [
+    33.1141038,
+    33.1913128
+   ],
+   "iterations": 45,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-deblocking",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.75406742,
+   "median_range_ms": [
+    5.71557593,
+    5.76994467
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-deblocking",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 32.6016583,
+   "median_range_ms": [
+    32.4678137,
+    32.6415684
+   ],
+   "iterations": 46,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-denoise",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 33.324553,
+   "median_range_ms": [
+    33.31846,
+    33.5005236
+   ],
+   "iterations": 44,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-denoise",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.79469848,
+   "median_range_ms": [
+    5.78721642,
+    5.80942345
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-denoise",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 32.5774989,
+   "median_range_ms": [
+    32.4963305,
+    32.5825534
+   ],
+   "iterations": 46,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 31.7741652,
+   "median_range_ms": [
+    31.7367101,
+    31.7889781
+   ],
+   "iterations": 47,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.17646909,
+   "median_range_ms": [
+    6.17433333,
+    6.18914843
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 20.6154747,
+   "median_range_ms": [
+    20.6087651,
+    20.643199
+   ],
+   "iterations": 71,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 41.766387,
+   "median_range_ms": [
+    41.7413406,
+    41.7720237
+   ],
+   "iterations": 35,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 7.27219248,
+   "median_range_ms": [
+    7.26724958,
+    7.27466726
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-l-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 19.8771329,
+   "median_range_ms": [
+    19.8722,
+    19.8893003
+   ],
+   "iterations": 75,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 20.4043307,
+   "median_range_ms": [
+    20.4022269,
+    20.4064794
+   ],
+   "iterations": 73,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 4.83034658,
+   "median_range_ms": [
+    4.8284831,
+    4.87124252
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 19.7618544,
+   "median_range_ms": [
+    19.7596118,
+    19.7763791
+   ],
+   "iterations": 76,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 19.0031381,
+   "median_range_ms": [
+    18.9599273,
+    19.010546
+   ],
+   "iterations": 78,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 4.06185365,
+   "median_range_ms": [
+    4.06011391,
+    4.06384063
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bbcu-sr-m-x4",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 17.9512587,
+   "median_range_ms": [
+    17.9303489,
+    17.9515362
+   ],
+   "iterations": 82,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 25.210885,
+   "median_range_ms": [
+    25.1982203,
+    25.2379689
+   ],
+   "iterations": 59,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.17147446,
+   "median_range_ms": [
+    5.16390467,
+    5.18721199
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 18.0148664,
+   "median_range_ms": [
+    18.007041,
+    18.0485549
+   ],
+   "iterations": 82,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 96.8633747,
+   "median_range_ms": [
+    96.8078079,
+    96.9373798
+   ],
+   "iterations": 15,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 22.5675478,
+   "median_range_ms": [
+    22.524303,
+    22.5769219
+   ],
+   "iterations": 66,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x2-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 77.7230358,
+   "median_range_ms": [
+    77.6118593,
+    77.970026
+   ],
+   "iterations": 19,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 44.8512979,
+   "median_range_ms": [
+    44.7957492,
+    44.972538
+   ],
+   "iterations": 33,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.86330509,
+   "median_range_ms": [
+    6.85292625,
+    6.86725545
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v0",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 22.6108079,
+   "median_range_ms": [
+    22.566216,
+    22.6415963
+   ],
+   "iterations": 65,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 53.281997,
+   "median_range_ms": [
+    53.2167811,
+    53.3697808
+   ],
+   "iterations": 28,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 9.69953799,
+   "median_range_ms": [
+    9.66335511,
+    9.70548487
+   ],
+   "iterations": 154,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bsrc2023-binary-sr-x4-v1",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 30.7579682,
+   "median_range_ms": [
+    30.7417569,
+    30.8105793
+   ],
+   "iterations": 48,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "adabin-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.04445481,
+   "median_range_ms": [
+    1.04251337,
+    1.05016303
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "adabin-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.894245863,
+   "median_range_ms": [
+    0.887811184,
+    0.901018381
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "adabin-resnet20-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 1.12372494,
+   "median_range_ms": [
+    1.12059569,
+    1.12737536
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.57899642,
+   "median_range_ms": [
+    0.578975916,
+    0.580178022
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 0.514828444,
+   "median_range_ms": [
+    0.504587412,
+    0.518639088
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 0.571223497,
+   "median_range_ms": [
+    0.571025133,
+    0.573702097
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 10.7381997,
+   "median_range_ms": [
+    10.7016275,
+    10.7626681
+   ],
+   "iterations": 138,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 1.81365252,
+   "median_range_ms": [
+    1.81337762,
+    1.82844639
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.35610294,
+   "median_range_ms": [
+    8.33187151,
+    8.36620235
+   ],
+   "iterations": 178,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-a-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 7.82050705,
+   "median_range_ms": [
+    7.66875315,
+    7.82177496
+   ],
+   "iterations": 191,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-a-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.553653,
+   "median_range_ms": [
+    3.52039933,
+    3.57940269
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-a-cifar10",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 5.94796443,
+   "median_range_ms": [
+    5.93648028,
+    5.94797111
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-d-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 22.1915507,
+   "median_range_ms": [
+    21.8578649,
+    22.2332129
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-d-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 6.54853916,
+   "median_range_ms": [
+    6.5483861,
+    6.59004259
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-d-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 15.888514,
+   "median_range_ms": [
+    15.8420091,
+    15.9809408
+   ],
+   "iterations": 93,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-e-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 27.928762,
+   "median_range_ms": [
+    27.8483939,
+    28.2773652
+   ],
+   "iterations": 53,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-e-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 7.46211433,
+   "median_range_ms": [
+    7.45145416,
+    7.51862812
+   ],
+   "iterations": 193,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-e-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 20.8582566,
+   "median_range_ms": [
+    20.8288143,
+    20.8766084
+   ],
+   "iterations": 70,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-h-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 94.8260899,
+   "median_range_ms": [
+    94.8012247,
+    96.7661028
+   ],
+   "iterations": 15,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-h-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 19.0357635,
+   "median_range_ms": [
+    19.0177815,
+    19.2245607
+   ],
+   "iterations": 76,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bnas-h-imagenet",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 70.3191445,
+   "median_range_ms": [
+    70.2798274,
+    71.6110663
+   ],
+   "iterations": 20,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bimatting-bimobilenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.76516771,
+   "median_range_ms": [
+    8.76219606,
+    8.76845169
+   ],
+   "iterations": 167,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bimatting-bimobilenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 3.60077548,
+   "median_range_ms": [
+    3.54921246,
+    3.6010704
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "bimatting-bimobilenet-backbone",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 8.68920588,
+   "median_range_ms": [
+    8.67566514,
+    8.69242048
+   ],
+   "iterations": 172,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "burn-reacta-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.9772968,
+   "median_range_ms": [
+    21.9766178,
+    22.0096331
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "burn-reacta-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.09951115,
+   "median_range_ms": [
+    5.06734753,
+    5.10044885
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "burn-reacta-stage2",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.9347451,
+   "median_range_ms": [
+    21.8065674,
+    22.0702088
+   ],
+   "iterations": 68,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "s2bnn-reacta-distill-only",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.8645182,
+   "median_range_ms": [
+    21.8597221,
+    22.0609331
+   ],
+   "iterations": 67,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "s2bnn-reacta-distill-only",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t8_pcore",
+   "model_file": "model.bitino",
+   "stage": "optimized",
+   "threads": 8,
+   "affinity": "0,2,4,6,8,10,12,14",
+   "median_ms": 5.02515531,
+   "median_range_ms": [
+    5.02004361,
+    5.22947955
+   ],
+   "iterations": 200,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  },
+  {
+   "model_id": "s2bnn-reacta-distill-only",
+   "date": "2026-11-01",
+   "suite": "all_models_20261101",
+   "config": "t1_int8",
+   "model_file": "model.bitino",
+   "stage": "optimized_int8",
+   "threads": 1,
+   "affinity": "2",
+   "median_ms": 21.8571715,
+   "median_range_ms": [
+    21.7835209,
+    22.0334406
+   ],
+   "iterations": 68,
+   "validity": "superseded-runtime",
+   "notes": [
+    "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+   ]
+  }
+ ],
+ "next_suite": {
+  "status": "pending",
+  "note": "slot for the next x86-64 host suite on the current runtime (same schema as runs[]); not run yet"
+ }
+}

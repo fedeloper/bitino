@@ -1,0 +1,9 @@
+# Reference environment for the PyTorch converters (AB-BNN, IR-Net family, BNext, bitorch, BNAS, BHViT, Bi-ViT,
+# BiBERT, restoration / super-resolution BNNs, ...). CPU only.
+# The published conversions were made with Python 3.12.7, torch 2.6.0, torchvision 0.21.0, Pillow 12.2.0, numpy 2.2.
+#   python3.12 -m venv ~/.venvs/bitino-torch
+#   ~/.venvs/bitino-torch/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch==2.6.0 torchvision==0.21.0
+#   ~/.venvs/bitino-torch/bin/pip install -r envs/torch-requirements.txt
+# then: bitino fetch <model-id> --python torch=~/.venvs/bitino-torch/bin/python   (or run bitino from that env)
+numpy>=1.24,<2.3
+Pillow>=10

@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "biper-resnet18-cifar10",
+ "registry_model_id": "biper-resnet18-cifar10",
+ "name": "BiPer ResNet-18 (CIFAR-10)",
+ "family": "BiPer",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_irnet",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 1461312,
+   "data_sha256": "e2c1c36cf076ab163393619ed3291572e15c9cf015ba37465ca28d92dbe60876"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 1590208,
+   "data_sha256": "6b0304a50f4a645ca30784960cf49cf99e52279ef9d7b800bb54b300f57e25d7"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_imagenet_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9453125,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9453125,
+   "reference_fp64": 0.9453125,
+   "runtime": 0.9453125,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.9375
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9337,
+    "b_top1": 0.9334,
+    "delta_pt": -0.03,
+    "ci95_pt": [
+     -0.423,
+     0.363
+    ],
+    "mcnemar_p": 0.9204597508085525,
+    "agreement": 0.953,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9337,
+    "b_top1": 0.9143,
+    "delta_pt": -1.94,
+    "ci95_pt": [
+     -2.414,
+     -1.466
+    ],
+    "mcnemar_p": 9.558042470905562e-16,
+    "agreement": 0.9308,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 21.381,
+   "optimized": 20.331
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "biper-resnet18-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 2.30981398,
+    "median_range_ms": [
+     2.30467892,
+     2.31120062
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "biper-resnet18-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.798763752,
+    "median_range_ms": [
+     0.79835844,
+     0.803712606
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "biper-resnet18-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 2.29057312,
+    "median_range_ms": [
+     2.29037881,
+     2.29204845
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

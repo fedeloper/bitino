@@ -1,0 +1,269 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+ "registry_model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+ "name": "Aliasgharshinwari finn-cnv-w1a1-pynq-z1 Brevitas CNV-W1A1 retrain (cnv_w1a1_best.pt)",
+ "family": "FINN/Brevitas BNN-PYNQ",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+INT8"
+ ],
+ "adapter": "bitino.adapters.brevitas_bnn",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 227648,
+   "data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 228416,
+   "data_sha256": "4f7fb928040e4fc03599e672fdd1f2c0c490491b79551da6e2aadd3e697ebf3d"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_totensor",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.8984375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.8984375,
+   "reference_fp64": 0.8984375,
+   "runtime": 0.8984375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.8424
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8424,
+    "b_top1": 0.8426,
+    "delta_pt": 0.02,
+    "ci95_pt": [
+     -0.445,
+     0.485
+    ],
+    "mcnemar_p": 0.9664178881962016,
+    "agreement": 0.9259,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8424,
+    "b_top1": 0.843,
+    "delta_pt": 0.06,
+    "ci95_pt": [
+     -0.489,
+     0.609
+    ],
+    "mcnemar_p": 0.8582886874415282,
+    "agreement": 0.9006,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 2.619,
+   "optimized": 3.142
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:05:48Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.569999993,
+    "median_range_ms": [
+     0.568880975,
+     0.571875572
+    ],
+    "p90_ms": 0.5924733162,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 5704,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:05:52Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 1.3882035,
+    "median_range_ms": [
+     0.66653651,
+     2.04604149
+    ],
+    "p90_ms": 2.079260512,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6004,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:05:55Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 1.04458302,
+    "median_range_ms": [
+     0.77799499,
+     2.74966151
+    ],
+    "p90_ms": 3.2595363269999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6280,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:05:59Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.511041999,
+    "median_range_ms": [
+     0.287630498,
+     0.512994528
+    ],
+    "p90_ms": 0.5226404908000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 5692,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.340583563,
+    "median_range_ms": [
+     0.340509892,
+     0.341498137
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.175766468,
+    "median_range_ms": [
+     0.174069405,
+     0.183979034
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "aliasgharshinwari-finn-cnv-w1a1-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.320971012,
+    "median_range_ms": [
+     0.320810556,
+     0.321182966
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

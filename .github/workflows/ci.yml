@@ -1,0 +1,91 @@
+# Correctness only: build + tests on x86-64 and native ARM64, sanitizers, Android cross-build with the
+# arm64 tests under qemu-user. No timings are measured or published from CI.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: build + tests (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    env:
+      # the aarch64 NEON kernels' inline asm needs clang (GCC allows at most 30 asm operands)
+      CXX: ${{ matrix.os == 'ubuntu-24.04-arm' && 'clang++' || 'g++' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build clang
+      - name: Configure
+        run: cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/host -j 4
+      - name: C++ tests
+        run: ./build/host/bitino_tests
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Python tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . pytest
+      - name: Python tests
+        run: python -m pytest -q tests/python
+      - name: CLI smoke test
+        run: |
+          bitino list --converted | tail -3
+          bitino list --release
+          bitino info ab-bnn-imagenet-reactnet18 > /dev/null
+          bitino fetch ab-bnn-imagenet-reactnet18 --dry-run > /dev/null
+      - name: Website and README tables build
+        run: python tools/build_site.py --out "$RUNNER_TEMP/site"
+      - name: x86-64 ISA isolation
+        if: runner.arch == 'X64'
+        run: python tools/check_isa_isolation.py build/host/bitino_bench --objects build/host/CMakeFiles/bitino.dir
+
+  sanitizers:
+    name: ASan + UBSan (x86-64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build
+      - run: cmake -S . -B build/asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DBITINO_SANITIZE=ON
+      - run: cmake --build build/asan -j 4
+      - run: ./build/asan/bitino_tests
+
+  android:
+    name: Android arm64 build + tests under qemu-user
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ninja-build qemu-user
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27c
+      - name: Android build (dynamic, as shipped)
+        env:
+          ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
+        run: scripts/build_android.sh build/android-arm64
+      - name: Static build for qemu-user
+        env:
+          ANDROID_NDK: ${{ steps.ndk.outputs.ndk-path }}
+          BITINO_STATIC: "ON"
+        run: scripts/build_android.sh build/android-arm64-static
+      - name: arm64 tests under qemu (-cpu max, all features)
+        run: QEMU_AARCH64=$(command -v qemu-aarch64) scripts/run_emulated.sh build/android-arm64-static/bitino_tests
+      - name: arm64 tests under qemu (-cpu cortex-a76, no i8mm fallbacks)
+        run: QEMU_AARCH64=$(command -v qemu-aarch64) QEMU_CPU=cortex-a76 scripts/run_emulated.sh build/android-arm64-static/bitino_tests

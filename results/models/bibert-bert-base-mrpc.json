@@ -1,0 +1,286 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bibert-bert-base-mrpc",
+ "registry_model_id": "bibert-bert-base-mrpc",
+ "name": "BiBERT (fully binarized BERT-base) fine-tuned on MRPC",
+ "family": "binary-bert-language",
+ "task": "glue-mrpc",
+ "dataset": "GLUE MRPC",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bibert",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 16291264,
+   "data_sha256": "7a3f33ae38fc1f4dae675615279fbf86bfe8280eac79a5569603af27624ebb67"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 15256640,
+   "data_sha256": "03282ae8087157fafabb356def4f2bdb1407dfcea112502ccf9b44fc0aee47d6"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "mrpc-dev-128 (first 128 GLUE MRPC dev pairs)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.765625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.7578125,
+   "reference_fp64": 0.765625,
+   "runtime": 0.765625,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim": 0.725
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "mrpc-dev-408",
+    "n": 408,
+    "a_top1": 0.7034313725490197,
+    "b_top1": 0.7034313725490197,
+    "delta_pt": 0.0,
+    "ci95_pt": [
+     0.0,
+     0.0
+    ],
+    "mcnemar_p": 1.0,
+    "agreement": 1.0,
+    "study": "exact_vs_int8-final_mrpcdev408",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "mrpc-dev-408",
+    "n": 408,
+    "a_top1": 0.7132352941176471,
+    "b_top1": 0.7230392156862745,
+    "delta_pt": 0.98,
+    "ci95_pt": [
+     -2.28,
+     4.241
+    ],
+    "mcnemar_p": 0.6587380770236564,
+    "agreement": 0.8872549019607843,
+    "study": "exact_vs_int8_full_mrpcdev408",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "with_gelu/model.bitino:neon",
+    "b": "no_gelu/model.bitino:neon",
+    "eval_set": "mrpc-dev-408",
+    "n": 408,
+    "a_top1": 0.7034313725490197,
+    "b_top1": 0.7132352941176471,
+    "delta_pt": 0.98,
+    "ci95_pt": [
+     -2.06,
+     4.021
+    ],
+    "mcnemar_p": 0.6358280026288412,
+    "agreement": 0.9019607843137255,
+    "study": "exact_vs_nogelu_mrpcdev408",
+    "date": "2026-11-02"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 604.133,
+   "optimized": 570.407
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:41:04Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 148.872084,
+    "median_range_ms": [
+     148.858516,
+     148.941355
+    ],
+    "p90_ms": 149.283636,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43580,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "7a3f33ae38fc1f4dae675615279fbf86bfe8280eac79a5569603af27624ebb67",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:41:11Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 68.2734895,
+    "median_range_ms": [
+     68.1836455,
+     68.370495
+    ],
+    "p90_ms": 68.7698027,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 45392,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "7a3f33ae38fc1f4dae675615279fbf86bfe8280eac79a5569603af27624ebb67",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:41:23Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 83.0445575,
+    "median_range_ms": [
+     82.2029169,
+     83.9457026
+    ],
+    "p90_ms": 86.23095889,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 47712,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "7a3f33ae38fc1f4dae675615279fbf86bfe8280eac79a5569603af27624ebb67",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:41:36Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 148.617839,
+    "median_range_ms": [
+     148.047083,
+     148.682707
+    ],
+    "p90_ms": 149.0876453,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43636,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "7a3f33ae38fc1f4dae675615279fbf86bfe8280eac79a5569603af27624ebb67",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 63.516634,
+    "median_range_ms": [
+     63.4705238,
+     63.5679913
+    ],
+    "iterations": 23,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 12.2784917,
+    "median_range_ms": [
+     12.2712328,
+     12.3240466
+    ],
+    "iterations": 116,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-mrpc",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 63.4916711,
+    "median_range_ms": [
+     63.456635,
+     63.5349312
+    ],
+    "iterations": 23,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

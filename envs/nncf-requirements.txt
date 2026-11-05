@@ -1,0 +1,12 @@
+# Reference env for tools/convert_nncf.py (NNCF-binarized ResNet-18). Project-local venv, no conda env touched:
+#   uv venv -p 3.10 .cache/venv-nncf
+#   VIRTUAL_ENV=.cache/venv-nncf uv pip install -r envs/nncf-requirements.txt \
+#       --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match
+# nncf 2.9.0 is the last release with the (deprecated) binarization algorithm; torch 2.1.2 is the version
+# NNCF 2.9.0 recommends. setuptools < 70 because torch 2.1's cpp_extension imports pkg_resources.
+nncf==2.9.0
+torch==2.1.2
+torchvision==0.16.2
+numpy<2
+setuptools==69.5.1
+threadpoolctl

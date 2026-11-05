@@ -1,0 +1,21 @@
+# Reference environment for the Brevitas BNN-PYNQ models (trusted source framework:
+# Xilinx/AMD brevitas, src/brevitas_examples/bnn_pynq, shipped inside the brevitas wheel).
+# Created 2026-10-29 (full `pip freeze` in brevitas-freeze.txt):
+#   ~/anaconda3/bin/python3.12 -m venv .cache/venv-brevitas      (stdlib venv; the conda env itself is untouched)
+#   .cache/venv-brevitas/bin/python -m pip install --index-url https://download.pytorch.org/whl/cpu \
+#       --extra-index-url https://pypi.org/simple -r envs/brevitas-requirements.txt
+# brevitas 0.11.0 wheel sha256 0350a5516bbcd2eb3c6d504d9d32425129a62ad62d39df57ece820c45301a0b5 (PyPI).
+# Its bnn_pynq cfg/*.ini PRETRAINED_URLs point to the exact checkpoints in registry/models.json
+# (cnv_1w1a-758c8fef, tfc_1w1a-45185b4d, sfc_1w1a-fa4b2f7f, lfc_1w1a-318d8bd9).
+# Checkpoints are loaded from the verified local cache with torch.load(weights_only=True);
+# torch.hub downloads and the training script are never used.
+torch==2.4.1+cpu
+numpy==1.26.4
+brevitas==0.11.0
+dependencies==2.0.1
+unfoldNd==0.2.3
+setuptools==69.5.1
+# optional, only to read the finn-examples FINN-ONNX files (second view):
+onnx==1.16.2
+# test runner for tests/python/test_brevitas_bnn.py (added 2026-10-29):
+pytest==8.3.3

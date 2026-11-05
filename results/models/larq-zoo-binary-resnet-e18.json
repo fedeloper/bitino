@@ -1,0 +1,231 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larq-zoo-binary-resnet-e18",
+ "registry_model_id": "larq-zoo-binary-resnet-e18",
+ "name": "BinaryResNetE18 (Larq Zoo, v0.1.0)",
+ "family": "larq-zoo",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet ILSVRC-2012",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64); device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 4208832,
+   "data_sha256": "1705b13a82aa1b3d384f31fa0289ce7ebfcf1493e346d744486a77d05195dd24"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 2175040,
+   "data_sha256": "06e7bdff1a2bbdb3d38c9de8a893dcd73ca2abb5f12589b8162db15538ef9c47"
+  },
+  "model_int8_full_log2.bitino": {
+   "bytes": 2195584,
+   "data_sha256": "0e0e93930174de3466bac0ff985b53dd57ad4c170ee03bfabcf78deb09c07cd2"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 (100 classes)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.5546875,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.546875,
+   "reference_fp64": 0.5546875,
+   "runtime": 0.5546875,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.5832
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5558,
+    "b_top1": 0.554,
+    "delta_pt": -0.18,
+    "ci95_pt": [
+     -1.066,
+     0.706
+    ],
+    "mcnemar_p": 0.7234524125363224,
+    "agreement": 0.7714,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5558,
+    "b_top1": 0.5524,
+    "delta_pt": -0.34,
+    "ci95_pt": [
+     -1.23,
+     0.55
+    ],
+    "mcnemar_p": 0.48081861118432856,
+    "agreement": 0.7632,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5558,
+    "b_top1": 0.5466,
+    "delta_pt": -0.92,
+    "ci95_pt": [
+     -1.847,
+     0.007
+    ],
+    "mcnemar_p": 0.05712690490720833,
+    "agreement": 0.7544,
+    "study": "exact_vs_int8_full_log2_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5558,
+    "b_top1": 0.4544,
+    "delta_pt": -10.14,
+    "ci95_pt": [
+     -11.288,
+     -8.992
+    ],
+    "mcnemar_p": 7.605336950707269e-67,
+    "agreement": 0.613,
+    "study": "exact_vs_int8_full_poolbug_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5524,
+    "b_top1": 0.5466,
+    "delta_pt": -0.58,
+    "ci95_pt": [
+     -1.441,
+     0.281
+    ],
+    "mcnemar_p": 0.20259938073793676,
+    "agreement": 0.7698,
+    "study": "int8_full_vs_int8_full_log2_eval5000",
+    "date": "2026-11-04"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed; imagenet-val-subset-5000 55.24% vs exact 55.58% (-0.34 pt, McNemar p=0.48); before 45.44% (-10.14 pt); emulated 100.46 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.5524,
+    "exact_top1": 0.5558,
+    "delta_vs_exact_pt": -0.34,
+    "mcnemar_p": 0.48,
+    "instructions_M": 100.46
+   },
+   {
+    "file": "model_int8_full_log2.bitino",
+    "note": "2026-11-04 log2 (log2_plain; --residual-code l8): accepted; imagenet-val-subset-5000 54.66% vs exact 55.58% (-0.92 pt, McNemar p=0.057); before 55.24% (-0.34 pt); emulated 88.75 M instructions; emulated reference stamp 64cff1e, byte-identical on merged runtime a890194",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.5466,
+    "exact_top1": 0.5558,
+    "delta_vs_exact_pt": -0.92,
+    "mcnemar_p": 0.057,
+    "instructions_M": 88.75
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 100.46,
+   "optimized": 111.339,
+   "int8_full_log2": 88.75
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 10.4039724,
+    "median_range_ms": [
+     10.3953834,
+     10.4087172
+    ],
+    "iterations": 142,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 2.22508454,
+    "median_range_ms": [
+     2.22444439,
+     2.23180532
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 8.28838015,
+    "median_range_ms": [
+     8.27220297,
+     8.29855299
+    ],
+    "iterations": 179,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

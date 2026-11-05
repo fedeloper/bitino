@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "siman-resnet20-cifar10",
+ "registry_model_id": "siman-resnet20-cifar10",
+ "name": "SiMaN ResNet-20 1W1A (CIFAR-10)",
+ "family": "SiMaN",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_irnet",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 94400,
+   "data_sha256": "7537b641cb437b8eff2149a17b1cf3ebaeb308e446ab3e2e14eee50ee2be5976"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 299392,
+   "data_sha256": "c2b6095d479a6cccfe6ce833066863d4e783fe51d58b12b0f66a5c6708bbbb38"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_imagenet_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.875,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.875,
+   "reference_fp64": 0.875,
+   "runtime": 0.875,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.874
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8735,
+    "b_top1": 0.8726,
+    "delta_pt": -0.09,
+    "ci95_pt": [
+     -0.58,
+     0.4
+    ],
+    "mcnemar_p": 0.7489974373936489,
+    "agreement": 0.9227,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8735,
+    "b_top1": 0.8503,
+    "delta_pt": -2.32,
+    "ci95_pt": [
+     -2.909,
+     -1.731
+    ],
+    "mcnemar_p": 1.2817838183731445e-14,
+    "agreement": 0.8903,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 7.043,
+   "optimized": 8.014
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "siman-resnet20-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.694680929,
+    "median_range_ms": [
+     0.692471743,
+     0.695637941
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "siman-resnet20-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.632154703,
+    "median_range_ms": [
+     0.632113457,
+     0.635453939
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "siman-resnet20-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.689918995,
+    "median_range_ms": [
+     0.689356089,
+     0.690626144
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

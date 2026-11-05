@@ -1,0 +1,149 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+ "registry_model_id": "brevitas-bnn-pynq-cnv-1w1a",
+ "name": "Brevitas BNN-PYNQ CNV_1W1A (CIFAR-10 VGG-like)",
+ "family": "FINN/Brevitas BNN-PYNQ",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+INT8"
+ ],
+ "adapter": "bitino.adapters.brevitas_bnn",
+ "numerical_verification": "passed (host + qemu-emulated arm64); device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 227648,
+   "data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 228416,
+   "data_sha256": "ebe0ba9f5cf3e93c46a7719d3ac4549c20f0cd0de16d9c2880961264b1b36f73"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.859375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.859375,
+   "reference_fp64": 0.859375,
+   "runtime": 0.859375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "note": "claim 84.22% full test; first 100 = published log batch 0 (83%) under torch.topk tie order"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8419,
+    "b_top1": 0.8406,
+    "delta_pt": -0.13,
+    "ci95_pt": [
+     -0.584,
+     0.324
+    ],
+    "mcnemar_p": 0.6046123371741172,
+    "agreement": 0.9311,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8419,
+    "b_top1": 0.8342,
+    "delta_pt": -0.77,
+    "ci95_pt": [
+     -1.329,
+     -0.211
+    ],
+    "mcnemar_p": 0.007650679566844321,
+    "agreement": 0.8932,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 2.618,
+   "optimized": 3.142
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.341099739,
+    "median_range_ms": [
+     0.340334415,
+     0.34213686
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.173408985,
+    "median_range_ms": [
+     0.171505213,
+     0.174570799
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.321473837,
+    "median_range_ms": [
+     0.321322918,
+     0.321704865
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

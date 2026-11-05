@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bnas-a-cifar10",
+ "registry_model_id": "bnas-a-cifar10",
+ "name": "BNAS-A (CIFAR-10)",
+ "family": "BNAS (Learning Architectures for Binary Networks)",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bnas",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 5751744,
+   "data_sha256": "033607629e4de3468c60e087b1e15b3524035352b60797c2e57009ca7d23b120"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 2301632,
+   "data_sha256": "1b0a38fc2d4324639a18fdc254bac44c8f613076626856fefe206a78c2859c20"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_darts_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9375,
+   "reference_fp64": 0.9375,
+   "runtime": 0.9375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_top1": 0.927
+   },
+   "note": "README reproduced value matched exactly by the official code on CPU (9,239/10,000)"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9243,
+    "b_top1": 0.9266,
+    "delta_pt": 0.23,
+    "ci95_pt": [
+     -0.105,
+     0.565
+    ],
+    "mcnemar_p": 0.1986207708527336,
+    "agreement": 0.966,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-11-01"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9243,
+    "b_top1": 0.9201,
+    "delta_pt": -0.42,
+    "ci95_pt": [
+     -0.787,
+     -0.053
+    ],
+    "mcnemar_p": 0.028268850510114896,
+    "agreement": 0.9587,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 69.742,
+   "optimized": 88.0
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bnas-a-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 7.82050705,
+    "median_range_ms": [
+     7.66875315,
+     7.82177496
+    ],
+    "iterations": 191,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnas-a-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 3.553653,
+    "median_range_ms": [
+     3.52039933,
+     3.57940269
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnas-a-cifar10",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 5.94796443,
+    "median_range_ms": [
+     5.93648028,
+     5.94797111
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

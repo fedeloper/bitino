@@ -1,0 +1,153 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+ "registry_model_id": "finn-examples-bnn-pynq-onnx",
+ "name": "finn-examples BNN-PYNQ ONNX exports (cnv/tfc × w1a1, w1a2, w2a2)",
+ "family": "FINN/Brevitas BNN-PYNQ",
+ "task": "cifar10-classification / mnist-classification",
+ "dataset": "MNIST / CIFAR-10",
+ "precision": [
+  "W1A1",
+  "W1A1+INT8"
+ ],
+ "adapter": "bitino.adapters.finn_onnx",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 226816,
+   "data_sha256": "602cbf84cacba1940fd5115acaadc930db7c60478afa5d8102abedcff6e07d33"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 227392,
+   "data_sha256": "ebe0ba9f5cf3e93c46a7719d3ac4549c20f0cd0de16d9c2880961264b1b36f73"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_pixels",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.859375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.859375,
+   "reference_fp64": 0.859375,
+   "runtime": 0.859375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_top1": 0.8422
+   },
+   "note": "128-sample smoke test plus full-test-set run of the exact model; claim: no claim in the release; same weights as brevitas cnv_1w1a (84.22% CIFAR-10 test)"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8419,
+    "b_top1": 0.8406,
+    "delta_pt": -0.13,
+    "ci95_pt": [
+     -0.584,
+     0.324
+    ],
+    "mcnemar_p": 0.6046123371741172,
+    "agreement": 0.9311,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8419,
+    "b_top1": 0.8342,
+    "delta_pt": -0.77,
+    "ci95_pt": [
+     -1.329,
+     -0.211
+    ],
+    "mcnemar_p": 0.007650679566844321,
+    "agreement": 0.8932,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 2.618,
+   "optimized": 3.142
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.341203213,
+    "median_range_ms": [
+     0.340411425,
+     0.341963053
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.173892975,
+    "median_range_ms": [
+     0.172264338,
+     0.174623489
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.321427584,
+    "median_range_ms": [
+     0.32089591,
+     0.321883917
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

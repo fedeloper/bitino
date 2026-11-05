@@ -1,0 +1,153 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "gsb-deit-s-cifar100-stage2",
+ "registry_model_id": "gsb-deit-s-cifar100-stage2",
+ "name": "GSB binary DeiT-Small, CIFAR-100 (stage 2, W1A1)",
+ "family": "binary-vit",
+ "task": "cifar100-classification",
+ "dataset": "CIFAR-100",
+ "precision": [
+  "W1A1+INT8",
+  "multi-bit/low-bit (not strict BNN)"
+ ],
+ "adapter": "bitino.adapters.torch_gsb",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 16784256,
+   "data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 7250432,
+   "data_sha256": "11fcec876548a950414588251c1d239ab70cc02193939e36badc085aadae5b90"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar100-test-first-128-deit224, preprocessing cifar100_deit (GSB build_transform: Resize 256 bicubic, CenterCrop 224)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.703125,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.71875,
+   "reference_fp64": 0.703125,
+   "runtime": 0.6953125,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_top1": 0.711
+   },
+   "note": "claim reproduced by the official fp32 model at batch 96; per-sample (deployable) semantics cost ~0.7 pt"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar100-test-first-10000-deit224",
+    "n": 10000,
+    "a_top1": 0.7095,
+    "b_top1": 0.7062,
+    "delta_pt": -0.33,
+    "ci95_pt": [
+     -0.97,
+     0.31
+    ],
+    "mcnemar_p": 0.32726401979859904,
+    "agreement": 0.8202,
+    "study": "exact_vs_int8-final_cifar100test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar100-test-first-10000-deit224",
+    "n": 10000,
+    "a_top1": 0.7095,
+    "b_top1": 0.6896,
+    "delta_pt": -1.99,
+    "ci95_pt": [
+     -2.672,
+     -1.308
+    ],
+    "mcnemar_p": 1.2164240031541845e-08,
+    "agreement": 0.7913,
+    "study": "exact_vs_int8_full_cifar100test10000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 816.111,
+   "optimized": 854.385
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 84.7879994,
+    "median_range_ms": [
+     84.7283957,
+     88.5302339
+    ],
+    "iterations": 16,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 23.5155277,
+    "median_range_ms": [
+     23.3851175,
+     23.523514
+    ],
+    "iterations": 58,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 83.84764,
+    "median_range_ms": [
+     83.760181,
+     87.6304359
+    ],
+    "iterations": 17,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

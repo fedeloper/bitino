@@ -1,0 +1,186 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bitorch-meliusnet22-imagenet",
+ "registry_model_id": "bitorch-meliusnet22-imagenet",
+ "name": "bitorch MeliusNet-22 (ImageNet, 240 ep, KD from ResNet-50)",
+ "family": "bitorch model hub (hpi-xnor)",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k (ILSVRC-2012)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bitorch",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 4164480,
+   "data_sha256": "53a94a34aa8ff8da662d74f4bb621d27a2832d114edbc92640bbf438f47a588e"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 4117248,
+   "data_sha256": "62705d4c2a749a64282334bfdec71c305965604ca16b6cc215e477ecfb90022c"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing bitorch_imagenet",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6640625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.6640625,
+   "reference_fp64": 0.6640625,
+   "runtime": 0.65625,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.64346
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6196,
+    "b_top1": 0.6206,
+    "delta_pt": 0.1,
+    "ci95_pt": [
+     -0.632,
+     0.832
+    ],
+    "mcnemar_p": 0.8304955119979022,
+    "agreement": 0.8438,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6196,
+    "b_top1": 0.0044,
+    "delta_pt": -61.52,
+    "ci95_pt": [
+     -62.871,
+     -60.169
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.0052,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "rejected_partspc_slsl/model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6196,
+    "b_top1": 0.6088,
+    "delta_pt": -1.08,
+    "ci95_pt": [
+     -1.846,
+     -0.314
+    ],
+    "mcnemar_p": 0.0066175836029236604,
+    "agreement": 0.8266,
+    "study": "exact_vs_int8_full_partspc_slsl_eval5000",
+    "date": "2026-11-05"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "rejected_partspc_slsl/model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.0044,
+    "b_top1": 0.6088,
+    "delta_pt": 60.44,
+    "ci95_pt": [
+     59.083,
+     61.797
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.0052,
+    "study": "int8_full_vs_int8_full_partspc_slsl_eval5000",
+    "date": "2026-11-05"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 199.738,
+   "optimized": 263.655
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bitorch-meliusnet22-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 26.9588532,
+    "median_range_ms": [
+     26.9386344,
+     26.9591451
+    ],
+    "iterations": 55,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bitorch-meliusnet22-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 6.68685794,
+    "median_range_ms": [
+     6.66860533,
+     6.69044447
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bitorch-meliusnet22-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 24.1739378,
+    "median_range_ms": [
+     24.1691256,
+     24.219173
+    ],
+    "iterations": 61,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,275 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bnext-tiny",
+ "registry_model_id": "bnext-tiny",
+ "name": "BNext-T (Tiny)",
+ "family": "BNext",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bnext",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 14137408,
+   "data_sha256": "97b71ad2021f64fcb2f1acc50715862e6ec7a09ee45ee6e2069686db0c677415"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 10478144,
+   "data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing timm_bicubic_crop095 (timm 0.6.11 eval: Resize 235 bicubic, CenterCrop 224)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6953125,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.671875,
+   "reference_fp64": 0.6953125,
+   "runtime": 0.6796875,
+   "delta_vs_reference": -1.5625,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.724
+   },
+   "note": "128-sample smoke test, not an ImageNet estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.7072,
+    "b_top1": 0.7052,
+    "delta_pt": -0.2,
+    "ci95_pt": [
+     -0.94,
+     0.54
+    ],
+    "mcnemar_p": 0.6334245469004376,
+    "agreement": 0.8692,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.7072,
+    "b_top1": 0.6688,
+    "delta_pt": -3.84,
+    "ci95_pt": [
+     -4.804,
+     -2.876
+    ],
+    "mcnemar_p": 6.992892996231562e-15,
+    "agreement": 0.7808,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 246.063,
+   "optimized": 239.834
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:42:08Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "bnext_t1_x2",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "spin_run": true,
+    "median_ms": 39.1743,
+    "median_range_ms": [
+     34.596,
+     44.7651
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 2.40/3.00 GHz, A710 2.11/2.50 GHz, A510 1.48/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:42:11Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "bnext_t4",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "unpinned",
+    "spin_run": true,
+    "median_ms": 20.3704,
+    "median_range_ms": [
+     18.1977,
+     27.5392
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 2.28/3.00 GHz, A710 2.00/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:42:24Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "bnext_t4_nospin",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "unpinned",
+    "spin_run": false,
+    "median_ms": 29.8818,
+    "median_range_ms": [
+     26.2472,
+     31.0059
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-04",
+    "timestamp_utc": "2026-11-04T11:42:15Z",
+    "plan": "speed_all_2026-11-04",
+    "config": "bnext_t4_pin",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "7,4,5,6",
+    "spin_run": true,
+    "median_ms": 19.5486,
+    "median_range_ms": [
+     17.3684,
+     25.1039
+    ],
+    "repeats": 4,
+    "iterations": 30,
+    "warmup": 5,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
+     "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": [
+     "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
+    ],
+    "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
+    "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 24.6807199,
+    "median_range_ms": [
+     24.6108828,
+     25.021184
+    ],
+    "iterations": 59,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 7.23054147,
+    "median_range_ms": [
+     7.22551584,
+     7.24423575
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnext-tiny",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 24.284471,
+    "median_range_ms": [
+     24.2501893,
+     24.3198462
+    ],
+    "iterations": 61,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

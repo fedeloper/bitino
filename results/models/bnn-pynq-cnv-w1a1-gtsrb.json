@@ -1,0 +1,130 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+ "registry_model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+ "name": "BNN-PYNQ CNV W1A1 GTSRB road signs (original Theano/Lasagne)",
+ "family": "FINN/BNN-PYNQ",
+ "task": "gtsrb-classification (43 classes + junk = 44)",
+ "dataset": "GTSRB (+ junk class; gtsrb.py adds 1 class from a junk folder)",
+ "precision": [
+  "W1A1+INT8"
+ ],
+ "adapter": "bitino.adapters.bnn_pynq_npz",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 228160,
+   "data_sha256": "a8158ac8821c13c7794952de0d3978dbd8bebc0012fb10d046907c3815117dee"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "gtsrb-test-udacity32-first-128, preprocessing gtsrb_bnnpynq",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9375,
+   "reference_fp64": 0.9375,
+   "runtime": 0.9375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_top1": 0.9663
+   },
+   "note": "128-sample smoke test plus full-test-set run of the exact model; claim: training README test error 3.37% on its own random split of Final_Training (rotations/crops, junk class); not the official test set"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "gtsrb-test-udacity32-first-12630",
+    "n": 12630,
+    "a_top1": 0.9532066508313539,
+    "b_top1": 0.9541567695961995,
+    "delta_pt": 0.095,
+    "ci95_pt": [
+     -0.106,
+     0.296
+    ],
+    "mcnemar_p": 0.39613334139637907,
+    "agreement": 0.9794140934283452,
+    "study": "exact_vs_int8-final_gtsrbtest12630",
+    "date": "2026-10-31"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 3.154
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.342927933,
+    "median_range_ms": [
+     0.341124058,
+     0.34404397
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.175042868,
+    "median_range_ms": [
+     0.174119473,
+     0.175323248
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnn-pynq-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.323040485,
+    "median_range_ms": [
+     0.321727991,
+     0.323141336
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

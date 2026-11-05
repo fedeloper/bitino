@@ -1,0 +1,127 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larqface-quicknet-msceleb",
+ "registry_model_id": "larqface-quicknet-msceleb",
+ "name": "QuickNet face embedding (MS-Celeb-1M, best AgeDB-30 epoch, '_binary' export)",
+ "family": "Larq binary face recognition (insightface_larq_keras / BinaryFaceNet)",
+ "task": "face-recognition (embedding; verification on LFW/CFP-FP/AgeDB-30, low-resolution face recognition)",
+ "dataset": "MS-Celeb-1M (insightface 'retina'/emore cleaned) for training; LFW, CFP-FP, AgeDB-30 for verification",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 4705664,
+   "data_sha256": "591f66ea358461198ad5a9746a1b2342e1f48416619e6268b44b7c44175984e4"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "LFW + AgeDB-30 insightface .bin (6,000 pairs each), authors' eval_callback metric (flip, best threshold on the test pairs)",
+   "n": 6000,
+   "metric": "LFW verification accuracy",
+   "reference": 0.9896666666666667,
+   "runtime": 0.9898333333333333,
+   "delta_vs_reference": 0.0167,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_lfw": 0.9897,
+    "author_claim_agedb30_checkpoint_filename": 0.89
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "lfw-insightface-bin-12000",
+    "n": 6000,
+    "a_top1": 0.989,
+    "b_top1": 0.9878333333333333,
+    "delta_pt": -0.117,
+    "ci95_pt": [
+     -0.273,
+     0.04
+    ],
+    "mcnemar_p": 0.21003961563110352,
+    "agreement": 0.9961666666666666,
+    "study": "exact_vs_int8-final_lfw6000",
+    "date": "2026-10-31"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 19.012
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "larqface-quicknet-msceleb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 3.03383446,
+    "median_range_ms": [
+     3.01648569,
+     3.03726649
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larqface-quicknet-msceleb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.961302042,
+    "median_range_ms": [
+     0.954273462,
+     0.966897488
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larqface-quicknet-msceleb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 1.99985933,
+    "median_range_ms": [
+     1.99914765,
+     2.00007486
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

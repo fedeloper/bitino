@@ -1,0 +1,353 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "ab-bnn-cifar10-reactneta",
+ "registry_model_id": "ab-bnn-cifar10-reactneta",
+ "name": "A&B BNN ReActNet-A (CIFAR-10)",
+ "family": "A&B BNN",
+ "task": "cifar10-classification",
+ "dataset": "CIFAR-10",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_abbnn",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 3860288,
+   "data_sha256": "f3ec0596d82746b41b482bcc08cce37ecc7a04c8993656f1e5dc1ad21ff0f17c"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 6736640,
+   "data_sha256": "f6e0770829833934f8da3a69cf7e3dc0e5490441df3a3958deb2d8db00c99238"
+  },
+  "model_int8_full_log2.bitino": {
+   "bytes": 3792896,
+   "data_sha256": "fa4bef98a7c0c5e01ac534fa1f22ee47eab70587043525bad0ff9b24f47fa972"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifar10-test-first-128, preprocessing cifar10_imagenet_norm",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9140625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9140625,
+   "reference_fp64": 0.9140625,
+   "runtime": 0.9140625,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_cifar10_top1": 0.8944
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8941,
+    "b_top1": 0.8907,
+    "delta_pt": -0.34,
+    "ci95_pt": [
+     -0.679,
+     -0.001
+    ],
+    "mcnemar_p": 0.056565651254290694,
+    "agreement": 0.9633,
+    "study": "exact_vs_int8-final_cifar10test10000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8941,
+    "b_top1": 0.887,
+    "delta_pt": -0.71,
+    "ci95_pt": [
+     -1.072,
+     -0.348
+    ],
+    "mcnemar_p": 0.00014278716450502474,
+    "agreement": 0.9585,
+    "study": "exact_vs_int8_full_cifar10test10000",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8941,
+    "b_top1": 0.8913,
+    "delta_pt": -0.28,
+    "ci95_pt": [
+     -0.648,
+     0.088
+    ],
+    "mcnemar_p": 0.15001758327149162,
+    "agreement": 0.9571,
+    "study": "exact_vs_int8_full_log2_cifar10test10000",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8941,
+    "b_top1": 0.8913,
+    "delta_pt": -0.28,
+    "ci95_pt": [
+     -0.648,
+     0.088
+    ],
+    "mcnemar_p": 0.15001758327149162,
+    "agreement": 0.9571,
+    "study": "exact_vs_int8_full_log2_split_cifar10test10000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8941,
+    "b_top1": 0.8891,
+    "delta_pt": -0.5,
+    "ci95_pt": [
+     -0.862,
+     -0.138
+    ],
+    "mcnemar_p": 0.007965438442651067,
+    "agreement": 0.9571,
+    "study": "exact_vs_int8_full_log2_steml8_cifar10test10000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "prev_log2_split/model_int8_full_log2.bitino:int8_full",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8913,
+    "b_top1": 0.8891,
+    "delta_pt": -0.22,
+    "ci95_pt": [
+     -0.577,
+     0.137
+    ],
+    "mcnemar_p": 0.24906690663723102,
+    "agreement": 0.9576,
+    "study": "int8_full_log2_split_vs_int8_full_log2_cifar10test10000",
+    "date": "2026-11-04"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "cifar10 test 10000: 88.70% vs exact 89.41%; emulated 19.9 M instructions",
+    "instructions_M": 19.9
+   },
+   {
+    "file": "model_int8_full_log2.bitino",
+    "note": "8-bit log2 residual stream with fused I8BConv2DRes (python/bitino/quantize_l8.py --stem split); cifar10 test 10000: 89.13% (vs exact -0.28 pt, McNemar p=0.15, accepted); emulated 19.9 -> 18.2 M instructions (optimized 16.5 M). Not run on the device yet."
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 19.9,
+   "int8_full_log2": 15.88,
+   "optimized": 16.018
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T11:28:02Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.6023435,
+    "median_range_ms": [
+     2.60005206,
+     2.60393196
+    ],
+    "p90_ms": 2.651010251,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16588,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3ec0596d82746b41b482bcc08cce37ecc7a04c8993656f1e5dc1ad21ff0f17c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T11:28:06Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 2.4759894,
+    "median_range_ms": [
+     2.46205801,
+     2.47617197
+    ],
+    "p90_ms": 2.8201039239999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20400,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3ec0596d82746b41b482bcc08cce37ecc7a04c8993656f1e5dc1ad21ff0f17c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T11:28:10Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 6.61244798,
+    "median_range_ms": [
+     6.200625,
+     20.8507545
+    ],
+    "p90_ms": 21.26259911,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22732,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3ec0596d82746b41b482bcc08cce37ecc7a04c8993656f1e5dc1ad21ff0f17c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T11:28:13Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.5734635,
+    "median_range_ms": [
+     2.57023442,
+     2.58416653
+    ],
+    "p90_ms": 2.618843661,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16556,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3ec0596d82746b41b482bcc08cce37ecc7a04c8993656f1e5dc1ad21ff0f17c",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 1.79956746,
+    "median_range_ms": [
+     1.77374506,
+     1.80332351
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.906843901,
+    "median_range_ms": [
+     0.899556875,
+     0.907421827
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 1.76368046,
+    "median_range_ms": [
+     1.76236343,
+     1.76642203
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,127 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+ "registry_model_id": "brevitas-bnn-pynq-sfc-1w1a",
+ "name": "Brevitas BNN-PYNQ SFC_1W1A (MNIST MLP 784-256x3-10)",
+ "family": "FINN/Brevitas BNN-PYNQ",
+ "task": "mnist-classification",
+ "dataset": "MNIST",
+ "precision": [
+  "W1A1"
+ ],
+ "adapter": "bitino.adapters.brevitas_bnn",
+ "numerical_verification": "passed (host + qemu-emulated arm64); device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 57600,
+   "data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "mnist-test-first-128",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 1.0,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 1.0,
+   "reference_fp64": 1.0,
+   "runtime": 1.0,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "note": "claim 97.81%"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "mnist-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9777,
+    "b_top1": 0.9777,
+    "delta_pt": 0.0,
+    "ci95_pt": [
+     0.0,
+     0.0
+    ],
+    "mcnemar_p": 1.0,
+    "agreement": 1.0,
+    "study": "exact_vs_int8-final_mnisttest10000",
+    "date": "2026-10-31"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 0.036
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.00220870972,
+    "median_range_ms": [
+     0.00220274925,
+     0.00224685669
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.00289344788,
+    "median_range_ms": [
+     0.00288009644,
+     0.00293636322
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.00217723846,
+    "median_range_ms": [
+     0.00213432312,
+     0.00222086906
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

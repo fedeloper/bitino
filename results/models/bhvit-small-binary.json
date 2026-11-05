@@ -1,0 +1,251 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bhvit-small-binary",
+ "registry_model_id": "bhvit-small-binary",
+ "name": "BHViT-Small (fully binary downsampling)",
+ "family": "binary-vit",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.bhvit",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 9402560,
+   "data_sha256": "a08910c54e7dac0717043ab31e6183f4b48651d1610029889ef879d56b37b91c"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 36531904,
+   "data_sha256": "a59c7c79938ced668a57f94df5db07f7e813685bd4f76f04787d0ef0667a7826"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing bhvit",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6875,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.65625,
+   "reference_fp64": 0.6875,
+   "runtime": 0.65625,
+   "delta_vs_reference": -3.125,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.684
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.6676,
+    "b_top1": 0.6644,
+    "delta_pt": -0.32,
+    "ci95_pt": [
+     -1.121,
+     0.481
+    ],
+    "mcnemar_p": 0.4631889390285331,
+    "agreement": 0.8262,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 480.023,
+   "optimized": 477.477
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:13:23Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 85.7772395,
+    "median_range_ms": [
+     84.5155985,
+     86.171823
+    ],
+    "p90_ms": 86.51703609,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 58676,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "a08910c54e7dac0717043ab31e6183f4b48651d1610029889ef879d56b37b91c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:13:30Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 59.3128905,
+    "median_range_ms": [
+     59.2148435,
+     60.4320574
+    ],
+    "p90_ms": 65.28070852,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 67484,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "a08910c54e7dac0717043ab31e6183f4b48651d1610029889ef879d56b37b91c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:13:40Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 73.7626305,
+    "median_range_ms": [
+     73.6846355,
+     76.8210939
+    ],
+    "p90_ms": 79.31692111000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 83012,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "a08910c54e7dac0717043ab31e6183f4b48651d1610029889ef879d56b37b91c",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:13:49Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 85.2136715,
+    "median_range_ms": [
+     85.045417,
+     93.762005
+    ],
+    "p90_ms": 93.99189510000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 58640,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "a08910c54e7dac0717043ab31e6183f4b48651d1610029889ef879d56b37b91c",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 45.4703808,
+    "median_range_ms": [
+     45.4566014,
+     45.518476
+    ],
+    "iterations": 32,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 15.5192599,
+    "median_range_ms": [
+     15.4671879,
+     15.5283818
+    ],
+    "iterations": 97,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bhvit-small-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 45.1097908,
+    "median_range_ms": [
+     45.0335379,
+     45.1637759
+    ],
+    "iterations": 33,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

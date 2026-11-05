@@ -1,0 +1,130 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "finn-examples-cnv-w1a1-gtsrb",
+ "registry_model_id": "finn-examples-cnv-w1a1-gtsrb",
+ "name": "finn-examples / QONNX model zoo Brevitas CNV_1W1A GTSRB (cnv_1w1a_gtsrb.onnx)",
+ "family": "FINN/Brevitas BNN-PYNQ",
+ "task": "gtsrb-classification (traffic signs; 44 outputs)",
+ "dataset": "GTSRB",
+ "precision": [
+  "W1A1+INT8"
+ ],
+ "adapter": "bitino.adapters.finn_onnx",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 229184,
+   "data_sha256": "19d5c56db43d02e3283d84778d2d9ddfa43cc7290e0797557ddb04cd1fd03c2c"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "gtsrb-test-udacity32-first-128, preprocessing gtsrb_totensor",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.9375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.9375,
+   "reference_fp64": 0.9375,
+   "runtime": 0.9375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_top1": 0.9693
+   },
+   "note": "128-sample smoke test plus full-test-set run of the exact model; claim: QONNX model zoo README 96.93% (author claim)"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "gtsrb-test-udacity32-first-12630",
+    "n": 12630,
+    "a_top1": 0.9517814726840855,
+    "b_top1": 0.9503562945368171,
+    "delta_pt": -0.143,
+    "ci95_pt": [
+     -0.35,
+     0.065
+    ],
+    "mcnemar_p": 0.20246043236353428,
+    "agreement": 0.9795724465558194,
+    "study": "exact_vs_int8-final_gtsrbtest12630",
+    "date": "2026-10-31"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 3.143
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "finn-examples-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.341233969,
+    "median_range_ms": [
+     0.341006041,
+     0.342090607
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "finn-examples-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.174157381,
+    "median_range_ms": [
+     0.172707558,
+     0.175189734
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "finn-examples-cnv-w1a1-gtsrb",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 0.321938992,
+    "median_range_ms": [
+     0.32140851,
+     0.323349237
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,151 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larq-zoo-dorefanet",
+ "registry_model_id": "larq-zoo-dorefanet",
+ "name": "DoReFa-Net W1A2 (AlexNet-style, Larq Zoo, v0.1.0)",
+ "family": "larq-zoo",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet ILSVRC-2012",
+ "precision": [
+  "multi-bit/low-bit (not strict BNN)"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64); device pending; not strict BNN (W1A2)",
+ "files": {
+  "model.bitino": {
+   "bytes": 23918464,
+   "data_sha256": "15076b42a514ecd7c570030ee5046970cee595e370260dc8f1ae4648710936c4"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 11526080,
+   "data_sha256": "9d1a077e304eba6256953d02855b1da2243263ccf5dc92e33ee5ceced22cc104"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 (100 classes)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.4609375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.4765625,
+   "reference_fp64": 0.4609375,
+   "runtime": 0.4609375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.5339
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.506,
+    "b_top1": 0.5076,
+    "delta_pt": 0.16,
+    "ci95_pt": [
+     -0.578,
+     0.898
+    ],
+    "mcnemar_p": 0.7099151967035064,
+    "agreement": 0.8138,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.506,
+    "b_top1": 0.4996,
+    "delta_pt": -0.64,
+    "ci95_pt": [
+     -1.458,
+     0.178
+    ],
+    "mcnemar_p": 0.13755116358892633,
+    "agreement": 0.778,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 190.355,
+   "optimized": 220.453
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "larq-zoo-dorefanet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 25.2825494,
+    "median_range_ms": [
+     25.2452245,
+     25.3946366
+    ],
+    "iterations": 58,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-dorefanet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 3.68631935,
+    "median_range_ms": [
+     3.67163849,
+     3.70755434
+    ],
+    "iterations": 160,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-dorefanet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 22.8687489,
+    "median_range_ms": [
+     22.8563282,
+     23.0726924
+    ],
+    "iterations": 64,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

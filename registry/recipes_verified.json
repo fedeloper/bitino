@@ -1,0 +1,25 @@
+{
+ "schema": "bitino.recipes_verified.v1",
+ "note": "Recipes run end to end with `bitino fetch` from a clean cache: downloads from the original sources (SHA-256 checked), source code at the recorded commit, conversion with python -I, synthetic eval set. 'identical' = the converted file's data section (data_sha256) and graph (tensors, inputs, nodes, outputs) equal the published conversion; only the provenance manifest (date, adapter name, library versions) differs.",
+ "verified": {
+  "larq-zoo-quicknet-small": {
+   "date": "2026-11-05", "framework": "Keras / Larq (TensorFlow 2.15.1, larq 0.13.3, larq-zoo 2.4.0, Python 3.11)",
+   "source": "GitHub release asset larq/zoo quicknet-v1.0", "result": "model.bitino identical (data + graph)",
+   "int8_verified": ["model_int8_full.bitino"],
+   "int8_note": "model_int8_full.bitino identical (data + graph) with the recorded calibration set imagenet100-train-calib-512 (n 128, percentile 99.99); the calibration images are not redistributed"
+  },
+  "ab-bnn-imagenet-reactnet18": {
+   "date": "2026-11-05", "framework": "PyTorch 2.6.0 CPU (Python 3.12)",
+   "source": "Hugging Face Ruichen0424/AB-BNN @8b8465a7 + GitHub Ruichen0424/AB-BNN @3485ea74",
+   "result": "model.bitino identical (data + graph)"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001": {
+   "date": "2026-11-05", "framework": "OpenVINO IR (OpenVINO runtime as the fp32 reference, Python 3.12)",
+   "source": "storage.openvinotoolkit.org Open Model Zoo 2023.0 (.xml + .bin)", "result": "model.bitino identical (data + graph)"
+  },
+  "bitorch-resnete18-imagenet": {
+   "date": "2026-11-05", "framework": "PyTorch 2.6.0 CPU + bitorch 0.3.0 model code (PyPI wheel, SHA-256 checked)",
+   "source": "bitorch model hub (W&B artifact) + PyPI bitorch-0.3.0 wheel", "result": "model.bitino identical (data + graph)"
+  }
+ }
+}

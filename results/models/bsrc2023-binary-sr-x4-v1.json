@@ -1,0 +1,107 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bsrc2023-binary-sr-x4-v1",
+ "registry_model_id": "bsrc2023-binary-sr-x4-v1",
+ "name": "BSRC-2023 binary SR baseline x4-v1",
+ "family": "BSRC-2023 (Binary Super-Resolution Challenge baselines)",
+ "task": "single-image-super-resolution-x4",
+ "dataset": "DIV2K (train); Set5, Set14, B100, Urban100 (eval)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bsrc",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 1807040,
+   "data_sha256": "ad6f72b94ee11e71f4c3a6992c538a1edd0b87a0f025a0dc712a1a4468b838be"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "set5-set14-b100-x4-lr32 (crops, Level 3/4) and full images (tools/restoration_eval.py)",
+   "n": 64,
+   "metric": "PSNR (dB, crops)",
+   "reference": 27.3157,
+   "runtime": 27.3156,
+   "delta_vs_reference": -0.0001,
+   "delta_unit": "dB",
+   "author_claim": {
+    "claim_source": "BSRC-2023 README (bnn_competition/evaluation/evaluator.py: 4-way self-ensemble)"
+   }
+  }
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 820.48
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bsrc2023-binary-sr-x4-v1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 53.281997,
+    "median_range_ms": [
+     53.2167811,
+     53.3697808
+    ],
+    "iterations": 28,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bsrc2023-binary-sr-x4-v1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 9.69953799,
+    "median_range_ms": [
+     9.66335511,
+     9.70548487
+    ],
+    "iterations": 154,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bsrc2023-binary-sr-x4-v1",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 30.7579682,
+    "median_range_ms": [
+     30.7417569,
+     30.8105793
+    ],
+    "iterations": 48,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

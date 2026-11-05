@@ -1,0 +1,152 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bnas-h-imagenet",
+ "registry_model_id": "bnas-h-imagenet",
+ "name": "BNAS-H (ImageNet)",
+ "family": "BNAS (binary NAS, modern binary CNN)",
+ "task": "imagenet-classification",
+ "dataset": "",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bnas",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 88429952,
+   "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 36998400,
+   "data_sha256": "d8993109eb9abd8a530e4497043a9bbd1b95958fdc407b218f0fe4273bbc2266"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing torchvision_imagenet",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6015625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.609375,
+   "reference_fp64": 0.6015625,
+   "runtime": 0.6015625,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.6351
+   },
+   "note": "100-class ImageNet subset (smoke/regression, not an ImageNet-1k estimate)"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.618,
+    "b_top1": 0.6184,
+    "delta_pt": 0.04,
+    "ci95_pt": [
+     -0.828,
+     0.908
+    ],
+    "mcnemar_p": 0.9639736351608248,
+    "agreement": 0.7876,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-11-01"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.618,
+    "b_top1": 0.6188,
+    "delta_pt": 0.08,
+    "ci95_pt": [
+     -0.798,
+     0.958
+    ],
+    "mcnemar_p": 0.8935016875643472,
+    "agreement": 0.79,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 633.989,
+   "optimized": 967.751
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "bnas-h-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 94.8260899,
+    "median_range_ms": [
+     94.8012247,
+     96.7661028
+    ],
+    "iterations": 15,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnas-h-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 19.0357635,
+    "median_range_ms": [
+     19.0177815,
+     19.2245607
+    ],
+    "iterations": 76,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bnas-h-imagenet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 70.3191445,
+    "median_range_ms": [
+     70.2798274,
+     71.6110663
+    ],
+    "iterations": 20,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

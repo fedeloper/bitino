@@ -1,0 +1,593 @@
+{
+ "schema": "bitino.eval_sets.v1",
+ "note": "preprocessing definitions of the evaluation sets (no data: the images are not redistributed)",
+ "eval_sets": {
+  "eval128_cifar10_norm": {
+   "name": "cifar10-test-first-128",
+   "source": "CIFAR-10 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test_batch; images not redistributed. Terms: no formal licence; cite Krizhevsky 2009 (TR, U. Toronto).",
+   "limitations": "Smoke/regression subset: 128 of 10000 CIFAR-10 test images; accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "cifar10_imagenet_norm": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision ToTensor() then Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) in float32, CHW->HWC (IR-Net family (ReCU/RBNN/SiMaN/BiPer) cifar dataset.py param['cifar10']['normalize'])"
+    },
+    "cifar10_bireal_norm": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision ToTensor() then Normalize(mean=[0.4914, 0.4822, 0.4465], std=[0.2023, 0.1994, 0.201]) in float32, CHW->HWC (ShuaiZ1037/bnn-xnor-bireal train.py:117-122)"
+    }
+   }
+  },
+  "eval128_cifar100_norm": {
+   "name": "cifar100-test-first-128",
+   "source": "CIFAR-100 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test; images not redistributed. Terms: no formal licence; cite Krizhevsky 2009 (TR, U. Toronto).",
+   "limitations": "Smoke/regression subset: 128 of 10000 CIFAR-100 test images (70 of 100 classes); accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 70,
+   "preprocessing": {
+    "cifar100_imagenet_norm": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision ToTensor() then Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) in float32, CHW->HWC (AB-BNN Inference/CIFAR100.ipynb transform_test)"
+    }
+   }
+  },
+  "eval128": {
+   "name": "imagenet-val-subset-128",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "larq_zoo": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "larq_zoo.training.data.preprocess_image_bytes(is_training=False)"
+    },
+    "torchvision_imagenet": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.21.0+cu124 / PIL 12.2.0: PIL.Image.open(f).convert('RGB') -> transforms.Resize(256) [InterpolationMode.BILINEAR, antialias=True, short side 256] -> transforms.CenterCrop(224) -> transforms.ToTensor() -> transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)); CHW -> HWC (AB-BNN Inference/ImageNet.ipynb transform_test)"
+    }
+   }
+  },
+  "eval128_cifar10_brevitas": {
+   "name": "cifar10-test-first-128",
+   "source": "CIFAR-10 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test_batch; images not redistributed. Terms: no formal licence; cite Krizhevsky 2009 (TR, U. Toronto).",
+   "limitations": "Smoke/regression subset: 128 of 10000 CIFAR-10 test images; accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "cifar10_totensor": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision transforms.ToTensor(): float32(uint8)/255, CHW->HWC; no normalisation (brevitas_examples/bnn_pynq/trainer.py transform_to_tensor)"
+    }
+   }
+  },
+  "eval68_jpeg_y_q10q40_c96": {
+   "name": "live1-classic5-jpeg-y-q10q40-center96",
+   "source": null,
+   "limitations": "One center crop per test image (fixed graph input shape); PSNR/SSIM on crops are smoke/regression numbers. Full-image metrics: tools/restoration_eval.py.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bbcu_jpeg_y": {
+     "shape": [
+      68,
+      96,
+      96,
+      1
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "BBCU main_test_dncnn3_deblocking_b.py: imread_uint(RGB) -> KAIR rgb2ycbcr (Y, uint8) -> cv2 4.13.0 JPEG q in [10, 40] -> imdecode gray -> float32/255, center crop 96x96"
+    }
+   }
+  },
+  "eval68_cbsd68_sigma25_c96": {
+   "name": "cbsd68-sigma25-center96",
+   "source": null,
+   "limitations": "One center crop per test image (fixed graph input shape); PSNR/SSIM on crops are smoke/regression numbers. Full-image metrics: tools/restoration_eval.py.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bbcu_denoise_s25": {
+     "shape": [
+      68,
+      96,
+      96,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "BBCU main_test_dncnn_denoising_b.py: imread_uint(RGB) -> uint2single -> np.random.seed(0); += N(0, 25.0/255) (unclipped, per image, full image), then center crop 96x96"
+    }
+   }
+  },
+  "eval64_sr_x2_lr48": {
+   "name": "set5-set14-b100-x2-lr48",
+   "source": null,
+   "limitations": "One center crop per test image (fixed graph input shape); PSNR/SSIM on crops are smoke/regression numbers. Full-image metrics: tools/restoration_eval.py.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "sr_x2_unit": {
+     "shape": [
+      64,
+      48,
+      48,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "HR (cv2 IMREAD_COLOR, RGB) modcrop 2 -> MATLAB-style bicubic imresize(1/2) (BBCU-SR matlab_functions.py) -> uint8 -> center LR crop 48x48 -> float32 / 255 (BBCU / BasicSR)"
+    },
+    "sr_x2_255": {
+     "shape": [
+      64,
+      48,
+      48,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "HR (cv2 IMREAD_COLOR, RGB) modcrop 2 -> MATLAB-style bicubic imresize(1/2) (BBCU-SR matlab_functions.py) -> uint8 -> center LR crop 48x48 -> float32 in [0, 255] (BSRC-2023)"
+    }
+   }
+  },
+  "eval64_sr_x4_lr32": {
+   "name": "set5-set14-b100-x4-lr32",
+   "source": null,
+   "limitations": "One center crop per test image (fixed graph input shape); PSNR/SSIM on crops are smoke/regression numbers. Full-image metrics: tools/restoration_eval.py.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "sr_x4_unit": {
+     "shape": [
+      64,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "HR (cv2 IMREAD_COLOR, RGB) modcrop 4 -> MATLAB-style bicubic imresize(1/4) (BBCU-SR matlab_functions.py) -> uint8 -> center LR crop 32x32 -> float32 / 255 (BBCU / BasicSR)"
+    },
+    "sr_x4_255": {
+     "shape": [
+      64,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "HR (cv2 IMREAD_COLOR, RGB) modcrop 4 -> MATLAB-style bicubic imresize(1/4) (BBCU-SR matlab_functions.py) -> uint8 -> center LR crop 32x32 -> float32 in [0, 255] (BSRC-2023)"
+    }
+   }
+  },
+  "eval128_bhvit": {
+   "name": "imagenet-val-subset-128_bhvit",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "bhvit": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.20.1+cu121 / PIL 12.2.0 / timm 1.0.27: IMRL/BHViT datasets.build_transform(is_train=False, input_size=224) = Compose(     Resize(size=256, interpolation=bicubic, max_size=None, antialias=True)     CenterCrop(size=(224, 224))     ToTensor()     Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)) ) applied to PIL.Image.open(f).convert('RGB'); CHW -> HWC"
+    }
+   }
+  },
+  "glue/mnli/eval128": {
+   "name": "mnli-dev-matched-128",
+   "source": {
+    "zip": "MNLI.zip",
+    "zip_sha256": "e7c1d896d26ed6caf700110645df426cc2d8ebf02a5ab743d5a5c68ac1c83633",
+    "member": "MNLI/dev_matched.tsv",
+    "url": "https://dl.fbaipublicfiles.com/glue/data/MNLI.zip",
+    "dev_tsv_sha256": "c9e1f16b216b949175e1be84fb21124b192acfcbb18686229512d6964fddaf60",
+    "dev_examples_total": 9815
+   },
+   "limitations": "Smoke/regression subset (first 128 dev-matched examples); accuracy on it is not the MNLI dev-matched accuracy.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bibert": {
+     "shape": [
+      128,
+      128
+     ],
+     "dtype": null,
+     "layout": null,
+     "definition": "per-sample record = input_ids i32[L] | token_type_ids i32[L] | attention_mask f32[L] (bitino_bench multi-input order)"
+    }
+   }
+  },
+  "glue/mrpc/eval128": {
+   "name": "mrpc-dev-128",
+   "source": {
+    "mrpc_dev_ids_sha256": "971d7767d81b997fd9060ade0ec23c4fc31cbb226a55d1bd4a1bac474eb81dc7",
+    "msr_paraphrase_train_sha256": "60a9b09084528f0673eedee2b69cb941920f0b8cd0eeccefc464a98768457f89",
+    "recipe": "GLUE download_glue_data.py format_mrpc (dev split)",
+    "url": "https://dl.fbaipublicfiles.com/glue/data/mrpc_dev_ids.tsv + https://dl.fbaipublicfiles.com/senteval/senteval_data/msr_paraphrase_train.txt",
+    "dev_tsv_sha256": "9e8f284788040f7c9ecde2e1b3c07237c756f926bd9ef8548ef5d34b56f69f17",
+    "dev_examples_total": 408,
+    "hf_parquet_crosscheck": {
+     "sha256": "33c007dbf5bfa8463d87a13e6226df8c0fcf2596c2cd39d0f3bb79754e00f50f",
+     "rows": 408,
+     "identical_text_and_labels": true
+    }
+   },
+   "limitations": "Smoke/regression subset (first 128 dev examples); accuracy on it is not the MRPC dev accuracy.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bibert": {
+     "shape": [
+      128,
+      128
+     ],
+     "dtype": null,
+     "layout": null,
+     "definition": "per-sample record = input_ids i32[L] | token_type_ids i32[L] | attention_mask f32[L] (bitino_bench multi-input order)"
+    }
+   }
+  },
+  "glue/qqp/eval128": {
+   "name": "qqp-dev-128",
+   "source": {
+    "zip": "QQP-clean.zip",
+    "zip_sha256": "40e7c862c04eb26ee04b67fd900e76c45c6ba8e6d8fab4f8f1f8072a1a3fbae0",
+    "member": "QQP/dev.tsv",
+    "url": "https://dl.fbaipublicfiles.com/glue/data/QQP-clean.zip",
+    "dev_tsv_sha256": "83f10e6aa22d59ab71b0d869c763480f165a498dc02a505c2943167acf55af63",
+    "dev_examples_total": 40430
+   },
+   "limitations": "Smoke/regression subset (first 128 dev examples); accuracy on it is not the QQP dev accuracy.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bibert": {
+     "shape": [
+      128,
+      128
+     ],
+     "dtype": null,
+     "layout": null,
+     "definition": "per-sample record = input_ids i32[L] | token_type_ids i32[L] | attention_mask f32[L] (bitino_bench multi-input order)"
+    }
+   }
+  },
+  "sst2/eval128": {
+   "name": "sst2-dev-128",
+   "source": {
+    "url": "https://dl.fbaipublicfiles.com/glue/data/SST-2.zip",
+    "zip_sha256": "d67e16fb55739c1b32cdce9877596db1c127dc322d93c082281f64057c16deaa",
+    "member": "SST-2/dev.tsv",
+    "dev_tsv_sha256": "54a9c12c77e402fc14d6a66a506f24d999f596b0176eb777c972cccc2f9cc4b0",
+    "dev_examples_total": 872
+   },
+   "limitations": "Smoke/regression subset (first 128 dev sentences); accuracy on it is not the SST-2 dev accuracy. The full 872-sentence dev accuracy is computed separately on the host.",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "bibert": {
+     "shape": [
+      128,
+      64
+     ],
+     "dtype": null,
+     "layout": null,
+     "definition": "per-sample record = input_ids i32[L] | token_type_ids i32[L] | attention_mask f32[L] (bitino_bench multi-input order)"
+    }
+   }
+  },
+  "eval128_bitorch": {
+   "name": "imagenet-val-subset-128",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "bitorch_imagenet": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.21.0+cu124 / PIL 12.2.0 / torch 2.6.0+cu124: PIL.Image.open(f).convert('RGB') -> transforms.Resize(256) [InterpolationMode.BILINEAR, antialias=True] -> transforms.CenterCrop(224) -> transforms.ToTensor() -> transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.255)); CHW -> HWC (bitorch 0.3.0 examples/image_classification/datasets/imagenet.py ImageNet.test_transform; std_dev[2] = 0.255 as in bitorch)"
+    }
+   }
+  },
+  "eval128_cifar10_darts": {
+   "name": "cifar10-test-first-128",
+   "source": "CIFAR-10 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test_batch; images not redistributed. Terms: no formal licence; cite Krizhevsky 2009 (TR, U. Toronto).",
+   "limitations": "Smoke/regression subset: 128 of 10000 CIFAR-10 test images; accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "cifar10_darts_norm": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision ToTensor() then Normalize(mean=[0.49139968, 0.48215827, 0.44653124], std=[0.24703233, 0.24348505, 0.26158768]) in float32, CHW->HWC (yonseivnl/bnas src/utils.py:122-137 _data_transforms_cifar10 valid_transform (DARTS CIFAR_MEAN/CIFAR_STD))"
+    }
+   }
+  },
+  "eval128_timm_bicubic_crop095": {
+   "name": "imagenet-val-subset-128",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "timm_bicubic_crop095": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.21.0+cu124 / PIL 12.2.0 / torch 2.6.0+cu124: PIL.Image.open(f).convert('RGB') -> transforms.Resize(235) [short side, InterpolationMode.BICUBIC] -> transforms.CenterCrop(224) -> uint8 -> float32 (x - 255*mean)/(255*std), timm IMAGENET_DEFAULT mean/std; CHW -> HWC. Re-implements timm 0.6.11 transforms_imagenet_eval(crop_pct=0.95, interpolation='bicubic', use_prefetcher=True) + PrefetchLoader as used by hpi-xnor/BNext src/train_assistant_group_amp.py:556-572"
+    }
+   }
+  },
+  "eval128_cifar10_finn": {
+   "name": "cifar10-test-first-128",
+   "source": "CIFAR-10 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test_batch; images not redistributed.",
+   "limitations": "128 of 10000 CIFAR-10 test images; a 128-image subset is a smoke test, not an accuracy estimate.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "cifar10_pixels": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "float32(k) for uint8 pixel k, NHWC RGB (finn-examples FINN-ONNX cnv-w1a1: Div 255 is in the graph)"
+    },
+    "cifar10_bnnpynq": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "float32(2/255)*float32(k) - 1 in float32, NHWC RGB (BNN-PYNQ cifar10.py on pylearn2 float32 X)"
+    }
+   }
+  },
+  "eval128_gtsrb": {
+   "name": "gtsrb-test-udacity32-first-128",
+   "source": "GTSRB final test set (Stallkamp et al. 2012) as resized to 32x32 RGB in Udacity's traffic-signs-data.zip test.p (https://d17h27t6h515a5.cloudfront.net/topher/2017/February/5898cd6f_traffic-signs-data/traffic-signs-data.zip, the file finn-examples' GTSRB notebook downloads); not redistributed. Licence of GTSRB: research use (unverified).",
+   "limitations": "128 of 12630 GTSRB test images (Udacity 32x32 resize); a 128-image subset is a smoke test.",
+   "n_classes_covered": 33,
+   "preprocessing": {
+    "gtsrb_totensor": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "float32(k)/255, NHWC RGB (finn-examples build.py custom_step_add_preproc: Div 255 before the QONNX graph)"
+    },
+    "gtsrb_bnnpynq": {
+     "shape": [
+      128,
+      32,
+      32,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "float32(2*(k/255.0)-1) computed in float64, NHWC RGB (BNN-PYNQ gtsrb.py normalisation); framing differs from BNN-PYNQ training (40-px aspect-preserving resize + 32-px crops)"
+    }
+   }
+  },
+  "eval128_mnist_finn": {
+   "name": "mnist-test-first-128",
+   "source": "MNIST test set (torchvision mirror files); images not redistributed.",
+   "limitations": "128 of 10000 MNIST test images; a 128-image subset is a smoke test, not an accuracy estimate.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "mnist_pixels": {
+     "shape": [
+      128,
+      28,
+      28,
+      1
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "float32(k) for uint8 pixel k, NHWC [N,28,28,1] (finn-examples FINN-ONNX tfc-w1a1: Div 255 is in the graph)"
+    },
+    "mnist_bnnpynq": {
+     "shape": [
+      128,
+      28,
+      28,
+      1
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "+1 if k >= 128 else -1 (BNN-PYNQ mnist.py np.where(2*X-1 < 0, -1, 1), X = k/255)"
+    }
+   }
+  },
+  "eval128_mnist_brevitas": {
+   "name": "mnist-test-first-128",
+   "source": "MNIST test set (LeCun, Cortes, Burges; torchvision mirror files); images not redistributed. Terms: no formal licence stated by the authors (CC BY-SA 3.0 often cited, unverified).",
+   "limitations": "Smoke/regression subset: 128 of 10000 MNIST test images; accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 10,
+   "preprocessing": {
+    "mnist_totensor": {
+     "shape": [
+      128,
+      28,
+      28,
+      1
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision transforms.ToTensor(): float32(uint8)/255; no normalisation (brevitas_examples/bnn_pynq/trainer.py transform_to_tensor)"
+    }
+   }
+  },
+  "eval128_speechcommands": {
+   "name": "speechcommands-v0.02-test-balanced-128",
+   "source": "Speech Commands v0.02 official test set (http://download.tensorflow.org/data/speech_commands_test_set_v0.02.tar.gz, CC BY 4.0); not redistributed",
+   "limitations": "BRILLsson outputs embeddings; labels serve only the linear-probe sanity check",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "brillsson_logmel": {
+     "shape": [
+      128,
+      98,
+      64,
+      1
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "tensorflow 2.15.1: int16/32767, centre zero-pad to 16000, tf.signal.stft(400, 160, 1024), |.| @ linear_to_mel_weight_matrix(64, 513, 16000, 40, 7800), log(x + 1e-6), [..., None] (HarlinLee/brillsson model.py Spectrogram.call + eval.py prepare_example)"
+    }
+   }
+  },
+  "eval128_cifar100_deit": {
+   "name": "cifar100-test-first-128-deit224",
+   "source": "CIFAR-100 python version (https://www.cs.toronto.edu/~kriz/cifar.html), test; images not redistributed. Terms: no formal licence; cite Krizhevsky 2009 (TR, U. Toronto).",
+   "limitations": "Smoke/regression subset: 128 of 10000 CIFAR-100 test images; accuracy on it is NOT an estimate of full test accuracy.",
+   "n_classes_covered": 70,
+   "preprocessing": {
+    "cifar100_deit": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.21.0+cu124 / PIL 12.2.0 / timm 1.0.27: IMRL/GSB-Vision-Transformer datasets.build_transform(is_train=False, input_size=224) = Compose(     Resize(size=256, interpolation=bicubic, max_size=None, antialias=True)     CenterCrop(size=(224, 224))     ToTensor()     Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)) ) applied to PIL.Image.fromarray(CIFAR-100 32x32 uint8); CHW -> HWC"
+    }
+   }
+  },
+  "eval128_lfw": {
+   "name": "lfw-insightface-bin-first-128",
+   "source": "insightface verification set lfw.bin (6000 pairs, 112x112 aligned crops); downloaded from https://huggingface.co/datasets/gaunernst/face-recognition-eval (revision 9921cccf7bc4b317c3021c0eb9d1330d3d732fc0); not redistributed (research use only).",
+   "limitations": "embedding model eval set; per-image validation compares embeddings, verification accuracy needs all pairs",
+   "n_classes_covered": null,
+   "preprocessing": {
+    "insightface": {
+     "shape": [
+      128,
+      112,
+      112,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "tensorflow 2.15.1: (tf.cast(tf.image.decode_image(bytes, channels=3), 'float32') - 127.5) * 0.0078125, NHWC 112x112x3 (insightface_larq_keras evals.py eval_callback._imread)"
+    },
+    "insightface_flip": {
+     "shape": [
+      128,
+      112,
+      112,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "tensorflow 2.15.1: (tf.cast(tf.image.decode_image(bytes, channels=3), 'float32') - 127.5) * 0.0078125, NHWC 112x112x3 (insightface_larq_keras evals.py eval_callback._imread) then tf.image.flip_left_right"
+    }
+   }
+  },
+  "eval128_omz_bgr": {
+   "name": "imagenet-val-subset-128",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "omz_bgr": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "OMZ accuracy-check.yml (resnet50-binary-0001 / resnet18-xnor-binary-onnx-0001), Pillow 12.2.0: PIL.Image.open(f).convert('RGB') -> resize short side to 256 with Accuracy Checker scale_greater (int truncation), Image.BILINEAR -> center crop 224 (offsets int(round((H-224)/2)), Python round) -> RGB->BGR; values 0..255 as float32, NHWC. Mean subtraction (103.5,116.3,123.7 BGR) is inside the IR."
+    }
+   }
+  },
+  "eval128_tensorpack_bgr": {
+   "name": "imagenet-val-subset-128 (tensorpack_bgr)",
+   "source": "ImageNet ILSVRC2012 validation images (local ImageNet-100 split); images not redistributed",
+   "limitations": "Small smoke/regression set: only classes present in the ImageNet-100 split are covered; accuracy on it is NOT an estimate of full ImageNet accuracy.",
+   "n_classes_covered": 100,
+   "preprocessing": {
+    "tensorpack_bgr": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "tensorpack 0.11 DoReFa-Net eval path, OpenCV 4.8.1: cv2.imread BGR -> ResizeShortestEdge(256, INTER_CUBIC, int(scale*side + 0.5)) on uint8 -> CenterCrop 224 (int((H-224)*0.5)) -> float32 (x - [0.406,0.456,0.485]*255) * fl32(1 / ([0.225,0.224,0.229]*255)) (BGR order; = the TF graph division after grappler rewrite), NHWC"
+    }
+   }
+  }
+ }
+}

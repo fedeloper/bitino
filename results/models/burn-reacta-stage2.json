@@ -1,0 +1,106 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "burn-reacta-stage2",
+ "registry_model_id": "burn-reacta-stage2",
+ "name": "BURN ReActNet-A binary backbone, stage-2 pretraining (W1A1), 200 epochs",
+ "family": "burn-self-supervised-binary-reactnet",
+ "task": "imagenet self-supervised representation learning (backbone; the ImageNet linear-eval head is NOT included)",
+ "dataset": "ImageNet-1k train, without labels (self-supervised); FP MoCo-v2 ResNet-50 used as the moving-target teacher",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_abbnn",
+ "numerical_verification": "passed (host + emulated arm64), feature-level only; physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 8066048,
+   "data_sha256": "f104a0e47c2092c50e407474350cc7c6be264fccb123f48830ded4172ab4fcfe"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 / 5000, preprocessing torchvision_imagenet (features only)",
+   "n": 128,
+   "metric": "embedding cosine vs fp64 reference (min, eval128)",
+   "reference": null,
+   "runtime": 0.99615,
+   "author_claim": {
+    "author_claim_linear_eval_top1": 0.6229
+   },
+   "note": "no classifier head released; the 62.29% linear-eval claim cannot be checked (no head trained)"
+  }
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 198.472
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "burn-reacta-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 21.9772968,
+    "median_range_ms": [
+     21.9766178,
+     22.0096331
+    ],
+    "iterations": 67,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "burn-reacta-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 5.09951115,
+    "median_range_ms": [
+     5.06734753,
+     5.10044885
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "burn-reacta-stage2",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 21.9347451,
+    "median_range_ms": [
+     21.8065674,
+     22.0702088
+    ],
+    "iterations": 68,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

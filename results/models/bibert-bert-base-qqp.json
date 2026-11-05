@@ -1,0 +1,269 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bibert-bert-base-qqp",
+ "registry_model_id": "bibert-bert-base-qqp",
+ "name": "BiBERT BERT-base QQP",
+ "family": "BiBERT (binary BERT)",
+ "task": "glue-qqp",
+ "dataset": "",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bibert",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 21010624,
+   "data_sha256": "8b31b08e136925c88076fc1254adf2f5500e920e28babb5f2642b0156d9a64c6"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 19530176,
+   "data_sha256": "c5f6d73450455da167eaf05b11b705db32ef4eb474a4d96b1ae34a236de19e12"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "qqp-dev-128 (first 128 GLUE QQP dev pairs)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.8359375,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.84375,
+   "reference_fp64": 0.8359375,
+   "runtime": 0.8359375,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim": 0.848
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "qqp-dev-40430",
+    "n": 40430,
+    "a_top1": 0.852164234479347,
+    "b_top1": 0.8519663616126638,
+    "delta_pt": -0.02,
+    "ci95_pt": [
+     -0.048,
+     0.008
+    ],
+    "mcnemar_p": 0.22948101302608848,
+    "agreement": 0.9991590403165966,
+    "study": "exact_vs_int8-final_qqpdev40430",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "qqp-dev-40430",
+    "n": 40430,
+    "a_top1": 0.852164234479347,
+    "b_top1": 0.8463022508038586,
+    "delta_pt": -0.586,
+    "ci95_pt": [
+     -0.879,
+     -0.293
+    ],
+    "mcnemar_p": 9.426586131568722e-05,
+    "agreement": 0.909596834034133,
+    "study": "exact_vs_int8_full_qqpdev40430",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 681.139,
+   "optimized": 655.414
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:43:22Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 160.725704,
+    "median_range_ms": [
+     160.400391,
+     160.728541
+    ],
+    "p90_ms": 161.0458235,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 51060,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8b31b08e136925c88076fc1254adf2f5500e920e28babb5f2642b0156d9a64c6",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:43:30Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 73.574349,
+    "median_range_ms": [
+     73.502526,
+     73.754193
+    ],
+    "p90_ms": 75.9000465,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54008,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8b31b08e136925c88076fc1254adf2f5500e920e28babb5f2642b0156d9a64c6",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:43:39Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 87.9365625,
+    "median_range_ms": [
+     87.931823,
+     88.2029165
+    ],
+    "p90_ms": 89.1851716,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 57140,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8b31b08e136925c88076fc1254adf2f5500e920e28babb5f2642b0156d9a64c6",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:43:53Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 160.63276,
+    "median_range_ms": [
+     160.57875,
+     160.708828
+    ],
+    "p90_ms": 161.2623327,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 51024,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "8b31b08e136925c88076fc1254adf2f5500e920e28babb5f2642b0156d9a64c6",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 70.476233,
+    "median_range_ms": [
+     70.4210029,
+     70.5108562
+    ],
+    "iterations": 21,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 13.5286789,
+    "median_range_ms": [
+     13.4336252,
+     13.608427
+    ],
+    "iterations": 109,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 70.3920794,
+    "median_range_ms": [
+     70.3837399,
+     70.4923358
+    ],
+    "iterations": 21,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

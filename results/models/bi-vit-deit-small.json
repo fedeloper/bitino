@@ -1,0 +1,622 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bi-vit-deit-small",
+ "registry_model_id": "bi-vit-deit-small",
+ "name": "Bi-ViT DeiT-Small (W1A1)",
+ "family": "binary-vit",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_bivit",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 8343680,
+   "data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 5585216,
+   "data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing bhvit (= DeiT build_transform: Resize 256 bicubic, CenterCrop 224)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.1171875,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.0234375,
+   "reference_fp64": 0.1171875,
+   "runtime": 0.109375,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.409
+   },
+   "note": "100-class ImageNet subset (smoke/regression, not an ImageNet-1k estimate); the remaining gap to the claim is unexplained (authors' GPU numerics: normcdf GELU, TF32) and flagged in the research notes (not published)"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.149,
+    "b_top1": 0.142,
+    "delta_pt": -0.7,
+    "ci95_pt": [
+     -1.473,
+     0.073
+    ],
+    "mcnemar_p": 0.0846000217154376,
+    "agreement": 0.4658,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.149,
+    "b_top1": 0.1402,
+    "delta_pt": -0.88,
+    "ci95_pt": [
+     -1.672,
+     -0.088
+    ],
+    "mcnemar_p": 0.03314205885728522,
+    "agreement": 0.4136,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "with_gelu/model.bitino:neon",
+    "b": "no_gelu/model.bitino:neon",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.149,
+    "b_top1": 0.0174,
+    "delta_pt": -13.16,
+    "ci95_pt": [
+     -14.165,
+     -12.155
+    ],
+    "mcnemar_p": 3.320229074780764e-154,
+    "agreement": 0.01,
+    "study": "exact_vs_nogelu_eval5000",
+    "date": "2026-11-02"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 327.425,
+   "optimized": 375.812
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:39:27Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "old6df911f_t1_x2_optimized",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 65.8785675,
+    "median_range_ms": [
+     65.8178905,
+     66.0631511
+    ],
+    "p90_ms": 66.8503236,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39528,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:39:34Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "new3085a03_t1_x2_optimized",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 62.711432,
+    "median_range_ms": [
+     62.4813025,
+     62.85138
+    ],
+    "p90_ms": 63.70073969,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39572,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:39:40Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "old6df911f_t1_x2_optimized_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 62.9394789,
+    "median_range_ms": [
+     62.8847135,
+     63.4454425
+    ],
+    "p90_ms": 63.9405783,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 36416,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:39:46Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "new3085a03_t1_x2_optimized_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 59.942032,
+    "median_range_ms": [
+     59.828724,
+     60.0837235
+    ],
+    "p90_ms": 60.86131761,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 36608,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:39:53Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "old6df911f_t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 71.205703,
+    "median_range_ms": [
+     70.7838019,
+     71.4191925
+    ],
+    "p90_ms": 72.03148909999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 125448,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:40:00Z",
+    "plan": "ab_old6df911f_20261103_1138",
+    "config": "new3085a03_t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 68.6927085,
+    "median_range_ms": [
+     68.3185675,
+     68.860313
+    ],
+    "p90_ms": 69.63810439999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48540,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:35:45Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t1_x2_optimized",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 62.485286,
+    "median_range_ms": [
+     62.23862,
+     62.6458075
+    ],
+    "p90_ms": 63.40321401,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39588,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:35:54Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t4_unpinned_optimized",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 62.148489,
+    "median_range_ms": [
+     61.9923955,
+     102.293802
+    ],
+    "p90_ms": 127.04091059999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39440,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:36:01Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t1_x2_optimized_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 60.1590105,
+    "median_range_ms": [
+     59.8335935,
+     60.5025005
+    ],
+    "p90_ms": 61.21358909,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 36416,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:36:07Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t4_unpinned_optimized_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 62.3417445,
+    "median_range_ms": [
+     58.3186205,
+     87.33849
+    ],
+    "p90_ms": 105.08388519999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 36548,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:36:14Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 68.6053125,
+    "median_range_ms": [
+     68.5765885,
+     68.7131775
+    ],
+    "p90_ms": 69.4322243,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48336,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-03",
+    "timestamp_utc": "2026-11-03T10:36:20Z",
+    "plan": "bivit_stages_20261103_1134",
+    "config": "t4_unpinned_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 56.5352604,
+    "median_range_ms": [
+     56.354479,
+     57.0703906
+    ],
+    "p90_ms": 61.81238,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48316,
+    "validity": "throttled",
+    "caps_seen": [
+     "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
+    ],
+    "notes": null,
+    "model_data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3",
+    "runtime": "development runtime as of 2026-11-03"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:34:22Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 113.124479,
+    "median_range_ms": [
+     113.060104,
+     113.151823
+    ],
+    "p90_ms": 113.3205162,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 46308,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "660a1e2c2a30cfcbf958f83f98200d9950f6ee0d702415be7b584fb4dc800a62",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:34:31Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 82.5905731,
+    "median_range_ms": [
+     81.8886195,
+     82.777995
+    ],
+    "p90_ms": 84.75379699999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 75856,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "660a1e2c2a30cfcbf958f83f98200d9950f6ee0d702415be7b584fb4dc800a62",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:35:07Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 536.841615,
+    "median_range_ms": [
+     473.76453,
+     552.434713
+    ],
+    "p90_ms": 560.7594055999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 107792,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "660a1e2c2a30cfcbf958f83f98200d9950f6ee0d702415be7b584fb4dc800a62",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T13:35:17Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 110.358177,
+    "median_range_ms": [
+     110.334453,
+     110.363073
+    ],
+    "p90_ms": 110.47736499999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43364,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "660a1e2c2a30cfcbf958f83f98200d9950f6ee0d702415be7b584fb4dc800a62",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 41.9481001,
+    "median_range_ms": [
+     41.8901653,
+     41.9734249
+    ],
+    "iterations": 35,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 22.5210781,
+    "median_range_ms": [
+     22.4968133,
+     22.8040428
+    ],
+    "iterations": 65,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 40.9076555,
+    "median_range_ms": [
+     40.8831191,
+     40.960866
+    ],
+    "iterations": 36,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+# Reference environment for Larq Zoo models (trusted source framework).
+# Installed in two steps to avoid pip backtracking (larq-zoo/zookeeper pin protobuf<3.21):
+#   python3.11 -m venv .cache/venv-larq
+#   .cache/venv-larq/bin/pip install -r envs/larq-zoo-requirements.txt
+#   .cache/venv-larq/bin/pip install --no-deps larq-zoo==2.4.0 zookeeper==1.4.0
+tensorflow-cpu==2.15.1
+larq==0.13.3
+protobuf==3.20.3
+tensorflow-datasets==4.8.3
+typeguard==4.6.0
+click==8.1.7
+pillow

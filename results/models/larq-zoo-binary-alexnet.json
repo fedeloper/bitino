@@ -1,0 +1,151 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larq-zoo-binary-alexnet",
+ "registry_model_id": "larq-zoo-binary-alexnet",
+ "name": "BinaryAlexNet (Larq Zoo, v0.3.0)",
+ "family": "larq-zoo",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet ILSVRC-2012",
+ "precision": [
+  "W1A1"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64); device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 7912384,
+   "data_sha256": "2232e146633b6082e519d41a75c090ee87a3d74a24335d32786acadf12d43967"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 7917696,
+   "data_sha256": "89d692456d2235302c8060de3b27b5e310ed85708e42bdd554d2e2547a0413c4"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 (100 classes)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.2890625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.2890625,
+   "reference_fp64": 0.2890625,
+   "runtime": 0.2890625,
+   "delta_vs_reference": 0.0,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.363
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.3292,
+    "b_top1": 0.3292,
+    "delta_pt": 0.0,
+    "ci95_pt": [
+     -0.85,
+     0.85
+    ],
+    "mcnemar_p": 1.0,
+    "agreement": 0.6378,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.3292,
+    "b_top1": 0.3322,
+    "delta_pt": 0.3,
+    "ci95_pt": [
+     -0.586,
+     1.186
+    ],
+    "mcnemar_p": 0.5357444395302418,
+    "agreement": 0.6114,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 29.98,
+   "optimized": 55.649
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "larq-zoo-binary-alexnet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 4.67771268,
+    "median_range_ms": [
+     4.67137742,
+     4.67882299
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-alexnet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 0.860003948,
+    "median_range_ms": [
+     0.859964371,
+     0.861586332
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-alexnet",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 3.54561353,
+    "median_range_ms": [
+     3.54533696,
+     3.54763246
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Convenience wrapper: runs the CLI from a source checkout without installing.
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PYTHONPATH="$ROOT/python${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m bitino.cli.main "$@"

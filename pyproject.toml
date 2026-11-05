@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bitino"
+version = "0.1.0"
+description = "Research, conversion and validation tooling for the Bitino BNN inference runtime"
+requires-python = ">=3.10"
+dependencies = ["numpy>=1.24"]
+license = {text = "Apache-2.0"}
+
+[project.optional-dependencies]
+larq = ["tensorflow-cpu==2.15.1", "larq==0.13.3", "larq-zoo==2.4.0"]
+torch = ["torch>=2.1"]
+test = ["pytest>=7"]
+
+[project.scripts]
+bitino = "bitino.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["python"]

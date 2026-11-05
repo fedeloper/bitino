@@ -1,0 +1,215 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "larq-zoo-binary-densenet37",
+ "registry_model_id": "larq-zoo-binary-densenet37",
+ "name": "BinaryDenseNet37 (Larq Zoo, v0.1.0)",
+ "family": "larq-zoo",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet ILSVRC-2012",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64, --explain); device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 5429696,
+   "data_sha256": "2dde4d2048c38c3c2c814c9f7467c6cb59c6606ff094f320c6a7a0255f6ee420"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 6095168,
+   "data_sha256": "4353a0d4abd73206960383fa543b5a421dfd89994d65c6cb314413a8ebd9955f"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128 (100 classes)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6640625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.671875,
+   "reference_fp64": 0.6640625,
+   "runtime": 0.65625,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.6289
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6008,
+    "b_top1": 0.6066,
+    "delta_pt": 0.58,
+    "ci95_pt": [
+     -0.199,
+     1.359
+    ],
+    "mcnemar_p": 0.15879813840616944,
+    "agreement": 0.8276,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6008,
+    "b_top1": 0.188,
+    "delta_pt": -41.28,
+    "ci95_pt": [
+     -42.775,
+     -39.785
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.2076,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "rejected_partspc/model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6008,
+    "b_top1": 0.5914,
+    "delta_pt": -0.94,
+    "ci95_pt": [
+     -1.799,
+     -0.081
+    ],
+    "mcnemar_p": 0.0358470556710787,
+    "agreement": 0.795,
+    "study": "exact_vs_int8_full_partspc_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6008,
+    "b_top1": 0.0496,
+    "delta_pt": -55.12,
+    "ci95_pt": [
+     -56.53,
+     -53.71
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.0556,
+    "study": "exact_vs_int8_full_poolbug_eval5000",
+    "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "rejected_partspc/model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.188,
+    "b_top1": 0.5914,
+    "delta_pt": 40.34,
+    "ci95_pt": [
+     38.855,
+     41.825
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.2108,
+    "study": "int8_full_vs_int8_full_partspc_eval5000",
+    "date": "2026-11-04"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 18.80% vs exact 60.08% (-41.28 pt, McNemar p=0); before 4.96% (-55.12 pt); emulated 196.50 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.188,
+    "exact_top1": 0.6008,
+    "delta_vs_exact_pt": -41.28,
+    "mcnemar_p": 0.0,
+    "instructions_M": 196.5
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 196.5,
+   "optimized": 259.11
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "larq-zoo-binary-densenet37",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 25.8111243,
+    "median_range_ms": [
+     25.7539401,
+     26.0373006
+    ],
+    "iterations": 57,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-densenet37",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 6.15277553,
+    "median_range_ms": [
+     6.12579107,
+     6.16210318
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "larq-zoo-binary-densenet37",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 22.8075891,
+    "median_range_ms": [
+     22.7859278,
+     22.830287
+    ],
+    "iterations": 65,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

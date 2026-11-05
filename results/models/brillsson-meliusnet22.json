@@ -1,0 +1,108 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "brillsson-meliusnet22",
+ "registry_model_id": "brillsson-meliusnet22",
+ "name": "BRILLsson MeliusNet22 speech embedding",
+ "family": "BRILLsson (binary non-semantic speech embeddings, Larq)",
+ "task": "non-semantic speech representation (embedding; linear-probe on SpeechCommands / emotion / language-ID etc.)",
+ "dataset": "Distilled from TRILLsson on a subset of AudioSet/Libri-Light-like data (per paper; not checked); linear probe example on SpeechCommands",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.keras_larq",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 4175424,
+   "data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "Speech Commands v0.02 test (4,890 clips), 5-fold ridge probe (sanity check, not the paper's protocol)",
+   "n": 128,
+   "metric": "linear-probe accuracy",
+   "reference": 0.9188139059304703,
+   "runtime": 0.9192229038854806,
+   "delta_vs_reference": 0.0409,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim": null
+   },
+   "note": "task accuracy of the paper not reproduced (needs the probe trained on the SC train split / other datasets); numerical validation only"
+  }
+ },
+ "instructions_M": {
+  "values": {
+   "optimized": 34.948
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [],
+  "x86": [
+   {
+    "model_id": "brillsson-meliusnet22",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 3.31498337,
+    "median_range_ms": [
+     3.31101155,
+     3.31802177
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brillsson-meliusnet22",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 1.78808498,
+    "median_range_ms": [
+     1.78410339,
+     1.80890799
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "brillsson-meliusnet22",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 3.14797258,
+    "median_range_ms": [
+     3.14042807,
+     3.14954686
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

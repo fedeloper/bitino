@@ -1,0 +1,9 @@
+# Reference environment for the OpenVINO Open Model Zoo binary IR models (trusted fp32 reference:
+# OpenVINO CPU plugin). Project-local venv; user conda envs are not modified.
+#   ~/anaconda3/bin/python3 -m venv .cache/venv-openvino      # Python 3.12.7
+#   .cache/venv-openvino/bin/pip install -r envs/openvino-requirements.txt
+# Used by tools/convert_omz.py (OpenVINO is imported only for the reference outputs; the
+# conversion itself needs numpy only) and tools/eval_sets/omz_bgr.py (Pillow).
+openvino==2026.4.1
+numpy==2.5.4
+pillow==12.2.0

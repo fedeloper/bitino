@@ -1,0 +1,964 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "bhvit-tiny-binary",
+ "registry_model_id": "bhvit-tiny-binary",
+ "name": "BHViT-Tiny (fully binary downsampling)",
+ "family": "binary-vit",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k (ILSVRC2012)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.bhvit",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 7241152,
+   "data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 22929984,
+   "data_sha256": "45581e88844598a58c775196b2754a9f6d397a74e5081f57eacfe496af55fad6"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing bhvit (official build_transform)",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.640625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.6328125,
+   "reference_fp64": 0.640625,
+   "runtime": 0.625,
+   "delta_vs_reference": -1.5625,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.64
+   }
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.617,
+    "b_top1": 0.6236,
+    "delta_pt": 0.66,
+    "ci95_pt": [
+     -0.171,
+     1.491
+    ],
+    "mcnemar_p": 0.13090766693654696,
+    "agreement": 0.8066,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000_bhvit",
+    "n": 5000,
+    "a_top1": 0.617,
+    "b_top1": 0.6096,
+    "delta_pt": -0.74,
+    "ci95_pt": [
+     -1.633,
+     0.153
+    ],
+    "mcnemar_p": 0.1139684773393112,
+    "agreement": 0.7728,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 305.811,
+   "optimized": 308.097
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:18:31Z",
+    "plan": "stages_20261102_1142",
+    "config": "01_reference_O0",
+    "model_file": "model_unfused.bitino",
+    "stage": "reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 12551.5942,
+    "median_range_ms": [
+     12537.7322,
+     12554.9508
+    ],
+    "p90_ms": 12585.33606,
+    "repeats": 3,
+    "iterations": 5,
+    "warmup": 1,
+    "peak_rss_kb": 72376,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:18:44Z",
+    "plan": "stages_20261102_1142",
+    "config": "02_reference_O3",
+    "model_file": "model_unfused.bitino",
+    "stage": "reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 749.318542,
+    "median_range_ms": [
+     601.443489,
+     750.075703
+    ],
+    "p90_ms": 750.9907076,
+    "repeats": 3,
+    "iterations": 10,
+    "warmup": 2,
+    "peak_rss_kb": 71796,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:19:25Z",
+    "plan": "stages_20261102_1142",
+    "config": "03_packed_naive",
+    "model_file": "model_unfused.bitino",
+    "stage": "packed_naive",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 627.004453,
+    "median_range_ms": [
+     502.91125,
+     627.550754
+    ],
+    "p90_ms": 629.2248277,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 72068,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:19:50Z",
+    "plan": "stages_20261102_1142",
+    "config": "04_binary_scalar",
+    "model_file": "model_unfused.bitino",
+    "stage": "binary_scalar",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 367.294011,
+    "median_range_ms": [
+     295.291301,
+     367.738385
+    ],
+    "p90_ms": 368.4037966,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 51932,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:20:13Z",
+    "plan": "stages_20261102_1142",
+    "config": "05_neon",
+    "model_file": "model_unfused.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 329.345182,
+    "median_range_ms": [
+     329.228646,
+     329.461718
+    ],
+    "p90_ms": 331.9677753,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 50456,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:20:37Z",
+    "plan": "stages_20261102_1142",
+    "config": "06_int8_reference",
+    "model_file": "model_unfused.bitino",
+    "stage": "int8_reference",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 327.0286195,
+    "median_range_ms": [
+     326.82677,
+     327.230469
+    ],
+    "p90_ms": 328.11911990000004,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 52004,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:20:58Z",
+    "plan": "stages_20261102_1142",
+    "config": "07_int8_neon",
+    "model_file": "model_unfused.bitino",
+    "stage": "int8_neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 295.6178385,
+    "median_range_ms": [
+     295.46776,
+     295.767917
+    ],
+    "p90_ms": 297.1064682,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 52308,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:21:05Z",
+    "plan": "stages_20261102_1142",
+    "config": "08_float_opt",
+    "model_file": "model_unfused.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 68.95042955,
+    "median_range_ms": [
+     68.8615366,
+     69.0393225
+    ],
+    "p90_ms": 70.9877659,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48700,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:21:13Z",
+    "plan": "stages_20261102_1142",
+    "config": "09_fusion",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 69.11516925000001,
+    "median_range_ms": [
+     68.982031,
+     69.2483075
+    ],
+    "p90_ms": 70.73685862,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48604,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:21:22Z",
+    "plan": "stages_20261102_1142",
+    "config": "10_no_memory_reuse",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 81.97877625000001,
+    "median_range_ms": [
+     81.4284635,
+     82.529089
+    ],
+    "p90_ms": 83.68095269000001,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 515820,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:21:30Z",
+    "plan": "stages_20261102_1142",
+    "config": "11_final_exact",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 68.44670550000001,
+    "median_range_ms": [
+     68.0967445,
+     68.7966665
+    ],
+    "p90_ms": 70.3161353,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48604,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:21:44Z",
+    "plan": "stages_20261102_1142",
+    "config": "12_final_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 67.531263,
+    "median_range_ms": [
+     66.9660155,
+     68.0965105
+    ],
+    "p90_ms": 69.66894239,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48256,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:00Z",
+    "plan": "threads_20261102_1142",
+    "config": "t1_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "unpinned",
+    "median_ms": 48.0759895,
+    "median_range_ms": [
+     45.744531,
+     55.908724
+    ],
+    "p90_ms": 56.148937700000005,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48712,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:09Z",
+    "plan": "threads_20261102_1142",
+    "config": "t2_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 2,
+    "affinity": "unpinned",
+    "median_ms": 42.8635415,
+    "median_range_ms": [
+     38.118125,
+     47.5774745
+    ],
+    "p90_ms": 49.12169229,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 50696,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:16Z",
+    "plan": "threads_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 39.30349,
+    "median_range_ms": [
+     36.108776,
+     40.9637495
+    ],
+    "p90_ms": 48.7501406,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54684,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:24Z",
+    "plan": "threads_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 70.55263,
+    "median_range_ms": [
+     57.7072135,
+     73.188256
+    ],
+    "p90_ms": 77.54869729999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 64768,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:31Z",
+    "plan": "threads_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 46.636979,
+    "median_range_ms": [
+     45.789948,
+     56.000755
+    ],
+    "p90_ms": 56.12230252,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48732,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:51:40Z",
+    "plan": "threads_20261102_1142",
+    "config": "t1_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "4",
+    "median_ms": 74.1014326,
+    "median_range_ms": [
+     73.8908591,
+     90.6664065
+    ],
+    "p90_ms": 95.96064552,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48768,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:52:05Z",
+    "plan": "threads_20261102_1142",
+    "config": "t1_a510",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "0",
+    "median_ms": 344.318281,
+    "median_range_ms": [
+     341.688932,
+     366.968385
+    ],
+    "p90_ms": 369.0702338,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48792,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:52:11Z",
+    "plan": "threads_20261102_1142",
+    "config": "t2_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 2,
+    "affinity": "4,5",
+    "median_ms": 44.1591931,
+    "median_range_ms": [
+     44.118985,
+     56.2495835
+    ],
+    "p90_ms": 61.14848431,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 50888,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:52:18Z",
+    "plan": "threads_20261102_1142",
+    "config": "t3_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 3,
+    "affinity": "4,5,6",
+    "median_ms": 49.35,
+    "median_range_ms": [
+     48.5379685,
+     51.6985155
+    ],
+    "p90_ms": 54.7707244,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 53656,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:52:25Z",
+    "plan": "threads_20261102_1142",
+    "config": "t4_x2_a710",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "7,4,5,6",
+    "median_ms": 37.4259639,
+    "median_range_ms": [
+     34.8077865,
+     46.7491925
+    ],
+    "p90_ms": 54.26012970999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54700,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:52:39Z",
+    "plan": "threads_20261102_1142",
+    "config": "t4_a510",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "0,1,2,3",
+    "median_ms": 184.596927,
+    "median_range_ms": [
+     150.345417,
+     335.265963
+    ],
+    "p90_ms": 364.6622389,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54720,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:53:02Z",
+    "plan": "threads_20261102_1142",
+    "config": "t8_all_pinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "7,4,5,6,0,1,2,3",
+    "median_ms": 330.010599,
+    "median_range_ms": [
+     272.634089,
+     337.557032
+    ],
+    "p90_ms": 400.3206565,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 64460,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:53:08Z",
+    "plan": "threads_20261102_1142",
+    "config": "t2_unpinned_spin200",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 2,
+    "affinity": "unpinned",
+    "median_ms": 35.1142445,
+    "median_range_ms": [
+     32.3232815,
+     38.6015885
+    ],
+    "p90_ms": 38.86549509,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 50916,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:53:14Z",
+    "plan": "threads_20261102_1142",
+    "config": "t4_unpinned_spin200",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 24.662266,
+    "median_range_ms": [
+     22.896719,
+     29.8773695
+    ],
+    "p90_ms": 31.03107351,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54716,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:53:28Z",
+    "plan": "threads_20261102_1142",
+    "config": "t4_pinned_spin200",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "7,4,5,6",
+    "median_ms": 164.066432,
+    "median_range_ms": [
+     158.482604,
+     184.509297
+    ],
+    "p90_ms": 191.02361999999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54740,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:53:43Z",
+    "plan": "threads_20261102_1142",
+    "config": "t8_unpinned_spin200",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 164.910312,
+    "median_range_ms": [
+     150.60052,
+     172.762552
+    ],
+    "p90_ms": 177.4294216,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 64492,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 29.26653,
+    "median_range_ms": [
+     29.1706934,
+     29.4085822
+    ],
+    "iterations": 51,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 10.2921672,
+    "median_range_ms": [
+     10.187516,
+     10.6044736
+    ],
+    "iterations": 146,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 28.8815298,
+    "median_range_ms": [
+     28.8472161,
+     28.8855281
+    ],
+    "iterations": 51,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}

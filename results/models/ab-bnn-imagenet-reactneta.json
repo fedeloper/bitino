@@ -1,0 +1,311 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "ab-bnn-imagenet-reactneta",
+ "registry_model_id": "ab-bnn-imagenet-reactneta",
+ "name": "A&B BNN ReActNet-A (ImageNet, step2)",
+ "family": "A&B BNN",
+ "task": "imagenet-classification",
+ "dataset": "ImageNet-1k",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_abbnn",
+ "numerical_verification": "passed (host + emulated arm64); physical device pending",
+ "files": {
+  "model.bitino": {
+   "bytes": 7919424,
+   "data_sha256": "672fcbfbf301b7534cfa2e2766a94dda63e7878e358c08757ae31706a8c860ce"
+  },
+  "model_int8_full.bitino": {
+   "bytes": 7746368,
+   "data_sha256": "b04a1af433e07cd33a8a2ba4b30e6712ed79bc3849a7542f01745a6c5469a59d"
+  },
+  "model_int8_full_log2.bitino": {
+   "bytes": 4815680,
+   "data_sha256": "4153d6a860d96912e915bd14dc1bf2ce05e32414177a3c98cb17c9295ad505b7"
+  }
+ },
+ "accuracy": {
+  "headline": {
+   "eval_set": "imagenet-val-subset-128, preprocessing torchvision_imagenet",
+   "n": 128,
+   "metric": "top-1",
+   "reference": 0.6640625,
+   "reference_kind": "source framework, float64",
+   "reference_fp32": 0.6953125,
+   "reference_fp64": 0.6640625,
+   "runtime": 0.65625,
+   "delta_vs_reference": -0.7812,
+   "delta_unit": "pt",
+   "author_claim": {
+    "author_claim_full_imagenet_top1": 0.6689
+   },
+   "note": "128-sample smoke test, not a full-test-set estimate"
+  },
+  "studies": [
+   {
+    "a": "model.bitino:neon",
+    "b": "model.bitino:optimized_int8",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6384,
+    "b_top1": 0.6424,
+    "delta_pt": 0.4,
+    "ci95_pt": [
+     -0.301,
+     1.101
+    ],
+    "mcnemar_p": 0.28816003219473185,
+    "agreement": 0.8572,
+    "study": "exact_vs_int8-final_eval5000",
+    "date": "2026-10-31"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6384,
+    "b_top1": 0.0392,
+    "delta_pt": -59.92,
+    "ci95_pt": [
+     -61.298,
+     -58.542
+    ],
+    "mcnemar_p": 0.0,
+    "agreement": 0.0472,
+    "study": "exact_vs_int8_full_eval5000",
+    "date": "2026-11-03"
+   },
+   {
+    "a": "model.bitino:neon",
+    "b": "model_int8_full_log2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6384,
+    "b_top1": 0.6326,
+    "delta_pt": -0.58,
+    "ci95_pt": [
+     -1.377,
+     0.217
+    ],
+    "mcnemar_p": 0.1681911640374527,
+    "agreement": 0.833,
+    "study": "exact_vs_int8_full_log2_eval5000",
+    "date": "2026-11-03"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "eval5000: 3.92% vs exact 63.84%; emulated 232.0 M instructions",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.0392,
+    "exact_top1": 0.6384000000000001,
+    "instructions_M": 232.0
+   },
+   {
+    "file": "model_int8_full_log2.bitino",
+    "note": "8-bit log2 residual stream with fused I8BConv2DRes (python/bitino/quantize_l8.py --stem split); eval5000: 63.26% (vs exact -0.58 pt, McNemar p=0.17, accepted); emulated 232.0 -> 212.7 M instructions (optimized 194.6 M). Not run on the device yet.",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.6325999999999999,
+    "delta_vs_exact_pt": -0.58,
+    "mcnemar_p": 0.17
+   }
+  ]
+ },
+ "instructions_M": {
+  "values": {
+   "int8_full": 232.0,
+   "int8_full_log2": 188.001,
+   "optimized": 191.572
+  },
+  "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",
+  "date": "2026-11-04",
+  "note": "exact executed ARM instructions per inference under qemu (not cycles, not latency)"
+ },
+ "speed": {
+  "s22": [
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:03:48Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 19.646979,
+    "median_range_ms": [
+     19.6336455,
+     20.9113275
+    ],
+    "p90_ms": 21.135078099999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 31260,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "672fcbfbf301b7534cfa2e2766a94dda63e7878e358c08757ae31706a8c860ce",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:03:52Z",
+    "plan": "quick_20261102_1142",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 12.825625,
+    "median_range_ms": [
+     12.591953,
+     13.2646355
+    ],
+    "p90_ms": 13.936791199999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 35992,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "672fcbfbf301b7534cfa2e2766a94dda63e7878e358c08757ae31706a8c860ce",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:04:05Z",
+    "plan": "quick_20261102_1142",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 26.4835939,
+    "median_range_ms": [
+     18.317995,
+     28.5661719
+    ],
+    "p90_ms": 30.7008796,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 41132,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "672fcbfbf301b7534cfa2e2766a94dda63e7878e358c08757ae31706a8c860ce",
+    "runtime": "development runtime as of 2026-11-02"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-02",
+    "timestamp_utc": "2026-11-02T12:04:09Z",
+    "plan": "quick_20261102_1142",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 19.387031,
+    "median_range_ms": [
+     19.331511,
+     20.34375
+    ],
+    "p90_ms": 20.5734532,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 29716,
+    "validity": "throttled",
+    "caps_seen": null,
+    "notes": [
+     "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
+    ],
+    "model_data_sha256": "672fcbfbf301b7534cfa2e2766a94dda63e7878e358c08757ae31706a8c860ce",
+    "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "x86": [
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 21.7572002,
+    "median_range_ms": [
+     21.7276459,
+     22.0124121
+    ],
+    "iterations": 67,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t8_pcore",
+    "model_file": "model.bitino",
+    "stage": "optimized",
+    "threads": 8,
+    "affinity": "0,2,4,6,8,10,12,14",
+    "median_ms": 5.02229047,
+    "median_range_ms": [
+     5.0178268,
+     5.18577933
+    ],
+    "iterations": 200,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactneta",
+    "date": "2026-11-01",
+    "suite": "all_models_20261101",
+    "config": "t1_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "2",
+    "median_ms": 21.5852261,
+    "median_range_ms": [
+     21.5794873,
+     21.6039166
+    ],
+    "iterations": 69,
+    "validity": "superseded-runtime",
+    "notes": [
+     "runtime of 2026-11-01, before the int8_full and kernel-tuning merges; re-run the host suite to refresh"
+    ]
+   }
+  ]
+ }
+}
