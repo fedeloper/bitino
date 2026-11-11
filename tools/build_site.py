@@ -4,13 +4,14 @@
   python3 tools/build_site.py --out ../bitino-site        # website (static, relative links only, no build step to serve)
   python3 tools/build_site.py --readme-only               # rewrite the generated blocks of README.md and docs/MODEL_ZOO.md
 
-Inputs: registry/models.json, registry/recipes.json, results/models/*.json, results/speed_s22.json,
-results/speed_x86.json, release.json (+ the release manifest, if --release-manifest is given).
+Inputs: registry/models.json, registry/recipes.json, results/models/*.json, results/devices.json,
+results/speed_<device>.json (one per phone), results/speed_x86.json, release.json (+ the release manifest,
+registry/release_models.json, when present).
 Outputs (site): index.html, models.html, benchmarks.html, docs.html, about.html, assets/{style.css,app.js,logo.svg},
 data/models.json. Everything is self-contained: no external fonts, scripts or trackers.
 
-Speed numbers come only from measured runs on the Galaxy S22 and on the x86-64 host, with their date, thread
-configuration and throttle state. Emulated runs contribute instruction counts only, never timings.
+Speed numbers come only from measured runs on real phones (results/devices.json) and on the x86-64 host, with their
+date, thread configuration and throttle state. Emulated runs contribute instruction counts only, never timings.
 """
 from __future__ import annotations
 
@@ -41,12 +42,20 @@ def esc(s) -> str:
 
 
 # ----------------------------------------------------------------------------------------------- data
-def pick_speed(runs: list[dict]) -> dict:
-    """Representative S22 numbers: latest measured runs of the shipped files, 1 thread on the X2 and 4 threads."""
+SPEED_KEYS = (("t1", 1, False), ("t4", 4, False), ("t1_int8", 1, True), ("t4_int8", 4, True))
+
+
+def norm_validity(v):
+    return "thermal-throttled" if v == "throttled" else v   # files written before the vendor-policy label existed
+
+
+def pick_speed(runs: list[dict], fastest_cpu: str = "7") -> dict:
+    """Representative numbers of one device: latest measured runs, 1 thread pinned to the fastest core and 4 threads
+    unpinned, for the exact stages (float glue) and for int8 (the full-integer file where measured, else the int8
+    kernels on the float file)."""
     out = {}
     if not runs:
         return out
-    latest_date = max(r.get("date") or "" for r in runs)
 
     def best(pred):
         c = [r for r in runs if pred(r) and r.get("median_ms")]
@@ -55,18 +64,32 @@ def pick_speed(runs: list[dict]) -> dict:
         c.sort(key=lambda r: (r.get("date") or "", r.get("plan") or ""), reverse=True)
         return c[0]
 
-    for key, thr, aff in (("t1", 1, "7"), ("t4", 4, None)):
-        for stage in ("int8_full", "all", "optimized"):
+    for key, thr, int8 in SPEED_KEYS:
+        for stage in (("int8_full", "optimized_int8") if int8 else ("all", "optimized")):
             r = best(lambda r, st=stage: r.get("stage") == st and r.get("threads") == thr
-                     and (aff is None and r.get("affinity") in ("unpinned", "") or aff is not None and r.get("affinity") == aff)
+                     and (r.get("affinity") in ("unpinned", "") if thr != 1 else r.get("affinity") == fastest_cpu)
                      and "nospin" not in (r.get("config") or "") and "spinrun" not in (r.get("config") or ""))
             if r:
                 out[key] = {"ms": round(r["median_ms"], 3), "stage": "float" if stage in ("all", "optimized") else stage,
-                            "date": r.get("date"), "validity": r.get("validity"),
+                            "date": r.get("date"), "validity": norm_validity(r.get("validity")),
                             "file": r.get("model_file"), "config": r.get("config"), "caps": r.get("caps_seen")}
                 break
-    out["latest"] = latest_date
+    if out:
+        out["latest"] = max(r.get("date") or "" for r in runs)
     return out
+
+
+def load_devices() -> dict:
+    """results/devices.json; without it (older trees) the S22 entry is rebuilt from results/speed_s22.json."""
+    devs = (load(os.path.join(ROOT, "results", "devices.json"), {}) or {}).get("devices")
+    if devs:
+        return devs
+    d = (load(os.path.join(ROOT, "results", "speed_s22.json"), {}) or {}).get("device") or {}
+    cores = d.get("cores") or {}
+    if isinstance(cores, dict):
+        cores = [{"name": k, **v} for k, v in sorted(cores.items(), key=lambda kv: -kv[1].get("max_ghz", 0))]
+    return {"s22": {**d, "kind": "phone", "short": "Galaxy S22", "cores": cores, "fastest_cpu": "7",
+                    "policies": {"7": "X2", "4": "A710", "0": "A510"}}}
 
 
 def collect() -> dict:
@@ -74,7 +97,12 @@ def collect() -> dict:
     recipes = load(os.path.join(ROOT, "registry", "recipes.json"), {}).get("recipes", {})
     release = load(os.path.join(ROOT, "release.json"), {})
     rel_manifest = load(os.path.join(ROOT, "registry", "release_models.json"), {}) or {}
-    s22 = load(os.path.join(ROOT, "results", "speed_s22.json"), {})
+    devices = load_devices()
+    speed = {}   # device id -> speed_<id>.json, phones with at least one run, in devices.json order
+    for did, dev in devices.items():
+        doc = load(os.path.join(ROOT, "results", f"speed_{did}.json"), {}) or {}
+        if dev.get("kind", "phone") == "phone" and doc.get("runs"):
+            speed[did] = doc
     x86 = load(os.path.join(ROOT, "results", "speed_x86.json"), {})
     sys.path.insert(0, os.path.join(ROOT, "python"))
     from bitino import zoo   # noqa: E402  (licence rule shared with `bitino list --release`)
@@ -102,7 +130,17 @@ def collect() -> dict:
                     i8 = {"file": st["b"].split(":")[0], "set": st.get("eval_set"), "n": st.get("n"), "top1": st.get("b_top1"),
                           "delta": st.get("delta_pt"), "p": st.get("mcnemar_p")}
         insn = (res.get("instructions_M") or {}).get("values") or {}
-        sp = pick_speed((res.get("speed") or {}).get("s22", []))
+        phones = {}
+        for did in speed:
+            p = pick_speed((res.get("speed") or {}).get(did, []), devices[did].get("fastest_cpu", "7"))
+            if p:
+                phones[did] = p
+        best = {}
+        for key in ("t1", "t4"):   # fastest phone (exact stages), for the zoo table
+            c = [(p[key]["ms"], did) for did, p in phones.items() if p.get(key)]
+            if c:
+                ms_, did = min(c)
+                best[key] = {**phones[did][key], "device": did, "device_short": devices[did].get("short") or did}
         xr = [r for r in (res.get("speed") or {}).get("x86", []) if r.get("config") == "t1"]
         assets = []
         rel = (rel_manifest.get("models") or {}).get(mid)
@@ -121,15 +159,15 @@ def collect() -> dict:
             "reference": head.get("reference"), "runtime": head.get("runtime"), "delta": head.get("delta_vs_reference"),
             "delta_unit": head.get("delta_unit"), "big": big, "int8": i8,
             "insn_opt": insn.get("optimized"), "insn_int8": insn.get("int8_full_log2") or insn.get("int8_full"),
-            "s22": sp, "x86_t1": round(xr[0]["median_ms"], 4) if xr else None,
+            "phones": phones, "best": best, "x86_t1": round(xr[0]["median_ms"], 4) if xr else None,
             "licence_code": (m.get("license") or {}).get("code", ""), "licence_weights": (m.get("license") or {}).get("weights", ""),
             "release": ok, "release_reason": why, "assets": assets, "recipe": rec.get("state"),
             "env": rec.get("env"), "files": list((rec.get("expected") or {}).keys()),
         })
     n_reg = len(reg)
     n_weights = sum(1 for m in reg.values() if m.get("registry_status") == "verified-pretrained")
-    return {"models": models, "registry_total": n_reg, "verified_weights": n_weights, "s22": s22, "x86": x86,
-            "release": release, "release_manifest": rel_manifest}
+    return {"models": models, "registry_total": n_reg, "verified_weights": n_weights, "devices": devices, "speed": speed,
+            "x86": x86, "release": release, "release_manifest": rel_manifest}
 
 
 # ----------------------------------------------------------------------------------------------- formatting
@@ -149,45 +187,99 @@ def fmt_ms(v):
     return f"{v:.3g}" if v < 10 else f"{v:.1f}"
 
 
-VALIDITY_MARK = {"clean": "", "throttled": " ⚠", "unknown-caps": " †", "superseded-runtime": " ‡"}
+VALIDITY_MARK = {"clean": "", "vendor-policy": " ◇", "thermal-throttled": " ⚠", "throttled": " ⚠", "unknown-caps": " †",
+                 "superseded-runtime": " ‡"}
+VALIDITY_TEXT = {
+    "vendor-policy": "the phone's own power policy held the clock ceiling below the maximum with no thermal event "
+                     "(stock settings, screen off; the ceiling is recorded per run)",
+    "thermal-throttled": "at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB)",
+    "unknown-caps": "run made before the frequency-cap check existed (caps unknown)",
+    "superseded-runtime": "measured on an older runtime",
+}
+
+
+def mark(x: dict | None) -> str:
+    return VALIDITY_MARK.get((x or {}).get("validity"), "")
+
+
+def device_pin(dev: dict) -> str:
+    """Name of the core the 1-thread configurations pin to, e.g. 'Cortex-X2'."""
+    fc = int(dev.get("fastest_cpu", "7"))
+    for c in dev.get("cores") or []:
+        lo, _, hi = str(c.get("cpus", "")).partition("-")
+        if lo.isdigit() and int(lo) <= fc <= int(hi or lo):
+            return c.get("name") or f"cpu{fc}"
+    return f"cpu{fc}"
+
+
+def validity_counts(runs: list[dict]) -> dict[str, int]:
+    out: dict[str, int] = {}
+    for r in runs:
+        v = norm_validity(r.get("validity"))
+        out[v] = out.get(v, 0) + 1
+    return out
+
+
+def speed_legend(d: dict, html_out: bool = False) -> str:
+    used = {norm_validity(r.get("validity")) for doc in d["speed"].values() for r in doc.get("runs", [])}
+    parts = [f"{VALIDITY_MARK[v].strip()} = {VALIDITY_TEXT[v]}" for v in VALIDITY_TEXT if v in used]
+    status = "; ".join(f"{d['devices'][did].get('short') or did}: " +
+                       ", ".join(f"{n} {v}" for v, n in sorted(validity_counts(doc['runs']).items()))
+                       for did, doc in d["speed"].items())
+    text = ("Unmarked = clean (every repeat at full clocks). " + "; ".join(parts) + ". " if parts else "") + \
+        (f"Runs per device and validity: {status}. " if status else "")
+    return esc(text) if html_out else text
 
 
 # ----------------------------------------------------------------------------------------------- README
 def readme_tables(d: dict) -> dict[str, str]:
     ms = d["models"]
+    devs = d["devices"]
     n_conv, n_rel = len(ms), sum(1 for m in ms if m["release"])
     n_ver = sum(1 for m in ms if m["recipe"] == "verified")
     stats = (f"**{d['registry_total']}** binary networks investigated, **{d['verified_weights']}** with verified public "
              f"weights, **{n_conv}** converted and validated against their original framework, **{n_rel}** redistributable "
              f"as converted files (explicit permissive weights licence). Fetch recipes: {n_ver} verified end to end, "
              f"{n_conv - n_ver} reconstructed from the conversion records.")
-    hi = [m for m in ms if m["s22"].get("t1") or m["s22"].get("t4")]
-    hi.sort(key=lambda m: m["id"])
-    lines = ["| model | task | accuracy (reference → Bitino) | S22 1 thread (X2) | S22 4 threads | measured | model file |",
-             "|---|---|---|---|---|---|---|"]
+    hi = sorted((m for m in ms if m["phones"]), key=lambda m: m["id"])
+    pids = list(d["speed"])
+
+    def cell(p: dict | None) -> str:
+        if not p:
+            return "–"
+        def pair(a, b):
+            return f"{fmt_ms(a['ms']) if a else '–'}{mark(a)} / {fmt_ms(b['ms']) if b else '–'}{mark(b)}"
+        out = pair(p.get("t1"), p.get("t4")) if p.get("t1") or p.get("t4") else ""
+        if p.get("t1_int8") or p.get("t4_int8"):
+            out += ("<br>" if out else "") + "int8 " + pair(p.get("t1_int8"), p.get("t4_int8"))
+        return out or "–"
+
+    head = " | ".join(f"{devs[did].get('short') or did} ms" + (" (32-bit fallback)" if devs[did].get("kernels") == "portable-fallback" else "")
+                      for did in pids)
+    lines = [f"| model | task | accuracy (reference → Bitino) | {head} |", "|---|---|---|" + "---|" * len(pids)]
     for m in hi:
-        t1, t4 = m["s22"].get("t1"), m["s22"].get("t4")
         acc = f"{fmt_acc(m['reference'], m['metric'])} → {fmt_acc(m['runtime'], m['metric'])} ({m['eval_set']}, n={m['n']})"
-        def cell(x):
-            return f"{fmt_ms(x['ms'])} ms{VALIDITY_MARK.get(x.get('validity'), '')} ({x['stage']})" if x else "–"
-        dates = sorted({x["date"] for x in (t1, t4) if x and x.get("date")})
-        lines.append(f"| `{m['id']}` | {m['task']} | {acc} | {cell(t1)} | {cell(t4)} | {', '.join(dates)} | "
-                     f"{(t1 or t4 or {}).get('file') or ''} |")
-    speed = "\n".join(lines) + ("\n\n⚠ = at least one repeat ran with a thermal CPU-frequency cap (phone charging over USB; "
-                                "caps are recorded per run in `results/speed_s22.json`); † = run made before the frequency-cap "
-                                "check existed (caps unknown). Every published S22 number so far is one of the two: the full "
-                                "device suite has not been re-run on the current runtime yet, so each number is for the runtime of its date. "
-                                "\"float\" = exact binary layers with float glue (stage all); int8_full = full-integer file. "
-                                "Emulated timings are never published.")
-    zl = ["| model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | S22 ms (t1) | weights licence | release |",
+        lines.append(f"| `{m['id']}` | {m['task']} | {acc} | " + " | ".join(cell(m["phones"].get(did)) for did in pids) + " |")
+    devline = "; ".join(f"{devs[did].get('short') or did}: {devs[did].get('soc')}, 1 thread on the {device_pin(devs[did])}"
+                        for did in pids)
+    speed = "\n".join(lines) + (
+        "\n\nEach cell: median latency of one inference, 1 thread pinned to the fastest core / 4 threads; "
+        "first line exact binary layers with float glue (stage all), \"int8\" line the full-integer file (int8_full) where "
+        "measured, else the int8 kernels on the exact file. " + (devline + ". " if devline else "") + speed_legend(d) +
+        "Per-run details (date, runtime, clock ceilings): `results/speed_<device>.json`. Emulated timings are never published.")
+    ver = "; ".join(f"{devs[did].get('short') or did}: {verified_text(devs[did])}" for did in devs if verified_text(devs[did]))
+    if ver:
+        speed += ("\n\nOn-device correctness (every model, every stage, `results/models/<id>.json` → device_verification): "
+                  + ver + ".")
+    zl = ["| model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | fastest phone ms (1 thread) | weights licence | release |",
           "|---|---|---|---|---|---|---|---|---|"]
     for m in ms:
         i8 = m["int8"]
         i8s = f"{i8['delta']:+.2f} pt ({i8['set']}, n={i8['n']})" if i8 and isinstance(i8.get("delta"), (int, float)) else "–"
-        t1 = m["s22"].get("t1")
+        t1 = m["best"].get("t1")
         zl.append(f"| `{m['id']}` | {m['task']} | {m['framework']} | {fmt_acc(m['reference'], m['metric'])} → "
                   f"{fmt_acc(m['runtime'], m['metric'])} | {m['eval_set']} ({m['n']}) | {i8s} | "
-                  f"{(fmt_ms(t1['ms']) + VALIDITY_MARK.get(t1.get('validity'), '')) if t1 else '–'} | "
+                  f"{(fmt_ms(t1['ms']) + mark(t1) + ' (' + t1['device_short'] + ')') if t1 else '–'} | "
                   f"{(m['licence_weights'] or '?')[:48].replace('|', '/')} | {'yes' if m['release'] else '–'} |")
     zoo = "\n".join(zl)
     return {"stats": stats, "speed": speed, "zoo_top": "\n".join(zl[:2] + [r for r in zl[2:] if any(f"`{m['id']}`" in r for m in hi or [])]),
@@ -262,9 +354,10 @@ def site_index(d: dict) -> str:
     ms = d["models"]
     n_rel = sum(1 for m in ms if m["release"])
     tasks = sorted({m["task"].split(" (")[0] for m in ms})
-    best = [m for m in ms if m["s22"].get("t4")]
-    fast = min(best, key=lambda m: m["s22"]["t4"]["ms"]) if best else None
-    qs = """<pre><code><span class="c"># install the tools (Python 3.10+) and build the runtime</span>
+    phones = [f"{dev.get('short') or did} ({re.sub(r' [(].*', '', dev.get('soc') or '')})"
+              for did, dev in d["devices"].items() if did in d["speed"]]
+    phones_txt = ", ".join(phones) if phones else "a real phone"
+    qs ="""<pre><code><span class="c"># install the tools (Python 3.10+) and build the runtime</span>
 git clone https://github.com/fedeloper/bitino && cd bitino
 pip install -e .
 cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release &amp;&amp; cmake --build build/host
@@ -314,8 +407,8 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
   </div>
   <div>
     <h2>Honest numbers</h2>
-    <p>Speed comes only from a real phone (Galaxy S22, Snapdragon 8 Gen 1) and a real x86 host, with the date,
-    thread setting and thermal state of every run. Emulators are used for correctness and instruction counts,
+    <p>Speed comes only from real phones ({esc(phones_txt)}) and a real x86 host, with the date,
+    thread setting and clock state of every run. Emulators are used for correctness and instruction counts,
     never for timings.</p>
   </div>
 </section>
@@ -348,7 +441,7 @@ def site_models(d: dict) -> str:
     <select id="task" aria-label="Task"><option value="">All tasks</option></select>
     <select id="fw" aria-label="Framework"><option value="">All frameworks</option></select>
     <label><input id="rel" type="checkbox"> release files only</label>
-    <label><input id="spd" type="checkbox"> measured on S22</label>
+    <label><input id="spd" type="checkbox"> measured on a phone</label>
     <span id="count" class="muted"></span>
   </div>
   <div class="table-wrap">
@@ -356,16 +449,18 @@ def site_models(d: dict) -> str:
     <thead><tr>
       <th data-k="id">Model</th><th data-k="task">Task</th><th data-k="framework">Framework</th>
       <th data-k="runtime" class="num">Accuracy (ref → Bitino)</th><th data-k="int8d" class="num">int8 Δ</th>
-      <th data-k="insn_opt" class="num">M instr. (exact / int8)</th><th data-k="s22t1" class="num">S22 t1 ms</th>
-      <th data-k="s22t4" class="num">S22 t4 ms</th><th data-k="x86" class="num">x86 t1 ms</th>
+      <th data-k="insn_opt" class="num">M instr. (exact / int8)</th><th data-k="p1" class="num">Phone 1 thread ms</th>
+      <th data-k="p4" class="num">Phone 4 threads ms</th><th data-k="x86" class="num">x86 t1 ms</th>
       <th data-k="release">Licence / get it</th>
     </tr></thead>
     <tbody></tbody>
   </table>
   </div>
-  <p class="note">⚠ throttled (thermal frequency cap during at least one repeat) · † caps unknown (run predates the cap check)
-  · ‡ x86 number from an older runtime (2026-11-01). M instr. = exact ARM instructions per inference counted under
-  qemu (1 thread): a cost measure, not a timing.</p>
+  <p class="note">Phone columns: the fastest measured phone for the exact stages (1 thread pinned to its fastest core,
+  4 threads unpinned); every device's numbers, int8 included, are on the <a href="benchmarks.html">benchmarks</a> page.
+  ◇ vendor power policy held the clock ceiling below the maximum (no thermal event) · ⚠ thermal frequency cap during
+  at least one repeat · † caps unknown (run predates the cap check) · ‡ x86 number from an older runtime (2026-11-01).
+  M instr. = exact ARM instructions per inference counted under qemu (1 thread): a cost measure, not a timing.</p>
 </section>
 <script id="zoo-data" type="application/json">{data}</script>
 """
@@ -373,58 +468,118 @@ def site_models(d: dict) -> str:
 
 
 def worst_cap(r: dict) -> str:
-    """Lowest X2 (big core) frequency cap seen during the run, e.g. 'X2 ≤ 1.61 of 3.00 GHz'."""
+    """Lowest ceiling of the fastest cpufreq policy seen during the run, e.g. 'X2 down to 1.61 of 3.00 GHz'
+    (caps text lists the fastest policy first)."""
     caps = []
     for c in r.get("caps_seen") or []:
-        m = re.search(r"X2 ([\d.]+)/([\d.]+) GHz", c)
+        m = re.match(r"\s*([^,]+?) ([\d.]+)/([\d.]+) GHz", c)
         if m:
-            caps.append((float(m.group(1)), float(m.group(2))))
+            caps.append((float(m.group(2)), float(m.group(3)), m.group(1)))
+    v = norm_validity(r.get("validity"))
     if not caps:
-        return "" if r.get("validity") == "clean" else ("unknown" if r.get("validity") == "unknown-caps" else "")
-    lo, mx = min(caps)
-    return f"X2 down to {lo:.2f} of {mx:.2f} GHz"
+        return "unknown" if v == "unknown-caps" else ""
+    lo, mx, name = min(caps)
+    return f"{name} {'held at' if v == 'vendor-policy' else 'down to'} {lo:.2f} of {mx:.2f} GHz"
 
 
-def site_benchmarks(d: dict) -> str:
-    s22, x86 = d["s22"], d["x86"]
-    dev = s22.get("device", {})
-    cores = ", ".join(f"{v['count']}× {k} ({v['max_ghz']:.2f} GHz)" for k, v in (dev.get("cores") or {}).items())
+def vbadge(v) -> str:
+    v = norm_validity(v)
+    return f"<span class='v v-{esc(v)}'>{esc(v)}</span>"
+
+
+def verified_text(dev: dict) -> str:
+    """On-device correctness summary of results/devices.json "verified" (scripts/device_final_suite.sh)."""
+    v = dev.get("verified") or {}
+    if not v.get("stages"):
+        return ""
+    ds = v.get("dates") or []
+    when = (f", {ds[0]}" if len(ds) == 1 else f", {ds[0]} to {ds[-1]}") if ds else ""
+    return (f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} "
+            "(outputs byte-identical to the emulated-ARM run of the same code)")
+
+
+def device_card(did: str, dev: dict, runs: list[dict]) -> str:
+    cores = ", ".join(f"{c.get('count')}× {c.get('name')} ({c.get('max_ghz', 0):.2f} GHz)" for c in dev.get("cores") or [])
+    counts = " · ".join(f"{n} {vbadge(v)}" for v, n in sorted(validity_counts(runs).items()))
+    dates = sorted({r.get("date") for r in runs if r.get("date")})
+    span = (dates[0] if dates[0] == dates[-1] else f"{dates[0]} to {dates[-1]}") if dates else "–"
+    fb = dev.get("kernels") == "portable-fallback"
+    notes = "".join(f"<p class=small>{esc(n)}</p>" for n in dev.get("notes") or [])
+    return f"""<div class="device" id="dev-{esc(did)}">
+    <h3>{esc(dev.get('name') or did)}</h3>
+    <p class=small>{esc(dev.get('soc'))} · Android {esc(dev.get('android'))} · {esc(dev.get('abi'))}{' · <b>32-bit fallback build</b>' if fb else ''}</p>
+    <p class=small>{esc(cores)}</p>
+    <p class=small>{esc(dev.get('isa'))}; 1-thread runs pinned to the {esc(device_pin(dev))} (cpu{esc(dev.get('fastest_cpu', '7'))})</p>
+    <p class=small>{len(runs)} runs, {esc(span)}: {counts}</p>
+    {f"<p class=small>{esc(verified_text(dev))}</p>" if verified_text(dev) else ""}
+    {notes}
+  </div>"""
+
+
+def run_rows(runs: list[dict]) -> str:
     rows = []
-    for r in sorted(s22.get("runs", []), key=lambda r: (r.get("date") or "", r["model_id"], r.get("config") or ""), reverse=True):
+    for r in sorted(runs, key=lambda r: (r.get("date") or "", r["model_id"], r.get("config") or ""), reverse=True):
         rows.append(f"<tr><td>{esc(r.get('date'))}</td><td><code>{esc(r['model_id'])}</code></td><td>{esc(r.get('model_file'))}</td>"
                     f"<td>{esc(r.get('stage'))}</td><td class=num>{esc(r.get('threads'))}</td><td>{esc(r.get('affinity'))}</td>"
                     f"<td class=num>{fmt_ms(r.get('median_ms'))}</td><td class=num>{esc(r.get('repeats'))}×{esc(r.get('iterations'))}</td>"
-                    f"<td><span class='v v-{esc(r.get('validity'))}'>{esc(r.get('validity'))}</span></td>"
+                    f"<td>{vbadge(r.get('validity'))}</td>"
                     f"<td class=small title='{esc('; '.join(r.get('caps_seen') or []))}'>{esc(worst_cap(r))}</td></tr>")
-    host = x86.get("host", {})
+    return "".join(rows)
+
+
+def site_benchmarks(d: dict) -> str:
+    devs, speed, x86 = d["devices"], d["speed"], d["x86"]
+    pids = list(speed)
+    cards = "".join(device_card(did, devs[did], speed[did].get("runs", [])) for did in pids)
+
+    def cell(x):
+        if not x:
+            return "<td class=num>–</td>"
+        return (f"<td class=num title='{esc(x.get('stage'))}, {esc(x.get('date'))}, {esc(norm_validity(x.get('validity')))}'>"
+                f"{fmt_ms(x['ms'])}{esc(mark(x))}</td>")
+
+    hdr1 = "".join(f"<th colspan=4 class=num><a href='#dev-{esc(did)}'>{esc(devs[did].get('short') or did)}</a></th>" for did in pids)
+    hdr2 = "".join("<th class=num>1T</th><th class=num>4T</th><th class=num>int8 1T</th><th class=num>int8 4T</th>" for _ in pids)
     xrows = []
+    for m in sorted((m for m in d["models"] if m["phones"]), key=lambda m: m["id"]):
+        tds = "".join(cell((m["phones"].get(did) or {}).get(k)) for did in pids for k in ("t1", "t4", "t1_int8", "t4_int8"))
+        xrows.append(f"<tr><td><code>{esc(m['id'])}</code></td>{tds}</tr>")
+    per_dev = "".join(
+        f"""<details class="runs"><summary>{esc(devs[did].get('name') or did)}: all runs ({len(speed[did].get('runs', []))})</summary>
+  <div class="table-wrap"><table class="bench">
+  <thead><tr><th>Date</th><th>Model</th><th>File</th><th>Stage</th><th class=num>Threads</th><th>Affinity</th><th class=num>Median ms</th><th class=num>Repeats×iters</th><th>Validity</th><th>Clock ceiling</th></tr></thead>
+  <tbody>{run_rows(speed[did].get('runs', []))}</tbody></table></div></details>"""
+        for did in pids)
+    pending = [devs[did].get("short") or did for did in pids if (speed[did].get("next_suite") or {}).get("status") == "pending"]
+    host = x86.get("host", {})
+    hrows = []
     for r in sorted(x86.get("runs", []), key=lambda r: r["model_id"]):
         if r.get("config") != "t1":
             continue
-        xrows.append(f"<tr><td><code>{esc(r['model_id'])}</code></td><td>{esc(r.get('stage'))}</td><td class=num>{esc(r.get('threads'))}</td>"
-                     f"<td class=num>{fmt_ms(r.get('median_ms'))}</td><td>{esc(r.get('date'))}</td><td><span class='v v-{esc(r.get('validity'))}'>"
-                     f"{esc(r.get('validity'))}</span></td></tr>")
+        hrows.append(f"<tr><td><code>{esc(r['model_id'])}</code></td><td>{esc(r.get('stage'))}</td><td class=num>{esc(r.get('threads'))}</td>"
+                     f"<td class=num>{fmt_ms(r.get('median_ms'))}</td><td>{esc(r.get('date'))}</td><td>{vbadge(r.get('validity'))}</td></tr>")
     body = f"""
 <section>
   <h1>Benchmarks</h1>
   <h2>Method</h2>
   <ul>
-    <li><b>Device:</b> {esc(dev.get('name'))}, {esc(dev.get('soc'))}, Android {esc(dev.get('android'))}; {esc(cores)}; {esc(dev.get('isa'))}.</li>
-    <li><b>Measurement:</b> <code>bitino_bench</code> pushed over adb, one inference (batch 1) per iteration; median per repeat, median of repeats; repeats interleaved across configurations so thermal drift spreads evenly. Each run records CPU frequency caps, Android thermal status and skin temperature before and after.</li>
-    <li><b>Validity labels:</b> <span class="v v-clean">clean</span> every repeat ran at full clocks · <span class="v v-throttled">throttled</span> at least one repeat ran under a thermal frequency cap (listed) · <span class="v v-unknown-caps">unknown-caps</span> run made before the cap check existed.</li>
+    <li><b>Measurement:</b> <code>bitino_bench</code> pushed over adb, one inference (batch 1) per iteration; median per repeat, median of repeats; repeats interleaved across configurations so thermal drift spreads evenly. Each run records the CPU frequency ceilings, Android thermal status and skin temperature before and after. 1-thread runs are pinned to the phone's fastest core; 4- and 8-thread runs are left to the scheduler.</li>
+    <li><b>Validity labels:</b> <span class="v v-clean">clean</span> every repeat ran with every readable frequency ceiling at its maximum · <span class="v v-vendor-policy">vendor-policy</span> the phone's own power policy held a ceiling below the maximum while Android reported no thermal event (stock settings, screen off; steady, recorded per run) · <span class="v v-thermal-throttled">thermal-throttled</span> at least one repeat ran under a thermal frequency cap · <span class="v v-unknown-caps">unknown-caps</span> run made before the cap check existed.</li>
     <li><b>Never published:</b> timings from emulators (qemu) or from CI machines. The emulator provides exact instruction counts, which are shown in the model zoo as a cost measure.</li>
   </ul>
+  <h2>Devices</h2>
+  <div class="devices">{cards or '<p>No phone runs yet.</p>'}</div>
   <h2>Status, honestly</h2>
-  <p>Every S22 run published so far is either <span class="v v-throttled">throttled</span> (the phone charged over USB
-  and the vendor thermal engine capped the clocks, the X2 core down to 1.61 of 3.00 GHz) or
-  <span class="v v-unknown-caps">unknown-caps</span> (the first runs, before the cap check existed). They are real
-  measurements on the runtime of their date, labelled as such, and they are not the phone's best case. The full device
-  suite has not been re-run since the latest runtime merges (status: {esc((s22.get('next_suite') or {}).get('status', 'pending'))});
-  its runs will be added to <code>results/speed_s22.json</code> with the same schema.</p>
-  <h2>Galaxy S22 runs ({len(s22.get('runs', []))})</h2>
-  <div class="table-wrap"><table class="bench">
-  <thead><tr><th>Date</th><th>Model</th><th>File</th><th>Stage</th><th class=num>Threads</th><th>Affinity</th><th class=num>Median ms</th><th class=num>Repeats×iters</th><th>Validity</th><th>Caps seen</th></tr></thead>
-  <tbody>{''.join(rows)}</tbody></table></div>
+  <p>{speed_legend(d, html_out=True)}Each number is for the runtime of its date (listed per run below).{(' The full device suite has not been re-run on the current runtime on: ' + esc(', '.join(pending)) + '.') if pending else ''}</p>
+  <h2>All phones, per model (ms)</h2>
+  <p class=small>Median latency of one inference. 1T = 1 thread on the fastest core, 4T = 4 threads; exact stages
+  (binary layers, float glue) and int8 (full-integer file where measured, else int8 kernels on the exact file).
+  ◇ vendor-policy · ⚠ thermal-throttled · † unknown-caps; hover a number for its stage, date and label.</p>
+  <div class="table-wrap"><table class="bench cross">
+  <thead><tr><th rowspan=2>Model</th>{hdr1}</tr><tr>{hdr2}</tr></thead>
+  <tbody>{''.join(xrows)}</tbody></table></div>
+  <h2>Every run</h2>
+  {per_dev}
   <h2>x86-64 host</h2>
   <p>{esc(host.get('cpu'))}, governor {esc(host.get('governor'))}, turbo {esc(host.get('turbo'))}, max {esc(host.get('scaling_max_freq_ghz'))} GHz,
   load average {esc(host.get('loadavg_start'))} at start. These runs used the runtime of 2026-11-01 (before the int8_full
@@ -432,7 +587,7 @@ def site_benchmarks(d: dict) -> str:
   host suite is re-run. Slot: <code>results/speed_x86.json</code> → <code>next_suite</code>.</p>
   <div class="table-wrap"><table class="bench">
   <thead><tr><th>Model</th><th>Stage</th><th class=num>Threads</th><th class=num>Median ms</th><th>Date</th><th>Validity</th></tr></thead>
-  <tbody>{''.join(xrows)}</tbody></table></div>
+  <tbody>{''.join(hrows)}</tbody></table></div>
 </section>
 """
     return page("Bitino · Benchmarks", "benchmarks.html", body)

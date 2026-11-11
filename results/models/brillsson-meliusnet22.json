@@ -32,6 +32,52 @@
    "note": "task accuracy of the paper not reproduced (needs the probe trained on the SC train split / other datasets); numerical validation only"
   }
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "optimized": 34.948
@@ -42,9 +88,136 @@
  },
  "speed": {
   "s22": [],
+  "oneplus-open": [
+   {
+    "model_id": "brillsson-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:10:18Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 3.403698,
+    "median_range_ms": [
+     3.402292,
+     3.41138
+    ],
+    "p90_ms": 3.4424484,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17208,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "brillsson-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:10:22Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 2.319063,
+    "median_range_ms": [
+     2.318021,
+     2.3325
+    ],
+    "p90_ms": 2.3690573,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20404,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "brillsson-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:10:27Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 3.2149475,
+    "median_range_ms": [
+     3.0197655,
+     3.2617185
+    ],
+    "p90_ms": 3.719009999999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20500,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "brillsson-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:10:31Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 3.101666,
+    "median_range_ms": [
+     3.098125,
+     3.1097915
+    ],
+    "p90_ms": 3.143166,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15504,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "runtime": "development runtime as of 2026-01-25"
+   }
+  ],
   "x86": [
    {
     "model_id": "brillsson-meliusnet22",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -65,6 +238,7 @@
    },
    {
     "model_id": "brillsson-meliusnet22",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -85,6 +259,7 @@
    },
    {
     "model_id": "brillsson-meliusnet22",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

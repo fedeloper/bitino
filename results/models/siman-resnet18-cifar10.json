@@ -75,6 +75,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 24.279,
@@ -86,9 +137,136 @@
  },
  "speed": {
   "s22": [],
+  "oneplus-open": [
+   {
+    "model_id": "siman-resnet18-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T07:05:43Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.75487,
+    "median_range_ms": [
+     2.7532035,
+     2.766016
+    ],
+    "p90_ms": 2.7890683000000003,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 10700,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c0182500c28346bfe4cc16bbbc5db8cc94ba5afab8ca681fcdb892b5fac3fc9a",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "siman-resnet18-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T07:05:47Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 1.859401,
+    "median_range_ms": [
+     1.8575265,
+     1.86612
+    ],
+    "p90_ms": 1.9745989,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14104,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c0182500c28346bfe4cc16bbbc5db8cc94ba5afab8ca681fcdb892b5fac3fc9a",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "siman-resnet18-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T07:05:51Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 1.9644275,
+    "median_range_ms": [
+     1.9547915,
+     2.019271
+    ],
+    "p90_ms": 2.3179320999999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14640,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c0182500c28346bfe4cc16bbbc5db8cc94ba5afab8ca681fcdb892b5fac3fc9a",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "siman-resnet18-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T07:05:55Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.716042,
+    "median_range_ms": [
+     2.7149475,
+     2.7316665
+    ],
+    "p90_ms": 2.7521663,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 10796,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c0182500c28346bfe4cc16bbbc5db8cc94ba5afab8ca681fcdb892b5fac3fc9a",
+    "runtime": "development runtime as of 2026-01-25"
+   }
+  ],
   "x86": [
    {
     "model_id": "siman-resnet18-cifar10",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -109,6 +287,7 @@
    },
    {
     "model_id": "siman-resnet18-cifar10",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -129,6 +308,7 @@
    },
    {
     "model_id": "siman-resnet18-cifar10",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

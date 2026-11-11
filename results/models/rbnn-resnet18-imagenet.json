@@ -109,6 +109,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 86.039,
@@ -120,9 +171,136 @@
  },
  "speed": {
   "s22": [],
+  "oneplus-open": [
+   {
+    "model_id": "rbnn-resnet18-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:53:02Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 13.112266,
+    "median_range_ms": [
+     13.0996875,
+     13.1303385
+    ],
+    "p90_ms": 13.2150262,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22460,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e8a74da6060c595228789dd5de161b7374e26348479b54290ecc83d2338add81",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "rbnn-resnet18-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:53:06Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 7.8585155,
+    "median_range_ms": [
+     7.8458335,
+     7.8812505
+    ],
+    "p90_ms": 7.9055215,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27248,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e8a74da6060c595228789dd5de161b7374e26348479b54290ecc83d2338add81",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "rbnn-resnet18-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:53:11Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 7.756016,
+    "median_range_ms": [
+     7.714271,
+     8.0603905
+    ],
+    "p90_ms": 11.272885599999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 30272,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e8a74da6060c595228789dd5de161b7374e26348479b54290ecc83d2338add81",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "rbnn-resnet18-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:53:16Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 9.801823,
+    "median_range_ms": [
+     9.766875,
+     9.828567
+    ],
+    "p90_ms": 9.920593799999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 23164,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e8a74da6060c595228789dd5de161b7374e26348479b54290ecc83d2338add81",
+    "runtime": "development runtime as of 2026-01-25"
+   }
+  ],
   "x86": [
    {
     "model_id": "rbnn-resnet18-imagenet",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -143,6 +321,7 @@
    },
    {
     "model_id": "rbnn-resnet18-imagenet",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -163,6 +342,7 @@
    },
    {
     "model_id": "rbnn-resnet18-imagenet",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

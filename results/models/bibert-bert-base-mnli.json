@@ -75,6 +75,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 627.633,
@@ -88,6 +139,7 @@
   "s22": [
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:38:49Z",
     "plan": "quick_20261102_1142",
@@ -106,17 +158,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48588,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:38:55Z",
     "plan": "quick_20261102_1142",
@@ -135,17 +190,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 51348,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:39:05Z",
     "plan": "quick_20261102_1142",
@@ -164,17 +222,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54524,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:39:26Z",
     "plan": "quick_20261102_1142",
@@ -193,19 +254,148 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48100,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
     "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bibert-bert-base-mnli",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:38:26Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 62.5633335,
+    "median_range_ms": [
+     62.5252085,
+     62.6153385
+    ],
+    "p90_ms": 62.6988437,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 47956,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bibert-bert-base-mnli",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:38:32Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 28.6846095,
+    "median_range_ms": [
+     28.6528125,
+     31.1979165
+    ],
+    "p90_ms": 31.450526,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 47876,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bibert-bert-base-mnli",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:38:38Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 25.6640365,
+    "median_range_ms": [
+     25.582708,
+     25.7485155
+    ],
+    "p90_ms": 26.6748495,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 47908,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bibert-bert-base-mnli",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:38:45Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 62.6584375,
+    "median_range_ms": [
+     62.608802,
+     62.686484
+    ],
+    "p90_ms": 62.8971985,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 47844,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "035139c6064c6ee6320e6f75c0ae27e7d2e02c031099de305139231882838262",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -226,6 +416,7 @@
    },
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -246,6 +437,7 @@
    },
    {
     "model_id": "bibert-bert-base-mnli",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

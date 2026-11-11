@@ -170,6 +170,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 67.26,
@@ -183,6 +234,7 @@
   "s22": [
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:05:50Z",
     "plan": "stages_20261029_1605",
@@ -206,11 +258,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:06:08Z",
     "plan": "stages_20261029_1605",
@@ -234,11 +289,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:06:26Z",
     "plan": "stages_20261029_1605",
@@ -262,11 +320,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:06:43Z",
     "plan": "stages_20261029_1605",
@@ -290,11 +351,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:07:01Z",
     "plan": "stages_20261029_1605",
@@ -318,11 +382,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:07:18Z",
     "plan": "stages_20261029_1605",
@@ -346,11 +413,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:07:34Z",
     "plan": "stages_20261029_1605",
@@ -374,11 +444,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:07:50Z",
     "plan": "stages_20261029_1605",
@@ -402,11 +475,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "8de6436966357cee8879865316ad1961e71bc1c5ab39496814a2c51a9a543051",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:08:06Z",
     "plan": "stages_20261029_1605",
@@ -430,11 +506,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:08:22Z",
     "plan": "stages_20261029_1605",
@@ -458,11 +537,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:08:38Z",
     "plan": "stages_20261029_1605",
@@ -486,11 +568,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:08:54Z",
     "plan": "stages_20261029_1605",
@@ -514,11 +599,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:16:52Z",
     "plan": "threads_20261029_1605",
@@ -542,11 +630,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:17:08Z",
     "plan": "threads_20261029_1605",
@@ -570,11 +661,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:17:24Z",
     "plan": "threads_20261029_1605",
@@ -598,11 +692,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:17:40Z",
     "plan": "threads_20261029_1605",
@@ -626,11 +723,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:17:56Z",
     "plan": "threads_20261029_1605",
@@ -654,11 +754,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:18:12Z",
     "plan": "threads_20261029_1605",
@@ -682,11 +785,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:18:31Z",
     "plan": "threads_20261029_1605",
@@ -710,11 +816,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:18:47Z",
     "plan": "threads_20261029_1605",
@@ -738,11 +847,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:19:03Z",
     "plan": "threads_20261029_1605",
@@ -766,11 +878,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:19:19Z",
     "plan": "threads_20261029_1605",
@@ -794,11 +909,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:19:37Z",
     "plan": "threads_20261029_1605",
@@ -822,11 +940,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-10-29",
     "timestamp_utc": "2026-10-29T15:19:56Z",
     "plan": "threads_20261029_1605",
@@ -850,11 +971,14 @@
     "notes": [
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-10-29"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:15Z",
     "plan": "speed_all_2026-11-04",
@@ -872,7 +996,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -880,11 +1004,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:17Z",
     "plan": "speed_all_2026-11-04",
@@ -902,7 +1029,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -910,11 +1037,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:26Z",
     "plan": "speed_all_2026-11-04",
@@ -932,7 +1062,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -940,11 +1070,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:20Z",
     "plan": "speed_all_2026-11-04",
@@ -962,7 +1095,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -970,13 +1103,142 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "62c4d31d4ad4b1cabf571d597eb9833a7afbfbeb6814adc832bb48204fb0fc7a",
     "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:37:51Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 5.0525785,
+    "median_range_ms": [
+     5.0347135,
+     5.08263
+    ],
+    "p90_ms": 5.112640900000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15696,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:37:55Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 2.703099,
+    "median_range_ms": [
+     2.6953385,
+     2.7083595
+    ],
+    "p90_ms": 2.7363958,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19428,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:37:59Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 2.5384895,
+    "median_range_ms": [
+     2.5211975,
+     2.5596615
+    ],
+    "p90_ms": 2.8629116,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22216,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:38:04Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 4.7671875,
+    "median_range_ms": [
+     4.7648175,
+     4.7790885
+    ],
+    "p90_ms": 4.8036454,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14804,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -997,6 +1259,7 @@
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -1017,6 +1280,7 @@
    },
    {
     "model_id": "larq-zoo-quicknet-small",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

@@ -89,8 +89,9 @@ def idle_baseline_c(max_age_h: float) -> dict:
     """Idle CPU temperature: cached, or measured by idling until the temperature stops falling
     (< 0.5 C drop over 30 s, at most 300 s)."""
     serial = adb("get-serialno", check=False).stdout.strip()
+    cache = BASELINE_CACHE.replace(".json", f"_{serial}.json")  # one per device: several phones can run at once
     try:
-        c = json.load(open(BASELINE_CACHE))
+        c = json.load(open(cache))
         if c.get("serial") == serial and time.time() - c["measured_unix"] < max_age_h * 3600:
             return c
     except (OSError, ValueError, KeyError):
@@ -105,8 +106,8 @@ def idle_baseline_c(max_age_h: float) -> dict:
     c = {"serial": serial, "temp_c": hist[-1][1], "measured_unix": hist[-1][0],
          "measured_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(hist[-1][0])),
          "settle_s": round(hist[-1][0] - hist[0][0], 1), "start_temp_c": hist[0][1]}
-    os.makedirs(os.path.dirname(BASELINE_CACHE), exist_ok=True)
-    json.dump(c, open(BASELINE_CACHE, "w"), indent=1)
+    os.makedirs(os.path.dirname(cache), exist_ok=True)
+    json.dump(c, open(cache, "w"), indent=1)
     print(f"idle baseline {c['temp_c']:.1f} C (from {c['start_temp_c']:.1f} C after {c['settle_s']} s)", file=sys.stderr)
     return c
 
@@ -429,6 +430,14 @@ def main() -> int:
     plan = {"plan": a.plan, "model_dir": a.model_dir, "warmup": a.warmup, "iterations": a.iterations,
             "repeats": a.repeats, "cooldown_mode": a.cooldown_mode, "configs": cfgs,
             "binaries": {k: v for k, v in binaries.items() if k in pushed}}
+    if adaptive:
+        try:
+            cpu_temp_c()
+        except RuntimeError as e:  # e.g. thermal zones not readable from adb shell (Unisoc, MediaTek phones)
+            adaptive = False
+            plan["cooldown_mode"] = "fixed"
+            plan["cooldown_fallback"] = f"adaptive cool-down unavailable ({e}); fixed {a.cooldown:g} s between runs"
+            print(plan["cooldown_fallback"], file=sys.stderr)
     if adaptive:
         base = idle_baseline_c(a.baseline_max_age)
         target = base["temp_c"] + a.cool_margin

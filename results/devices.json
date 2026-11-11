@@ -1,0 +1,215 @@
+{
+ "schema": "bitino.results.v1.devices",
+ "generated": "2026-11-11",
+ "devices": {
+  "s22": {
+   "kind": "phone",
+   "name": "Samsung Galaxy S22 (SM-S901U1)",
+   "short": "Galaxy S22",
+   "soc": "Qualcomm Snapdragon 8 Gen 1 (SM8450)",
+   "android": "16",
+   "abi": "arm64-v8a",
+   "kernels": "neon",
+   "isa": "ARMv9-A: NEON, dotprod, i8mm, bf16, fp16",
+   "cores": [
+    {
+     "name": "Cortex-X2",
+     "count": 1,
+     "max_ghz": 2.9952,
+     "cpus": "7"
+    },
+    {
+     "name": "Cortex-A710",
+     "count": 3,
+     "max_ghz": 2.496,
+     "cpus": "4-6"
+    },
+    {
+     "name": "Cortex-A510",
+     "count": 4,
+     "max_ghz": 1.7856,
+     "cpus": "0-3"
+    }
+   ],
+   "policies": {
+    "7": "X2",
+    "4": "A710",
+    "0": "A510"
+   },
+   "fastest_cpu": "7",
+   "product_models": [
+    "SM-S901U1"
+   ],
+   "tags": [
+    "sm-s901u1",
+    "s22"
+   ],
+   "legacy_untagged": true,
+   "notes": [
+    "Runs up to 2026-11-05 were made while the phone charged over USB: Samsung's thermal engine then capped the clocks on skin temperature (X2 down to 1.61 of 3.00 GHz); they are labelled thermal-throttled or, before the cap check existed, unknown-caps."
+   ],
+   "api_level": "36",
+   "runs": 209,
+   "verified": {
+    "models": 114,
+    "stages": 342,
+    "stages_passed": 342,
+    "dates": [
+     "2026-11-02"
+    ]
+   }
+  },
+  "oneplus-open": {
+   "kind": "phone",
+   "name": "OnePlus Open (CPH2551)",
+   "short": "OnePlus Open",
+   "soc": "Qualcomm Snapdragon 8 Gen 2 (SM8550)",
+   "android": "16",
+   "abi": "arm64-v8a",
+   "kernels": "neon",
+   "isa": "ARMv9-A: NEON, dotprod, i8mm, bf16, fp16",
+   "cores": [
+    {
+     "name": "Cortex-X3",
+     "count": 1,
+     "max_ghz": 3.1872,
+     "cpus": "7"
+    },
+    {
+     "name": "Cortex-A715",
+     "count": 2,
+     "max_ghz": 2.8032,
+     "cpus": "3-4"
+    },
+    {
+     "name": "Cortex-A710",
+     "count": 2,
+     "max_ghz": 2.8032,
+     "cpus": "5-6"
+    },
+    {
+     "name": "Cortex-A510",
+     "count": 3,
+     "max_ghz": 2.016,
+     "cpus": "0-2"
+    }
+   ],
+   "policies": {
+    "7": "X3",
+    "3": "A715/A710",
+    "0": "A510"
+   },
+   "fastest_cpu": "7",
+   "product_models": [
+    "CPH2551"
+   ],
+   "tags": [
+    "cph2551",
+    "oneplus-open"
+   ],
+   "notes": [
+    "Stock settings, screen off: the vendor power policy holds the clock ceilings below the maximum with no thermal event (Android thermal status 0): X3 2.23 of 3.19 GHz, A715/A710 1.79 of 2.80 GHz. Runs are labelled vendor-policy and the ceilings are recorded per run. With the screen on the ceilings move (3.19, then 2.48 and 2.23 GHz under load), so they are not a steadier condition."
+   ],
+   "runs": 456,
+   "verified": {
+    "models": 114,
+    "stages": 449,
+    "stages_passed": 449,
+    "dates": [
+     "2026-11-11"
+    ]
+   }
+  },
+  "moto-e13": {
+   "kind": "phone",
+   "name": "Motorola moto e13",
+   "short": "moto e13",
+   "soc": "Unisoc T606",
+   "android": "13",
+   "abi": "arm64-v8a",
+   "kernels": "neon",
+   "isa": "ARMv8.2-A: NEON, dotprod (no i8mm)",
+   "cores": [
+    {
+     "name": "Cortex-A75",
+     "count": 2,
+     "max_ghz": 1.612,
+     "cpus": "6-7"
+    },
+    {
+     "name": "Cortex-A55",
+     "count": 6,
+     "max_ghz": 1.612,
+     "cpus": "0-5"
+    }
+   ],
+   "policies": {
+    "6": "A75",
+    "0": "A55"
+   },
+   "fastest_cpu": "7",
+   "product_models": [
+    "moto e13"
+   ],
+   "tags": [
+    "moto-e13"
+   ],
+   "notes": [
+    "Entry-level phone (2 GB RAM). The A55 cluster's frequency ceiling (policy0 scaling_max_freq) is not readable without root, so only the A75 cluster's ceiling is checked."
+   ],
+   "runs": 0,
+   "verified": {
+    "models": 0,
+    "stages": 0,
+    "stages_passed": 0,
+    "dates": []
+   }
+  },
+  "redmi-9a": {
+   "kind": "phone",
+   "name": "Xiaomi Redmi 9A (M2006C3LG)",
+   "short": "Redmi 9A",
+   "soc": "MediaTek Helio G35 (MT6765)",
+   "android": "11",
+   "abi": "armeabi-v7a",
+   "kernels": "portable-fallback",
+   "isa": "ARMv8-A CPU running 32-bit Android (armeabi-v7a): NEON only",
+   "cores": [
+    {
+     "name": "Cortex-A53",
+     "count": 4,
+     "max_ghz": 2.001,
+     "cpus": "0-3"
+    },
+    {
+     "name": "Cortex-A53",
+     "count": 4,
+     "max_ghz": 1.5,
+     "cpus": "4-7"
+    }
+   ],
+   "policies": {
+    "4": "A53 (1.5)",
+    "0": "A53 (2.0)"
+   },
+   "fastest_cpu": "0",
+   "product_models": [
+    "M2006C3LG"
+   ],
+   "tags": [
+    "m2006c3lg",
+    "redmi-9a"
+   ],
+   "notes": [
+    "32-bit Android: runs the armeabi-v7a build, which has no NEON kernels yet (portable C++ fallback). Its numbers show that the runtime works there, not what the ARM kernels can do."
+   ],
+   "runs": 0,
+   "verified": {
+    "models": 0,
+    "stages": 0,
+    "stages_passed": 0,
+    "dates": []
+   }
+  }
+ }
+}

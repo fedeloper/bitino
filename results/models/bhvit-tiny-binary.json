@@ -74,6 +74,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1059",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 305.811,
@@ -87,6 +138,7 @@
   "s22": [
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:18:31Z",
     "plan": "stages_20261102_1142",
@@ -105,17 +157,20 @@
     "iterations": 5,
     "warmup": 1,
     "peak_rss_kb": 72376,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:18:44Z",
     "plan": "stages_20261102_1142",
@@ -134,17 +189,20 @@
     "iterations": 10,
     "warmup": 2,
     "peak_rss_kb": 71796,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:19:25Z",
     "plan": "stages_20261102_1142",
@@ -163,17 +221,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 72068,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:19:50Z",
     "plan": "stages_20261102_1142",
@@ -192,17 +253,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 51932,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:20:13Z",
     "plan": "stages_20261102_1142",
@@ -221,17 +285,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 50456,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:20:37Z",
     "plan": "stages_20261102_1142",
@@ -250,17 +317,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 52004,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:20:58Z",
     "plan": "stages_20261102_1142",
@@ -279,17 +349,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 52308,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:21:05Z",
     "plan": "stages_20261102_1142",
@@ -308,17 +381,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48700,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "d36003521b53e93cc6a40e73e907e53aadae5167ebaec76e2f788af37dade80e",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:21:13Z",
     "plan": "stages_20261102_1142",
@@ -337,17 +413,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48604,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:21:22Z",
     "plan": "stages_20261102_1142",
@@ -366,17 +445,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 515820,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:21:30Z",
     "plan": "stages_20261102_1142",
@@ -395,17 +477,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48604,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:21:44Z",
     "plan": "stages_20261102_1142",
@@ -424,17 +509,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48256,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:00Z",
     "plan": "threads_20261102_1142",
@@ -453,17 +541,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48712,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:09Z",
     "plan": "threads_20261102_1142",
@@ -482,17 +573,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 50696,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:16Z",
     "plan": "threads_20261102_1142",
@@ -511,17 +605,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54684,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:24Z",
     "plan": "threads_20261102_1142",
@@ -540,17 +637,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 64768,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:31Z",
     "plan": "threads_20261102_1142",
@@ -569,17 +669,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48732,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:51:40Z",
     "plan": "threads_20261102_1142",
@@ -598,17 +701,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48768,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:52:05Z",
     "plan": "threads_20261102_1142",
@@ -627,17 +733,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 48792,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:52:11Z",
     "plan": "threads_20261102_1142",
@@ -656,17 +765,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 50888,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:52:18Z",
     "plan": "threads_20261102_1142",
@@ -685,17 +797,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 53656,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:52:25Z",
     "plan": "threads_20261102_1142",
@@ -714,17 +829,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54700,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:52:39Z",
     "plan": "threads_20261102_1142",
@@ -743,17 +861,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54720,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:53:02Z",
     "plan": "threads_20261102_1142",
@@ -772,17 +893,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 64460,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:53:08Z",
     "plan": "threads_20261102_1142",
@@ -801,17 +925,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 50916,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:53:14Z",
     "plan": "threads_20261102_1142",
@@ -830,17 +957,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54716,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:53:28Z",
     "plan": "threads_20261102_1142",
@@ -859,17 +989,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54740,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:53:43Z",
     "plan": "threads_20261102_1142",
@@ -888,19 +1021,148 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 64492,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:33:48Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 32.7765365,
+    "median_range_ms": [
+     32.6782815,
+     32.8226565
+    ],
+    "p90_ms": 33.2325788,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 40748,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:33:53Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 16.25211,
+    "median_range_ms": [
+     16.2513805,
+     16.2547395
+    ],
+    "p90_ms": 16.418786599999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 42604,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:33:58Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 21.8461715,
+    "median_range_ms": [
+     21.7291405,
+     21.922604
+    ],
+    "p90_ms": 23.0349635,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43884,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:34:04Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 32.0994535,
+    "median_range_ms": [
+     32.0479425,
+     32.346875
+    ],
+    "p90_ms": 32.5718484,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39812,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -921,6 +1183,7 @@
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -941,6 +1204,7 @@
    },
    {
     "model_id": "bhvit-tiny-binary",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

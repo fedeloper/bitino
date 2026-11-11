@@ -109,6 +109,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 128.943,
@@ -122,6 +173,7 @@
   "s22": [
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:09Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -140,16 +192,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 21072,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:13Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -168,16 +223,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 21300,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:17Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -196,16 +254,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 20236,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:21Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -224,16 +285,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 20404,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:25Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -252,16 +316,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 62712,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:38:29Z",
     "plan": "ab_old6df911f_20261103_1138",
@@ -280,16 +347,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 24532,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:26Z",
     "plan": "bivit_stages_20261103_1134",
@@ -308,16 +378,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 21248,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:30Z",
     "plan": "bivit_stages_20261103_1134",
@@ -336,16 +409,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 21568,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:34Z",
     "plan": "bivit_stages_20261103_1134",
@@ -364,16 +440,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 20364,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:38Z",
     "plan": "bivit_stages_20261103_1134",
@@ -392,16 +471,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 20280,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:43Z",
     "plan": "bivit_stages_20261103_1134",
@@ -420,16 +502,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 24496,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-03",
     "timestamp_utc": "2026-11-03T10:34:47Z",
     "plan": "bivit_stages_20261103_1134",
@@ -448,16 +533,19 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 24336,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz"
     ],
     "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime as of 2026-11-03"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:37:28Z",
     "plan": "quick_20261102_1142",
@@ -476,17 +564,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 23820,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "92295da0152e45d9a9aff69e68b82c5b395bbbed7da560c21f773969c085be1f",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:37:34Z",
     "plan": "quick_20261102_1142",
@@ -505,17 +596,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 38864,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "92295da0152e45d9a9aff69e68b82c5b395bbbed7da560c21f773969c085be1f",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:37:41Z",
     "plan": "quick_20261102_1142",
@@ -534,17 +628,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54672,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "92295da0152e45d9a9aff69e68b82c5b395bbbed7da560c21f773969c085be1f",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:37:47Z",
     "plan": "quick_20261102_1142",
@@ -563,17 +660,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 22668,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "92295da0152e45d9a9aff69e68b82c5b395bbbed7da560c21f773969c085be1f",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:39Z",
     "plan": "speed_all_2026-11-04",
@@ -591,7 +691,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -599,11 +699,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:42Z",
     "plan": "speed_all_2026-11-04",
@@ -621,7 +724,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -629,11 +732,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:51Z",
     "plan": "speed_all_2026-11-04",
@@ -651,7 +757,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -659,11 +765,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:41:45Z",
     "plan": "speed_all_2026-11-04",
@@ -681,7 +790,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -689,13 +798,142 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "60763222b7abd75a8b11e05724af169d8a21d59b6f41bd97fa76987c5680fcf4",
     "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:37:23Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 16.832448,
+    "median_range_ms": [
+     16.818464,
+     16.986875
+    ],
+    "p90_ms": 17.011911599999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19752,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:37:27Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 10.1073965,
+    "median_range_ms": [
+     10.095052,
+     10.189791
+    ],
+    "p90_ms": 10.7548702,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19936,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:37:32Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 14.0521875,
+    "median_range_ms": [
+     14.050052,
+     14.228542
+    ],
+    "p90_ms": 16.5530941,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20340,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:37:37Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 16.0215885,
+    "median_range_ms": [
+     16.0145315,
+     16.0297655
+    ],
+    "p90_ms": 16.0972401,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 18568,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -716,6 +954,7 @@
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -736,6 +975,7 @@
    },
    {
     "model_id": "bi-vit-deit-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

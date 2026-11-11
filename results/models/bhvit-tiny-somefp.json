@@ -74,6 +74,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1059",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 300.965,
@@ -87,6 +138,7 @@
   "s22": [
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:29:50Z",
     "plan": "quick_20261102_1142",
@@ -105,17 +157,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 54016,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:30:10Z",
     "plan": "quick_20261102_1142",
@@ -134,17 +189,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 59840,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:30:35Z",
     "plan": "quick_20261102_1142",
@@ -163,17 +221,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 70464,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T13:30:56Z",
     "plan": "quick_20261102_1142",
@@ -192,19 +253,148 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 52220,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
     "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bhvit-tiny-somefp",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:34:58Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 35.0815625,
+    "median_range_ms": [
+     34.9625255,
+     35.383307
+    ],
+    "p90_ms": 36.06908919999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 45904,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-somefp",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:35:02Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 17.4948955,
+    "median_range_ms": [
+     17.4866665,
+     17.5283595
+    ],
+    "p90_ms": 17.6554213,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 48072,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-somefp",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:35:08Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 23.219636,
+    "median_range_ms": [
+     22.3644005,
+     23.2853645
+    ],
+    "p90_ms": 24.0737141,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 49896,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bhvit-tiny-somefp",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:35:14Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 32.3606775,
+    "median_range_ms": [
+     32.3327865,
+     32.81651
+    ],
+    "p90_ms": 33.0074483,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43680,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -225,6 +415,7 @@
    },
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -245,6 +436,7 @@
    },
    {
     "model_id": "bhvit-tiny-somefp",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

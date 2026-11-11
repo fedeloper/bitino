@@ -31,6 +31,52 @@
    }
   }
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1059",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "optimized": 379.686
@@ -43,6 +89,7 @@
   "s22": [
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:08:45Z",
     "plan": "quick_20261102_1142",
@@ -61,17 +108,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 14268,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:08:50Z",
     "plan": "quick_20261102_1142",
@@ -90,17 +140,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 18812,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:08:56Z",
     "plan": "quick_20261102_1142",
@@ -119,17 +172,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 23536,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T12:09:02Z",
     "plan": "quick_20261102_1142",
@@ -148,19 +204,148 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 26808,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
     "runtime": "development runtime as of 2026-11-02"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bbcu-sr-l-x2",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:26:50Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 37.802604,
+    "median_range_ms": [
+     37.787917,
+     37.836198
+    ],
+    "p90_ms": 37.8627345,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14440,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bbcu-sr-l-x2",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:26:55Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 19.33987,
+    "median_range_ms": [
+     19.335859,
+     19.379557
+    ],
+    "p90_ms": 19.419114399999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22560,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bbcu-sr-l-x2",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:27:00Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 14.8535155,
+    "median_range_ms": [
+     14.7836455,
+     14.975469
+    ],
+    "p90_ms": 15.7016978,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 24372,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bbcu-sr-l-x2",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:27:05Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 20.404297,
+    "median_range_ms": [
+     20.361979,
+     20.4707035
+    ],
+    "p90_ms": 20.558323,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27048,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -181,6 +366,7 @@
    },
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -201,6 +387,7 @@
    },
    {
     "model_id": "bbcu-sr-l-x2",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

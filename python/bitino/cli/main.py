@@ -56,13 +56,15 @@ def zoo_rows() -> list[dict]:
         ok, why = zoo.weights_licence_decision(m)
         r = res.get(mid, {})
         head = (r.get("accuracy") or {}).get("headline") or {}
-        s22 = [x for x in (r.get("speed") or {}).get("s22", []) if x.get("threads") == 1 and x.get("stage") in ("int8_full", "optimized", "all")]
+        t1 = {dev: min((x["median_ms"] for x in runs if x.get("threads") == 1 and x.get("stage") in ("int8_full", "optimized", "all")),
+                       default=None)
+              for dev, runs in (r.get("speed") or {}).items() if dev != "x86"}   # phones: results/devices.json
         rows.append({"model_id": mid, "task": m.get("task", ""), "family": m.get("family", ""), "framework": rec.get("framework") or "",
                      "precision": ",".join(m.get("precision", {}).get("categories", [])), "strict": m.get("strict_bnn", False),
                      "converted": True, "recipe": rec["state"], "release": ok, "licence_reason": why,
                      "metric": head.get("metric"), "reference": head.get("reference"), "runtime": head.get("runtime"),
                      "eval_set": head.get("eval_set"),
-                     "s22_t1_ms": min((x["median_ms"] for x in s22), default=None)})
+                     "s22_t1_ms": t1.get("s22"), "phone_t1_ms": {k: v for k, v in t1.items() if v is not None}})
     for m in reg["models"]:
         if m["model_id"] in seen:
             continue

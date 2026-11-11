@@ -49,9 +49,11 @@ def test_results_exist_for_every_recipe():
     for mid in RECIPES["recipes"]:
         res = zoo.results(mid)
         assert res.get("model_id") == mid
-        for run in res.get("speed", {}).get("s22", []):
-            assert run["validity"] in ("clean", "throttled", "unknown-caps", "superseded-runtime")
-            assert run["median_ms"] and run["median_ms"] > 0
+        for dev, runs in res.get("speed", {}).items():
+            for run in runs:
+                assert run["validity"] in ("clean", "vendor-policy", "thermal-throttled", "throttled", "unknown-caps",
+                                           "superseded-runtime"), (mid, dev)
+                assert run["median_ms"] and run["median_ms"] > 0
 
 
 @pytest.mark.parametrize("weights,ok", [

@@ -14,7 +14,7 @@
 
 var BitinoZoo = (function () {
   var rows = [], sortKey = "id", sortDir = 1;
-  var MARK = { clean: "", throttled: " ⚠", "unknown-caps": " †" };
+  var MARK = { clean: "", "vendor-policy": " ◇", "thermal-throttled": " ⚠", throttled: " ⚠", "unknown-caps": " †" };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -35,8 +35,8 @@ var BitinoZoo = (function () {
     switch (k) {
       case "runtime": return typeof m.runtime === "number" ? m.runtime : -1;
       case "int8d": return m.int8 && typeof m.int8.delta === "number" ? m.int8.delta : -999;
-      case "s22t1": return m.s22 && m.s22.t1 ? m.s22.t1.ms : 1e9;
-      case "s22t4": return m.s22 && m.s22.t4 ? m.s22.t4.ms : 1e9;
+      case "p1": return m.best && m.best.t1 ? m.best.t1.ms : 1e9;
+      case "p4": return m.best && m.best.t4 ? m.best.t4.ms : 1e9;
       case "x86": return m.x86_t1 == null ? 1e9 : m.x86_t1;
       case "insn_opt": return m.insn_opt == null ? 1e12 : m.insn_opt;
       case "release": return m.release ? 0 : 1;
@@ -51,7 +51,7 @@ var BitinoZoo = (function () {
       if (task && m.task !== task) return false;
       if (fw && m.framework !== fw) return false;
       if (rel && !m.release) return false;
-      if (spd && !(m.s22 && (m.s22.t1 || m.s22.t4))) return false;
+      if (spd && !(m.phones && Object.keys(m.phones).length)) return false;
       if (q) {
         var hay = [m.id, m.name, m.task, m.family, m.framework, m.precision, m.paper].join(" ").toLowerCase();
         return q.split(/\s+/).every(function (w) { return hay.indexOf(w) >= 0; });
@@ -65,7 +65,10 @@ var BitinoZoo = (function () {
     var html = list.map(function (m) {
       var i8 = m.int8 && typeof m.int8.delta === "number"
         ? (m.int8.delta > 0 ? "+" : "") + m.int8.delta.toFixed(2) + " pt<span class=sub>" + esc(m.int8.set) + ", n=" + esc(m.int8.n) + "</span>" : "–";
-      var t1 = m.s22 && m.s22.t1, t4 = m.s22 && m.s22.t4;
+      var t1 = m.best && m.best.t1, t4 = m.best && m.best.t4;
+      var sp = function (x) {
+        return x ? ms(x.ms) + (MARK[x.validity] || "") + "<span class=sub>" + esc(x.device_short) + " · " + esc(x.stage) + ", " + esc(x.date) + "</span>" : "–";
+      };
       var label = function (f) { return f.indexOf("log2") >= 0 ? "int8 log2" : f.indexOf("int8") >= 0 ? "int8" : "float"; };
       var full = m.licence_weights || "?";
       var short = full.split(/ \(|;|,/)[0];
@@ -83,8 +86,8 @@ var BitinoZoo = (function () {
         "<td class=num>" + acc(m.reference, m.metric) + " → " + acc(m.runtime, m.metric) + "<span class=sub>" + esc(m.eval_set) + (m.n ? ", n=" + esc(m.n) : "") + "</span></td>" +
         "<td class=num>" + i8 + "</td>" +
         "<td class=num>" + (m.insn_opt != null ? m.insn_opt.toFixed(1) : "–") + " / " + (m.insn_int8 != null ? m.insn_int8.toFixed(1) : "–") + "</td>" +
-        "<td class=num>" + (t1 ? ms(t1.ms) + (MARK[t1.validity] || "") + "<span class=sub>" + esc(t1.stage) + ", " + esc(t1.date) + "</span>" : "–") + "</td>" +
-        "<td class=num>" + (t4 ? ms(t4.ms) + (MARK[t4.validity] || "") + "<span class=sub>" + esc(t4.stage) + ", " + esc(t4.date) + "</span>" : "–") + "</td>" +
+        "<td class=num>" + sp(t1) + "</td>" +
+        "<td class=num>" + sp(t4) + "</td>" +
         "<td class=num>" + (m.x86_t1 != null ? ms(m.x86_t1) + " ‡" : "–") + "</td>" +
         "<td>" + (m.release ? "<span class='badge ok'>release</span><br>" : "") + lic +
         "<span class=sub><code>bitino fetch " + esc(m.id) + "</code></span></td>" +

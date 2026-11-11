@@ -75,6 +75,57 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1142",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 246.063,
@@ -88,6 +139,7 @@
   "s22": [
    {
     "model_id": "bnext-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:08Z",
     "plan": "speed_all_2026-11-04",
@@ -105,7 +157,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
@@ -114,11 +166,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bnext-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:11Z",
     "plan": "speed_all_2026-11-04",
@@ -136,7 +191,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
@@ -145,11 +200,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bnext-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:24Z",
     "plan": "speed_all_2026-11-04",
@@ -167,7 +225,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -175,11 +233,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "bnext-tiny",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:15Z",
     "plan": "speed_all_2026-11-04",
@@ -197,7 +258,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -205,13 +266,142 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
     "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "bnext-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:02:35Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 25.557005,
+    "median_range_ms": [
+     25.496224,
+     25.6490625
+    ],
+    "p90_ms": 25.8027758,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 46112,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "97b71ad2021f64fcb2f1acc50715862e6ec7a09ee45ee6e2069686db0c677415",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:02:39Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 13.257526,
+    "median_range_ms": [
+     13.224062,
+     13.3246355
+    ],
+    "p90_ms": 13.4223284,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 52380,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "97b71ad2021f64fcb2f1acc50715862e6ec7a09ee45ee6e2069686db0c677415",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:02:44Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 14.041719,
+    "median_range_ms": [
+     13.6459635,
+     14.952578
+    ],
+    "p90_ms": 16.2843746,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 56116,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "97b71ad2021f64fcb2f1acc50715862e6ec7a09ee45ee6e2069686db0c677415",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T06:02:49Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 25.0744005,
+    "median_range_ms": [
+     25.0693745,
+     25.0839845
+    ],
+    "p90_ms": 25.5570098,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 40204,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "97b71ad2021f64fcb2f1acc50715862e6ec7a09ee45ee6e2069686db0c677415",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "bnext-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -232,6 +422,7 @@
    },
    {
     "model_id": "bnext-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -252,6 +443,7 @@
    },
    {
     "model_id": "bnext-tiny",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

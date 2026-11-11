@@ -148,6 +148,62 @@
    }
   ]
  },
+ "device_verification": {
+  "s22": {
+   "suite": "20261102_1059",
+   "date": "2026-11-02",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "oneplus-open": {
+   "suite": "20261111_1500",
+   "date": "2026-11-11",
+   "runtime_commit": "054534c",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "int8_full_log2": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": {
   "values": {
    "int8_full": 28.0,
@@ -162,6 +218,7 @@
   "s22": [
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T11:26:56Z",
     "plan": "quick_20261102_1142",
@@ -180,17 +237,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 11492,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T11:27:00Z",
     "plan": "quick_20261102_1142",
@@ -209,17 +269,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 14784,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T11:27:21Z",
     "plan": "quick_20261102_1142",
@@ -238,17 +301,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 15868,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-02",
     "timestamp_utc": "2026-11-02T11:27:26Z",
     "plan": "quick_20261102_1142",
@@ -267,17 +333,20 @@
     "iterations": 50,
     "warmup": 10,
     "peak_rss_kb": 11180,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": null,
     "notes": [
      "S22 thermally throttled by skin temperature while charging over USB (thermalservice status 1, SKIN 37-38 C): scaling_max_freq X2 1.84 of 2.99 GHz, A710 1.56 of 2.50, A510 1.36 of 1.79 GHz, for an unknown part of the run; the benchmark script did not yet check frequency caps.",
      "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
     "runtime": "development runtime as of 2026-11-02"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:35Z",
     "plan": "speed_all_2026-11-04",
@@ -295,7 +364,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
@@ -304,11 +373,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "38d6e2bab9249d5937b4f0df05595dff97b67b4af5facd657661bdb14749eef6",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:37Z",
     "plan": "speed_all_2026-11-04",
@@ -326,7 +398,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -334,11 +406,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "38d6e2bab9249d5937b4f0df05595dff97b67b4af5facd657661bdb14749eef6",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:45Z",
     "plan": "speed_all_2026-11-04",
@@ -356,7 +431,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz"
@@ -364,11 +439,14 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "38d6e2bab9249d5937b4f0df05595dff97b67b4af5facd657661bdb14749eef6",
     "runtime": "development runtime after the 2026-11-04 speed merge"
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "s22",
     "date": "2026-11-04",
     "timestamp_utc": "2026-11-04T11:42:40Z",
     "plan": "speed_all_2026-11-04",
@@ -386,7 +464,7 @@
     "repeats": 4,
     "iterations": 30,
     "warmup": 5,
-    "validity": "throttled",
+    "validity": "thermal-throttled",
     "caps_seen": [
      "X2 1.61/3.00 GHz, A710 1.32/2.50 GHz, A510 1.36/1.79 GHz",
      "X2 1.84/3.00 GHz, A710 1.56/2.50 GHz, A510 1.36/1.79 GHz",
@@ -395,13 +473,142 @@
     "notes": [
      "phone charging over USB; vendor thermal engine capped the CPU clocks (caps listed per run)"
     ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
     "model_data_sha256": "38d6e2bab9249d5937b4f0df05595dff97b67b4af5facd657661bdb14749eef6",
     "runtime": "development runtime after the 2026-11-04 speed merge"
+   }
+  ],
+  "oneplus-open": [
+   {
+    "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:16:37Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.3235935,
+    "median_range_ms": [
+     2.311146,
+     2.3324475
+    ],
+    "p90_ms": 2.369974,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 11632,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:16:41Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 1.278698,
+    "median_range_ms": [
+     1.2690365,
+     1.345625
+    ],
+    "p90_ms": 1.3879266000000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14956,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:16:45Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 1.5211975,
+    "median_range_ms": [
+     1.4918225,
+     1.5255205
+    ],
+    "p90_ms": 1.6939122,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15480,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
+    "runtime": "development runtime as of 2026-01-25"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-01-25",
+    "timestamp_utc": "2026-01-25T05:16:49Z",
+    "plan": "quick_20261111_1500_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.1472915,
+    "median_range_ms": [
+     2.145599,
+     2.15737
+    ],
+    "p90_ms": 2.175625,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 11248,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "241035c0068582443c3f19c6c6a5a4f0833a5f3c42db807eb81d32573f2d5280",
+    "runtime": "development runtime as of 2026-01-25"
    }
   ],
   "x86": [
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1",
@@ -422,6 +629,7 @@
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t8_pcore",
@@ -442,6 +650,7 @@
    },
    {
     "model_id": "ab-bnn-cifar10-reactnet18",
+    "device": "x86",
     "date": "2026-11-01",
     "suite": "all_models_20261101",
     "config": "t1_int8",

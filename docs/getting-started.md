@@ -112,8 +112,8 @@ A JNI wrapper is in `examples/android_jni/`. More: [android-deployment.md](andro
 ## 6. Where the numbers come from
 
 * `results/models/<model>.json`: accuracy checks (eval set, n, Δ vs reference), int8 studies, emulated
-  instruction counts, measured S22 and x86 speed.
-* `results/speed_s22.json`, `results/speed_x86.json`: every measured run with date, threads, affinity and thermal
-  state. Emulated timings are never recorded.
+  instruction counts, measured phone and x86 speed.
+* `results/devices.json`: the phones; `results/speed_<device>.json`, `results/speed_x86.json`: every measured run
+  with date, threads, affinity and clock state. Emulated timings are never recorded.
 * [benchmarking.md](benchmarking.md): the measurement method; [numerical-correctness.md](numerical-correctness.md):
   how conversions and kernels are validated; [int8.md](int8.md): the int8 paths.
