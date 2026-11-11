@@ -1,0 +1,475 @@
+{
+ "schema": "bitino.published_accuracy.v1",
+ "generated": "2026-11-11",
+ "about": "Full test-set top-1 (%) published for the shipped weights (author claims from registry/models.json reported_metrics, curated: top-5/error-rate confusions fixed, checkpoint value when it differs from the README row). Bitino's exact stage reproduces the source framework's outputs, so these apply to it; the 128-image checks in results/ only validate conversions.",
+ "models": {
+  "ab-bnn-cifar10-reactnet18": {
+   "dataset": "cifar10",
+   "top1": 91.94,
+   "note": "as stated",
+   "source_text": "CIFAR-10 top-1 91.94%, 11.18M params (HF card table). The arXiv abstract's 92.30% CIFAR-10 headline is not this released model."
+  },
+  "ab-bnn-cifar10-reactneta": {
+   "dataset": "cifar10",
+   "top1": 89.44,
+   "note": "as stated",
+   "source_text": "CIFAR-10 89.44% (HF card)"
+  },
+  "ab-bnn-imagenet-reactnet18": {
+   "dataset": "imagenet",
+   "top1": 61.39,
+   "note": "as stated",
+   "source_text": "ImageNet top-1 61.39%, 11.70M params (HF model card table). Not re-verified locally."
+  },
+  "ab-bnn-imagenet-reactnet34": {
+   "dataset": "imagenet",
+   "top1": 65.19,
+   "note": "as stated",
+   "source_text": "ImageNet top-1 65.19%, 21.82M params (HF card). Not re-verified."
+  },
+  "ab-bnn-imagenet-reactneta": {
+   "dataset": "imagenet",
+   "top1": 66.89,
+   "note": "as stated",
+   "source_text": "ImageNet top-1 66.89%, 29.33M params (HF card; also in arXiv abstract). Not re-verified."
+  },
+  "adabin-resnet20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 88.1,
+   "note": "as stated",
+   "source_text": "88.1% (README CIFAR table); checkpoint best_prec1 88.02"
+  },
+  "aliasgharshinwari-finn-cnv-w1a1-cifar10": {
+   "dataset": "cifar10",
+   "top1": 84.24,
+   "note": "as stated",
+   "source_text": "README: 84.24% validation (float/QAT model), 74.80% measured on PYNQ-Z1 hardware over full test set (gap unexplained by author). Author claims."
+  },
+  "bhvit-small-binary": {
+   "dataset": "imagenet",
+   "top1": 68.4,
+   "note": "as stated",
+   "source_text": "Top-1 68.4%, size 3.5 MB, OPs 0.8e8 (arXiv 2503.02394 Table 2; README 'binary68.4'). Author claim."
+  },
+  "bhvit-small-somefp": {
+   "dataset": "imagenet",
+   "top1": 70.1,
+   "note": "as stated",
+   "source_text": "Top-1 70.1%, OPs 1.5e8 (arXiv 2503.02394 Table 2 † row; also Table 7 'Hybrid 70.1'). README 'somefp 70.1'. Author claim."
+  },
+  "bhvit-tiny-binary": {
+   "dataset": "imagenet",
+   "top1": 64.0,
+   "note": "as stated",
+   "source_text": "Top-1 64.0%, size 2.5 MB, OPs 0.5e8 (arXiv 2503.02394 Table 2; README link text 'binary64.0'). Author claim."
+  },
+  "bhvit-tiny-somefp": {
+   "dataset": "imagenet",
+   "top1": 66.0,
+   "note": "as stated",
+   "source_text": "Top-1 66.0%, OPs 1.1e8 (arXiv 2503.02394 Table 2: † row has a single value 1.1 in the OPs column; the size cell is shared). README link text 'somefp 66.0'. Author claim."
+  },
+  "bi-vit-deit-small": {
+   "dataset": "imagenet",
+   "top1": 40.9,
+   "note": "as stated",
+   "source_text": "Top-1 40.9% / Top-5 65.0%, W1A1 DeiT-Small (arXiv 2305.12354 Table 2). Author claim."
+  },
+  "bi-vit-deit-tiny": {
+   "dataset": "imagenet",
+   "top1": 28.7,
+   "note": "as stated",
+   "source_text": "Top-1 28.7% / Top-5 51.7%, W1A1 DeiT-Tiny (arXiv 2305.12354 Table 2). Author claim."
+  },
+  "biper-resnet18-cifar10": {
+   "dataset": "cifar10",
+   "top1": 93.75,
+   "note": "as stated",
+   "source_text": "93.75% (README, checkpoint, log Best_Prec1)"
+  },
+  "biper-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 61.4,
+   "note": "as stated",
+   "source_text": "61.40% (README); checkpoint 61.40 / 83.14"
+  },
+  "biper-resnet20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 86.98,
+   "note": "as stated",
+   "source_text": "86.98% (README, checkpoint)"
+  },
+  "biper-resnet34-imagenet": {
+   "dataset": "imagenet",
+   "top1": 65.63,
+   "note": "checkpoint best_prec1 65.633 (README 65.73)",
+   "source_text": "README 65.73 top-1 (21.81M params). Checkpoint best_prec1 65.633 / best_prec5 86.200, matching logger.log 'Best_Prec1 65.6330 Best_Prec5 86.1999'. The README value is 0.1"
+  },
+  "biper-vgg-small-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.46,
+   "note": "as stated",
+   "source_text": "README 92.46% (4.66M params); ckpt best_prec1 92.46 (epoch 288) (author claim)"
+  },
+  "bitorch-densenet28-imagenet": {
+   "dataset": "imagenet",
+   "top1": 58.69,
+   "note": "as stated",
+   "source_text": "bitorch hub table: test top-1 0.58686 (58.69%) at epoch 59 (author record, not re-evaluated)"
+  },
+  "bitorch-meliusnet22-imagenet": {
+   "dataset": "imagenet",
+   "top1": 64.35,
+   "note": "as stated",
+   "source_text": "bitorch hub table: test top-1 0.64346 (64.35%) at epoch 239 (author record, not re-evaluated)"
+  },
+  "bitorch-resnete18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 60.58,
+   "note": "as stated",
+   "source_text": "bitorch hub table: metrics/test-top1-accuracy = best-test-top1 = 0.60576 (60.58% top-1) at epoch 239 (author-run record, not re-evaluated)"
+  },
+  "bnas-a-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.7,
+   "note": "as stated",
+   "source_text": "92.70% reported, ~92.39 reproduced (README table)"
+  },
+  "bnas-d-imagenet": {
+   "dataset": "imagenet",
+   "top1": 57.71,
+   "note": "checkpoint 57.714 (README 57.69)",
+   "source_text": "57.69 / 79.89 (README); checkpoint 57.714"
+  },
+  "bnas-e-imagenet": {
+   "dataset": "imagenet",
+   "top1": 58.32,
+   "note": "checkpoint best_acc_top1 58.324 (paper 58.76)",
+   "source_text": "Paper 58.76/80.61. README reproduced ~58.15/~80.16. Checkpoint best_acc_top1 58.324 (epoch 150)."
+  },
+  "bnas-h-imagenet": {
+   "dataset": "imagenet",
+   "top1": 63.74,
+   "note": "checkpoint best_acc_top1 63.744 (paper 63.51)",
+   "source_text": "Paper 63.51/83.91. README reproduced ~63.70/~84.49. Checkpoint best_acc_top1 63.744 (epoch 148)."
+  },
+  "bnext-large": {
+   "dataset": "imagenet",
+   "top1": 80.6,
+   "note": "as stated",
+   "source_text": "Top-1 80.6% (README table); 80.57% in the arXiv abstract"
+  },
+  "bnext-middle": {
+   "dataset": "imagenet",
+   "top1": 78.3,
+   "note": "as stated",
+   "source_text": "Top-1 78.3%, 0.317 G BOPs (README)"
+  },
+  "bnext-small": {
+   "dataset": "imagenet",
+   "top1": 76.1,
+   "note": "as stated",
+   "source_text": "Top-1 76.1%, 0.172 G BOPs (README)"
+  },
+  "bnext-tiny": {
+   "dataset": "imagenet",
+   "top1": 72.4,
+   "note": "as stated",
+   "source_text": "Top-1 72.4%, 0.077 G BOPs (README table)"
+  },
+  "bnn-pynq-cnv-w1a1-cifar10": {
+   "dataset": "cifar10",
+   "top1": 79.54,
+   "note": "training README states test error 20.46%",
+   "source_text": "training README: CNV W1A1 test error 20.46% (re-checked)"
+  },
+  "brevitas-bnn-pynq-cnv-1w1a": {
+   "dataset": "cifar10",
+   "top1": 84.22,
+   "note": "as stated",
+   "source_text": "README 84.22% top-1; eval log final Prec@1 84.220 (re-checked)"
+  },
+  "dabnn-bireal18": {
+   "dataset": "imagenet",
+   "top1": 56.4,
+   "note": "as stated",
+   "source_text": "56.4% top-1 ImageNet; 61.3 ms/image on Google Pixel 1, single thread (daBNN README L43; author claim, not reproduced). 56.4% is identical to the official Bi-Real-18 Caffe"
+  },
+  "dabnn-bireal18-stem": {
+   "dataset": "imagenet",
+   "top1": 56.4,
+   "note": "as stated",
+   "source_text": "56.4% top-1; 43.2 ms/image on Google Pixel 1, single thread (daBNN README L45; author claim)"
+  },
+  "fda-bnn-resnet20-cifar10-mindspore": {
+   "dataset": "cifar10",
+   "top1": 86.61,
+   "note": "as stated",
+   "source_text": "Top-1 86.61%, top-5 99.51% (gitee README eval output). Paper body (Sec. 4 tables) reports 86.20% for ResNet-20; the abstract has no number."
+  },
+  "finn-examples-bnn-pynq-cnv-w1a1": {
+   "dataset": "cifar10",
+   "top1": 84.22,
+   "note": "weights identical to brevitas-bnn-pynq-cnv-1w1a (registry evidence); its README 84.22%",
+   "source_text": "not stated in the release"
+  },
+  "larq-zoo-binary-alexnet": {
+   "dataset": "imagenet",
+   "top1": 36.3,
+   "note": "as stated",
+   "source_text": "Top-1 36.30%, top-5 61.53%, 7.49 MB (docstring). Docs table: 36.3/61.5, 7.45 MB, 44.4 ms."
+  },
+  "larq-zoo-binary-densenet28": {
+   "dataset": "imagenet",
+   "top1": 60.91,
+   "note": "as stated",
+   "source_text": "Top-1 60.91%, top-5 82.83%, 4.12 MB (docstring). Docs table: 60.9/82.8, 4.04 MB, 84.9 ms."
+  },
+  "larq-zoo-binary-densenet37": {
+   "dataset": "imagenet",
+   "top1": 62.89,
+   "note": "as stated",
+   "source_text": "Top-1 62.89%, top-5 84.19%, 5.25 MB (docstring). Docs table: 62.9/84.2, 5.13 MB, 97.1 ms."
+  },
+  "larq-zoo-binary-densenet37-dilated": {
+   "dataset": "imagenet",
+   "top1": 64.34,
+   "note": "as stated",
+   "source_text": "Top-1 64.34%, top-5 85.15%, 5.25 MB (docstring). Docs table: 64.3/85.2, 5.13 MB, 174.9 ms."
+  },
+  "larq-zoo-binary-densenet45": {
+   "dataset": "imagenet",
+   "top1": 64.59,
+   "note": "as stated",
+   "source_text": "Top-1 64.59%, top-5 85.21%, 7.54 MB (docstring). Docs table: 64.6/85.2, 7.35 MB, 129.3 ms."
+  },
+  "larq-zoo-binary-resnet-e18": {
+   "dataset": "imagenet",
+   "top1": 58.32,
+   "note": "as stated",
+   "source_text": "Top-1 58.32%, top-5 80.79%, 4.03 MB (docstring). Docs table: 58.3/80.8, 4.00 MB, 41.8 ms Pixel 1."
+  },
+  "larq-zoo-birealnet": {
+   "dataset": "imagenet",
+   "top1": 57.47,
+   "note": "as stated",
+   "source_text": "Top-1 57.47%, top-5 79.84%, 4.03 MB (docstring, birealnet.py:144). Docs table: 57.5/79.8, 4.00 MB, 41.7 ms Pixel 1. LCE README: 41.6 ms Pixel 1, versus 61.3 ms that dabnn"
+  },
+  "larq-zoo-dorefanet": {
+   "dataset": "imagenet",
+   "top1": 53.39,
+   "note": "as stated",
+   "source_text": "Top-1 53.39%, top-5 76.50%, 22.84 MB (docstring). Docs table: 53.4/76.5, 22.80 MB, LCE latency 'Unsupported' (footnote: 'uses quantizers for which currently no optimized "
+  },
+  "larq-zoo-meliusnet22": {
+   "dataset": "imagenet",
+   "top1": 62.4,
+   "note": "as stated",
+   "source_text": "Top-1 62.4%, top-5 83.9%, 3.88 MiB (docstring). Docs table: 3.88 MB, 110.7 ms."
+  },
+  "larq-zoo-quicknet": {
+   "dataset": "imagenet",
+   "top1": 63.3,
+   "note": "as stated",
+   "source_text": "Top-1 63.3%, top-5 84.6%, 4.17 MB (docstring/docs). Docs: 27.4 ms Pixel 1. LCE README Pixel 1: 25.5 ms (1 thread), 12.6 ms (4 threads)."
+  },
+  "larq-zoo-quicknet-large": {
+   "dataset": "imagenet",
+   "top1": 66.9,
+   "note": "as stated",
+   "source_text": "Top-1 66.9%, top-5 87.0%, 5.40 MB (docstring/docs). Docs: 45.5 ms. LCE README Pixel 1: 44.2 ms (1 thread), 22.8 ms (4 threads)."
+  },
+  "larq-zoo-quicknet-small": {
+   "dataset": "imagenet",
+   "top1": 59.4,
+   "note": "as stated",
+   "source_text": "Top-1 59.4%, top-5 81.8%, 12,655,688 params, 4.00 MB (quicknet.py docstring; docs.larq.dev/zoo). Docs: 17.5 ms Pixel 1 single thread (benchmarked 2020-10-15). LCE README,"
+  },
+  "larq-zoo-quicknet-xl-legacy": {
+   "dataset": "imagenet",
+   "top1": 67.0,
+   "note": "as stated",
+   "source_text": "Top-1 67.0%, top-5 87.3%, 22,058,368 params, 6.22 MB (legacy docstring @40f4cdc29f lines 434-436). Not in the current docs table. No LCE latency published."
+  },
+  "larq-zoo-real-to-binary-net": {
+   "dataset": "imagenet",
+   "top1": 65.01,
+   "note": "as stated",
+   "source_text": "Top-1 65.01%, top-5 85.72%, 5.13 MB (docstring :459-461). Docs table: 65.0/85.7, 5.13 MB, 48.8 ms."
+  },
+  "larq-zoo-xnornet": {
+   "dataset": "imagenet",
+   "top1": 44.96,
+   "note": "as stated",
+   "source_text": "Top-1 44.96%, top-5 69.18%, 22.81 MB (docstring). Docs table: 45.0/69.2, 22.77 MB, 29.3 ms."
+  },
+  "nncf-resnet18-binarization-dorefa": {
+   "dataset": "imagenet",
+   "top1": 61.63,
+   "note": "as stated",
+   "source_text": "Top-1 61.63% (drop 8.13 vs FP 69.76), from the README v2.5.0 binarization table. The in-checkpoint best_acc1 is 63.544 (inconsistent; not re-measured)."
+  },
+  "nncf-resnet18-binarization-xnor": {
+   "dataset": "imagenet",
+   "top1": 61.67,
+   "note": "as stated",
+   "source_text": "Top-1 61.67% (drop 8.09 vs FP 69.76), from examples/torch/classification/README.md 'Results for binarization' at v2.5.0 and docs/ModelZoo.md v2.6.0-v2.9.0. The in-checkpo"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001": {
+   "dataset": "imagenet",
+   "top1": 61.71,
+   "note": "as stated",
+   "source_text": "ImageNet top-1 61.71% (README). accuracy-check reference top-1 0.6171, top-5 0.8353. NNCF README separately lists ResNet-18 XNOR at 61.63%. Not reproduced."
+  },
+  "omz-resnet18-xnor-binary-onnx-0001-fp16": {
+   "dataset": "imagenet",
+   "top1": 61.71,
+   "note": "as stated",
+   "source_text": "No separate FP16 metric. README 61.71%."
+  },
+  "omz-resnet50-binary-0001": {
+   "dataset": "imagenet",
+   "top1": 70.69,
+   "note": "as stated",
+   "source_text": "ImageNet top-1 70.69% (README). accuracy-check reference top-1 0.7069, top-5 0.8923. README: 960 FP32 conv MFlops, 7218 binary conv MI1ops. Not reproduced."
+  },
+  "omz-resnet50-binary-0001-fp16": {
+   "dataset": "imagenet",
+   "top1": 70.69,
+   "note": "as stated",
+   "source_text": "Same README metric (70.69% top-1). No separate FP16 figure published."
+  },
+  "rbnn-resnet18-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.2,
+   "note": "as stated",
+   "source_text": "92.2% (README); checkpoint 92.24"
+  },
+  "rbnn-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 59.9,
+   "note": "as stated",
+   "source_text": "59.9 / 81.9 (README, 150 ep, paper setting); checkpoint 59.94 / 81.89"
+  },
+  "rbnn-resnet20-bireal-cifar10": {
+   "dataset": "cifar10",
+   "top1": 87.8,
+   "note": "as stated",
+   "source_text": "README 87.8% (CIFAR-10, 1000 epochs); ckpt best_prec1 87.82, epoch 981 (author claim)"
+  },
+  "rbnn-resnet20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 86.5,
+   "note": "as stated",
+   "source_text": "86.5% (README); checkpoint 86.51"
+  },
+  "rbnn-resnet34-imagenet": {
+   "dataset": "imagenet",
+   "top1": 63.1,
+   "note": "as stated",
+   "source_text": "63.1 / 84.4 (README); checkpoint 63.14 / 84.38"
+  },
+  "rbnn-vgg-small-cifar10": {
+   "dataset": "cifar10",
+   "top1": 91.3,
+   "note": "as stated",
+   "source_text": "README 91.3%; ckpt best_prec1 91.27 (epoch 933 of 1000) (author claim)"
+  },
+  "rbonn-reactnet-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 66.7,
+   "note": "as stated",
+   "source_text": "66.7 / 87.0 (README); log max 66.68"
+  },
+  "recu-resnet18-cifar10": {
+   "dataset": "cifar10",
+   "top1": 93.2,
+   "note": "as stated",
+   "source_text": "README resnet18_1w1a finetune 93.2% (vanilla 92.8%); ckpt best_prec1 93.24, epoch 533 (author claim)"
+  },
+  "recu-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 61.2,
+   "note": "as stated",
+   "source_text": "61.20 / 82.93 (README finetune); checkpoint 61.204 / 82.928. Vanilla 60.98 / 82.57 also linked."
+  },
+  "recu-resnet20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 88.0,
+   "note": "as stated",
+   "source_text": "88.0% (README); checkpoint 87.95"
+  },
+  "recu-resnet34-imagenet": {
+   "dataset": "imagenet",
+   "top1": 65.25,
+   "note": "as stated",
+   "source_text": "65.25 / 85.98 (README); checkpoint 65.258 / 85.98"
+  },
+  "recu-vgg-small-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.25,
+   "note": "shipped file is the vanilla run: checkpoint best_prec1 92.25 (README finetune row 93.3 is another file)",
+   "source_text": "README vgg_small_1w1a: vanilla 92.2 / finetune 93.3; ckpt best_prec1 92.25 (epoch 923), so this file is the VANILLA run although it is the README \"finetune\" row link (aut"
+  },
+  "sa-bnn-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 61.7,
+   "note": "checkpoint best_top1_acc 61.696",
+   "source_text": "Folder name / checkpoint best_top1_acc 61.696 (checkpoint metadata). Paper-reported figures not re-checked here."
+  },
+  "shuaiz-bireal20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 83.17,
+   "note": "README BiReal row; checkpoint best_top1_acc 83.17 (the parsed 71.70 is the plain-BNN row)",
+   "source_text": "README: BNN 71.70%, XNOR 80.77%, BiReal 83.17% CIFAR-10 (author claim); checkpoint best_top1_acc 83.17 (verified)."
+  },
+  "siman-resnet18-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.5,
+   "note": "as stated",
+   "source_text": "README 92.5%; ckpt best_prec1 92.49 (400 epochs) (author claim)"
+  },
+  "siman-resnet18-imagenet": {
+   "dataset": "imagenet",
+   "top1": 60.1,
+   "note": "as stated",
+   "source_text": "60.1 / 82.3 (README); checkpoint 60.07 / 82.33"
+  },
+  "siman-resnet20-cifar10": {
+   "dataset": "cifar10",
+   "top1": 87.4,
+   "note": "as stated",
+   "source_text": "README 87.4%; ckpt best_prec1 87.36 (author claim)"
+  },
+  "siman-resnet34-imagenet": {
+   "dataset": "imagenet",
+   "top1": 63.9,
+   "note": "as stated",
+   "source_text": "63.9 / 84.8 (README); checkpoint 63.86 / 84.75"
+  },
+  "siman-vgg-small-cifar10": {
+   "dataset": "cifar10",
+   "top1": 92.5,
+   "note": "as stated",
+   "source_text": "README 92.5%; ckpt best_prec1 92.48 (epoch 395/400) (author claim)"
+  },
+  "snn-subbit-reactnet18-w0.67a1-imagenet": {
+   "dataset": "imagenet",
+   "top1": 63.4,
+   "note": "README 0.67W/1A top-1 (the parsed 84.5 was top-5)",
+   "source_text": "README 0.67W/1A: 63.4% top-1 / 84.5% top-5, 7.324 Mbit, 0.883G BOPs; ckpt best_top1_acc 63.414 (author claim)"
+  },
+  "snn-subbit-reactnet18-w1a1-imagenet": {
+   "dataset": "imagenet",
+   "top1": 65.7,
+   "note": "README 1W/1A top-1 (the parsed 86.3 was top-5)",
+   "source_text": "README: 1W/1A 65.7% top-1 / 86.3% top-5, 10.99 Mbit params, 1.677G BOPs; checkpoint best_top1_acc 65.738 (author claim; no re-evaluation)"
+  },
+  "tensorpack-dorefa-alexnet-w1a1-g32": {
+   "dataset": "imagenet",
+   "top1": 48.5,
+   "note": "README states top-1 error 51.5%",
+   "source_text": "README: top-1 validation error 51.5% (i.e. 48.5% top-1 acc)"
+  }
+ }
+}

@@ -78,6 +78,8 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 ### CIFAR-10 (23 models)
 
+![CIFAR-10: accuracy vs latency, Pareto frontier](docs/img/pareto_cifar10.svg)
+
 | model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread |
 |---|---|---:|---:|---:|---:|---:|
 | `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.701 ◇ | 0.253 ◇ | 0.696 ◇ | – |
@@ -105,6 +107,8 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `bnas-a-cifar10` | 93.8% → 93.8% | -0.42 pt | 8.74 ◇ | 5.28 ◇ | 5.67 ◇ | – |
 
 ### ImageNet (55 models)
+
+![ImageNet: accuracy vs latency, Pareto frontier](docs/img/pareto_imagenet.svg)
 
 | model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread |
 |---|---|---:|---:|---:|---:|---:|
@@ -207,7 +211,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 456 vendor-policy. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 342/342 correctness checks passed on 114 models, 2026-11-02 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 11/12 correctness checks passed on 6 models, 2026-11-11 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 342/342 correctness checks passed on 114 models, 2026-11-02 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 18/20 correctness checks passed on 10 models, 2026-11-11 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host

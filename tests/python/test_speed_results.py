@@ -6,6 +6,7 @@ The fixture mimics a quick-plan directory written by tools/benchmark.py + tools/
 import importlib.util
 import json
 import os
+import sys
 
 import pytest
 
@@ -169,3 +170,15 @@ def test_pick_speed_and_readme_tables():
     row = next(line for line in t["speed"].splitlines() if line.startswith("| `m1`"))
     assert row.endswith("| 4 ◇ | 1.5 ◇ | 3 ◇ | 5 ⚠ |")
     assert "4 ◇ (OnePlus Open)" in t["zoo"]
+
+
+def test_pareto_frontier_and_svg():
+    sys.path.insert(0, os.path.join(ROOT, "public", "tools"))
+    import pareto_plot as PP
+    pts = [{"id": "a", "label": "a", "x": 5.0, "y": 59.4}, {"id": "b", "label": "b", "x": 8.0, "y": 63.3},
+           {"id": "c", "label": "c", "x": 9.0, "y": 60.0},   # slower and less accurate than b: dominated
+           {"id": "d", "label": "d", "x": 11.0, "y": 63.3},  # ties b on accuracy but slower: dominated
+           {"id": "e", "label": "e", "x": 25.0, "y": 72.4}]
+    assert [p["id"] for p in PP.frontier(pts)] == ["a", "b", "e"]
+    svg = PP.pareto_svg(pts, "T", "s", "x", "y")
+    assert svg.startswith("<svg") and svg.count('class="dot-f"') == 3 + 1 and "var(" not in svg   # +1: legend mark
