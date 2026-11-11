@@ -159,9 +159,13 @@ def test_pick_speed_and_readme_tables():
     d = {"models": [model], "devices": devices, "registry_total": 1, "verified_weights": 1,
          "speed": {"s22": {"runs": s22}, "oneplus-open": {"runs": op}}}
     t = SITE.readme_tables(d)
-    head = t["speed"].splitlines()[0]
+    head = t["speed_full"].splitlines()[0]   # docs/SPEED.md: every phone, 1 and 4 threads and int8
     assert "Galaxy S22 ms" in head and "OnePlus Open ms" in head
-    row = next(line for line in t["speed"].splitlines() if line.startswith("| `m1`"))
+    row = next(line for line in t["speed_full"].splitlines() if line.startswith("| `m1`"))
     assert "5 ⚠" in row and "4 ◇ / 1.5 ◇<br>int8 3 ◇ / –" in row
     assert "◇ = the phone's own power policy" in t["speed"] and "⚠ = at least one repeat" in t["speed"]
+    # README: tables by task, headline phone = the most recent suite (OnePlus), other phones' 1-thread column after it
+    assert "### Other tasks (1 models)" in t["speed"] and "**OnePlus Open" in t["speed"]
+    row = next(line for line in t["speed"].splitlines() if line.startswith("| `m1`"))
+    assert row.endswith("| 4 ◇ | 1.5 ◇ | 3 ◇ | 5 ⚠ |")
     assert "4 ◇ (OnePlus Open)" in t["zoo"]

@@ -232,6 +232,61 @@ def speed_legend(d: dict, html_out: bool = False) -> str:
 
 
 # ----------------------------------------------------------------------------------------------- README
+# Models of the headline speed table and the README zoo excerpt: the released files plus one or two per family.
+FEATURED = ("larq-zoo-quicknet-small", "larq-zoo-quicknet", "larq-zoo-quicknet-large", "larq-zoo-birealnet",
+            "ab-bnn-imagenet-reactnet18", "ab-bnn-imagenet-reactnet34", "ab-bnn-imagenet-reactneta",
+            "omz-resnet18-xnor-binary-onnx-0001", "omz-resnet50-binary-0001", "bnext-tiny", "bi-vit-deit-tiny",
+            "bhvit-tiny-binary", "bibert-bert-base-sst2", "ab-bnn-cifar10-reactnet18", "brevitas-bnn-pynq-cnv-1w1a",
+            "bbcu-sr-l-x4")
+
+
+def primary_device(d: dict) -> str | None:
+    """The phone of the headline tables: the most recent full arm64 suite (latest run date, then most runs)."""
+    c = [(max((r.get("date") or "") for r in doc.get("runs", [])), len(doc.get("runs", [])), did)
+         for did, doc in d["speed"].items() if d["devices"][did].get("kernels") != "portable-fallback"]
+    return max(c)[2] if c else None
+
+
+def short_task(t: str) -> str:
+    return re.split(r" \(|/", t or "")[0].strip().replace("-classification", "")
+
+
+def task_label(m: dict) -> str:
+    return "mnist" if MNIST_ID.search(m["id"]) else short_task(m["task"])
+
+
+def ms_cell(x: dict | None) -> str:
+    return f"{fmt_ms(x['ms'])}{mark(x)}" if x else "–"
+
+
+MNIST_ID = re.compile(r"(?:^|-)[tsl]fc(?:-|$)")   # BNN-PYNQ TFC/SFC/LFC: MNIST MLPs (some registry tasks say "cifar10 / mnist")
+GROUPS = (("cifar10", "CIFAR-10", lambda m: m["task"].startswith("cifar10-classification") and not MNIST_ID.search(m["id"])),
+          ("imagenet", "ImageNet", lambda m: m["task"] == "imagenet-classification"),
+          ("others", "Other tasks", lambda m: True))
+
+
+def group_rows(d: dict) -> tuple[str | None, list[str], list[tuple[str, str, list[dict]]]]:
+    """Speed tables by task: CIFAR-10 classifiers, ImageNet classifiers, everything else; fastest first on the
+    headline phone."""
+    pid = primary_device(d)
+    others = [did for did in d["speed"] if did != pid]
+    left = [m for m in d["models"] if m["phones"]]
+    out = []
+    big = 1e18
+    for key, title, pred in GROUPS:
+        g = [m for m in left if pred({**m, "task": m["task"] or ""})]
+        left = [m for m in left if m not in g]
+        g.sort(key=lambda m: (((m["phones"].get(pid) or {}).get("t1") or {}).get("ms", big), m["id"]))
+        if g:
+            out.append((key, title, g))
+    return pid, others, out
+
+
+def int8_delta(m: dict) -> str:
+    i8 = m["int8"]
+    return f"{i8['delta']:+.2f} pt" if i8 and isinstance(i8.get("delta"), (int, float)) else "–"
+
+
 def readme_tables(d: dict) -> dict[str, str]:
     ms = d["models"]
     devs = d["devices"]
@@ -262,15 +317,41 @@ def readme_tables(d: dict) -> dict[str, str]:
         lines.append(f"| `{m['id']}` | {m['task']} | {acc} | " + " | ".join(cell(m["phones"].get(did)) for did in pids) + " |")
     devline = "; ".join(f"{devs[did].get('short') or did}: {devs[did].get('soc')}, 1 thread on the {device_pin(devs[did])}"
                         for did in pids)
-    speed = "\n".join(lines) + (
+    speed_full = "\n".join(lines) + (
         "\n\nEach cell: median latency of one inference, 1 thread pinned to the fastest core / 4 threads; "
         "first line exact binary layers with float glue (stage all), \"int8\" line the full-integer file (int8_full) where "
         "measured, else the int8 kernels on the exact file. " + (devline + ". " if devline else "") + speed_legend(d) +
         "Per-run details (date, runtime, clock ceilings): `results/speed_<device>.json`. Emulated timings are never published.")
     ver = "; ".join(f"{devs[did].get('short') or did}: {verified_text(devs[did])}" for did in devs if verified_text(devs[did]))
     if ver:
-        speed += ("\n\nOn-device correctness (every model, every stage, `results/models/<id>.json` → device_verification): "
+        speed_full += ("\n\nOn-device correctness (every model, every stage, `results/models/<id>.json` → device_verification): "
                   + ver + ".")
+    pid, others, groups = group_rows(d)
+    speed = ""
+    if pid:
+        pdev, ps = devs[pid], devs[pid].get("short") or pid
+        speed += (f"Median latency of one inference (batch 1) in ms. Main columns: **{pdev.get('name')}** ({pdev.get('soc')}); "
+                  "1 thread = pinned to the fastest core; int8 = the full-integer file (int8_full) where measured, else the "
+                  "int8 kernels on the exact file. Accuracy: the original model in its own framework → Bitino's exact stage, "
+                  "on the small check subset; int8_full Δ: the full-integer file's paired difference against the exact stage. "
+                  "Fastest first.\n")
+        oh = "".join(f" {devs[o].get('short') or o} 1 thread" + (" (32-bit fallback)" if devs[o].get("kernels") == "portable-fallback" else "") + " |"
+                     for o in others)
+        for key, title, ms_ in groups:
+            task_col = key == "others"
+            speed += (f"\n### {title} ({len(ms_)} models)\n\n| model |" + (" task |" if task_col else "") +
+                      f" accuracy (reference → Bitino) | int8_full Δ | {ps} 1 thread | {ps} 4 threads | {ps} int8 1 thread |{oh}\n"
+                      "|---|" + ("---|" if task_col else "") + "---|---:|---:|---:|---:|" + "---:|" * len(others) + "\n")
+            for m in ms_:
+                p = m["phones"].get(pid) or {}
+                speed += (f"| `{m['id']}` |" + (f" {task_label(m)} |" if task_col else "") +
+                          f" {fmt_acc(m['reference'], m['metric'])} → {fmt_acc(m['runtime'], m['metric'])} | "
+                          f"{int8_delta(m)} | {ms_cell(p.get('t1'))} | {ms_cell(p.get('t4'))} | {ms_cell(p.get('t1_int8'))} |"
+                          + "".join(f" {ms_cell((m['phones'].get(o) or {}).get('t1'))} |" for o in others) + "\n")
+        speed += ("\n" + speed_legend(d) + "\n\nEvery phone with 1 and 4 threads and int8: "
+                  "[docs/SPEED.md](docs/SPEED.md)." + (" On-device correctness: " + ver + "." if ver else ""))
+    else:
+        speed = speed_full
     zl = ["| model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | fastest phone ms (1 thread) | weights licence | release |",
           "|---|---|---|---|---|---|---|---|---|"]
     for m in ms:
@@ -282,7 +363,9 @@ def readme_tables(d: dict) -> dict[str, str]:
                   f"{(fmt_ms(t1['ms']) + mark(t1) + ' (' + t1['device_short'] + ')') if t1 else '–'} | "
                   f"{(m['licence_weights'] or '?')[:48].replace('|', '/')} | {'yes' if m['release'] else '–'} |")
     zoo = "\n".join(zl)
-    return {"stats": stats, "speed": speed, "zoo_top": "\n".join(zl[:2] + [r for r in zl[2:] if any(f"`{m['id']}`" in r for m in hi or [])]),
+    feat = [f"`{x}`" for x in FEATURED]
+    return {"stats": stats, "speed": speed, "speed_full": speed_full,
+            "zoo_top": "\n".join(zl[:2] + [r for r in zl[2:] if r.split(" | ")[0][2:] in feat]),
             "zoo": zoo}
 
 
@@ -302,6 +385,9 @@ def write_readme(d: dict) -> None:
     for k in ("stats", "speed", "zoo_top"):
         text = replace_block(text, k, t[k])
     open(p, "w").write(text)
+    with open(os.path.join(ROOT, "docs", "SPEED.md"), "w") as f:
+        f.write("# Speed: all models on all phones\n\nGenerated by `tools/build_site.py --readme-only` from `results/`. "
+                "Do not edit by hand.\n\n" + t["speed_full"] + "\n")
     z = os.path.join(ROOT, "docs", "MODEL_ZOO.md")
     zoo_doc = ("# Model zoo\n\nGenerated by `tools/build_site.py --readme-only` from `registry/` and `results/`. Do not edit by hand.\n\n"
                + t["stats"] + "\n\nAccuracy: the headline numbers are on small smoke-test subsets (n = 128 for most "
@@ -494,8 +580,9 @@ def verified_text(dev: dict) -> str:
         return ""
     ds = v.get("dates") or []
     when = (f", {ds[0]}" if len(ds) == 1 else f", {ds[0]} to {ds[-1]}") if ds else ""
-    return (f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} "
-            "(outputs byte-identical to the emulated-ARM run of the same code)")
+    how = ("exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference"
+           if dev.get("kernels") == "portable-fallback" else "outputs byte-identical to the emulated-ARM run of the same code")
+    return f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} ({how})"
 
 
 def device_card(did: str, dev: dict, runs: list[dict]) -> str:
@@ -550,6 +637,27 @@ def site_benchmarks(d: dict) -> str:
   <thead><tr><th>Date</th><th>Model</th><th>File</th><th>Stage</th><th class=num>Threads</th><th>Affinity</th><th class=num>Median ms</th><th class=num>Repeats×iters</th><th>Validity</th><th>Clock ceiling</th></tr></thead>
   <tbody>{run_rows(speed[did].get('runs', []))}</tbody></table></div></details>"""
         for did in pids)
+
+    gpid, gothers, groups = group_rows(d)
+    group_html = ""
+    if gpid:
+        pdev, ps = devs[gpid], esc(devs[gpid].get("short") or gpid)
+        oth = "".join(f"<th class=num>{esc(devs[o].get('short') or o)} 1T{' (32-bit)' if devs[o].get('kernels') == 'portable-fallback' else ''}</th>" for o in gothers)
+        group_html = (f"<p class=small>Median latency of one inference (batch 1) in ms. Main columns: {esc(pdev.get('name'))} "
+                      f"({esc(pdev.get('soc'))}); 1T = 1 thread pinned to the fastest core, 4T = 4 threads, int8 = the "
+                      "full-integer file where measured. Accuracy on the small check subset (reference → Bitino); int8_full Δ = "
+                      "paired difference of the full-integer file against the exact stage. Fastest first.</p>")
+        for key, title, ms_ in groups:
+            task_col = key == "others"
+            trs = "".join(f"<tr><td><code>{esc(m['id'])}</code></td>" + (f"<td>{esc(task_label(m))}</td>" if task_col else "") +
+                          f"<td>{esc(fmt_acc(m['reference'], m['metric']))} → {esc(fmt_acc(m['runtime'], m['metric']))}</td>"
+                          f"<td class=num>{esc(int8_delta(m))}</td>"
+                          + "".join(cell((m['phones'].get(gpid) or {}).get(k)) for k in ("t1", "t4", "t1_int8"))
+                          + "".join(cell((m['phones'].get(o) or {}).get('t1')) for o in gothers) + "</tr>" for m in ms_)
+            group_html += f"""<h2 id="speed-{key}">{esc(title)} ({len(ms_)} models)</h2>
+  <div class="table-wrap"><table class="bench">
+  <thead><tr><th>Model</th>{'<th>Task</th>' if task_col else ''}<th>Accuracy (reference → Bitino)</th><th class=num>int8_full Δ</th><th class=num>{ps} 1T</th><th class=num>{ps} 4T</th><th class=num>{ps} int8 1T</th>{oth}</tr></thead>
+  <tbody>{trs}</tbody></table></div>"""
     pending = [devs[did].get("short") or did for did in pids if (speed[did].get("next_suite") or {}).get("status") == "pending"]
     host = x86.get("host", {})
     hrows = []
@@ -561,6 +669,8 @@ def site_benchmarks(d: dict) -> str:
     body = f"""
 <section>
   <h1>Benchmarks</h1>
+  {group_html}
+  <p class=small>{speed_legend(d, html_out=True)}</p>
   <h2>Method</h2>
   <ul>
     <li><b>Measurement:</b> <code>bitino_bench</code> pushed over adb, one inference (batch 1) per iteration; median per repeat, median of repeats; repeats interleaved across configurations so thermal drift spreads evenly. Each run records the CPU frequency ceilings, Android thermal status and skin temperature before and after. 1-thread runs are pinned to the phone's fastest core; 4- and 8-thread runs are left to the scheduler.</li>

@@ -41,6 +41,24 @@ VALIDITY_ORDER = ["clean", "vendor-policy", "thermal-throttled", "unknown-caps"]
 PLAN_DIR = re.compile(r"^(?P<plan>.+?)_(?P<ts>\d{8}_\d{4})(?:_(?P<tag>[A-Za-z0-9.-]+))?$")
 
 
+def run_date(plan: str, device_ts: str | None) -> tuple[str | None, str | None, str | None]:
+    """(date, timestamp_utc, note) of a run. The date comes from the plan directory name, written with the host clock;
+    phone clocks can be far off (seen: 2023 and January 2026 on phones without network time), so the phone's own
+    timestamp is kept only when it agrees with the host date within two days."""
+    m = PLAN_DIR.match(plan)
+    if not m:
+        return (device_ts or "")[:10] or None, device_ts, None
+    ts = m.group("ts")
+    host = datetime.date(int(ts[:4]), int(ts[4:6]), int(ts[6:8]))
+    try:
+        dev = datetime.date.fromisoformat((device_ts or "")[:10])
+    except ValueError:
+        dev = None
+    if dev is not None and abs((dev - host).days) <= 2:
+        return host.isoformat(), device_ts, None
+    return host.isoformat(), None, (f"phone clock was wrong (it read {device_ts}); date from the host clock" if device_ts else None)
+
+
 def load(p, default=None):
     if default is not None and not os.path.exists(p):
         return default
@@ -149,14 +167,15 @@ def phone_runs(d: str, device_id: str, dev: dict | None, model_id: str | None = 
         checked = bool(cls) and all(c["checked"] for c in cls)
         validity = worst(c["validity"] for c in cls) if checked else "unknown-caps"
         caps = sorted({caps_text(c.get("policies"), dev) for c in cls if c.get("policies")} - {None})
-        out.append({"model_id": mid, "device": device_id, "date": (row.get("timestamp_first") or "")[:10] or None,
-                    "timestamp_utc": row.get("timestamp_first"), "plan": plan, "config": row["name"],
+        date, tsu, clock_note = run_date(plan, row.get("timestamp_first"))
+        out.append({"model_id": mid, "device": device_id, "date": date,
+                    "timestamp_utc": tsu, "plan": plan, "config": row["name"],
                     "model_file": row.get("model_file"), "stage": row.get("stage"),
                     "threads": row.get("threads"), "affinity": row.get("affinity") or "unpinned",
                     "median_ms": row.get("median_ms"), "median_range_ms": [row.get("median_min_ms"), row.get("median_max_ms")],
                     "p90_ms": row.get("p90_ms"), "repeats": row.get("repeats"), "iterations": row.get("iterations_per_repeat"),
                     "warmup": row.get("warmup"), "peak_rss_kb": row.get("vm_hwm_kb"),
-                    "validity": validity, "caps_seen": caps or None, "notes": None,
+                    "validity": validity, "caps_seen": caps or None, "notes": [clock_note] if clock_note else None,
                     "abi": (dev or {}).get("abi"), "kernels": (dev or {}).get("kernels"),
                     "model_data_sha256": row.get("model_data_sha256"),
                     "runtime": f"bitino {(raws[0].get('bitino_version') or raws[0].get('bitino_version') or '?') if raws else '?'}"})
