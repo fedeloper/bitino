@@ -1,6 +1,6 @@
 {
  "schema": "bitino.registry.v1",
- "generated_utc": "2026-11-05T17:18:11Z",
+ "generated_utc": "2026-11-12T20:33:20Z",
  "generator": "tools/build_registry.py",
  "counts": {
   "no-public-weights": 46,
@@ -12392,8 +12392,8 @@
    }
   },
   {
-   "model_id": "ftl-deepfake-bnext-t-cocofake",
-   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (COCOFake, RGB + FFT + LBP)",
+   "model_id": "ftl-deepfake-bnext-m-cifake",
+   "canonical_name": "Faster Than Lies BNext-M with frozen backbone deepfake detector (CIFAKE, RGB + FFT + LBP)",
    "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
    "task": "deepfake-image-detection (binary real / fake classification)",
    "registry_status": "verified-pretrained",
@@ -12409,30 +12409,30 @@
    "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
    "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
    "checkpoint": {
-    "url": "https://drive.google.com/file/d/1AYMi3DE4J0haBJzm8dutThGpUCC3lqfN/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "coco_fake_T.ckpt",
-    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 119794538,
-    "sha256": "1f7de096598c32d841bce54ecbc53fc77d8a864d820e800b8c7bd77f41ce077f",
+    "url": "https://drive.google.com/file/d/1XjEDzZgLj7zi6GqS1Win5Enu73XMXLsy/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "cifake_M.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 532710358,
+    "sha256": "7fdfdeb1b2d54437197d92998e9ebfb541e77085e31e1a909537ec549c34edd5",
     "download_tested": true,
     "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
     "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 0, global_step 3882. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_T.ckpt"
+    "inspection": "torch.load(weights_only=True) OK. epoch 9, global_step 7820. hyper_parameters: num_classes 2, backbone BNext-M, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-M), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_M.ckpt"
    },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-middle (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
    "reported_metrics": {
-    "value": "COCOFake validation set: accuracy 83.65%, AUC 81.98% (BNext-T with frozen backbone, paper Table 1; 29.8M parameters, 0.89 GFLOPs)",
+    "value": "CIFAKE test set: accuracy 82.77%, AUC 90.73% (BNext-M with frozen backbone, paper Table 3; 133M parameters, 3.39 GFLOPs)",
     "status": "author_claim"
    },
    "precision": {
     "categories": [
      "W1A1+FP"
     ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-middle)."
    },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-middle.",
    "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
    "license": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
@@ -12450,8 +12450,8 @@
      "status": "verified"
     },
     {
-     "claim": "COCOFake validation set accuracy 83.65% / AUC 81.98%",
-     "source": "arXiv:2406.04932 Table 1",
+     "claim": "CIFAKE test set accuracy 82.77% / AUC 90.73%",
+     "source": "arXiv:2406.04932 Table 3",
      "status": "author_claim"
     },
     {
@@ -12471,12 +12471,12 @@
     "conversion_status": "converted",
     "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
     "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 4.7e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 2.4e-10. Source fp32 vs fp64: 8/128 decision changes (BNext is fp32-chaotic).",
     "reproduced_metrics": {
      "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.625,
-     "accuracy_reference_fp64": 0.578125,
-     "accuracy_bitino_numpy_fused": 0.578125,
+     "accuracy_reference_fp32": 0.8046875,
+     "accuracy_reference_fp64": 0.8203125,
+     "accuracy_bitino_numpy_fused": 0.8046875,
      "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
     },
     "device_benchmark": "not run (same network as the measured model of the same size)",
@@ -12484,8 +12484,8 @@
    }
   },
   {
-   "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-T deepfake detector (COCOFake, RGB + FFT + LBP)",
+   "model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-M deepfake detector (CIFAKE, RGB + FFT + LBP)",
    "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
    "task": "deepfake-image-detection (binary real / fake classification)",
    "registry_status": "verified-pretrained",
@@ -12501,30 +12501,30 @@
    "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
    "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
    "checkpoint": {
-    "url": "https://drive.google.com/file/d/1uH_Px3jm2uqyCUFxcEPmBugiVlcpSXTE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "coco_fake_T_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 358745196,
-    "sha256": "872279a7ffde9ca5a1a9ff6e6cf545fbe836f80df76087fec27528b18ba72ac1",
+    "url": "https://drive.google.com/file/d/1cArYmqGzbjE9miyWeddDoR9gboLym73O/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "cifake_M_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 1596745360,
+    "sha256": "6de488fb9df5f5ead56092f28dc9bc110451b30edc62ce40d10e636b28b4657b",
     "download_tested": true,
     "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
     "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 19410. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_T_unfrozen.ckpt"
+    "inspection": "torch.load(weights_only=True) OK. epoch 9, global_step 7820. hyper_parameters: num_classes 2, backbone BNext-M, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-M), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_M_unfrozen.ckpt"
    },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-middle (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
    "reported_metrics": {
-    "value": "COCOFake validation set: accuracy 99.25%, AUC 99.86% (BNext-T, paper Table 1; 29.8M parameters, 0.89 GFLOPs)",
+    "value": "CIFAKE test set: accuracy 97.35%, AUC 99.62% (BNext-M, paper Table 3; 133M parameters, 3.39 GFLOPs)",
     "status": "author_claim"
    },
    "precision": {
     "categories": [
      "W1A1+FP"
     ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-middle)."
    },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-middle.",
    "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
    "license": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
@@ -12542,258 +12542,8 @@
      "status": "verified"
     },
     {
-     "claim": "COCOFake validation set accuracy 99.25% / AUC 99.86%",
-     "source": "arXiv:2406.04932 Table 1",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 113/128 <= 1e-6, with float64 constants max 1.9e-10. Source fp32 vs fp64: 6/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.4609375,
-     "accuracy_reference_fp64": 0.4609375,
-     "accuracy_bitino_numpy_fused": 0.453125,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "see speed",
-    "release": "no: no licence (fetch recipe only)",
-    "speed_2026_11_12": {
-     "oneplus-open": {
-      "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
-      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
-       "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
-      ],
-      "thermal_status_seen": [
-       0
-      ],
-      "affinity_errors_max": 21,
-      "all": {
-       "full": {
-        "median_ms": 28.425,
-        "range_ms": [
-         28.316,
-         29.504
-        ],
-        "p90_ms": 29.64
-       },
-       "features": {
-        "median_ms": 1.075,
-        "range_ms": [
-         1.075,
-         1.075
-        ],
-        "p90_ms": 1.107
-       },
-       "network": {
-        "median_ms": 27.038,
-        "range_ms": [
-         26.934,
-         27.043
-        ],
-        "p90_ms": 27.27
-       },
-       "fps_full": 35.2,
-       "features_share_of_full": 0.038,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      },
-      "neon": {
-       "full": {
-        "median_ms": 133.329,
-        "range_ms": [
-         133.256,
-         133.414
-        ],
-        "p90_ms": 133.73
-       },
-       "features": {
-        "median_ms": 1.076,
-        "range_ms": [
-         1.076,
-         1.076
-        ],
-        "p90_ms": 1.108
-       },
-       "network": {
-        "median_ms": 132.608,
-        "range_ms": [
-         132.424,
-         132.664
-        ],
-        "p90_ms": 133.091
-       },
-       "fps_full": 7.5,
-       "features_share_of_full": 0.008,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      }
-     },
-     "moto-e13": {
-      "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
-      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
-       "cpu0:1.61/1.61 cpu6:1.61/1.61"
-      ],
-      "thermal_status_seen": [
-       0
-      ],
-      "affinity_errors_max": 0,
-      "all": {
-       "full": {
-        "median_ms": 147.864,
-        "range_ms": [
-         147.82,
-         149.002
-        ],
-        "p90_ms": 150.121
-       },
-       "features": {
-        "median_ms": 6.044,
-        "range_ms": [
-         6.002,
-         6.06
-        ],
-        "p90_ms": 6.251
-       },
-       "network": {
-        "median_ms": 142.546,
-        "range_ms": [
-         141.699,
-         142.952
-        ],
-        "p90_ms": 143.95
-       },
-       "fps_full": 6.8,
-       "features_share_of_full": 0.041,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      },
-      "neon": {
-       "full": {
-        "median_ms": 399.362,
-        "range_ms": [
-         396.415,
-         399.989
-        ],
-        "p90_ms": 401.653
-       },
-       "features": {
-        "median_ms": 6.101,
-        "range_ms": [
-         6.063,
-         6.125
-        ],
-        "p90_ms": 6.334
-       },
-       "network": {
-        "median_ms": 394.256,
-        "range_ms": [
-         393.078,
-         394.374
-        ],
-        "p90_ms": 395.983
-       },
-       "fps_full": 2.5,
-       "features_share_of_full": 0.015,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      }
-     }
-    }
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-s-cocofake",
-   "canonical_name": "Faster Than Lies BNext-S with frozen backbone deepfake detector (COCOFake, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/17G9SgTTnjB_sJk5o1rxFB5Futr8QS4Q1/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "coco_fake_S.ckpt",
-    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 268769450,
-    "sha256": "878b2327e6f91d0491ca5366fc2db4f24b71ba71277c596ab7f2603ef78fbb9a",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 19410. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_S.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
-   "reported_metrics": {
-    "value": "COCOFake validation set: accuracy 93.15%, AUC 95.19% (BNext-S with frozen backbone, paper Table 1; 67.1M parameters, 1.91 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "COCOFake validation set accuracy 93.15% / AUC 95.19%",
-     "source": "arXiv:2406.04932 Table 1",
+     "claim": "CIFAKE test set accuracy 97.35% / AUC 99.62%",
+     "source": "arXiv:2406.04932 Table 3",
      "status": "author_claim"
     },
     {
@@ -12813,266 +12563,16 @@
     "conversion_status": "converted",
     "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
     "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 49/128 <= 1e-6, with float64 constants max 5.8e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 1.5e-09. Source fp32 vs fp64: 1/128 decision changes (BNext is fp32-chaotic).",
     "reproduced_metrics": {
      "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.5625,
-     "accuracy_reference_fp64": 0.578125,
-     "accuracy_bitino_numpy_fused": 0.515625,
+     "accuracy_reference_fp32": 0.96875,
+     "accuracy_reference_fp64": 0.9765625,
+     "accuracy_bitino_numpy_fused": 0.96875,
      "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
     },
     "device_benchmark": "not run (same network as the measured model of the same size)",
     "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-S deepfake detector (COCOFake, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1ysBVOE2doPveeTF-E-xYQzwEfKqRUVHE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "coco_fake_S_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 805446956,
-    "sha256": "64b4fd63cc67267c94d45de318e20c326a4e9799a368e326dbf6fa606bb0c210",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 15528. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_S_unfrozen.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
-   "reported_metrics": {
-    "value": "COCOFake validation set: accuracy 99.28%, AUC 99.89% (BNext-S, paper Table 1; 67.1M parameters, 1.91 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "COCOFake validation set accuracy 99.28% / AUC 99.89%",
-     "source": "arXiv:2406.04932 Table 1",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 93/128 <= 1e-6, with float64 constants max 1.1e-09. Source fp32 vs fp64: 4/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.4375,
-     "accuracy_reference_fp64": 0.4375,
-     "accuracy_bitino_numpy_fused": 0.4296875,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "see speed",
-    "release": "no: no licence (fetch recipe only)",
-    "speed_2026_11_12": {
-     "oneplus-open": {
-      "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
-      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
-       "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
-      ],
-      "thermal_status_seen": [
-       0
-      ],
-      "affinity_errors_max": 18,
-      "all": {
-       "full": {
-        "median_ms": 53.614,
-        "range_ms": [
-         53.234,
-         53.819
-        ],
-        "p90_ms": 54.244
-       },
-       "features": {
-        "median_ms": 1.076,
-        "range_ms": [
-         1.075,
-         1.077
-        ],
-        "p90_ms": 1.111
-       },
-       "network": {
-        "median_ms": 52.133,
-        "range_ms": [
-         52.051,
-         53.321
-        ],
-        "p90_ms": 53.579
-       },
-       "fps_full": 18.7,
-       "features_share_of_full": 0.02,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      },
-      "neon": {
-       "full": {
-        "median_ms": 236.328,
-        "range_ms": [
-         236.285,
-         236.383
-        ],
-        "p90_ms": 236.934
-       },
-       "features": {
-        "median_ms": 1.074,
-        "range_ms": [
-         1.074,
-         1.075
-        ],
-        "p90_ms": 1.118
-       },
-       "network": {
-        "median_ms": 235.173,
-        "range_ms": [
-         234.833,
-         235.349
-        ],
-        "p90_ms": 235.822
-       },
-       "fps_full": 4.2,
-       "features_share_of_full": 0.005,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      }
-     },
-     "moto-e13": {
-      "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
-      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
-       "cpu0:1.61/1.61 cpu6:1.61/1.61"
-      ],
-      "thermal_status_seen": [
-       0
-      ],
-      "affinity_errors_max": 0,
-      "all": {
-       "full": {
-        "median_ms": 281.472,
-        "range_ms": [
-         279.942,
-         281.677
-        ],
-        "p90_ms": 282.99
-       },
-       "features": {
-        "median_ms": 6.084,
-        "range_ms": [
-         5.935,
-         6.121
-        ],
-        "p90_ms": 6.331
-       },
-       "network": {
-        "median_ms": 275.652,
-        "range_ms": [
-         275.467,
-         275.971
-        ],
-        "p90_ms": 277.243
-       },
-       "fps_full": 3.6,
-       "features_share_of_full": 0.022,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      },
-      "neon": {
-       "full": {
-        "median_ms": 670.271,
-        "range_ms": [
-         666.562,
-         671.252
-        ],
-        "p90_ms": 672.949
-       },
-       "features": {
-        "median_ms": 6.072,
-        "range_ms": [
-         6.002,
-         6.12
-        ],
-        "p90_ms": 6.248
-       },
-       "network": {
-        "median_ms": 665.798,
-        "range_ms": [
-         664.056,
-         666.466
-        ],
-        "p90_ms": 667.869
-       },
-       "fps_full": 1.5,
-       "features_share_of_full": 0.009,
-       "kernels_features": {
-        "concat.small_channels": 1,
-        "fft_log_magnitude.opt": 1,
-        "image_gray_u8.neon": 1,
-        "local_binary_pattern.opt": 1
-       }
-      }
-     }
-    }
    }
   },
   {
@@ -13418,374 +12918,6 @@
    }
   },
   {
-   "model_id": "ftl-deepfake-bnext-t-dffd",
-   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (DFFD, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1FIWYPqBeHCqGpJWI2dQmRWlPD58uVR5y/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "dffd_T.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 119794538,
-    "sha256": "0db557174d808bf80d121096d2432a816540c34a42ae89b0932d90ea41048680",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 7160. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_T.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "DFFD (Diverse Fake Face Dataset)",
-   "reported_metrics": {
-    "value": "DFFD test set: accuracy 89.56%, AUC 87.65% (BNext-T with frozen backbone, paper Table 2; 29.8M parameters, 0.89 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "DFFD test set accuracy 89.56% / AUC 87.65%",
-     "source": "arXiv:2406.04932 Table 2",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 3.8e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.578125,
-     "accuracy_reference_fp64": 0.59375,
-     "accuracy_bitino_numpy_fused": 0.609375,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-T deepfake detector (DFFD, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/194TP5vsWMKN8Pz_L7I_CQM1gseg2BRNI/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "dffd_T_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 358745196,
-    "sha256": "263f5e286c995ad0f75f19bcb15c9cc11cc7cd74dd39b54baefe2a60bd5e31df",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 8950. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_T_unfrozen.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "DFFD (Diverse Fake Face Dataset)",
-   "reported_metrics": {
-    "value": "DFFD test set: accuracy 98.95%, AUC 99.94% (BNext-T, paper Table 2; 29.8M parameters, 0.89 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "DFFD test set accuracy 98.95% / AUC 99.94%",
-     "source": "arXiv:2406.04932 Table 2",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 2.0e-14. Source fp32 vs fp64: 3/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.515625,
-     "accuracy_reference_fp64": 0.53125,
-     "accuracy_bitino_numpy_fused": 0.515625,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-s-dffd",
-   "canonical_name": "Faster Than Lies BNext-S with frozen backbone deepfake detector (DFFD, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1RxhpckkLr5Q6YJGQuvk3sXAktZSiNZFE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "dffd_S.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 268769450,
-    "sha256": "7581fe90c1bf666846bfdff89334751b1769cc3df6fb023274a093e03de10d35",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 7160. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_S.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "DFFD (Diverse Fake Face Dataset)",
-   "reported_metrics": {
-    "value": "DFFD test set: accuracy 89.69%, AUC 88.58% (BNext-S with frozen backbone, paper Table 2; 67.1M parameters, 1.91 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "DFFD test set accuracy 89.69% / AUC 88.58%",
-     "source": "arXiv:2406.04932 Table 2",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 4.2e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.609375,
-     "accuracy_reference_fp64": 0.625,
-     "accuracy_bitino_numpy_fused": 0.5625,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-S deepfake detector (DFFD, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1CrJr7uwhD-qWr8ozVfhI8MBbeE0R2vdl/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "dffd_S_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 805446892,
-    "sha256": "ffef0532e874fa38da0a12dd58ee96d8275bd714353c8fade5f8003ba54e1a40",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 8950. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_S_unfrozen.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "DFFD (Diverse Fake Face Dataset)",
-   "reported_metrics": {
-    "value": "DFFD test set: accuracy 99.01%, AUC 99.94% (BNext-S, paper Table 2; 67.1M parameters, 1.91 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "DFFD test set accuracy 99.01% / AUC 99.94%",
-     "source": "arXiv:2406.04932 Table 2",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 42/128 <= 1e-6, with float64 constants max 2.5e-14. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.453125,
-     "accuracy_reference_fp64": 0.46875,
-     "accuracy_bitino_numpy_fused": 0.484375,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
    "model_id": "ftl-deepfake-bnext-m-dffd",
    "canonical_name": "Faster Than Lies BNext-M with frozen backbone deepfake detector (DFFD, RGB + FFT + LBP)",
    "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
@@ -13963,190 +13095,6 @@
      "accuracy_reference_fp32": 0.625,
      "accuracy_reference_fp64": 0.578125,
      "accuracy_bitino_numpy_fused": 0.5625,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-t-cifake",
-   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (CIFAKE, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1IFK56RlbF5A9blinzbs3-3kvoJYj6oF-/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "cifake_T.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 119794538,
-    "sha256": "1e85aec0ecbf71b25ebf974ad71fe3f29f7bfb6f3d32cc4d32533f56c6b4991b",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 8, global_step 7038. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_T.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
-   "reported_metrics": {
-    "value": "CIFAKE test set: accuracy 83.89%, AUC 91.7% (BNext-T with frozen backbone, paper Table 3; 29.8M parameters, 0.89 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "CIFAKE test set accuracy 83.89% / AUC 91.7%",
-     "source": "arXiv:2406.04932 Table 3",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 6.1e-10. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.875,
-     "accuracy_reference_fp64": 0.8515625,
-     "accuracy_bitino_numpy_fused": 0.84375,
-     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
-    },
-    "device_benchmark": "not run (same network as the measured model of the same size)",
-    "release": "no: no licence (fetch recipe only)"
-   }
-  },
-  {
-   "model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-T deepfake detector (CIFAKE, RGB + FFT + LBP)",
-   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
-   "task": "deepfake-image-detection (binary real / fake classification)",
-   "registry_status": "verified-pretrained",
-   "strict_bnn": true,
-   "paper": {
-    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
-    "venue": "CVPR 2024 Workshops (DFAD)",
-    "year": "2024",
-    "arxiv_or_doi": "arXiv:2406.04932",
-    "url": "https://arxiv.org/abs/2406.04932"
-   },
-   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
-   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
-   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
-   "checkpoint": {
-    "url": "https://drive.google.com/file/d/1rZSYjaCSEh_6quIdXK-0DaImsilmljoJ/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "cifake_T_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 358745196,
-    "sha256": "ddb3172027e1511d8b110f6946082d3add6dda1028dae2f8406fbd03563c6b89",
-    "download_tested": true,
-    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
-    "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 6, global_step 5474. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_T_unfrozen.ckpt"
-   },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
-   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
-   "reported_metrics": {
-    "value": "CIFAKE test set: accuracy 97.29%, AUC 99.65% (BNext-T, paper Table 3; 29.8M parameters, 0.89 GFLOPs)",
-    "status": "author_claim"
-   },
-   "precision": {
-    "categories": [
-     "W1A1+FP"
-    ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
-   },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
-   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
-   "license": {
-    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
-    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
-    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
-    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
-   },
-   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
-   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
-   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
-   "evidence": [
-    {
-     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
-     "source": "gdown + torch.load",
-     "status": "verified"
-    },
-    {
-     "claim": "CIFAKE test set accuracy 97.29% / AUC 99.65%",
-     "source": "arXiv:2406.04932 Table 3",
-     "status": "author_claim"
-    },
-    {
-     "claim": "No licence",
-     "source": "GitHub API (license null), clone at 668db9a",
-     "status": "verified"
-    }
-   ],
-   "feasibility_score": 8,
-   "research": {
-    "date_checked": "2026-11-12",
-    "discovered_in": "missed-bnns-2026-10-30",
-    "notes": "the research notes (not published); docs/operators_image_features.md",
-    "adversarially_verified": false
-   },
-   "bitino": {
-    "conversion_status": "converted",
-    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
-    "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 3.0e-11. Source fp32 vs fp64: 2/128 decision changes (BNext is fp32-chaotic).",
-    "reproduced_metrics": {
-     "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.984375,
-     "accuracy_reference_fp64": 0.96875,
-     "accuracy_bitino_numpy_fused": 0.984375,
      "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
     },
     "device_benchmark": "not run (same network as the measured model of the same size)",
@@ -14338,8 +13286,8 @@
    }
   },
   {
-   "model_id": "ftl-deepfake-bnext-m-cifake",
-   "canonical_name": "Faster Than Lies BNext-M with frozen backbone deepfake detector (CIFAKE, RGB + FFT + LBP)",
+   "model_id": "ftl-deepfake-bnext-s-cocofake",
+   "canonical_name": "Faster Than Lies BNext-S with frozen backbone deepfake detector (COCOFake, RGB + FFT + LBP)",
    "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
    "task": "deepfake-image-detection (binary real / fake classification)",
    "registry_status": "verified-pretrained",
@@ -14355,30 +13303,30 @@
    "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
    "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
    "checkpoint": {
-    "url": "https://drive.google.com/file/d/1XjEDzZgLj7zi6GqS1Win5Enu73XMXLsy/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "cifake_M.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 532710358,
-    "sha256": "7fdfdeb1b2d54437197d92998e9ebfb541e77085e31e1a909537ec549c34edd5",
+    "url": "https://drive.google.com/file/d/17G9SgTTnjB_sJk5o1rxFB5Futr8QS4Q1/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "coco_fake_S.ckpt",
+    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 268769450,
+    "sha256": "878b2327e6f91d0491ca5366fc2db4f24b71ba71277c596ab7f2603ef78fbb9a",
     "download_tested": true,
     "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
     "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 9, global_step 7820. hyper_parameters: num_classes 2, backbone BNext-M, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-M), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_M.ckpt"
+    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 19410. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_S.ckpt"
    },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-middle (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
    "reported_metrics": {
-    "value": "CIFAKE test set: accuracy 82.77%, AUC 90.73% (BNext-M with frozen backbone, paper Table 3; 133M parameters, 3.39 GFLOPs)",
+    "value": "COCOFake validation set: accuracy 93.15%, AUC 95.19% (BNext-S with frozen backbone, paper Table 1; 67.1M parameters, 1.91 GFLOPs)",
     "status": "author_claim"
    },
    "precision": {
     "categories": [
      "W1A1+FP"
     ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-middle)."
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
    },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-middle.",
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
    "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
    "license": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
@@ -14396,8 +13344,8 @@
      "status": "verified"
     },
     {
-     "claim": "CIFAKE test set accuracy 82.77% / AUC 90.73%",
-     "source": "arXiv:2406.04932 Table 3",
+     "claim": "COCOFake validation set accuracy 93.15% / AUC 95.19%",
+     "source": "arXiv:2406.04932 Table 1",
      "status": "author_claim"
     },
     {
@@ -14417,12 +13365,12 @@
     "conversion_status": "converted",
     "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
     "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 2.4e-10. Source fp32 vs fp64: 8/128 decision changes (BNext is fp32-chaotic).",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 49/128 <= 1e-6, with float64 constants max 5.8e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
     "reproduced_metrics": {
      "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.8046875,
-     "accuracy_reference_fp64": 0.8203125,
-     "accuracy_bitino_numpy_fused": 0.8046875,
+     "accuracy_reference_fp32": 0.5625,
+     "accuracy_reference_fp64": 0.578125,
+     "accuracy_bitino_numpy_fused": 0.515625,
      "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
     },
     "device_benchmark": "not run (same network as the measured model of the same size)",
@@ -14430,8 +13378,8 @@
    }
   },
   {
-   "model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
-   "canonical_name": "Faster Than Lies BNext-M deepfake detector (CIFAKE, RGB + FFT + LBP)",
+   "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-S deepfake detector (COCOFake, RGB + FFT + LBP)",
    "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
    "task": "deepfake-image-detection (binary real / fake classification)",
    "registry_status": "verified-pretrained",
@@ -14447,30 +13395,30 @@
    "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
    "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
    "checkpoint": {
-    "url": "https://drive.google.com/file/d/1cArYmqGzbjE9miyWeddDoR9gboLym73O/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
-    "filename": "cifake_M_unfrozen.ckpt",
-    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
-    "size_bytes": 1596745360,
-    "sha256": "6de488fb9df5f5ead56092f28dc9bc110451b30edc62ce40d10e636b28b4657b",
+    "url": "https://drive.google.com/file/d/1ysBVOE2doPveeTF-E-xYQzwEfKqRUVHE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "coco_fake_S_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 805446956,
+    "sha256": "64b4fd63cc67267c94d45de318e20c326a4e9799a368e326dbf6fa606bb0c210",
     "download_tested": true,
     "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
     "upstream_hash_published": "none",
-    "inspection": "torch.load(weights_only=True) OK. epoch 9, global_step 7820. hyper_parameters: num_classes 2, backbone BNext-M, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-M), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
-    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_M_unfrozen.ckpt"
+    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 15528. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_S_unfrozen.ckpt"
    },
-   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-middle (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
-   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
    "reported_metrics": {
-    "value": "CIFAKE test set: accuracy 97.35%, AUC 99.62% (BNext-M, paper Table 3; 133M parameters, 3.39 GFLOPs)",
+    "value": "COCOFake validation set: accuracy 99.28%, AUC 99.89% (BNext-S, paper Table 1; 67.1M parameters, 1.91 GFLOPs)",
     "status": "author_claim"
    },
    "precision": {
     "categories": [
      "W1A1+FP"
     ],
-    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-middle)."
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
    },
-   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-middle.",
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
    "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
    "license": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
@@ -14488,7 +13436,441 @@
      "status": "verified"
     },
     {
-     "claim": "CIFAKE test set accuracy 97.35% / AUC 99.62%",
+     "claim": "COCOFake validation set accuracy 99.28% / AUC 99.89%",
+     "source": "arXiv:2406.04932 Table 1",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 93/128 <= 1e-6, with float64 constants max 1.1e-09. Source fp32 vs fp64: 4/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.4375,
+     "accuracy_reference_fp64": 0.4375,
+     "accuracy_bitino_numpy_fused": 0.4296875,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "see speed",
+    "release": "no: no licence (fetch recipe only)",
+    "speed_2026_11_12": {
+     "oneplus-open": {
+      "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
+      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+       "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
+      ],
+      "thermal_status_seen": [
+       0
+      ],
+      "affinity_errors_max": 18,
+      "all": {
+       "full": {
+        "median_ms": 53.614,
+        "range_ms": [
+         53.234,
+         53.819
+        ],
+        "p90_ms": 54.244
+       },
+       "features": {
+        "median_ms": 1.076,
+        "range_ms": [
+         1.075,
+         1.077
+        ],
+        "p90_ms": 1.111
+       },
+       "network": {
+        "median_ms": 52.133,
+        "range_ms": [
+         52.051,
+         53.321
+        ],
+        "p90_ms": 53.579
+       },
+       "fps_full": 18.7,
+       "features_share_of_full": 0.02,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      },
+      "neon": {
+       "full": {
+        "median_ms": 236.328,
+        "range_ms": [
+         236.285,
+         236.383
+        ],
+        "p90_ms": 236.934
+       },
+       "features": {
+        "median_ms": 1.074,
+        "range_ms": [
+         1.074,
+         1.075
+        ],
+        "p90_ms": 1.118
+       },
+       "network": {
+        "median_ms": 235.173,
+        "range_ms": [
+         234.833,
+         235.349
+        ],
+        "p90_ms": 235.822
+       },
+       "fps_full": 4.2,
+       "features_share_of_full": 0.005,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      }
+     },
+     "moto-e13": {
+      "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
+      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+       "cpu0:1.61/1.61 cpu6:1.61/1.61"
+      ],
+      "thermal_status_seen": [
+       0
+      ],
+      "affinity_errors_max": 0,
+      "all": {
+       "full": {
+        "median_ms": 281.472,
+        "range_ms": [
+         279.942,
+         281.677
+        ],
+        "p90_ms": 282.99
+       },
+       "features": {
+        "median_ms": 6.084,
+        "range_ms": [
+         5.935,
+         6.121
+        ],
+        "p90_ms": 6.331
+       },
+       "network": {
+        "median_ms": 275.652,
+        "range_ms": [
+         275.467,
+         275.971
+        ],
+        "p90_ms": 277.243
+       },
+       "fps_full": 3.6,
+       "features_share_of_full": 0.022,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      },
+      "neon": {
+       "full": {
+        "median_ms": 670.271,
+        "range_ms": [
+         666.562,
+         671.252
+        ],
+        "p90_ms": 672.949
+       },
+       "features": {
+        "median_ms": 6.072,
+        "range_ms": [
+         6.002,
+         6.12
+        ],
+        "p90_ms": 6.248
+       },
+       "network": {
+        "median_ms": 665.798,
+        "range_ms": [
+         664.056,
+         666.466
+        ],
+        "p90_ms": 667.869
+       },
+       "fps_full": 1.5,
+       "features_share_of_full": 0.009,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-s-dffd",
+   "canonical_name": "Faster Than Lies BNext-S with frozen backbone deepfake detector (DFFD, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1RxhpckkLr5Q6YJGQuvk3sXAktZSiNZFE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "dffd_S.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 268769450,
+    "sha256": "7581fe90c1bf666846bfdff89334751b1769cc3df6fb023274a093e03de10d35",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 7160. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_S.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "DFFD (Diverse Fake Face Dataset)",
+   "reported_metrics": {
+    "value": "DFFD test set: accuracy 89.69%, AUC 88.58% (BNext-S with frozen backbone, paper Table 2; 67.1M parameters, 1.91 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "DFFD test set accuracy 89.69% / AUC 88.58%",
+     "source": "arXiv:2406.04932 Table 2",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 4.2e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.609375,
+     "accuracy_reference_fp64": 0.625,
+     "accuracy_bitino_numpy_fused": 0.5625,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-S deepfake detector (DFFD, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1CrJr7uwhD-qWr8ozVfhI8MBbeE0R2vdl/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "dffd_S_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 805446892,
+    "sha256": "ffef0532e874fa38da0a12dd58ee96d8275bd714353c8fade5f8003ba54e1a40",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 8950. hyper_parameters: num_classes 2, backbone BNext-S, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-S), adapter.weight (3,5,3,3) + bias, fc.weight (1,1536) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_S_unfrozen.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-small (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1536, 1) (logit > 0 = real)",
+   "dataset": "DFFD (Diverse Fake Face Dataset)",
+   "reported_metrics": {
+    "value": "DFFD test set: accuracy 99.01%, AUC 99.94% (BNext-S, paper Table 2; 67.1M parameters, 1.91 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-small)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-small.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "DFFD test set accuracy 99.01% / AUC 99.94%",
+     "source": "arXiv:2406.04932 Table 2",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 42/128 <= 1e-6, with float64 constants max 2.5e-14. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.453125,
+     "accuracy_reference_fp64": 0.46875,
+     "accuracy_bitino_numpy_fused": 0.484375,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-cifake",
+   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (CIFAKE, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1IFK56RlbF5A9blinzbs3-3kvoJYj6oF-/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "cifake_T.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 119794538,
+    "sha256": "1e85aec0ecbf71b25ebf974ad71fe3f29f7bfb6f3d32cc4d32533f56c6b4991b",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 8, global_step 7038. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_T.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
+   "reported_metrics": {
+    "value": "CIFAKE test set: accuracy 83.89%, AUC 91.7% (BNext-T with frozen backbone, paper Table 3; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "CIFAKE test set accuracy 83.89% / AUC 91.7%",
      "source": "arXiv:2406.04932 Table 3",
      "status": "author_claim"
     },
@@ -14509,12 +13891,630 @@
     "conversion_status": "converted",
     "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
     "numerical_verification": "passed (Level 3, numpy executor)",
-    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 1.5e-09. Source fp32 vs fp64: 1/128 decision changes (BNext is fp32-chaotic).",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 6.1e-10. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
     "reproduced_metrics": {
      "eval_set": "cifake-test-subset-128",
-     "accuracy_reference_fp32": 0.96875,
-     "accuracy_reference_fp64": 0.9765625,
-     "accuracy_bitino_numpy_fused": 0.96875,
+     "accuracy_reference_fp32": 0.875,
+     "accuracy_reference_fp64": 0.8515625,
+     "accuracy_bitino_numpy_fused": 0.84375,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-T deepfake detector (CIFAKE, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1rZSYjaCSEh_6quIdXK-0DaImsilmljoJ/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "cifake_T_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 358745196,
+    "sha256": "ddb3172027e1511d8b110f6946082d3add6dda1028dae2f8406fbd03563c6b89",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 6, global_step 5474. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 1.0000. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/cifake_T_unfrozen.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
+   "reported_metrics": {
+    "value": "CIFAKE test set: accuracy 97.29%, AUC 99.65% (BNext-T, paper Table 3; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "CIFAKE test set accuracy 97.29% / AUC 99.65%",
+     "source": "arXiv:2406.04932 Table 3",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 3.0e-11. Source fp32 vs fp64: 2/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.984375,
+     "accuracy_reference_fp64": 0.96875,
+     "accuracy_bitino_numpy_fused": 0.984375,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-cocofake",
+   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (COCOFake, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1AYMi3DE4J0haBJzm8dutThGpUCC3lqfN/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "coco_fake_T.ckpt",
+    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 119794538,
+    "sha256": "1f7de096598c32d841bce54ecbc53fc77d8a864d820e800b8c7bd77f41ce077f",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 0, global_step 3882. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_T.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
+   "reported_metrics": {
+    "value": "COCOFake validation set: accuracy 83.65%, AUC 81.98% (BNext-T with frozen backbone, paper Table 1; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "COCOFake validation set accuracy 83.65% / AUC 81.98%",
+     "source": "arXiv:2406.04932 Table 1",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 4.7e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.625,
+     "accuracy_reference_fp64": 0.578125,
+     "accuracy_bitino_numpy_fused": 0.578125,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-T deepfake detector (COCOFake, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1uH_Px3jm2uqyCUFxcEPmBugiVlcpSXTE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "coco_fake_T_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.2.0.post0 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 358745196,
+    "sha256": "872279a7ffde9ca5a1a9ff6e6cf545fbe836f80df76087fec27528b18ba72ac1",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 19410. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 5.0024. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/coco_fake_T_unfrozen.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
+   "reported_metrics": {
+    "value": "COCOFake validation set: accuracy 99.25%, AUC 99.86% (BNext-T, paper Table 1; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "COCOFake validation set accuracy 99.25% / AUC 99.86%",
+     "source": "arXiv:2406.04932 Table 1",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 113/128 <= 1e-6, with float64 constants max 1.9e-10. Source fp32 vs fp64: 6/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.4609375,
+     "accuracy_reference_fp64": 0.4609375,
+     "accuracy_bitino_numpy_fused": 0.453125,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "see speed",
+    "release": "no: no licence (fetch recipe only)",
+    "speed_2026_11_12": {
+     "oneplus-open": {
+      "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
+      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+       "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
+      ],
+      "thermal_status_seen": [
+       0
+      ],
+      "affinity_errors_max": 21,
+      "all": {
+       "full": {
+        "median_ms": 28.425,
+        "range_ms": [
+         28.316,
+         29.504
+        ],
+        "p90_ms": 29.64
+       },
+       "features": {
+        "median_ms": 1.075,
+        "range_ms": [
+         1.075,
+         1.075
+        ],
+        "p90_ms": 1.107
+       },
+       "network": {
+        "median_ms": 27.038,
+        "range_ms": [
+         26.934,
+         27.043
+        ],
+        "p90_ms": 27.27
+       },
+       "fps_full": 35.2,
+       "features_share_of_full": 0.038,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      },
+      "neon": {
+       "full": {
+        "median_ms": 133.329,
+        "range_ms": [
+         133.256,
+         133.414
+        ],
+        "p90_ms": 133.73
+       },
+       "features": {
+        "median_ms": 1.076,
+        "range_ms": [
+         1.076,
+         1.076
+        ],
+        "p90_ms": 1.108
+       },
+       "network": {
+        "median_ms": 132.608,
+        "range_ms": [
+         132.424,
+         132.664
+        ],
+        "p90_ms": 133.091
+       },
+       "fps_full": 7.5,
+       "features_share_of_full": 0.008,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      }
+     },
+     "moto-e13": {
+      "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
+      "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+       "cpu0:1.61/1.61 cpu6:1.61/1.61"
+      ],
+      "thermal_status_seen": [
+       0
+      ],
+      "affinity_errors_max": 0,
+      "all": {
+       "full": {
+        "median_ms": 147.864,
+        "range_ms": [
+         147.82,
+         149.002
+        ],
+        "p90_ms": 150.121
+       },
+       "features": {
+        "median_ms": 6.044,
+        "range_ms": [
+         6.002,
+         6.06
+        ],
+        "p90_ms": 6.251
+       },
+       "network": {
+        "median_ms": 142.546,
+        "range_ms": [
+         141.699,
+         142.952
+        ],
+        "p90_ms": 143.95
+       },
+       "fps_full": 6.8,
+       "features_share_of_full": 0.041,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      },
+      "neon": {
+       "full": {
+        "median_ms": 399.362,
+        "range_ms": [
+         396.415,
+         399.989
+        ],
+        "p90_ms": 401.653
+       },
+       "features": {
+        "median_ms": 6.101,
+        "range_ms": [
+         6.063,
+         6.125
+        ],
+        "p90_ms": 6.334
+       },
+       "network": {
+        "median_ms": 394.256,
+        "range_ms": [
+         393.078,
+         394.374
+        ],
+        "p90_ms": 395.983
+       },
+       "fps_full": 2.5,
+       "features_share_of_full": 0.015,
+       "kernels_features": {
+        "concat.small_channels": 1,
+        "fft_log_magnitude.opt": 1,
+        "image_gray_u8.neon": 1,
+        "local_binary_pattern.opt": 1
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-dffd",
+   "canonical_name": "Faster Than Lies BNext-T with frozen backbone deepfake detector (DFFD, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/1FIWYPqBeHCqGpJWI2dQmRWlPD58uVR5y/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "dffd_T.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 119794538,
+    "sha256": "0db557174d808bf80d121096d2432a816540c34a42ae89b0932d90ea41048680",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 3, global_step 7160. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone True, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_T.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (frozen, ImageNet-pretrained; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "DFFD (Diverse Fake Face Dataset)",
+   "reported_metrics": {
+    "value": "DFFD test set: accuracy 89.56%, AUC 87.65% (BNext-T with frozen backbone, paper Table 2; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "DFFD test set accuracy 89.56% / AUC 87.65%",
+     "source": "arXiv:2406.04932 Table 2",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 3.8e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.578125,
+     "accuracy_reference_fp64": 0.59375,
+     "accuracy_bitino_numpy_fused": 0.609375,
+     "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+    },
+    "device_benchmark": "not run (same network as the measured model of the same size)",
+    "release": "no: no licence (fetch recipe only)"
+   }
+  },
+  {
+   "model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
+   "canonical_name": "Faster Than Lies BNext-T deepfake detector (DFFD, RGB + FFT + LBP)",
+   "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+   "task": "deepfake-image-detection (binary real / fake classification)",
+   "registry_status": "verified-pretrained",
+   "strict_bnn": true,
+   "paper": {
+    "title": "Faster Than Lies: Real-time Deepfake Detection using Binary Neural Networks",
+    "venue": "CVPR 2024 Workshops (DFAD)",
+    "year": "2024",
+    "arxiv_or_doi": "arXiv:2406.04932",
+    "url": "https://arxiv.org/abs/2406.04932"
+   },
+   "authors": "Romeo Lanzino, Federico Fontana, Anxhelo Diko, Marco Raoul Marini, Luigi Cinque (Sapienza University of Rome)",
+   "repo_url": "https://github.com/fedeloper/binary_deepfake_detection",
+   "provenance": "official authors (README \"Weights\" Google Drive folder: 18 PyTorch-Lightning checkpoints {cifake, coco_fake, dffd} x {T, S, M} x {frozen backbone, unfrozen})",
+   "checkpoint": {
+    "url": "https://drive.google.com/file/d/194TP5vsWMKN8Pz_L7I_CQM1gseg2BRNI/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+    "filename": "dffd_T_unfrozen.ckpt",
+    "format": "PyTorch-Lightning 2.1.4 checkpoint (zip): state_dict + hyper_parameters + optimizer states",
+    "size_bytes": 358745196,
+    "sha256": "263f5e286c995ad0f75f19bcb15c9cc11cc7cd74dd39b54baefe2a60bd5e31df",
+    "download_tested": true,
+    "download_status": "gdown (no credentials) 2026-11-12, folder download; SHA-256 recorded by the downloader",
+    "upstream_hash_published": "none",
+    "inspection": "torch.load(weights_only=True) OK. epoch 4, global_step 8950. hyper_parameters: num_classes 2, backbone BNext-T, freeze_backbone False, add_fft_channel True, add_lbp_channel True, add_magnitude_channel False, learning_rate 1e-4, pos_weight 0.3257. state_dict: base_model.* (659 tensors, BNext-T), adapter.weight (3,5,3,3) + bias, fc.weight (1,1024) + bias; loads strictly into model.BNext4DFR. Frozen-backbone checkpoints still carry their own BN running statistics (Lightning train mode updates them), so the backbone is taken from the checkpoint.",
+    "local_cache_path": ".cache/checkpoints/ftl-deepfake/dffd_T_unfrozen.ckpt"
+   },
+   "architecture": "ImageGrayU8 (OpenCV BGR2GRAY on RGB) -> FFT log-magnitude and LBP(P=3, R=6, uniform) channels -> concat with RGB (5 channels) -> FP adapter Conv2d(5, 3, 3x3) -> ImageNet mean/std -> BNext-tiny (fine-tuned; fc removed) -> PReLU -> global avgpool -> FP Linear(1024, 1) (logit > 0 = real)",
+   "dataset": "DFFD (Diverse Fake Face Dataset)",
+   "reported_metrics": {
+    "value": "DFFD test set: accuracy 98.95%, AUC 99.94% (BNext-T, paper Table 2; 29.8M parameters, 0.89 GFLOPs)",
+    "status": "author_claim"
+   },
+   "precision": {
+    "categories": [
+     "W1A1+FP"
+    ],
+    "per_layer": "Preprocessing (gray, FFT, LBP) double; adapter conv, BNext stem / SE / BN / PReLU / mix and the fc in FP; all BNext 3x3 and 1x1 body convs W1A1 (as bnext-tiny)."
+   },
+   "binarization_semantics": "Backbone = hpi-xnor/BNext src/bnext.py (HardSign = torch.sign, HardBinaryConv sign(W) at temperature ~7e-24, zero padding); see bnext-tiny.",
+   "input_spec": "RGB in [0, 1], 224x224 (test loaders: Resize(252, bilinear) -> CenterCrop(224) -> ToDtype; no normalisation outside the model). The FFT / LBP channels are computed from cv2.cvtColor((x*255).astype(uint8), COLOR_BGR2GRAY) inside forward (model.py _add_new_channels_worker); normalisation (timm ImageNet mean/std) after the adapter.",
+   "license": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)",
+    "data": "COCOFake / DFFD / CIFAKE terms (training data); eval subsets used here are not redistributed",
+    "evidence": "GitHub API repos/fedeloper/binary_deepfake_detection: license null (checked 2026-11-12); no LICENSE in the clone at 668db9a"
+   },
+   "reference_impl": "PyTorch: model.py BNext4DFR (lightning, timm, einops, cv2, scikit-image, fvcore, torchmetrics imports) + BNext src/bnext.py",
+   "conversion_notes": "tools/convert_ftl_deepfake.py (adapter bitino.adapters.torch_ftl_deepfake): preprocessing as IR operators ImageGrayU8 / FftLogMagnitude / LocalBinaryPattern (docs/operators_image_features.md), normalisation folded into the adapter conv, BNext via torch_bnext, head [0, logit].",
+   "known_limitations": "Authored by the Bitino maintainer (F. Fontana, co-author). No licence: weights are not redistributable (fetch recipe only). COCOFake / DFFD are not accessible without registration, so the converted models are validated on a CIFAKE test subset (128) and 128 real ImageNet photos; the paper's accuracy is cited, not reproduced (except the 128-image CIFAKE smoke test for the CIFAKE checkpoints). The paper reports 20 CIFAKE epochs, the released configs 10.",
+   "evidence": [
+    {
+     "claim": "Downloaded without credentials, hashed, hparams read with weights_only=True",
+     "source": "gdown + torch.load",
+     "status": "verified"
+    },
+    {
+     "claim": "DFFD test set accuracy 98.95% / AUC 99.94%",
+     "source": "arXiv:2406.04932 Table 2",
+     "status": "author_claim"
+    },
+    {
+     "claim": "No licence",
+     "source": "GitHub API (license null), clone at 668db9a",
+     "status": "verified"
+    }
+   ],
+   "feasibility_score": 8,
+   "research": {
+    "date_checked": "2026-11-12",
+    "discovered_in": "missed-bnns-2026-10-30",
+    "notes": "the research notes (not published); docs/operators_image_features.md",
+    "adversarially_verified": false
+   },
+   "bitino": {
+    "conversion_status": "converted",
+    "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+    "numerical_verification": "passed (Level 3, numpy executor)",
+    "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 2.0e-14. Source fp32 vs fp64: 3/128 decision changes (BNext is fp32-chaotic).",
+    "reproduced_metrics": {
+     "eval_set": "cifake-test-subset-128",
+     "accuracy_reference_fp32": 0.515625,
+     "accuracy_reference_fp64": 0.53125,
+     "accuracy_bitino_numpy_fused": 0.515625,
      "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
     },
     "device_benchmark": "not run (same network as the measured model of the same size)",
@@ -23552,7 +23552,8 @@
      "top1_reference_fp32": 0.6328125,
      "top1_reference_fp64": 0.65625,
      "top1_bitino_ge": 0.65625,
-     "author_claim_full_imagenet_top1": 0.66
+     "author_claim_full_imagenet_top1": 0.66,
+     "eval_set": "imagenet-val-subset-128, preprocessing bhvit (official build_transform)"
     },
     "speed_2026_11_04": {
      "instructions_M": {

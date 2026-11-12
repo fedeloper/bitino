@@ -351,7 +351,7 @@ def synthetic_eval(recipe: dict, home: str, n: int, seed: int = 0) -> str:
         x = ((u8.astype(np.float32) - mean) * (np.float32(1.0) / std)).astype(np.float32)   # tools/eval_sets/tensorpack_bgr.py
     elif key.endswith("_pixels"):   # raw 8-bit pixel values (FINN / QONNX graphs check the UINT8 input type)
         x = rng.integers(0, 256, size=[n] + shape[1:]).astype(np.float32)
-    elif key.endswith("_totensor"):   # ToTensor(): k / 255
+    elif key.endswith(("_totensor", "_rgb01")):   # ToTensor() / ToDtype(float32, scale=True) of 8-bit pixels: k / 255
         x = (rng.integers(0, 256, size=[n] + shape[1:]) / 255.0).astype(np.float32)
     else:
         x = rng.standard_normal([n] + shape[1:]).astype(np.float32)

@@ -101,6 +101,9 @@ ENVS = {
     "brevitas": {"python": "3.12", "requirements": "envs/brevitas-requirements.txt", "note": "brevitas 0.11.0 + torch"},
     "bhvit": {"python": "3.11", "requirements": "envs/bhvit-requirements.txt",
               "note": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40)"},
+    "ftl": {"python": "3.11", "requirements": "envs/ftl-requirements.txt",
+            "note": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' "
+                    "Faster Than Lies model.py and the BNext definition import them)"},
     "nncf": {"python": "3.10", "requirements": "envs/nncf-requirements.txt", "note": "nncf 2.9.0 + torch 2.1.2"},
     "qonnx": {"python": "3.12", "requirements": "envs/qonnx-freeze.txt", "note": "qonnx 1.0.0 + onnx + onnxruntime"},
     "theano27": {"python": "2.7", "requirements": "envs/theano27-conda-export.txt",
@@ -114,6 +117,7 @@ TOOL_ENV = {
     "tools/convert_larq_zoo.py": "larq", "tools/convert_keras_embedding.py": "larq", "tools/convert_omz.py": "openvino",
     "tools/convert_brevitas.py": "brevitas", "tools/convert_nncf.py": "nncf", "tools/convert_finn_onnx.py": "qonnx",
     "tools/convert_dabnn.py": "qonnx", "tools/convert_bnn_pynq_npz.py": "base", "tools/convert_bhvit.py": "bhvit",
+    "tools/convert_ftl_deepfake.py": "ftl",
 }
 
 BNEXT_COMMIT = "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28"   # hpi-xnor/BNext, the commit every BNext conversion used
@@ -333,6 +337,9 @@ def build_recipe(mid, st, reg, man, adir, int8_args):
         args += ["--repo", "{repo}", "--bnext-repo", "{bnext}", "--bnext-weights", "{download:bnext_weights}", "--weights", "{weights}"]
         notes.append("the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the "
                      "synthetic eval set the conversion checks run on random inputs")
+        if size == "middle":
+            notes.append("memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M "
+                         "needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)")
     elif short == "convert_sabnn.py":
         args += ["--repo", "{downloads}", "--weights", "{weights}"]
         notes.append("the model definition birealnet.py.txt is part of the same Google Drive release as the weights")

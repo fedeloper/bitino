@@ -1,0 +1,16 @@
+# Reference environment for the "Faster Than Lies" deepfake-detector converter (tools/convert_ftl_deepfake.py): the
+# authors' model.py imports OpenCV, scikit-image, timm and einops at module level, and the BNext definition imports
+# torchinfo. CPU only.
+# The published conversions were made with Python 3.11.13, torch 2.9.0, torchvision 0.24.0, numpy 2.2.6, Pillow 11.3.0.
+#   python3.11 -m venv ~/.venvs/bitino-ftl
+#   ~/.venvs/bitino-ftl/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch==2.9.0 torchvision==0.24.0
+#   ~/.venvs/bitino-ftl/bin/pip install -r envs/ftl-requirements.txt
+# then: bitino fetch ftl-deepfake-bnext-t-cifake --python ftl=~/.venvs/bitino-ftl/bin/python
+numpy==2.2.6
+scipy==1.16.2
+opencv-python-headless==4.12.0.88
+scikit-image==0.25.2
+timm==0.6.11
+einops==0.8.1
+torchinfo==1.8.0
+Pillow==11.3.0

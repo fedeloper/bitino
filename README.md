@@ -10,7 +10,7 @@ runtime with NEON (ARMv8.2 dotprod, i8mm) and AVX2 / AVX-VNNI kernels, converter
 public weights.
 
 <!-- generated:stats -->
-**343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 113 verified end to end, 1 broken upstream, 18 reconstructed from the conversion records.
+**343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 131 verified end to end, 1 broken upstream.
 <!-- /generated:stats -->
 
 *Un bitino* is Italian for “a little bit”, which is all a binary network needs per weight.
@@ -260,7 +260,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 898 vendor-policy; moto e13: 116 clean; Redmi 9A: 42 clean. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 425/425 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 192/228 correctness checks passed on 114 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 425/425 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 193/228 correctness checks passed on 114 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host
@@ -338,11 +338,12 @@ Full walk-through: [docs/adding-a-model.md](docs/adding-a-model.md).
   policy, which holds the clocks below their maximum with the screen off (◇, ceilings recorded per run). The S22
   numbers are from an older runtime on a thermally capped phone (charging over USB) and are labelled so. x86 host
   numbers are from an older runtime.
-* **Fetch recipes:** 113 of 114 were run end to end from an empty cache (authors' downloads, SHA-256 checked,
+* **Fetch recipes:** 131 of 132 were run end to end from an empty cache (authors' downloads, SHA-256 checked,
   converted file identical to the published one); one is broken upstream (S2-BNN: the authors' OneDrive link has
   expired). State per model: `bitino list --converted`. Google Drive can refuse a scripted download (daily quota);
   `fetch` then prints the link to download by hand. Some recipes need a second reference environment
-  (BHViT's transformers 4.39, tensorpack/TensorFlow, Python 2.7 Theano for BNN-PYNQ), listed in `envs/`.
+  (BHViT's transformers 4.39, OpenCV + scikit-image for the Faster Than Lies detectors, tensorpack/TensorFlow,
+  Python 2.7 Theano for BNN-PYNQ), listed in `envs/`.
 * **int8_full** loses accuracy on some networks (see the zoo tables); the exact `neon` / `optimized` stages
   match the source framework. Reproducing an int8 file bit for bit needs the calibration images it was built from
   (training split, not redistributed).

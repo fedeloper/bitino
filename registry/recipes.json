@@ -38,6 +38,11 @@
    "requirements": "envs/bhvit-requirements.txt",
    "note": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40)"
   },
+  "ftl": {
+   "python": "3.11",
+   "requirements": "envs/ftl-requirements.txt",
+   "note": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them)"
+  },
   "nncf": {
    "python": "3.10",
    "requirements": "envs/nncf-requirements.txt",
@@ -65,8 +70,7 @@
   }
  },
  "counts": {
-  "verified": 113,
-  "reconstructed": 18,
+  "verified": 131,
   "broken": 1
  },
  "recipes": {
@@ -7872,11 +7876,11 @@
   "ftl-deepfake-bnext-m-cifake": {
    "model_id": "ftl-deepfake-bnext-m-cifake",
    "registry_model_id": "ftl-deepfake-bnext-m-cifake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -7917,7 +7921,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -7965,21 +7969,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1096620509,
+    "seconds": 192.1,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-m-cifake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8020,7 +8034,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8068,21 +8082,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 2160655511,
+    "seconds": 200.7,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-m-cocofake": {
    "model_id": "ftl-deepfake-bnext-m-cocofake",
    "registry_model_id": "ftl-deepfake-bnext-m-cocofake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8123,7 +8147,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8171,21 +8195,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1096620509,
+    "seconds": 191.8,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-m-cocofake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8226,7 +8260,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8274,21 +8308,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 2160655511,
+    "seconds": 203.7,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-m-dffd": {
    "model_id": "ftl-deepfake-bnext-m-dffd",
    "registry_model_id": "ftl-deepfake-bnext-m-dffd",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8329,7 +8373,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8377,21 +8421,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1096620445,
+    "seconds": 188.3,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-m-dffd-unfrozen": {
    "model_id": "ftl-deepfake-bnext-m-dffd-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-m-dffd-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8432,7 +8486,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8480,21 +8534,31 @@
    },
    "int8": [],
    "notes": [
-    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs"
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "memory: the conversion checks fork one numpy-executor worker per thread (--threads); BNext-M needed 6.2 GB at --threads 1 and more than 14 GB at --threads 4 (verification runs used --threads 1)"
    ],
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 2160655511,
+    "seconds": 195.1,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-cifake": {
    "model_id": "ftl-deepfake-bnext-s-cifake",
    "registry_model_id": "ftl-deepfake-bnext-s-cifake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8535,7 +8599,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8588,16 +8652,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 568742369,
+    "seconds": 51.8,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-cifake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-s-cifake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-s-cifake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8638,7 +8711,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8691,16 +8764,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1105419875,
+    "seconds": 59.5,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-cocofake": {
    "model_id": "ftl-deepfake-bnext-s-cocofake",
    "registry_model_id": "ftl-deepfake-bnext-s-cocofake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8741,7 +8823,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8794,16 +8876,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 568742369,
+    "seconds": 67.1,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-cocofake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8844,7 +8935,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -8897,16 +8988,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1105419875,
+    "seconds": 55.2,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-dffd": {
    "model_id": "ftl-deepfake-bnext-s-dffd",
    "registry_model_id": "ftl-deepfake-bnext-s-dffd",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -8947,7 +9047,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9000,16 +9100,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 568742369,
+    "seconds": 46.3,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-s-dffd-unfrozen": {
    "model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9050,7 +9159,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9103,16 +9212,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 1105419811,
+    "seconds": 56.0,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-cifake": {
    "model_id": "ftl-deepfake-bnext-t-cifake",
    "registry_model_id": "ftl-deepfake-bnext-t-cifake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9153,7 +9271,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9206,16 +9324,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 268750689,
+    "seconds": 33.1,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-cifake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9256,7 +9383,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9309,16 +9436,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 507701347,
+    "seconds": 35.8,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-cocofake": {
    "model_id": "ftl-deepfake-bnext-t-cocofake",
    "registry_model_id": "ftl-deepfake-bnext-t-cocofake",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9359,7 +9495,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9412,16 +9548,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 268750689,
+    "seconds": 32.8,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-cocofake-unfrozen": {
    "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9462,7 +9607,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9515,16 +9660,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 507701347,
+    "seconds": 32.1,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-dffd": {
    "model_id": "ftl-deepfake-bnext-t-dffd",
    "registry_model_id": "ftl-deepfake-bnext-t-dffd",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9565,7 +9719,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9618,16 +9772,25 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 268750689,
+    "seconds": 34.9,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "ftl-deepfake-bnext-t-dffd-unfrozen": {
    "model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
    "registry_model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
-   "state": "reconstructed",
+   "state": "verified",
    "framework": "pytorch",
    "adapter": "bitino.adapters.torch_ftl_deepfake",
    "converter": "tools/convert_ftl_deepfake.py",
-   "env": "torch",
+   "env": "ftl",
    "downloads": [
     {
      "name": "weights",
@@ -9668,7 +9831,7 @@
    ],
    "steps": [
     {
-     "env": "torch",
+     "env": "ftl",
      "tool": "tools/convert_ftl_deepfake.py",
      "args": [
       "--model-id",
@@ -9721,6 +9884,15 @@
    "licence": {
     "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
     "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   },
+   "verified": {
+    "date": "2026-11-12",
+    "framework": "PyTorch 2.9.0 CPU + OpenCV 4.12 + scikit-image 0.25.2 + timm 0.6.11 + einops + torchinfo (the authors' Faster Than Lies model.py and the BNext definition import them) (env ftl)",
+    "source": "drive.google.com; https://github.com/fedeloper/binary_deepfake_detection @ 668db9a63671; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+    "result": "model.bitino identical (data + graph)",
+    "bytes_downloaded": 507701347,
+    "seconds": 34.4,
+    "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
    }
   },
   "gsb-deit-s-cifar100-stage2": {

@@ -121,3 +121,6 @@ def test_synthetic_eval_inputs(tmp_path):
     rec = {"eval": {"dir": "eval128_cifar10_finn", "preprocess": "cifar10_pixels", "input_shape": [1, 32, 32, 3]}}
     x = np.fromfile(os.path.join(F.synthetic_eval(rec, str(tmp_path), 4), "cifar10_pixels.f32"), np.float32)
     assert x.min() >= 0 and x.max() <= 255 and (x == np.round(x)).all()
+    rec = {"eval": {"dir": "eval128_cifake_ftl", "preprocess": "ftl_rgb01", "input_shape": [1, 8, 8, 3]}}   # RGB in [0, 1]
+    x = np.fromfile(os.path.join(F.synthetic_eval(rec, str(tmp_path), 4), "ftl_rgb01.f32"), np.float32)
+    assert x.min() >= 0 and x.max() <= 1 and (np.round(x * 255) == x * np.float32(255)).all()
