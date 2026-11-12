@@ -90,13 +90,13 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `rbnn-resnet20-cifar10` | 88.3% → 88.3% | -1.01 pt | 0.86 ◇ | 0.635 ◇ | 0.878 ◇ | – |
 | `siman-resnet20-cifar10` | 87.5% → 87.5% | -2.32 pt | 0.868 ◇ | 0.769 ◇ | 0.877 ◇ | – |
 | `shuaiz-bireal20-cifar10` | 84.4% → 84.4% | -0.55 pt | 1.11 ◇ | 0.59 ◇ | 1.09 ◇ | – |
-| `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.42 pt | 1.2 ◇ | 0.646 ◇ | 1.18 ◇ | – |
+| `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.67 pt | 1.2 ◇ | 0.646 ◇ | 1.18 ◇ | – |
 | `biper-resnet20-cifar10` | 86.7% → 86.7% | -0.63 pt | 1.22 ◇ | 0.631 ◇ | 1.15 ◇ | – |
 | `fda-bnn-resnet20-cifar10-mindspore` | 89.8% → 89.8% | -0.55 pt | 1.23 ◇ | 0.501 ◇ | 1.21 ◇ | – |
 | `adabin-resnet20-cifar10` | 91.4% → 91.4% | -0.64 pt | 1.58 ◇ | 1.27 ◇ | 1.71 ◇ | 1.22 ⚠ |
-| `ab-bnn-cifar10-reactneta` | 91.4% → 91.4% | -0.22 pt | 1.61 ◇ | 0.992 ◇ | 1.59 ◇ | 2.6 ⚠ |
+| `ab-bnn-cifar10-reactneta` | 91.4% → 91.4% | -0.50 pt | 1.61 ◇ | 0.992 ◇ | 1.59 ◇ | 2.6 ⚠ |
 | `biper-resnet18-cifar10` | 94.5% → 94.5% | -1.94 pt | 2.01 ◇ | 1.14 ◇ | 1.99 ◇ | – |
-| `recu-resnet18-cifar10` | 93.8% → 93.8% | -0.29 pt | 2.05 ◇ | 1.17 ◇ | 2 ◇ | – |
+| `recu-resnet18-cifar10` | 93.8% → 93.8% | -1.32 pt | 2.05 ◇ | 1.17 ◇ | 2 ◇ | – |
 | `biper-vgg-small-cifar10` | 96.1% → 96.1% | -1.40 pt | 2.08 ◇ | 1.08 ◇ | 1.99 ◇ | – |
 | `recu-vgg-small-cifar10` | 96.1% → 96.1% | -0.84 pt | 2.09 ◇ | 1.06 ◇ | 2.01 ◇ | – |
 | `ab-bnn-cifar10-reactnet18` | 93.8% → 93.8% | +0.06 pt | 2.32 ◇ | 1.28 ◇ | 2.15 ◇ | 3.72 ⚠ |
@@ -129,17 +129,17 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `snn-subbit-reactnet18-w1a1-imagenet` | 64.8% → 64.8% | -0.20 pt | 11.1 ◇ | 5.87 ◇ | 7.81 ◇ | – |
 | `snn-subbit-reactnet18-w0.67a1-imagenet` | 64.1% → 64.8% | -0.68 pt | 11.1 ◇ | 5.85 ◇ | 7.82 ◇ | – |
 | `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 11.1 ◇ | 5.86 ◇ | 7.81 ◇ | 16.9 ⚠ |
-| `recu-resnet18-imagenet` | 59.4% → 59.4% | -0.14 pt | 11.2 ◇ | 6.01 ◇ | 7.94 ◇ | – |
-| `biper-resnet18-imagenet` | 59.4% → 59.4% | -0.12 pt | 11.2 ◇ | 6.01 ◇ | 7.9 ◇ | – |
+| `recu-resnet18-imagenet` | 59.4% → 59.4% | -1.74 pt | 11.2 ◇ | 6.01 ◇ | 7.94 ◇ | – |
+| `biper-resnet18-imagenet` | 59.4% → 59.4% | -1.86 pt | 11.2 ◇ | 6.01 ◇ | 7.9 ◇ | – |
 | `tensorpack-dorefa-alexnet-w1a1-g32` | 46.1% → 46.1% | -0.32 pt | 11.4 ◇ | 5.82 ◇ | 7.68 ◇ | – |
 | `sa-bnn-resnet18-imagenet` | 61.7% → 62.5% | -0.78 pt | 11.9 ◇ | 6.12 ◇ | 8.43 ◇ | – |
 | `larq-zoo-real-to-binary-net` | 64.8% → 64.8% | -1.12 pt | 12.7 ◇ | 6.72 ◇ | 9.03 ◇ | – |
 | `siman-resnet18-imagenet` | 54.7% → 54.7% | -4.58 pt | 12.8 ◇ | 7.68 ◇ | 9.49 ◇ | – |
-| `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.48 pt | 13.1 ◇ | 7.86 ◇ | 9.8 ◇ | – |
+| `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.90 pt | 13.1 ◇ | 7.86 ◇ | 9.8 ◇ | – |
 | `larq-zoo-quicknet-xl-legacy` | 64.1% → 64.8% | -0.92 pt | 13.7 ◇ | 7.7 ◇ | 13.1 ◇ | – |
 | `larq-zoo-quicknet-large` | 71.1% → 70.3% | -1.96 pt | 14.0 ◇ | 7.63 ◇ | 13.4 ◇ | – |
 | `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 16.8 ◇ | 10.1 ◇ | 16.0 ◇ | 42.1 ⚠ |
-| `biper-resnet34-imagenet` | 66.4% → 66.4% | -0.12 pt | 17.5 ◇ | 9.37 ◇ | 14.2 ◇ | – |
+| `biper-resnet34-imagenet` | 66.4% → 66.4% | -1.26 pt | 17.5 ◇ | 9.37 ◇ | 14.2 ◇ | – |
 | `recu-resnet34-imagenet` | 68.8% → 68.8% | -4.56 pt | 17.6 ◇ | 9.37 ◇ | 14.2 ◇ | – |
 | `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.7 ◇ | 9.36 ◇ | 14.3 ◇ | 27.0 ⚠ |
 | `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 20.2 ◇ | 10.5 ◇ | 19.8 ◇ | 19.6 ⚠ |
@@ -150,9 +150,9 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.1 ◇ | 12.1 ◇ | 19.3 ◇ | – |
 | `bnext-tiny` | 69.5% → 68.0% | -3.84 pt | 25.6 ◇ | 13.3 ◇ | 25.1 ◇ | – |
 | `larq-zoo-binary-densenet37` | 66.4% → 65.6% | -41.28 pt | 26.4 ◇ | 14.2 ◇ | 21.4 ◇ | – |
-| `bnas-d-imagenet` | 60.2% → 60.2% | +53.34 pt | 26.4 ◇ | 15.4 ◇ | 15.9 ◇ | – |
+| `bnas-d-imagenet` | 60.2% → 60.2% | -54.94 pt | 26.4 ◇ | 15.4 ◇ | 15.9 ◇ | – |
 | `larq-zoo-meliusnet22` | 65.6% → 66.4% | -57.38 pt | 26.6 ◇ | 14.0 ◇ | 24.6 ◇ | – |
-| `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | +60.44 pt | 26.9 ◇ | 14.3 ◇ | 22.3 ◇ | – |
+| `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | -61.52 pt | 26.9 ◇ | 14.3 ◇ | 22.3 ◇ | – |
 | `bnas-e-imagenet` | 56.2% → 56.2% | -0.92 pt | 32.7 ◇ | 19.1 ◇ | 21.3 ◇ | – |
 | `bhvit-tiny-binary` | 64.1% → 62.5% | -0.74 pt | 32.8 ◇ | 16.3 ◇ | 32.1 ◇ | 46.6 ⚠ |
 | `omz-resnet50-binary-0001-fp16` | 71.9% → 73.4% | +0.26 pt | 34.4 ◇ | 18.0 ◇ | 21.5 ◇ | – |

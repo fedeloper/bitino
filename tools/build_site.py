@@ -54,7 +54,7 @@ def norm_validity(v):
 
 def pick_speed(runs: list[dict], fastest_cpu: str = "7") -> dict:
     """Representative numbers of one device: latest measured runs, 1 thread pinned to the fastest core and 4 threads
-    unpinned, for the exact stages (float glue) and for int8 (the full-integer file where measured, else the int8
+    unpinned, for the float file (stage all: binary layers exact, float32 elsewhere) and for int8 (the full-integer file where measured, else the int8
     kernels on the float file)."""
     out = {}
     if not runs:
@@ -77,6 +77,14 @@ def pick_speed(runs: list[dict], fastest_cpu: str = "7") -> dict:
                             "date": r.get("date"), "validity": norm_validity(r.get("validity")),
                             "file": r.get("model_file"), "config": r.get("config"), "caps": r.get("caps_seen")}
                 break
+    i8f = {}
+    for r in sorted((r for r in runs if r.get("stage") == "int8_full" and r.get("threads") == 1
+                     and r.get("affinity") == fastest_cpu and r.get("median_ms")),
+                    key=lambda r: (r.get("date") or "", r.get("plan") or "")):
+        i8f[os.path.basename(r.get("model_file") or "")] = {"ms": round(r["median_ms"], 3), "date": r.get("date"),
+                                                             "validity": norm_validity(r.get("validity"))}
+    if i8f:
+        out["t1_int8_full_files"] = i8f   # latest run per file
     if out:
         out["latest"] = max(r.get("date") or "" for r in runs)
     return out
@@ -129,7 +137,9 @@ def collect() -> dict:
                     break
         if i8 is None:
             for st in sorted(acc.get("studies", []), key=lambda s: s.get("date") or ""):
-                if st.get("b", "").endswith(":int8_full") and "poolbug" not in st.get("study", "") and "prev" not in st.get("study", ""):
+                b = st.get("b", "")
+                if b.endswith(":int8_full") and "/" not in b and st.get("a", "").endswith(":neon") \
+                        and "poolbug" not in st.get("study", "") and "prev" not in st.get("study", ""):
                     i8 = {"file": st["b"].split(":")[0], "set": st.get("eval_set"), "n": st.get("n"), "top1": st.get("b_top1"),
                           "delta": st.get("delta_pt"), "p": st.get("mcnemar_p")}
         insn = (res.get("instructions_M") or {}).get("values") or {}
@@ -139,7 +149,7 @@ def collect() -> dict:
             if p:
                 phones[did] = p
         best = {}
-        for key in ("t1", "t4"):   # fastest phone (exact stages), for the zoo table
+        for key in ("t1", "t4"):   # fastest phone (float file, stage all), for the zoo table
             c = [(p[key]["ms"], did) for did, p in phones.items() if p.get(key)]
             if c:
                 ms_, did = min(c)
@@ -278,30 +288,65 @@ def short_label(mid: str) -> str:
     return s
 
 
-def pareto_data(d: dict, dataset: str) -> tuple[str | None, list[dict]]:
-    """(device, points) for the accuracy-vs-latency plot of `dataset`: published full-test-set top-1
-    (registry/published_accuracy.json) against the headline phone's 1-thread latency of the exact stage. The exact stage
-    reproduces the source framework, so the published accuracy applies to it. Duplicate files (-fp16) are left out."""
+INT8_BROKEN_PT = 10.0   # int8_full files losing more than this are left out of the int8_full plot (named in its note)
+
+
+def pareto_data(d: dict, dataset: str, int8: bool = False) -> tuple[str | None, list[dict], list[str]]:
+    """(device, points, left-out ids) for the accuracy-vs-latency plot of `dataset` on the headline phone, 1 thread.
+    Float file (stage all): published full-test-set top-1 (registry/published_accuracy.json); the binary layers are
+    exact and the rest is float32 as in the source framework, so the published accuracy applies.
+    int8=True, the shipped full-integer file (stage int8_full): published top-1 plus the measured paired difference
+    of that file against the exact stage (int8_full Δ, on the larger eval subset), i.e. an estimate; files losing more
+    than INT8_BROKEN_PT are left out. Duplicate files (-fp16) are left out."""
     pid = primary_device(d)
     acc = (load(os.path.join(ROOT, "registry", "published_accuracy.json"), {}) or {}).get("models", {})
-    pts = []
+    pts, dropped = [], []
     for m in d["models"]:
         a = acc.get(m["id"])
-        t1 = ((m["phones"].get(pid) or {}).get("t1")) if pid else None
-        if a and a.get("dataset") == dataset and t1 and not m["id"].endswith("-fp16"):
-            pts.append({"id": m["id"], "label": short_label(m["id"]), "x": t1["ms"], "y": a["top1"]})
-    return pid, pts
+        p = (m["phones"].get(pid) or {}) if pid else {}
+        if not a or a.get("dataset") != dataset or m["id"].endswith("-fp16"):
+            continue
+        if not int8:
+            if p.get("t1"):
+                pts.append({"id": m["id"], "label": short_label(m["id"]), "x": p["t1"]["ms"], "y": a["top1"]})
+            continue
+        i8 = m["int8"]
+        t = (p.get("t1_int8_full_files") or {}).get(os.path.basename((i8 or {}).get("file") or ""))
+        if not t or not isinstance((i8 or {}).get("delta"), (int, float)):
+            continue
+        if i8["delta"] < -INT8_BROKEN_PT:
+            dropped.append(m["id"])
+            continue
+        pts.append({"id": m["id"], "label": short_label(m["id"]), "x": t["ms"], "y": round(a["top1"] + i8["delta"], 2)})
+    return pid, pts, dropped
 
 
-def pareto_figure(d: dict, dataset: str, title: str) -> str | None:
-    pid, pts = pareto_data(d, dataset)
+def pareto_figure(d: dict, dataset: str, title: str, int8: bool = False) -> str | None:
+    pid, pts, dropped = pareto_data(d, dataset, int8)
     if not pid or len(pts) < 3:
         return None
     dev = d["devices"][pid]
-    return PP.pareto_svg(pts, f"{title}: accuracy vs latency ({len(pts)} models)",
-                         f"{dev.get('name')}, 1 thread on the {device_pin(dev)}, exact stage; published full test-set top-1",
+    if int8:
+        sub = (f"{dev.get('short') or dev.get('name')}, 1 thread on the {device_pin(dev)}, int8_full file; "
+               "top-1 = published + measured Δ (estimate)")
+        if dropped:
+            sub += f"; {len(dropped)} losing > {INT8_BROKEN_PT:g} pt not shown"
+    else:
+        sub = (f"{dev.get('name')}, 1 thread on the {device_pin(dev)}, float file (binary layers exact, "
+               "float32 elsewhere); published full test-set top-1")
+    return PP.pareto_svg(pts, f"{title}{' int8_full' if int8 else ''}: accuracy vs latency ({len(pts)} models)", sub,
                          f"latency per image, ms (log scale), {dev.get('short') or pid} 1 thread",
-                         f"{title} top-1 (%)")
+                         f"{title} top-1 (%)" + (" (estimate)" if int8 else ""))
+
+
+def pareto_files(d: dict, key: str, title: str) -> list[tuple[str, str]]:
+    """[(file name under docs/img, svg)] of the plots of one group: float file, then int8_full."""
+    out = []
+    for int8, suffix in ((False, ""), (True, "_int8_full")):
+        svg = pareto_figure(d, key, title, int8) if any(k == key for k, _ in PARETO) else None
+        if svg:
+            out.append((f"pareto_{key}{suffix}.svg", svg))
+    return out
 
 
 PARETO = (("imagenet", "ImageNet"), ("cifar10", "CIFAR-10"))
@@ -381,8 +426,8 @@ def readme_tables(d: dict) -> dict[str, str]:
                      for o in others)
         for key, title, ms_ in groups:
             task_col = key == "others"
-            img = (f"\n![{title}: accuracy vs latency, Pareto frontier](docs/img/pareto_{key}.svg)\n"
-                   if any(k == key for k, _ in PARETO) and pareto_figure(d, key, title) else "")
+            img = "".join(f"\n![{title}{' int8_full' if 'int8' in fn else ''}: accuracy vs latency, Pareto frontier](docs/img/{fn})\n"
+                          for fn, _ in pareto_files(d, key, title))
             speed += (f"\n### {title} ({len(ms_)} models)\n{img}\n| model |" + (" task |" if task_col else "") +
                       f" accuracy (reference → Bitino) | int8_full Δ | {ps} 1 thread | {ps} 4 threads | {ps} int8 1 thread |{oh}\n"
                       "|---|" + ("---|" if task_col else "") + "---|---:|---:|---:|---:|" + "---:|" * len(others) + "\n")
@@ -431,9 +476,8 @@ def write_readme(d: dict) -> None:
     open(p, "w").write(text)
     os.makedirs(os.path.join(ROOT, "docs", "img"), exist_ok=True)
     for key, title in PARETO:
-        svg = pareto_figure(d, key, title)
-        if svg:
-            with open(os.path.join(ROOT, "docs", "img", f"pareto_{key}.svg"), "w") as f:
+        for fn, svg in pareto_files(d, key, title):
+            with open(os.path.join(ROOT, "docs", "img", fn), "w") as f:
                 f.write(svg + "\n")
     with open(os.path.join(ROOT, "docs", "SPEED.md"), "w") as f:
         f.write("# Speed: all models on all phones\n\nGenerated by `tools/build_site.py --readme-only` from `results/`. "
@@ -592,7 +636,7 @@ def site_models(d: dict) -> str:
     <tbody></tbody>
   </table>
   </div>
-  <p class="note">Phone columns: the fastest measured phone for the exact stages (1 thread pinned to its fastest core,
+  <p class="note">Phone columns: the fastest measured phone for the float file, stage all (1 thread pinned to its fastest core,
   4 threads unpinned); every device's numbers, int8 included, are on the <a href="benchmarks.html">benchmarks</a> page.
   ◇ vendor power policy held the clock ceiling below the maximum (no thermal event) · ⚠ thermal frequency cap during
   at least one repeat · † caps unknown (run predates the cap check) · ‡ x86 number from an older runtime (2026-11-01).
@@ -704,9 +748,9 @@ def site_benchmarks(d: dict) -> str:
                           f"<td class=num>{esc(int8_delta(m))}</td>"
                           + "".join(cell((m['phones'].get(gpid) or {}).get(k)) for k in ("t1", "t4", "t1_int8"))
                           + "".join(cell((m['phones'].get(o) or {}).get('t1')) for o in gothers) + "</tr>" for m in ms_)
-            fig = pareto_figure(d, key, title) if any(k == key for k, _ in PARETO) else None
+            figs = [svg for _, svg in pareto_files(d, key, title)]
             group_html += f"""<h2 id="speed-{key}">{esc(title)} ({len(ms_)} models)</h2>
-  {('<figure class="pareto">' + fig + '<figcaption class=small>Pareto-optimal: no other model is both faster and at least as accurate. Hover a dot for its numbers.</figcaption></figure>') if fig else ''}
+  {''.join('<figure class="pareto">' + fig + '<figcaption class=small>Pareto-optimal: no other model is both faster and at least as accurate. Hover a dot for its numbers.</figcaption></figure>' for fig in figs)}
   <div class="table-wrap"><table class="bench">
   <thead><tr><th>Model</th>{'<th>Task</th>' if task_col else ''}<th>Accuracy (reference → Bitino)</th><th class=num>int8_full Δ</th><th class=num>{ps} 1T</th><th class=num>{ps} 4T</th><th class=num>{ps} int8 1T</th>{oth}</tr></thead>
   <tbody>{trs}</tbody></table></div>"""
@@ -734,8 +778,8 @@ def site_benchmarks(d: dict) -> str:
   <h2>Status, honestly</h2>
   <p>{speed_legend(d, html_out=True)}Each number is for the runtime of its date (listed per run below).{(' The full device suite has not been re-run on the current runtime on: ' + esc(', '.join(pending)) + '.') if pending else ''}</p>
   <h2>All phones, per model (ms)</h2>
-  <p class=small>Median latency of one inference. 1T = 1 thread on the fastest core, 4T = 4 threads; exact stages
-  (binary layers, float glue) and int8 (full-integer file where measured, else int8 kernels on the exact file).
+  <p class=small>Median latency of one inference. 1T = 1 thread on the fastest core, 4T = 4 threads; float file, stage all
+  (binary layers exact, float32 elsewhere) and int8 (full-integer file where measured, else int8 kernels on the exact file).
   ◇ vendor-policy · ⚠ thermal-throttled · † unknown-caps; hover a number for its stage, date and label.</p>
   <div class="table-wrap"><table class="bench cross">
   <thead><tr><th rowspan=2>Model</th>{hdr1}</tr><tr>{hdr2}</tr></thead>
