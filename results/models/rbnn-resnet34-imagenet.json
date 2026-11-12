@@ -164,10 +164,10 @@
      "exact_vs_numpy": null
     },
     "optimized": {
-     "pass": false,
-     "pending": true,
+     "pass": true,
+     "pending": false,
      "identical_to_emulated": null,
-     "exact_vs_numpy": null
+     "exact_vs_numpy": false
     },
     "int8_full": {
      "pass": true,
@@ -195,9 +195,9 @@
      "exact_vs_numpy": null
     },
     "optimized": {
-     "pass": false,
-     "pending": true,
-     "identical_to_emulated": null,
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": true,
      "exact_vs_numpy": null
     },
     "optimized_int8": {
@@ -217,6 +217,25 @@
      "pending": false,
      "identical_to_emulated": true,
      "exact_vs_numpy": null
+    }
+   }
+  },
+  "redmi-9a": {
+   "suite": "20261112_1359",
+   "date": "2026-11-12",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": true
+    },
+    "all": {
+     "pass": false,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
     }
    }
   }
