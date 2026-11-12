@@ -96,6 +96,13 @@ def caps_text(pol: dict | None, dev: dict | None = None) -> str | None:
                      for k, (c, m) in sorted(pol.items(), key=lambda kv: int(kv[0]), reverse=True))
 
 
+def unpinned_repeat(raw: dict, affinity) -> bool:
+    """A repeat of a pinned configuration whose thread was still unpinned in the timed iterations (more pin failures
+    than warmup + 1, e.g. the requested core paused by the vendor): tools/report_benchmarks.py leaves it out."""
+    cfg = (raw or {}).get("config") or {}
+    return bool(affinity) and (cfg.get("affinity_errors") or 0) > (cfg.get("warmup") or 0) + 1
+
+
 def classify_repeat(th) -> dict:
     """One raw repeat's throttle block -> {checked, validity, policies, thermal_status}."""
     th = lit(th)
@@ -158,7 +165,8 @@ def phone_runs(d: str, device_id: str, dev: dict | None, model_id: str | None = 
     for row in summ.get("rows", []):
         if not row.get("median_ms"):
             continue   # listed in the plan, never measured
-        raws = [load(p) for p in sorted(glob.glob(os.path.join(d, row["name"] + "__r*.json")))]
+        raws = [r for r in (load(p) for p in sorted(glob.glob(os.path.join(d, row["name"] + "__r*.json"))))
+                if not unpinned_repeat(r, row.get("affinity"))]
         rd = device_of_raw(raws[0]) if raws else {}
         if raws and not rd.get("model"):
             raise SystemExit(f"{d}/{row['name']}: no physical device recorded; refusing")

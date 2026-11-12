@@ -84,11 +84,11 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 | model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `finn-examples-bnn-pynq-cnv-w1a1` | 85.9% → 85.9% | -0.77 pt | 0.327 † | 0.241 ◇ | – | – | – | – |
-| `aliasgharshinwari-finn-cnv-w1a1-cifar10` | 89.8% → 89.8% | +0.06 pt | 0.333 ◇ | 0.313 ◇ | 0.272 † | 0.57 ⚠ | – | – |
-| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.337 † | 0.269 ◇ | 0.431 † | – | 1.5 | 3.35 |
-| `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.339 † | 0.246 ◇ | – | – | – | – |
-| `shuaiz-bireal20-cifar10` | 84.4% → 84.4% | -0.55 pt | 0.425 † | 0.489 ◇ | 0.694 ◇ | – | – | – |
+| `finn-examples-bnn-pynq-cnv-w1a1` | 85.9% → 85.9% | -0.77 pt | 0.327 ◇ | 0.241 ◇ | – | – | – | – |
+| `aliasgharshinwari-finn-cnv-w1a1-cifar10` | 89.8% → 89.8% | +0.06 pt | 0.333 ◇ | 0.313 ◇ | 0.272 ◇ | 0.57 ⚠ | – | – |
+| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.337 ◇ | 0.269 ◇ | 0.431 ◇ | – | 1.5 | 3.35 |
+| `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.339 ◇ | 0.246 ◇ | – | – | – | – |
+| `shuaiz-bireal20-cifar10` | 84.4% → 84.4% | -0.55 pt | 0.425 ◇ | 0.489 ◇ | 0.694 ◇ | – | – | – |
 | `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.67 pt | 0.539 ◇ | 0.407 ◇ | 0.658 ◇ | – | – | – |
 | `biper-resnet20-cifar10` | 86.7% → 86.7% | -0.63 pt | 0.613 ◇ | 0.433 ◇ | 0.629 ◇ | – | – | – |
 | `fda-bnn-resnet20-cifar10-mindspore` | 89.8% → 89.8% | -0.55 pt | 0.627 ◇ | 0.516 ◇ | 0.593 ◇ | – | – | – |
@@ -179,8 +179,8 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `brevitas-bnn-pynq-sfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.003 ◇ | 0.012 ◇ | 0.003 ◇ | – | – | – |
 | `bnn-pynq-lfc-w1a1-mnist` | mnist | 100.0% → 100.0% | – | 0.017 ◇ | 0.017 ◇ | 0.017 ◇ | – | – | – |
 | `brevitas-bnn-pynq-lfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.017 ◇ | 0.017 ◇ | 0.017 ◇ | – | – | – |
-| `finn-examples-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.328 † | 0.253 ◇ | – | – | – | – |
-| `bnn-pynq-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.338 † | 0.248 ◇ | – | – | – | – |
+| `finn-examples-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.328 ◇ | 0.253 ◇ | – | – | – | – |
+| `bnn-pynq-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.338 ◇ | 0.248 ◇ | – | – | – | – |
 | `brillsson-quicknet` | non-semantic speech representation | 90.7% → 90.7% | – | 0.995 ◇ | 0.687 ◇ | 0.898 ◇ | – | – | – |
 | `ab-bnn-cifar100-reactneta` | cifar100 | 71.9% → 71.9% | -0.31 pt | 1.59 ◇ | 0.953 ◇ | 2.09 ◇ | 2.63 ⚠ | – | – |
 | `larqface-quicknet-msceleb` | face-recognition | 99.0% → 99.0% | – | 1.86 ◇ | 1.18 ◇ | 1.7 ◇ | – | – | – |
@@ -213,7 +213,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `brevitas-bnn-pynq-tfc-1w1a` | mnist | 96.9% → 96.9% | – | – | 0.007 ◇ | – | – | – | – |
 | `finn-examples-bnn-pynq-tfc-w1a1` | mnist | 96.9% → 96.9% | – | – | 0.007 ◇ | – | – | – | – |
 
-Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 9 unknown-caps, 871 vendor-policy; moto e13: 98 clean; Redmi 9A: 42 clean. 
+Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 880 vendor-policy; moto e13: 98 clean; Redmi 9A: 42 clean. 
 
 Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 58/70 correctness checks passed on 35 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
@@ -238,7 +238,7 @@ the website):
 | `bi-vit-deit-tiny` | imagenet-classification | pytorch | 15.6% → 15.6% | imagenet-val-subset-128 (128) | -0.34 pt (imagenet-val-subset-5000_bhvit, n=5000) | 13.6 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
 | `bibert-bert-base-sst2` | glue-sst2 | pytorch | 89.8% → 89.8% | sst2-dev-128 (128) | -0.34 pt (sst2-dev-872, n=872) | 30.5 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
 | `bnext-tiny` | imagenet-classification | pytorch | 69.5% → 68.0% | imagenet-val-subset-128 (128) | -3.84 pt (imagenet-val-subset-5000, n=5000) | 25.5 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
-| `brevitas-bnn-pynq-cnv-1w1a` | cifar10-classification | pytorch+brevitas | 85.9% → 85.9% | cifar10-test-first-128 (128) | -0.77 pt (cifar10-test-first-10000, n=10000) | 0.337 † (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
+| `brevitas-bnn-pynq-cnv-1w1a` | cifar10-classification | pytorch+brevitas | 85.9% → 85.9% | cifar10-test-first-128 (128) | -0.77 pt (cifar10-test-first-10000, n=10000) | 0.337 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
 | `larq-zoo-birealnet` | imagenet-classification | larq_zoo | 57.8% → – | imagenet-val-subset-128 (128) | -0.20 pt (imagenet-val-subset-5000, n=5000) | 10.6 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
 | `larq-zoo-quicknet` | imagenet-classification | larq_zoo | 66.4% → 66.4% | imagenet-val-subset-128 (128) | -0.72 pt (imagenet-val-subset-5000, n=5000) | 7.63 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
 | `larq-zoo-quicknet-large` | imagenet-classification | larq_zoo | 71.1% → 70.3% | imagenet-val-subset-128 (128) | -1.96 pt (imagenet-val-subset-5000, n=5000) | 13.6 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
