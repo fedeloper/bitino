@@ -30,11 +30,33 @@ public weights.
   an x86-64 host), with date, thread setting and clock state. Emulators are used for correctness and instruction
   counts, never for timings.
 
-## Five-minute quickstart
+## Quickstart: Python
+
+```bash
+pip install "bitino[image]"           # native runtime inside the wheel; [image] adds Pillow
+```
+
+```python
+import bitino
+
+m = bitino.load("ab-bnn-imagenet-reactnet18")    # MIT-licensed weights: converted file from the release, SHA-256 checked
+logits = m.predict_image("cat.jpg")              # the model's own preprocessing, then the runtime (numpy in, numpy out)
+print(logits.argmax(), m.benchmark(threads=1), "ms on this CPU")
+```
+
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb)
+classify an image and time it on Colab's CPU (a cloud x86 server, not a phone: the phone numbers are below).
+Wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64, any Python >= 3.10; `predict(x)` takes numpy
+arrays in the model's layout (NHWC for images), `stage="neon"` is bit-identical with the reference numpy executor.
+From a terminal: `bitino run ab-bnn-imagenet-reactnet18 --image cat.jpg --bench`. API: [docs/python.md](docs/python.md).
+Models whose weights licence is not explicitly permissive are converted from their original checkpoint
+(`bitino fetch`, below) and then load the same way.
+
+## Five-minute quickstart: from source
 
 ```bash
 git clone https://github.com/fedeloper/bitino && cd bitino
-pip install -e .                      # the `bitino` CLI (needs only numpy)
+pip install -e .                      # the `bitino` CLI and Python API (compiles the runtime library with CMake)
 
 # 1. the runtime: build it (CMake + a C++17 compiler), or download bitino_bench from the Releases page
 cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build/host
@@ -59,9 +81,29 @@ adb push ~/.cache/bitino/models/ab-bnn-imagenet-reactnet18/model.bitino /data/lo
 adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --threads 4 --stage all
 ```
 
-In an app, link `libbitino.a` and use the C API (`runtime/include/bitino/bitino_c.h`) or the JNI example
-(`examples/android_jni/`). Details: [docs/getting-started.md](docs/getting-started.md),
-[docs/android-deployment.md](docs/android-deployment.md).
+## In an Android app
+
+<!-- demo GIF: record with android/tools/record_demo.sh (docs/android-deployment.md), then restore:
+<p align="center"><img src="docs/img/android_demo.gif" width="300" alt="Bitino demo app: live ImageNet top-5 from the camera with latency and fps"></p> -->
+
+The Android library (`android/bitino`, an AAR for arm64-v8a and armeabi-v7a, API 24+) wraps the runtime in a small
+Kotlin API; `android/demo` is the CameraX app above (bundled ReActNet-18, weights MIT).
+
+```kotlin
+// build.gradle.kts: implementation("io.github.fedeloper:bitino-android:0.1.0")   (until published: build the AAR,
+// android/gradlew -p android :bitino:publishToMavenLocal, and add mavenLocal())
+import io.github.fedeloper.bitino.Bitino
+
+val model = Bitino.load(context, "ab-bnn-imagenet-reactnet18.bitino", threads = 1)   // asset or absolute file path
+val scores = model.run(bitmap)                  // resize / crop / normalize exactly as the model's manifest says
+val top5 = Bitino.topK(Bitino.softmax(scores), 5)
+model.close()
+```
+
+The preprocessing reproduces the Python pipeline of each model bit for bit (Pillow resampling included; checked
+against the evaluation tensors). Native code can instead link `libbitino.a` and use the C API
+(`runtime/include/bitino/bitino_c.h`). Details: [docs/android-deployment.md](docs/android-deployment.md),
+[docs/getting-started.md](docs/getting-started.md).
 
 `bitino fetch` downloads the weights from where the authors published them, into a fresh directory, checks their
 SHA-256, downloads the authors' model code pinned to the recorded commit, and runs the converter with `python -I`
@@ -215,7 +257,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 880 vendor-policy; moto e13: 98 clean; Redmi 9A: 42 clean. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 58/70 correctness checks passed on 35 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 412/425 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code; 13 pending: outputs changed by the faster float kernels, outside the plain tolerance, rounding-trace check not yet run); moto e13: 436/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code; 13 pending: outputs changed by the faster float kernels, outside the plain tolerance, rounding-trace check not yet run); Redmi 9A: 127/156 correctness checks passed on 78 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host
@@ -268,7 +310,9 @@ registry records code and weights licences separately for every model (`registry
 * **Kernel tiers:** scalar reference (every op), NEON (`binary_neon`, `float_opt`, `int8_neon` with SDOT / SMMLA),
   x86-64 AVX2 / AVX-VNNI, selected at run time from the CPU features.
 * **Stages:** `reference`, `neon` (exact), `optimized` (float fusion), `optimized_int8`, `int8_full`.
-* **Targets:** Android arm64 (API 30+), Linux aarch64, Linux x86-64.
+* **Targets:** Android arm64 and armeabi-v7a (command-line runtime: API 30+; AAR: API 24+), Linux aarch64,
+  Linux x86-64; Python wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64 (correctness-tested in CI;
+  speed is measured on the phones and the x86 host only).
 
 ## Add a model
 

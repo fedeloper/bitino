@@ -13,6 +13,11 @@
 4. Website: `python3 tools/build_site.py --out <site dir>` and upload the folder (relative links only; it works
    under any sub-path).
 5. Publish the draft release.
+6. Python wheels: the `wheels` workflow builds and tests the sdist and the wheels of the tag (Linux x86-64 / aarch64,
+   macOS arm64, Windows x64) and keeps them as workflow artifacts. `bitino.load()` downloads the redistributable
+   models from this release, so publish the release (step 5) first. PyPI upload is manual: Actions -> wheels ->
+   Run workflow on the tag with `publish` ticked, then approve the `pypi` environment (one-time setup and details:
+   [python.md](python.md#releasing-wheels)).
 
 Locally, `scripts/build_release.sh dist/bin` builds the same binaries (on an x86-64 host the linux-aarch64 binary
 falls back to a static NDK build unless an `aarch64-linux-gnu` cross compiler is installed; `BUILDINFO.txt` says

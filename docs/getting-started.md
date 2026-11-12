@@ -5,9 +5,13 @@
 Bitino has two halves: the **runtime** (C++17, no dependencies) that executes models, and the **tools** (Python,
 numpy only) that list, fetch, convert, validate and quantize them.
 
+Only to run models from Python: `pip install "bitino[image]"` (binary wheels with the runtime inside; see
+[python.md](python.md)). For the whole tool chain (fetch recipes, converters, validation, Android builds):
+
 ```bash
 git clone https://github.com/fedeloper/bitino && cd bitino
-pip install -e .                       # installs the `bitino` command (editable: it reads registry/ and results/)
+pip install -e .                       # the `bitino` command and the Python API (editable: it reads registry/ and
+                                       # results/; compiles the runtime library libbitino_c with CMake)
 ```
 
 Runtime, either prebuilt or from source:
@@ -94,7 +98,8 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
 ```
 
 Building it yourself: `scripts/build_android.sh` (Android NDK r27c tested; `ANDROID_NDK=...`). No root needed.
-For an app, link `libbitino.a` and use the C API:
+For an Android app use the AAR and its Kotlin API (`android/bitino`, see
+[android-deployment.md](android-deployment.md)); other native code can link `libbitino.a` and use the C API:
 
 ```c
 #include "bitino/bitino_c.h"
@@ -106,7 +111,7 @@ bf_session_get_output(s, 0, output, bf_session_output_size(s, 0));
 bf_session_free(s); bf_model_free(m);
 ```
 
-A JNI wrapper is in `examples/android_jni/`. More: [android-deployment.md](android-deployment.md),
+A minimal Java JNI wrapper is in `examples/android_jni/`. More: [android-deployment.md](android-deployment.md),
 [architecture.md](architecture.md), [threads.md](threads.md).
 
 ## 6. Where the numbers come from

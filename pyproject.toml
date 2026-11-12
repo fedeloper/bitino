@@ -1,22 +1,91 @@
 [build-system]
-requires = ["setuptools>=64"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core>=0.10"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "bitino"
 version = "0.1.0"
-description = "Research, conversion and validation tooling for the Bitino BNN inference runtime"
+description = "Binary neural networks on CPUs: native runtime (ARM NEON, x86 AVX2), model zoo, converters and validation tools"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 license = {text = "Apache-2.0"}
+authors = [{name = "Federico Fontana"}]
+keywords = ["binary neural networks", "BNN", "inference", "NEON", "AVX2", "quantization", "edge AI"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: C++",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.urls]
+Homepage = "https://github.com/fedeloper/bitino"
+Documentation = "https://github.com/fedeloper/bitino/blob/main/docs/python.md"
 
 [project.optional-dependencies]
+image = ["pillow>=9"]
 larq = ["tensorflow-cpu==2.15.1", "larq==0.13.3", "larq-zoo==2.4.0"]
 torch = ["torch>=2.1"]
-test = ["pytest>=7"]
+test = ["pytest>=7", "pillow>=9"]
 
 [project.scripts]
 bitino = "bitino.cli.main:main"
 
-[tool.setuptools.packages.find]
-where = ["python"]
+# The wheel: the Python package (python/bitino) + libbitino_c (the C++ runtime behind the C API, loaded with
+# ctypes, so one wheel per platform serves every Python 3 version) + the zoo data (registry/, results/), installed by
+# the SKBUILD section of CMakeLists.txt.
+[tool.scikit-build]
+minimum-version = "build-system.requires"
+cmake.version = ">=3.20"
+cmake.build-type = "Release"
+build-dir = "build/py-{wheel_tag}"
+wheel.packages = ["python/bitino"]
+wheel.py-api = "py3"
+wheel.license-files = ["LICENSE", "NOTICE", "THIRD_PARTY.md"]
+sdist.exclude = ["build*", "artifacts", "data", ".cache", "*.bitino", "site", "docs/img"]
+
+# aarch64 Linux: the NEON kernels' inline asm needs clang (GCC allows at most 30 asm operands).
+[[tool.scikit-build.overrides]]
+if.platform-system = "^linux"
+if.platform-machine = "^(aarch64|arm64)$"
+cmake.define.CMAKE_C_COMPILER = "clang"
+cmake.define.CMAKE_CXX_COMPILER = "clang++"
+
+# Windows: clang targeting MinGW-w64 (llvm-mingw on PATH; GNU-style flags, GNU inline asm and builtins). The DLL
+# links its C++ runtime statically and is loaded with ctypes, so it does not have to match CPython's MSVC ABI.
+[[tool.scikit-build.overrides]]
+if.platform-system = "^win32"
+cmake.args = ["-G", "Ninja"]
+cmake.define.CMAKE_C_COMPILER = "x86_64-w64-mingw32-clang"
+cmake.define.CMAKE_CXX_COMPILER = "x86_64-w64-mingw32-clang++"
+
+[tool.cibuildwheel]
+# One py3-none-<platform> wheel per platform (ctypes, no CPython ABI): built for the first selected Python, then
+# reused and tested on the others.
+build = ["cp310-*", "cp312-*", "cp314-*"]
+skip = ["*-musllinux_*", "*-win32", "*_i686"]
+test-requires = ["pytest>=7", "pillow>=9"]
+test-environment = { BITINO_TEST_INSTALLED = "1" }   # tests import the installed wheel, not python/ of the checkout
+test-command = "python -m pytest -q {project}/tests/python/test_python_api.py"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-manylinux_aarch64"
+before-all = "dnf install -y clang"
+
+[tool.cibuildwheel.macos]
+archs = ["arm64"]
+environment = { MACOSX_DEPLOYMENT_TARGET = "11.0" }
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+# The wheel has no extension module (the DLL is loaded with ctypes and depends only on system DLLs): nothing for
+# delvewheel to repair, and it errors on such wheels.
+repair-wheel-command = ""

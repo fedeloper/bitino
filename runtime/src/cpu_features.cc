@@ -7,6 +7,9 @@
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
 #endif
+#if defined(__aarch64__) && defined(__APPLE__)
+#include <sys/sysctl.h>
+#endif
 
 namespace bitino {
 namespace {
@@ -35,6 +38,17 @@ CpuInfo detect() {
   if (hw2 & HWCAP2_BF16) info.features |= kFeatBf16;
 #endif
   (void)hw2;
+#elif defined(__APPLE__)
+  // Apple silicon: dotprod on every M-series / A13+ core, i8mm from M2 / A15 (hw.optional.arm.FEAT_*).
+  auto sysctl_flag = [](const char* name) {
+    int v = 0;
+    size_t len = sizeof(v);
+    return sysctlbyname(name, &v, &len, nullptr, 0) == 0 && v != 0;
+  };
+  if (sysctl_flag("hw.optional.arm.FEAT_DotProd")) info.features |= kFeatDotProd;
+  if (sysctl_flag("hw.optional.arm.FEAT_I8MM")) info.features |= kFeatI8mm;
+  if (sysctl_flag("hw.optional.arm.FEAT_FP16")) info.features |= kFeatFp16;
+  if (sysctl_flag("hw.optional.arm.FEAT_BF16")) info.features |= kFeatBf16;
 #endif
 #elif defined(__arm__)
   // 32-bit ARM (armeabi-v7a; also AArch32 on ARMv8 cores): the NEON kernels' AArch32 builds (kernels/neon_a32.h)

@@ -17,6 +17,17 @@ option(BITINO_BUILD_TESTS "Build C++ tests" ON)
 option(BITINO_SANITIZE "Build with ASan+UBSan (host debug)" OFF)
 option(BITINO_NATIVE "Use -march=native on host builds" OFF)
 option(BITINO_STATIC "Link executables statically (Android: lets qemu-aarch64 user mode run them)" OFF)
+option(BITINO_BUILD_TOOLS "Build bitino_bench and the other command-line tools" ON)
+# libbitino_c: the C API (runtime/include/bitino/bitino_c.h) as a self-contained shared library, loaded by
+# the Python package (python/bitino/_native.py). Off by default: it compiles the runtime as position-independent
+# code with hidden visibility, so the default build (and the measured bitino_bench binaries) stay as they were.
+option(BITINO_BUILD_SHARED "Build the shared C-API library libbitino_c (Python package)" OFF)
+# Python wheel / sdist build (scikit-build-core sets SKBUILD): shared library + package data only.
+if(SKBUILD)
+  set(BITINO_BUILD_SHARED ON)
+  set(BITINO_BUILD_TESTS OFF)
+  set(BITINO_BUILD_TOOLS OFF)
+endif()
 
 add_compile_options(-Wall -Wextra -Wno-unused-parameter)
 # Bit-exact agreement between kernels (and host vs device) requires that the
@@ -121,6 +132,35 @@ target_include_directories(bitino PUBLIC runtime/include PRIVATE runtime)
 find_package(Threads REQUIRED)
 target_link_libraries(bitino PUBLIC Threads::Threads)
 
+if(BITINO_BUILD_SHARED)
+  set_target_properties(bitino PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_VISIBILITY_PRESET hidden
+                                            VISIBILITY_INLINES_HIDDEN ON)
+  # c_api.cc is compiled into the shared library itself (it pulls the rest of the runtime from the static
+  # library); only the bf_* functions (BF_API) are exported.
+  add_library(bitino_c SHARED runtime/src/c_api.cc)
+  target_link_libraries(bitino_c PRIVATE bitino)
+  target_compile_definitions(bitino_c PRIVATE BITINO_C_BUILD_DLL)
+  set_target_properties(bitino_c PROPERTIES PREFIX "lib" CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON)
+  if(WIN32)
+    # MinGW-w64 (clang or GCC): no dependency on the toolchain's C++ runtime or winpthread DLLs.
+    target_link_options(bitino_c PRIVATE -static)
+  elseif(NOT APPLE AND NOT ANDROID)
+    # Linux: link the C++ runtime in (hidden) when a static libstdc++ is available, so the library needs only
+    # glibc; otherwise it uses the system libstdc++ (manylinux allows it; auditwheel checks the symbol versions).
+    include(CheckLinkerFlag)
+    check_linker_flag(CXX "-static-libstdc++" BITINO_HAVE_STATIC_LIBSTDCXX)
+    if(BITINO_HAVE_STATIC_LIBSTDCXX)
+      target_link_options(bitino_c PRIVATE -static-libstdc++ -static-libgcc -Wl,--exclude-libs,ALL)
+    endif()
+  endif()
+  if(NOT APPLE AND NOT WIN32)
+    # ELF (Linux, Android): export the C API only (no C++ runtime symbols).
+    target_link_options(bitino_c PRIVATE -Wl,--no-undefined -Wl,--version-script=${CMAKE_SOURCE_DIR}/runtime/src/bitino_c.map)
+    set_target_properties(bitino_c PROPERTIES LINK_DEPENDS ${CMAKE_SOURCE_DIR}/runtime/src/bitino_c.map)
+  endif()
+endif()
+
+if(BITINO_BUILD_TOOLS)
 add_executable(bitino_bench runtime/tools/bitino_bench.cc)
 target_link_libraries(bitino_bench PRIVATE bitino)
 target_include_directories(bitino_bench PRIVATE runtime)
@@ -129,6 +169,11 @@ add_executable(bitino_microbench runtime/tools/bitino_microbench.cc)
 target_link_libraries(bitino_microbench PRIVATE bitino)
 target_include_directories(bitino_microbench PRIVATE runtime)
 
+add_executable(bitino_int8_quantbench runtime/tools/bitino_int8_quantbench.cc)
+target_link_libraries(bitino_int8_quantbench PRIVATE bitino)
+target_include_directories(bitino_int8_quantbench PRIVATE runtime)
+endif()
+
 if(ANDROID)
   option(BITINO_BUILD_JNI "Build the JNI example library" ON)
   if(BITINO_BUILD_JNI AND NOT BITINO_STATIC)
@@ -136,10 +181,6 @@ if(ANDROID)
     target_link_libraries(bitino_jni PRIVATE bitino)
   endif()
 endif()
-
-add_executable(bitino_int8_quantbench runtime/tools/bitino_int8_quantbench.cc)
-target_link_libraries(bitino_int8_quantbench PRIVATE bitino)
-target_include_directories(bitino_int8_quantbench PRIVATE runtime)
 
 if(BITINO_BUILD_TESTS)
   enable_testing()
@@ -157,9 +198,31 @@ if(BITINO_BUILD_TESTS)
 endif()
 
 # Record build configuration inside benchmark reports.
+if(BITINO_BUILD_TOOLS)
 get_directory_property(_bf_opts COMPILE_OPTIONS)
 string(TOUPPER "${CMAKE_BUILD_TYPE}" _bf_bt)
 string(REPLACE ";" " " _bf_opts_str "${_bf_opts}")
 target_compile_definitions(bitino_bench PRIVATE
   BITINO_BUILD_FLAGS="${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_bf_bt}} ${_bf_opts_str}"
   BITINO_BUILD_TYPE="${CMAKE_BUILD_TYPE}")
+endif()
+
+# Python package (scikit-build-core, pyproject.toml): the shared library next to the Python modules, plus the
+# zoo data the `bitino` CLI and bitino.load() read (registry + results; see python/bitino/zoo.py).
+if(SKBUILD)
+  # install(TARGETS) so that scikit-build-core strips it; the Windows import library is not shipped.
+  install(TARGETS bitino_c LIBRARY DESTINATION bitino RUNTIME DESTINATION bitino
+          ARCHIVE DESTINATION bitino/_unused EXCLUDE_FROM_ALL)
+  install(FILES registry/models.json registry/recipes.json registry/eval_sets.json DESTINATION bitino/_data/registry)
+  foreach(_f registry/release_models.json release.json)
+    if(EXISTS ${CMAKE_SOURCE_DIR}/${_f})
+      get_filename_component(_d ${_f} DIRECTORY)
+      install(FILES ${_f} DESTINATION bitino/_data/${_d})
+    elseif(EXISTS ${CMAKE_SOURCE_DIR}/public/${_f})   # development tree: public-only files live under public/
+      get_filename_component(_d ${_f} DIRECTORY)
+      install(FILES public/${_f} DESTINATION bitino/_data/${_d})
+    endif()
+  endforeach()
+  install(FILES results/devices.json DESTINATION bitino/_data/results)
+  install(DIRECTORY results/models DESTINATION bitino/_data/results FILES_MATCHING PATTERN "*.json")
+endif()

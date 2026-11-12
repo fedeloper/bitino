@@ -1,0 +1,9 @@
+# JitPack build of the Android library (android/bitino); see docs/android-deployment.md, "Publishing the AAR".
+# Consumers: maven("https://jitpack.io") + implementation("com.github.fedeloper.bitino:bitino-android:<tag>")
+jdk:
+  - openjdk17
+before_install:
+  - yes | sdkmanager --licenses > /dev/null || true
+  - sdkmanager "platforms;android-36" "build-tools;35.0.0" "cmake;3.31.6" "ndk;27.2.12479018"
+install:
+  - cd android && ./gradlew :bitino:publishToMavenLocal -x test --no-daemon

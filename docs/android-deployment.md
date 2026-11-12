@@ -1,5 +1,197 @@
 # Android deployment
 
+Two ways to run Bitino on Android:
+
+* **In an app: the Android library (AAR)** in `android/bitino`: the runtime for arm64-v8a and armeabi-v7a, a JNI
+  bridge and a small Kotlin API that loads a model, preprocesses a `Bitmap` exactly as the model's manifest says and
+  returns the scores. `android/demo` is a CameraX app built on it (live top-5, latency, fps).
+* **From a shell: `bitino_bench`** pushed with adb, for benchmarks and correctness runs ([below](#command-line-runtime-adb)).
+
+## The Android library
+
+### Add it to an app
+
+Until the library is on Maven Central, build it from this repository and use the AAR file (or `mavenLocal()`):
+
+```bash
+android/gradlew -p android :bitino:assembleRelease        # -> android/bitino/build/outputs/aar/bitino-release.aar
+android/gradlew -p android :bitino:publishToMavenLocal    # -> ~/.m2: io.github.fedeloper:bitino-android:0.1.0
+```
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+    implementation("io.github.fedeloper:bitino-android:0.1.0")   // mavenLocal() / Maven Central once published
+    // or: implementation(files("libs/bitino-release.aar"))
+}
+```
+
+### Use it
+
+```kotlin
+import io.github.fedeloper.bitino.Bitino
+
+val model = Bitino.load(context, "ab-bnn-imagenet-reactnet18.bitino", threads = 1)  // asset, or an absolute file path
+val scores: FloatArray = model.run(bitmap)                     // resize / crop / normalize per the model manifest
+val top5 = Bitino.topK(Bitino.softmax(scores), 5)              // [(class index, probability), ...]
+Log.i("bitino", "inference ${model.lastInferenceMs} ms, preprocessing ${model.lastPreprocessMs} ms")
+model.close()
+```
+
+* `Bitino.load(context, name)` reads an asset (`src/main/assets/<name>`), `Bitino.load(file)` maps a file (e.g. a
+  model downloaded at first launch), `Bitino.load(bytes)` takes the bytes of a content URI. The SHA-256 of the
+  weights is checked at load (`verifyHash = false` skips it).
+* `model.run(bitmap, rotationDegrees)` rotates first (CameraX: `imageProxy.imageInfo.rotationDegrees`, frames from
+  `imageProxy.toBitmap()`), `model.run(floatArray)` takes an already preprocessed NHWC tensor (`model.inputShape`),
+  `model.output(i)` returns further outputs of multi-output models.
+* One `BitinoModel` runs one inference at a time (calls are serialized); it owns native memory: `close()` it.
+* `threads`: 1 is the most energy-efficient choice for a camera loop; 2-4 lower the latency on the big cores. To change
+  it, load the model again.
+
+### Preprocessing
+
+`model.preprocessing` is parsed from the manifest's `input.preprocessing` entry, the definition of the pipeline that
+produced the model's evaluation tensors. Recognized pipelines (all the redistributable ImageNet models):
+
+| manifest pipeline | steps |
+|---|---|
+| torchvision `Resize(N)` + `CenterCrop(M)` + `ToTensor()` + `Normalize(mean, std)` (bilinear or bicubic) | AB-BNN, Bi-Real / ReActNet / IR-Net families, bitorch, BHViT, Bi-ViT, daBNN |
+| OpenVINO Accuracy Checker (`scale_greater` resize, center crop, RGB->BGR, 0..255) | OMZ ResNet-18 XNOR / ResNet-50 binary |
+| `ToTensor()` (+ `Normalize`) without resize (32x32 CIFAR models) | the image is resized (short side) and center-cropped to the input size: the app's framing choice |
+
+Other pipelines (TensorFlow `preprocess_image_bytes` of Larq Zoo, OpenCV-based ones, audio, text) give
+`model.preprocessing == null`: set `model.preprocessing = Preprocessing(...)` or pass float tensors.
+
+The resize is Pillow's resampling reproduced bit for bit (antialiased separable convolution, 22-bit fixed-point
+coefficients, 8-bit intermediate, horizontal pass first, as `torchvision.transforms.Resize` on PIL images), the crop
+offsets use Python's round-half-to-even, normalization is float32 `((v / 255) - mean) / std`. Checks
+(`android/gradlew -p android :bitino:testDebugUnitTest`, JVM unit tests):
+
+* synthetic images of 10 sizes (down- and upscaling, portrait, landscape, extreme aspect ratios) against fixtures made
+  with torchvision 0.21 / Pillow 12.2 (`android/tools/make_preprocess_fixtures.py`): every float equal (SHA-256 of the
+  tensor), for the torchvision bilinear and bicubic, OMZ and CIFAR pipelines;
+* the 128 ImageNet validation images of the eval set (decoded with PIL, `android/tools/dump_eval_rgb.py`;
+  `BITINO_EVAL_RGB_DIR=<dir>`): the Kotlin output equals `eval128/torchvision_imagenet.f32` and
+  `eval128_omz_bgr/omz_bgr.f32` byte for byte, 128/128 for both (2026-11-12).
+
+What is not reproduced is JPEG decoding (Android's decoder may differ from libjpeg-turbo in PIL by a few levels on
+some pixels); camera frames are not JPEG-decoded anyway.
+
+### ABIs, devices, size
+
+* arm64-v8a: built for ARMv8.2-A + dot product (Cortex-A55 / A75 and newer, 2018+), the runtime's baseline; I8MM
+  kernels are picked at run time where the CPU has them. On an older 64-bit core the library throws
+  `UnsupportedOperationException` at first use (checked from `/proc/cpuinfo` before the native library is loaded)
+  instead of crashing.
+* armeabi-v7a: ARMv7-A + NEON, for 32-bit-only phones (see "32-bit ARM" below).
+* `minSdk` 24. The native library is built with 16 KB page alignment (Android 15+ devices).
+* Size: the AAR is 1.6 MB (libbitino_jni.so 2.3 MB arm64-v8a, 1.5 MB armeabi-v7a, stripped, static libc++); the
+  demo APK is 9.0 MB, of which 4.3 MB is the bundled model.
+
+### The demo app
+
+`android/demo`: CameraX preview, the model's 224x224 center crop outlined, live top-5, preprocessing / inference
+latency and fps, a thread selector (1 / 2 / 4), a back / front camera switch and a model selector:
+
+* **ReActNet-18 (A&B BNN), bundled** (4.3 MB, ImageNet, weights MIT; its licence file is bundled next to it,
+  `assets/models/ab-bnn-imagenet-reactnet18.LICENSE.txt`);
+* **ReActNet-A (A&B BNN, MIT)** and **ResNet-18 XNOR (OpenVINO OMZ, Apache-2.0)**, downloaded from the release
+  assets at first use and SHA-256-checked (or side-loaded while the release is not public: `adb push omz-resnet18-xnor-binary-onnx-0001.bitino
+  /sdcard/Android/data/io.github.fedeloper.bitino.demo/files/models/`, the release asset's file name);
+* **Load a model file...** (system file picker), e.g. any `.bitino` file converted with `bitino fetch`.
+
+Only models with an explicit permissive weights licence are bundled or offered for download (`bitino list
+--release`). Class names: `assets/imagenet_classes.txt`, the ImageNet-1k category names of torchvision
+(`torchvision/models/_meta.py`, BSD 3-Clause, Copyright (c) Soumith Chintala 2016).
+
+```bash
+# the bundled model comes from a local copy of the release files, or is downloaded from the release at build time
+android/gradlew -p android :demo:assembleRelease -Pbitino.demoModelDir=<dir with ab-bnn-imagenet-reactnet18.bitino>
+adb install android/demo/build/outputs/apk/release/demo-release.apk
+adb shell am start -n io.github.fedeloper.bitino.demo/.MainActivity --ei threads 4   # optional: threads, model index
+adb logcat -s BitinoDemo     # one line per second: inference_ms, pre_ms, fps, top-1
+android/tools/record_demo.sh # GIF of the running app (docs/img/android_demo.gif; needs ffmpeg)
+```
+
+Extras for scripted runs: `--ei threads 1|2|4`, `--ei model <index>`, `--es camera front`, `--ei capture_seconds N`.
+The camera permission is asked at first launch.
+
+The release APK is signed with the debug key (local installs); use your own signing config to distribute it.
+
+#### On a phone (OnePlus Open, 2026-11-12)
+
+What the demo app shows for the bundled ReActNet-18 (camera frames 640x480, `ImageProxy.toBitmap()` then
+`model.run(bitmap, rotation)`; app threads are not pinned and the phone's stock power policy applies; medians of the
+per-second log lines over 20 s):
+
+| scene | threads | inference | preprocessing | fps |
+|---|---|---|---|---|
+| lit desk (camera at ~30 fps) | 1 | 17.6-18.9 ms | 5.2-6.8 ms | 29-30 (camera-bound) |
+| dark scene (camera at 16.5 fps) | 1 | 27.0 / 28.4 ms | 12.3 / 12.8 ms | 16.5 (camera-bound) |
+| dark scene | 2 | 21.9 ms | 14.6 ms | 16.5 |
+| dark scene | 4 | 20.1 / 18.8 ms | 15.2 / 15.5 ms | 16.5 |
+
+The frame rate is set by the camera (it drops to ~16 fps in low light); with the CPU idle between frames the vendor
+governor lowers the clocks, so per-frame latency is higher than in `bitino_bench` runs on a pinned, busy core
+(11.1 ms at 1 thread on the X3 core, 5.8 ms at 4 threads, same model; `results/speed_oneplus-open.json`). Right
+after launch, at full clocks, the app showed 9.2 ms inference and 6.2 ms preprocessing at 1 thread. ReActNet-A
+(~35 ms) and ResNet-18 XNOR (BGR / OMZ preprocessing, ~27 ms) also ran in the app, side-loaded (1 thread, dark
+scene).
+
+`docs/img/android_demo.gif` (not yet recorded: point the phone at an object and run the script) is made with `android/tools/record_demo.sh` (frames captured by the app itself
+with `--ei capture_seconds N`: `adb shell screenrecord` is blocked on this phone), switching from 1 to 4 threads
+half way.
+
+### Building
+
+Needs JDK 17+, the Android SDK (platform 36, build-tools 35.0.0, CMake 3.31.6) and NDK r27c (27.2.12479018). An
+NDK outside the SDK directory is used when given as `bitino.ndkPath=<dir>` in `android/local.properties` or as
+`$ANDROID_NDK`; `sdk.dir` goes in `android/local.properties` too (or `$ANDROID_HOME`). The native build compiles the
+runtime from this checkout (`android/bitino/src/main/cpp/CMakeLists.txt` adds the top-level `CMakeLists.txt`, which
+carries the per-ABI kernel flags), so the library is always built from a repository checkout. `-Pbitino.nativeJobs=N`
+bounds the parallel compile jobs per ABI (peak memory).
+
+```bash
+cd android
+./gradlew :bitino:testDebugUnitTest          # preprocessing tests (JVM)
+./gradlew :bitino:assembleRelease            # AAR
+./gradlew :demo:assembleRelease              # demo APK
+```
+
+### Publishing the AAR (prepared, not done)
+
+Coordinates: `io.github.fedeloper:bitino-android:<VERSION_NAME>` (`android/gradle.properties`). The publishing setup
+uses the [vanniktech maven-publish plugin](https://github.com/vanniktech/gradle-maven-publish-plugin) (POM, sources
+and javadoc jars, signing, Central Portal upload); nothing has been published.
+
+**Maven Central** (Sonatype Central Portal):
+
+1. Sign in at <https://central.sonatype.com> with the GitHub account `fedeloper`: the namespace
+   `io.github.fedeloper` is verified automatically for GitHub logins (otherwise verify it under "Namespaces").
+2. Generate a user token (Account -> Generate User Token) and a GPG key; publish the public key
+   (`gpg --keyserver keyserver.ubuntu.com --send-keys <KEY_ID>`).
+3. Put the credentials in `~/.gradle/gradle.properties` (never in the repository):
+   ```properties
+   mavenCentralUsername=<token user>
+   mavenCentralPassword=<token password>
+   signingInMemoryKey=<output of: gpg --export-secret-keys --armor <KEY_ID> (newlines as \n)>
+   signingInMemoryKeyId=<last 8 hex digits of the key id>
+   signingInMemoryKeyPassword=<passphrase>
+   ```
+4. Set `VERSION_NAME` and tag the release, then
+   `android/gradlew -p android :bitino:publishToMavenCentral` uploads a deployment to the Central Portal for review;
+   check it under "Deployments" and press "Publish" (or use `publishAndReleaseToMavenCentral` to release directly).
+   `-SNAPSHOT` versions go to the snapshot repository instead.
+
+**JitPack** (no account; builds from a GitHub tag once the repository is public): `jitpack.yml` at the repository
+root builds the library with `publishToMavenLocal`. Consumers add `maven("https://jitpack.io")` to their repositories
+and depend on `com.github.fedeloper.bitino:bitino-android:<tag>` (JitPack's coordinates for a module of a
+multi-module build; the build log at <https://jitpack.io/#fedeloper/bitino> shows them). JitPack's build machines
+must provide NDK r27c and CMake 3.31.6; `jitpack.yml` installs them with `sdkmanager` first. The first build of a tag
+takes several minutes.
+
+## Command-line runtime (adb)
+
 Requirements: Android NDK (tested r27c), CMake ≥ 3.20, Ninja, adb. No root access and no
 device modifications are needed.
 
@@ -23,7 +215,7 @@ int8_full kernels stay AArch64 only (the portable kernels run). The C++ tests bu
 (push and run `bitino_tests` as on arm64). Numerics: see "32-bit ARM (armeabi-v7a)" in
 `docs/numerical-correctness.md`.
 
-## Running a model
+### Running a model
 
 ```bash
 ADB=~/Android/Sdk/platform-tools/adb; D=/data/local/tmp/bitino
@@ -48,10 +240,10 @@ python3 tools/validate_model.py --artifacts artifacts/larq-zoo-quicknet-small --
 The model file's data section is SHA-256-verified at load (`--no-verify-hash` disables it, and the
 report then records that). Both the `--inputs` file size and the model's input shape are checked.
 
-## App integration
+### Native code without the AAR
 
-Use the C API (`runtime/include/bitino/bitino_c.h`) or the JNI example (`examples/android_jni/`).
-The APK path has not been built here (no Gradle/SDK build-tools installed). See the example README.
+Other native code can link the runtime (`libbitino.a`, built by `scripts/build_android.sh`) and use the C API
+(`runtime/include/bitino/bitino_c.h`); `examples/android_jni/` is a minimal Java JNI wrapper over it.
 
 ## Device facts (verified 2026-10-29)
 

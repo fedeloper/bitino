@@ -1,0 +1,113 @@
+# Python wheels (`pip install bitino`): the C++ runtime compiled into libbitino_c + the Python package, built and
+# tested with cibuildwheel on Linux x86-64 / aarch64 (manylinux_2_28), macOS arm64 and Windows x64, uploaded as
+# workflow artifacts. Nothing is published by the build jobs. PyPI upload is the separate `pypi` job below: it runs
+# only when started by hand (Actions -> wheels -> Run workflow, publish = true) and waits for the approval of the
+# protected `pypi` environment. Procedure: docs/python.md, "Releasing wheels".
+name: wheels
+
+on:
+  push:
+    tags: ["v*"]
+  pull_request:
+    paths:
+      - "runtime/**"
+      - "python/**"
+      - "CMakeLists.txt"
+      - "pyproject.toml"
+      - "tests/python/test_python_api.py"
+      - ".github/workflows/wheels.yml"
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Upload the built sdist and wheels to PyPI (needs the approval of the pypi environment)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wheels-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sdist:
+    name: sdist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip build
+      - run: python -m build --sdist --outdir dist
+      - name: Build a wheel from the sdist (checks that the sdist is complete)
+        run: |
+          python -m pip wheel --no-deps -w dist/from-sdist dist/*.tar.gz
+          python -m pip install dist/from-sdist/*.whl pytest pillow
+          BITINO_TEST_INSTALLED=1 python -m pytest -q tests/python/test_python_api.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+
+  wheels:
+    name: wheel ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: linux-x86_64, os: ubuntu-latest, archs: x86_64 }
+          - { name: linux-aarch64, os: ubuntu-24.04-arm, archs: aarch64 }   # native ARM runner; clang (pyproject.toml)
+          - { name: macos-arm64, os: macos-14, archs: arm64 }
+          - { name: windows-x64, os: windows-latest, archs: AMD64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: clang for Windows (llvm-mingw, pinned release, SHA-256 checked)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $url = "https://github.com/mstorsjo/llvm-mingw/releases/download/20261020/llvm-mingw-20261020-ucrt-x86_64.zip"
+          Invoke-WebRequest -Uri $url -OutFile llvm-mingw.zip
+          $h = (Get-FileHash llvm-mingw.zip -Algorithm SHA256).Hash.ToLower()
+          if ($h -ne "fd5462b7f5d93b2ff981fcd3f9c7e427e47f3203c64ea91c27bcc444eebd74cd") { throw "llvm-mingw SHA-256 mismatch: $h" }
+          Expand-Archive llvm-mingw.zip -DestinationPath C:\llvm-mingw
+          "C:\llvm-mingw\llvm-mingw-20261020-ucrt-x86_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - uses: pypa/cibuildwheel@b9e566a2b284570af229f6c2a33673410d0389a3   # v4.3.4
+        env:
+          CIBW_ARCHS: ${{ matrix.archs }}
+        with:
+          output-dir: wheelhouse
+      - name: Wheel size
+        shell: bash
+        run: ls -l wheelhouse
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.name }}
+          path: wheelhouse/*.whl
+
+  # Manual, gated upload. Configure PyPI trusted publishing for this repository and workflow (environment `pypi`)
+  # and give the `pypi` environment required reviewers before the first use.
+  pypi:
+    name: upload to PyPI (manual)
+    needs: [sdist, wheels]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/bitino
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: sdist
+          path: dist
+      - run: ls -l dist
+      - uses: pypa/gh-action-pypi-publish@release/v1

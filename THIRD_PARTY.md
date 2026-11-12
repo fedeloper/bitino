@@ -28,6 +28,18 @@ recorded commit (`registry/recipes.json` → `sources`), and the source framewor
 * `scripts/build_android.sh` uses the Android NDK toolchain; release binaries link the NDK's libc++ statically
   (Apache-2.0 with LLVM exceptions).
 
+## Android library and demo app (`android/`)
+
+* The library's image preprocessing (`android/bitino/.../Preprocessing.kt`) re-implements the behaviour of Pillow's
+  resampling (`libImaging/Resample.c`: filter supports, coefficient normalization, 22-bit fixed point) and of
+  torchvision's `Resize` / `CenterCrop` / `ToTensor` / `Normalize`, so that its output equals theirs bit for bit; no
+  code is copied (Pillow: MIT-CMU licence; torchvision: BSD 3-Clause).
+* `android/demo/src/main/assets/imagenet_classes.txt`: the 1000 ImageNet-1k category names as listed in torchvision
+  (`torchvision/models/_meta.py`, `_IMAGENET_CATEGORIES`), BSD 3-Clause, Copyright (c) Soumith Chintala 2016.
+* The demo APK depends on AndroidX CameraX and Activity (Apache-2.0), fetched by Gradle, not vendored. The bundled
+  model (A&B BNN ReActNet-18, weights MIT) is added at build time from the release assets, with its `.LICENSE.txt`.
+* `android/gradlew`, `android/gradle/wrapper/`: the Gradle wrapper (Apache-2.0).
+
 ## Model weights and datasets
 
 Not covered by Bitino's licence. Converted weights are redistributed only where the weights licence is explicitly

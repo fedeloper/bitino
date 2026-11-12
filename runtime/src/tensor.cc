@@ -2,6 +2,9 @@
 
 #include <cstdlib>
 #include <cstring>
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
 
 #include "bitino/error.h"
 
@@ -61,10 +64,21 @@ size_t storage_bytes(DType dtype, const Shape& shape) {
 std::shared_ptr<void> aligned_alloc_shared(size_t bytes) {
   size_t rounded = (bytes + kTensorAlignment - 1) / kTensorAlignment * kTensorAlignment;
   if (rounded == 0) rounded = kTensorAlignment;
-  void* p = std::aligned_alloc(kTensorAlignment, rounded);
+#if defined(_WIN32)
+  // The Windows C runtimes (MSVCRT / UCRT) have no aligned_alloc: _aligned_malloc pairs with _aligned_free.
+  void* p = _aligned_malloc(rounded, kTensorAlignment);
+  if (!p) fail("out of memory allocating ", bytes, " bytes");
+  std::memset(p, 0, rounded);
+  return std::shared_ptr<void>(p, [](void* q) { _aligned_free(q); });
+#else
+  // posix_memalign rather than std::aligned_alloc: bionic has aligned_alloc only from API 28, and the Android
+  // library (android/bitino) targets API 24+. Both are released with free().
+  void* p = nullptr;
+  if (posix_memalign(&p, kTensorAlignment, rounded) != 0) p = nullptr;
   if (!p) fail("out of memory allocating ", bytes, " bytes");
   std::memset(p, 0, rounded);
   return std::shared_ptr<void>(p, [](void* q) { std::free(q); });
+#endif
 }
 
 Tensor Tensor::allocate(DType dtype, const Shape& shape) {

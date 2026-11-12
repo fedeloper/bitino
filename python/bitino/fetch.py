@@ -250,12 +250,12 @@ def _fmt(arg: str, ctx: dict) -> str:
 def fetch_prebuilt(model_id: str) -> dict:
     """Downloads the converted files of a redistributable model from the GitHub release (SHA-256 checked)."""
     man = zoo._load(os.path.join("registry", "release_models.json"))
-    ent = (man.get("models") or {}).get(model_id)
+    ent, why = zoo.release_entry(model_id)
     if not ent:
         ok = [k for k in (man.get("models") or {})]
-        raise FetchError(f"{model_id} has no prebuilt release file (its weights licence does not permit redistribution, "
-                         f"or no release manifest is present). Redistributable: {', '.join(ok) or 'none'}. "
-                         f"Use `bitino fetch {model_id}` to convert from the original source.")
+        raise FetchError(f"{model_id} has no prebuilt release file ({why}). Only models whose weights licence is "
+                         f"explicitly permissive are redistributed: {', '.join(ok) or 'none'}. "
+                         f"Use `bitino fetch {model_id}` to convert it from the original source.")
     out_dir = zoo.model_dir(model_id)
     base = f"https://github.com/{man['repo']}/releases/download/{man['tag']}/"
     record = {"model_id": model_id, "prebuilt": True, "release": man["tag"], "results": {}, "commands": []}
@@ -292,6 +292,12 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
     if dry_run:
         print(json.dumps(rec, indent=1))
         return record
+    if not zoo.source_checkout():
+        raise FetchError(f"converting {model_id} from its original source runs the converters of a source checkout "
+                         f"(tools/) in the reference environment of the recipe ({rec['env']}); they are not part of the "
+                         f"installed package. Clone {zoo.REPO_URL}, `pip install -e .` there and run "
+                         f"`bitino fetch {model_id}`: the converted file lands in {out_dir}, where "
+                         f"bitino.load('{model_id}') finds it.")
     new_dl = not os.path.isdir(dl_dir)
     os.makedirs(dl_dir, exist_ok=True)
     if new_dl:

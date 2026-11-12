@@ -1,5 +1,8 @@
 # Minimal Android integration (JNI)
 
+For an app, use the Android library instead: `android/bitino` (AAR, Kotlin API, preprocessing from the model
+manifest; see `docs/android-deployment.md`). This directory is the bare minimum over the C API, without Gradle.
+
 `bitino_jni.cc` wraps the stable C API (`runtime/include/bitino/bitino_c.h`), and
 `java/org/bitino/Bitino.java` is the Java side. The top-level CMake builds
 `libbitino_jni.so` for Android (`BITINO_BUILD_JNI=ON`, the default when `ANDROID` is set):
@@ -18,6 +21,5 @@ try (Bitino bf = new Bitino(context.getFilesDir() + "/model.bitino", 4)) {
 ```
 
 Status: the shared library is cross-compiled in CI-style builds and the C API it wraps is
-exercised by `tests/cpp/test_core.cc` (host and device). An APK has **not** been built or
-run, because this environment has no Gradle/Android SDK build-tools. The JNI layer has not been
-executed inside a JVM.
+exercised by `tests/cpp/test_core.cc` (host and device). This Java wrapper itself has not been run in an app; the
+JNI bridge of `android/bitino` (same C API) has, in the demo app on a phone.

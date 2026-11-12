@@ -696,8 +696,11 @@ def verified_text(dev: dict) -> str:
     ds = v.get("dates") or []
     when = (f", {ds[0]}" if len(ds) == 1 else f", {ds[0]} to {ds[-1]}") if ds else ""
     how = ("exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference"
-           if is_a32(dev) else "outputs byte-identical to the emulated-ARM run of the same code")
-    return f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} ({how})"
+           if is_a32(dev) else "outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code")
+    pend = v.get("stages_pending") or 0
+    pend_t = (f"; {pend} pending: outputs changed by the faster float kernels, outside the plain tolerance, "
+              "rounding-trace check not yet run") if pend else ""
+    return f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} ({how}{pend_t})"
 
 
 def device_card(did: str, dev: dict, runs: list[dict]) -> str:

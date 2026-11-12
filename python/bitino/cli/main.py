@@ -5,7 +5,8 @@ Model zoo:
   bitino info MODEL_ID
   bitino fetch MODEL_ID [--eval-dir D] [--python ENV=PY] [--file NAME=PATH] [--source NAME=DIR]
                           [--int8 --calib-dir D] [--dry-run]
-  bitino run MODEL_ID|FILE [--input X.f32 | --random N] [--int8] [--stage S] [--threads N] [--top K]
+  bitino run MODEL_ID|FILE [--image F.jpg ... | --input X.f32 | --random N] [--bench] [--int8] [--stage S]
+                             [--threads N] [--top K] [--labels FILE]
   bitino bench MODEL_ID|FILE [--stage S] [--threads N] [--iterations I] [--warmup W] [--affinity C] [--json P]
   bitino validate MODEL_ID [--eval-dir D] [--stage S]
 
@@ -30,12 +31,13 @@ import tempfile
 from .. import zoo
 
 ROOT = zoo.ROOT
-REGISTRY = os.path.join(ROOT, "registry", "models.json")
 
 
 def load_registry() -> dict:
-    with open(REGISTRY) as f:
-        return json.load(f)
+    reg = zoo.registry()
+    if not reg:
+        raise FileNotFoundError(f"registry/models.json not found under {zoo.data_root()}")
+    return reg
 
 
 def find(reg: dict, model_id: str) -> dict | None:
@@ -177,47 +179,133 @@ def model_inputs(model: str) -> list[dict]:
         return json.loads(f.read(js)).get("inputs", [])
 
 
+def native_ok() -> bool:
+    try:
+        from .. import _native
+        return _native.available()
+    except Exception:
+        return False
+
+
+def model_for_run(spec: str, variant: str) -> tuple[str, str | None]:
+    """(file, zoo id): a path, a fetched zoo model, or a redistributable one downloaded from the release now."""
+    if os.path.isfile(spec):
+        return spec, None
+    p = zoo.fetched_file(spec, variant)
+    if not os.path.isfile(p) and zoo.release_entry(spec)[0]:
+        from .. import fetch as F
+        F.fetch_prebuilt(spec)
+    return zoo.resolve_model_file(spec, variant), spec
+
+
+def load_labels(path: str | None) -> list[str] | None:
+    """Class names: a text file with one name per line, or a JSON list / {"0": [wnid, name], ...} map."""
+    if not path:
+        return None
+    with open(path) as f:
+        text = f.read()
+    if path.endswith(".json"):
+        d = json.loads(text)
+        if isinstance(d, dict):
+            return [(lambda v: v[-1] if isinstance(v, list) else str(v))(d[k]) for k in sorted(d, key=int)]
+        return [str(v) for v in d]
+    return [ln.strip() for ln in text.splitlines()]
+
+
 def cmd_run(a) -> int:
     import numpy as np
-    model = zoo.resolve_model_file(a.model, "int8" if a.int8 else "float")
-    bench = bench_or_die(a.bench)
+    variant = "int8" if a.int8 else "float"
+    stage = a.stage or ("int8_full" if a.int8 else "all")
+    bench_bin = a.bench or None                  # --bench PATH: run through that bitino_bench binary
+    native = bench_bin is None and native_ok()
+    try:
+        model, mid = model_for_run(a.model, variant)
+    except Exception as e:
+        print(str(e), file=sys.stderr)
+        return 3
     shape = model_inputs(model)[0]["shape"]
     per = int(np.prod(shape[1:]))
-    with tempfile.TemporaryDirectory(prefix="bitino-run-") as td:
-        if a.input:
-            x = np.fromfile(a.input, np.float32)
-            if x.size % per:
-                print(f"{a.input}: {x.size} floats is not a multiple of the input size {shape[1:]}", file=sys.stderr)
-                return 2
-            inp = a.input
-        else:
-            x = np.random.default_rng(0).standard_normal([a.random] + list(shape[1:])).astype(np.float32)
-            inp = os.path.join(td, "x.f32")
-            x.tofile(inp)
-        n = x.size // per
-        outp = os.path.join(td, "y.f32")
-        stage = a.stage or ("int8_full" if a.int8 else "all")
-        r = subprocess.run([bench, "--model", model, "--inputs", inp, "--outputs", outp, "--stage", stage,
-                            "--threads", str(a.threads), "--warmup", "0", "--iterations", "1"], capture_output=True, text=True)
-        if r.returncode != 0:
-            sys.stderr.write(r.stderr)
-            return 1
-        y = np.fromfile(outp, np.float32).reshape(n, -1)
+    if a.image:
+        from .. import images
+        key = a.preprocess or (zoo.preprocess_key(mid) if mid else None)
+        if not key:
+            print(f"--image: preprocessing unknown for {a.model}; pass --preprocess ({', '.join(images.supported())})",
+                  file=sys.stderr)
+            return 2
+        try:
+            x = np.concatenate([images.load_image(p, key) for p in a.image])
+        except (ImportError, ValueError) as e:
+            print(str(e), file=sys.stderr)
+            return 2
+        src = f"{len(a.image)} image(s), preprocessing {key}"
+    elif a.input:
+        x = np.fromfile(a.input, np.float32)
+        if x.size % per:
+            print(f"{a.input}: {x.size} floats is not a multiple of the input size {shape[1:]}", file=sys.stderr)
+            return 2
+        x = x.reshape([-1] + list(shape[1:]))
+        src = "file " + a.input
+    else:
+        x = np.random.default_rng(0).standard_normal([a.random] + list(shape[1:])).astype(np.float32)
+        src = "random, seed 0"
+    n = x.shape[0]
+    timing = None
+    if native:
+        from .. import runtime
+        with runtime.Model(model, stage=stage, threads=a.threads, model_id=mid) as m:
+            ys = m.predict(x)
+            ys = ys if isinstance(ys, list) else [ys]
+            y = np.concatenate([v.reshape(n, -1) for v in ys], axis=1)   # bitino_bench --outputs record layout
+            first = ys[0].reshape(n, -1).shape[1]
+            if a.bench == "":
+                timing = m.benchmark(iterations=a.iterations, warmup=a.warmup, full=True)
+    else:
+        bench = bench_or_die(bench_bin)
+        with tempfile.TemporaryDirectory(prefix="bitino-run-") as td:
+            inp, outp = os.path.join(td, "x.f32"), os.path.join(td, "y.f32")
+            x.astype(np.float32).tofile(inp)
+            r = subprocess.run([bench, "--model", model, "--inputs", inp, "--outputs", outp, "--stage", stage,
+                                "--threads", str(a.threads), "--warmup", "0", "--iterations", "1"], capture_output=True, text=True)
+            if r.returncode != 0:
+                sys.stderr.write(r.stderr)
+                return 1
+            y = np.fromfile(outp, np.float32).reshape(n, -1)
+        first = y.shape[1]
     if a.output:
-        y.tofile(a.output)
-    print(f"model {model}\ninput {n} x {shape[1:]} ({'file ' + a.input if a.input else 'random, seed 0'}), stage {stage}, "
-          f"output {n} x {y.shape[1]} floats")
-    if y.shape[1] > 1 and y.shape[1] <= 100000:
+        y.astype(np.float32).tofile(a.output)
+    labels = load_labels(a.labels)
+    print(f"model {model}\ninput {n} x {list(shape[1:])} ({src}), stage {stage}, output {n} x {y.shape[1]} values"
+          + ("" if native else " (via " + os.path.basename(bench) + ")"))
+    if first > 1 and first <= 100000:
         for i in range(min(n, 8)):
-            top = np.argsort(-y[i])[: a.top]
-            print(f"  sample {i}: top-{a.top} " + ", ".join(f"{int(k)}:{y[i, k]:.4g}" for k in top))
+            yi = y[i, :first]
+            top = np.argsort(-yi)[: a.top]
+            name = (lambda k: f" {labels[k]}" if labels and k < len(labels) else "")
+            print(f"  sample {i}: top-{a.top} " + ", ".join(f"{int(k)}{name(int(k))}:{yi[k]:.4g}" for k in top))
+    if timing:
+        print(f"latency on this machine ({timing['cpu']['arch']}: {' '.join(timing['cpu']['features'])}): median "
+              f"{timing['median_ms']:.3f} ms, min {timing['min_ms']:.3f} ms over {timing['iterations']} runs "
+              f"(warmup {timing['warmup']}, {timing['threads']} thread(s))")
     return 0
 
 
 def cmd_bench(a) -> int:
     model = zoo.resolve_model_file(a.model, "int8" if a.int8 else "float")
-    bench = bench_or_die(a.bench)
     stage = a.stage or ("int8_full" if a.int8 else "all")
+    if not a.bench and not zoo.find_bench() and native_ok():
+        # No bitino_bench binary: time with the runtime of the Python package (same timing loop: run() only).
+        from .. import runtime
+        aff = [int(c) for c in a.affinity.split(",")] if a.affinity else None
+        with runtime.Model(model, stage=stage, threads=a.threads, affinity=aff) as m:
+            r = m.benchmark(iterations=a.iterations, warmup=a.warmup, full=True)
+        if a.json:
+            with open(a.json, "w") as f:
+                json.dump({"schema": "bitino.python_benchmark.v1", "model": model, **r}, f, indent=1)
+        print(f"{os.path.basename(model)} stage {stage}, {a.threads} thread(s): median {r['median_ms']:.3f} ms, "
+              f"p90 {r['p90_ms']:.3f} ms over {a.iterations} iterations (warmup {a.warmup}; Python package runtime)")
+        print("note: timings are only meaningful on real hardware; never under an emulator", file=sys.stderr)
+        return 0
+    bench = bench_or_die(a.bench)
     with tempfile.TemporaryDirectory(prefix="bitino-bench-") as td:
         jp = a.json or os.path.join(td, "bench.json")
         argv = [bench, "--model", model, "--stage", stage, "--threads", str(a.threads), "--warmup", str(a.warmup),
@@ -370,13 +458,22 @@ def main(argv=None) -> int:
         q.add_argument("--int8", action="store_true", help="use the int8_full file of a fetched model")
         q.add_argument("--stage")
         q.add_argument("--threads", type=int, default=1)
-        q.add_argument("--bench", help=f"path to {zoo.BENCH_NAME}")
         if name == "run":
+            q.add_argument("--bench", nargs="?", const="", metavar="PATH",
+                           help="without a value: also time the model (native runtime); with PATH: run through that "
+                                f"{zoo.BENCH_NAME} binary instead of the Python runtime")
+            q.add_argument("--image", nargs="+", metavar="FILE",
+                           help="image file(s), decoded and preprocessed as the model was validated (needs Pillow)")
+            q.add_argument("--preprocess", help="preprocessing key for --image (default: the zoo model's)")
+            q.add_argument("--labels", help="class names: text file (one per line) or JSON list / index map")
             q.add_argument("--input", help="raw float32 file, N x input shape")
-            q.add_argument("--random", type=int, default=1, help="N random inputs if --input is not given")
+            q.add_argument("--random", type=int, default=1, help="N random inputs if neither --image nor --input is given")
             q.add_argument("--output", help="write the raw float32 outputs here")
             q.add_argument("--top", type=int, default=5)
+            q.add_argument("--iterations", type=int, default=50, help="timed runs with --bench")
+            q.add_argument("--warmup", type=int, default=10, help="untimed runs before timing with --bench")
         else:
+            q.add_argument("--bench", help=f"path to {zoo.BENCH_NAME}")
             q.add_argument("--iterations", type=int, default=50)
             q.add_argument("--warmup", type=int, default=10)
             q.add_argument("--affinity")
