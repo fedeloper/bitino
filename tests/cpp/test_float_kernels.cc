@@ -286,6 +286,137 @@ BF_TEST(float_conv2d_gemm_matches_reference) {
   report_max_err("conv2d_gemm");
 }
 
+BF_TEST(float_conv2d_narrow_panels_bit_exact) {
+  // N <= 4 output channels per group use 4-column panels (conv_gemm.cc micro_kernel_n4 / gemv_kernel_n4), or the
+  // narrow direct convolution (narrow_conv_tile: stride 1, kh * kw > 1, no GEMV rows). Every output must equal, bit
+  // for bit, the same channel computed in an 8-column panel: the oc = n model's channels against channels 0..n-1 of
+  // a model with 11 output channels whose first n filters and biases are the same. M remainders 1..7 (masked tiles,
+  // GEMV rows), K blocks (K = 300 > 256), the 1x1 direct path, im2col with padding / pad_value / stride, the
+  // transposition with ic % 4 == 0 and a pixel tail, batch 2, activations, 1 and 3 threads; Dense likewise.
+  struct Case {
+    int64_t n, h, w, ic, oc, k, s, pad;
+    std::string act;
+    float pad_value;
+  };
+  uint32_t seed = 900;
+  for (const Case& c : {Case{1, 8, 8, 5, 3, 3, 1, 1, "none", 0.f}, Case{1, 5, 3, 7, 1, 3, 1, 1, "relu", 0.5f},
+                        Case{1, 7, 7, 300, 2, 1, 1, 0, "relu6", 0.f}, Case{2, 9, 5, 16, 4, 3, 2, 1, "none", -1.f},
+                        Case{1, 3, 3, 64, 3, 1, 1, 0, "relu", 0.f}, Case{1, 13, 11, 6, 3, 9, 1, 4, "none", 0.f},
+                        Case{1, 1, 6, 9, 3, 3, 1, 1, "none", 0.f}, Case{2, 7, 10, 8, 3, 3, 1, 1, "relu6", 0.25f},
+                        Case{1, 6, 9, 12, 2, 5, 1, 2, "none", 0.f}, Case{1, 9, 9, 16, 4, 3, 1, 1, "relu", 0.f}}) {
+    const int64_t kk = c.k * c.k * c.ic, wide = 11;
+    auto w = randn(static_cast<size_t>(wide * kk), seed, 1.f / std::sqrt(float(kk)));
+    auto b = randn(static_cast<size_t>(wide), seed + 1, 0.5f);
+    auto build = [&](int64_t oc) {
+      bftest::ModelBuilder mb;
+      mb.constant("w", DType::kF32, {oc, c.k, c.k, c.ic}, w.data());
+      mb.constant("b", DType::kF32, {oc}, b.data());
+      mb.input("x", DType::kF32, {c.n, c.h, c.w, c.ic});
+      mb.node("Conv2D", {"x", "w", "b"}, {"y"},
+              Json(Json::Object{{"strides", ints({c.s, c.s})}, {"pads", ints({c.pad, c.pad, c.pad, c.pad})},
+                                {"pad_value", Json(static_cast<double>(c.pad_value))}, {"activation", c.act}}));
+      mb.output("y");
+      return mb.build();
+    };
+    auto narrow = build(c.oc), full = build(wide);
+    for (int threads : {1, 3}) {
+      const RunResult a = run_model(narrow, forced(narrow, "conv2d.float_opt"), threads, seed + 2);
+      const RunResult r = run_model(full, forced(full, "conv2d.float_opt"), threads, seed + 2);
+      const size_t px = a.out.size() / static_cast<size_t>(c.oc);
+      for (size_t q = 0; q < px; ++q)
+        for (int64_t o = 0; o < c.oc; ++o)
+          if (std::memcmp(&a.out[q * c.oc + o], &r.out[q * wide + o], 4) != 0)
+            throw bftest::Failure{"narrow conv oc " + std::to_string(c.oc) + " k" + std::to_string(c.k) + " pixel " + std::to_string(q) +
+                                  ": " + std::to_string(a.out[q * c.oc + o]) + " vs " + std::to_string(r.out[q * wide + o])};
+    }
+    seed += 3;
+  }
+  for (int64_t rows : {1, 3, 8, 13, 21}) {
+    const int64_t k = 37, wide = 11, o = rows % 4 + 1;
+    auto w = randn(static_cast<size_t>(wide * k), seed, 0.3f);
+    auto build = [&](int64_t oc) {
+      bftest::ModelBuilder mb;
+      mb.constant("w", DType::kF32, {oc, k}, w.data());
+      mb.input("x", DType::kF32, {rows, k});
+      mb.node("Dense", {"x", "w", ""}, {"y"}, Json(Json::Object{{"activation", "relu"}}));
+      mb.output("y");
+      return mb.build();
+    };
+    auto narrow = build(o), full = build(wide);
+    const RunResult a = run_model(narrow, forced(narrow, "dense.float_opt"), 1, seed + 1);
+    const RunResult r = run_model(full, forced(full, "dense.float_opt"), 1, seed + 1);
+    for (int64_t q = 0; q < rows; ++q)
+      for (int64_t j = 0; j < o; ++j)
+        if (std::memcmp(&a.out[q * o + j], &r.out[q * wide + j], 4) != 0)
+          throw bftest::Failure{"narrow dense rows " + std::to_string(rows) + " row " + std::to_string(q)};
+    seed += 2;
+  }
+}
+
+BF_TEST(float_conv2d_narrow_grouped_chain_exact) {
+  // Grouped convolutions with <= 4 outputs per group and stride 1 take the narrow direct path (conv_gemm.cc
+  // narrow_conv_tile), with the GEMM's arithmetic per output: acc = bias (0 without), then one madd per k = (ky, kx,
+  // c) of the group in ascending order (NEON: fused; elsewhere rounded after the multiply and after the add), padding
+  // taps reading pad_value, then the activation. Checked bit for bit against that chain: BSRC's depthwise layer with
+  // channel multiplier 2 and its grouped 1x1 back (2 inputs per output), 3 / 4 outputs per group, kic 3, pads with
+  // pad_value, batch 2, a pixel tail; the conv2d_grouped.float_opt kernel, 1 and 3 threads.
+  struct Case {
+    int64_t n, h, w, ic, oc, groups, k, pad;
+    std::string act;
+    float pad_value;
+    bool bias;
+  };
+  uint32_t seed = 950;
+  for (const Case& c : {Case{1, 6, 21, 8, 16, 8, 3, 1, "none", 0.f, true}, Case{1, 5, 8, 16, 8, 8, 1, 0, "none", 0.f, false},
+                        Case{2, 4, 9, 12, 12, 4, 3, 1, "relu", 0.5f, true}, Case{1, 7, 8, 6, 8, 2, 5, 2, "relu6", -1.f, true},
+                        Case{1, 3, 18, 4, 12, 4, 3, 0, "none", 0.f, true}}) {
+    const int64_t kic = c.ic / c.groups, ocg = c.oc / c.groups, kk = c.k * c.k * kic;
+    const int64_t oh = c.h + 2 * c.pad - c.k + 1, ow = c.w + 2 * c.pad - c.k + 1;
+    auto w = randn(static_cast<size_t>(c.oc * kk), seed, 0.4f);
+    auto b = randn(static_cast<size_t>(c.oc), seed + 1, 0.5f);
+    bftest::ModelBuilder mb;
+    mb.constant("w", DType::kF32, {c.oc, c.k, c.k, kic}, w.data());
+    if (c.bias) mb.constant("b", DType::kF32, {c.oc}, b.data());
+    mb.input("x", DType::kF32, {c.n, c.h, c.w, c.ic});
+    mb.node("Conv2D", {"x", "w", c.bias ? "b" : ""}, {"y"},
+            Json(Json::Object{{"pads", ints({c.pad, c.pad, c.pad, c.pad})}, {"groups", Json(c.groups)},
+                              {"pad_value", Json(static_cast<double>(c.pad_value))}, {"activation", c.act}}));
+    mb.output("y");
+    auto m = mb.build();
+    const auto x = randn(static_cast<size_t>(c.n * c.h * c.w * c.ic), seed + 2);  // run_model's input
+    for (int threads : {1, 3}) {
+      const RunResult opt = run_model(m, forced(m, "conv2d_grouped.float_opt"), threads, seed + 2);
+      size_t i = 0;
+      for (int64_t n = 0; n < c.n; ++n)
+        for (int64_t oy = 0; oy < oh; ++oy)
+          for (int64_t ox = 0; ox < ow; ++ox)
+            for (int64_t o = 0; o < c.oc; ++o, ++i) {
+              const int64_t g = o / ocg;
+              float acc = c.bias ? b[o] : 0.f;
+              for (int64_t ky = 0; ky < c.k; ++ky)
+                for (int64_t kx = 0; kx < c.k; ++kx)
+                  for (int64_t ci = 0; ci < kic; ++ci) {
+                    const int64_t iy = oy - c.pad + ky, ix = ox - c.pad + kx;
+                    const float a = iy < 0 || iy >= c.h || ix < 0 || ix >= c.w ? c.pad_value
+                                                                               : x[((n * c.h + iy) * c.w + ix) * c.ic + g * kic + ci];
+                    const float wv = w[((o * c.k + ky) * c.k + kx) * kic + ci];
+#if defined(__aarch64__)
+                    acc = std::fmaf(a, wv, acc);
+#else
+                    acc = acc + a * wv;
+#endif
+                  }
+              if (c.act == "relu") acc = acc > 0.f ? acc : 0.f;
+              if (c.act == "relu6") acc = std::min(std::max(acc, 0.f), 6.f);
+              if (std::memcmp(&acc, &opt.out[i], 4) != 0)
+                throw bftest::Failure{"grouped narrow g" + std::to_string(c.groups) + " oc " + std::to_string(c.oc) + " element " +
+                                      std::to_string(i) + ": " + std::to_string(opt.out[i]) + " vs chain " + std::to_string(acc)};
+            }
+    }
+    seed += 3;
+  }
+}
+
 BF_TEST(float_conv2d_depthwise_matches_reference) {
   std::vector<ConvCase> cases;
   uint32_t i = 0;

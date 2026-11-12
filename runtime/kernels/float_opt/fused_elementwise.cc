@@ -260,6 +260,7 @@ class FeCoreBase {
   std::vector<int32_t> from_;     // per micro-op: index of its instruction in prog_ (-1: kFePop)
   std::vector<int32_t> row_ops_;  // micro-ops needing per-row pointers
   std::vector<std::vector<float>> gate_;
+  std::vector<float> zeros_;      // a row of c zeros (whole-row gathers of out-of-range ids)
   std::vector<const float*> in_;
   int64_t c_ = 0, rows_ = 0, rows_per_batch_ = 1;
   FeEvalArgs args_{};
@@ -288,7 +289,9 @@ class FeCoreBase {
         full_ok = full_ok && in.act % chunk == 0;
         half_ok = half_ok && in.act % (chunk / 2) == 0;
       }
-    if (!full_ok && half_ok && c >= chunk / 2) chunk /= 2;
+    // Also half when only that divides the rows (e.g. 16 channels): rows then run as whole chunks (and flat
+    // programs as one run) instead of per-vector dispatch.
+    if (half_ok && c >= chunk / 2 && (!full_ok || (c % chunk != 0 && c % (chunk / 2) == 0))) chunk /= 2;
     args_.chunk = chunk;
     // Operand tree of the postfix program (children of each instruction).
     std::vector<int32_t> ca(prog_.size(), -1), cb(prog_.size(), -1), stk;
@@ -322,7 +325,11 @@ class FeCoreBase {
         m.w = in.act;
         BF_CHECK(m.w > 0 && c % m.w == 0, "FusedElementwise: bad tile / gather width");
         const bool direct = m.w % vec == 0 && (c < chunk || m.w % chunk == 0);
-        if (in.op == FeOp::kLoadGather) {
+        if (in.op == FeOp::kLoadGather && m.w == c) {  // whole rows: a per-row pointer (no per-chunk index lookup)
+          m.v = ctx.in(in.a).dim(0);
+          m.src = kFeSrcGatherWhole;
+          zeros_.assign(static_cast<size_t>(c), 0.f);
+        } else if (in.op == FeOp::kLoadGather) {
           m.v = ctx.in(in.a).dim(0);
           m.src = direct ? kFeSrcGather : kFeSrcGatherRow;
           at = direct ? kFeAtGather : kFeAtRow;
@@ -330,7 +337,7 @@ class FeCoreBase {
           m.src = direct ? kFeSrcTile : kFeSrcTileRow;
           at = direct ? kFeAtTile : kFeAtRow;
         }
-        if (!direct) m.slot = slots++;
+        if (!direct && m.src != kFeSrcGatherWhole) m.slot = slots++;
       }
       m.op = base + at;
       row_ops_.push_back(static_cast<int32_t>(ops_.size()));
@@ -431,7 +438,7 @@ class FeCoreBase {
     args_.n_slots = slots;
     args_.flat = 1;
     for (int32_t j : row_ops_)
-      if (ops_[static_cast<size_t>(j)].op == kFeGate || ops_[static_cast<size_t>(j)].src != kFeSrcRow) args_.flat = 0;
+      if (ops_[static_cast<size_t>(j)].op != kFeGate && ops_[static_cast<size_t>(j)].src != kFeSrcRow) args_.flat = 0;
     args_.c = c_;
     args_.rows_per_batch = rows_per_batch_;
     const size_t ptr_floats = (2 * ops_.size() * sizeof(void*) + sizeof(float) - 1) / sizeof(float);
@@ -499,6 +506,7 @@ class FeCoreBase {
         case FeOp::kLoadGather:
           m.p = in_[in.a];
           m.ids = reinterpret_cast<const int32_t*>(in_[in.b]);
+          if (m.src == kFeSrcGatherWhole) m.q = zeros_.data();
           break;
         case FeOp::kAffine:
           if (m.op == kFeRPrelu) {

@@ -19,9 +19,10 @@
 //    layout) on raw codes, then subtract x_zero * sum_k w[o] and requantize;
 //    taken whenever the int32 accumulator is provably exact (see
 //    gemm_sdot_supported), incl. grouped convolutions.
+#include "kernels/neon_a32.h"
 #include "ops/op_defs.h"
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 
 #include <algorithm>
@@ -34,14 +35,21 @@
 #include "kernels/int8_full/int8_full.h"
 #include "kernels/int8_full/l8_neon.h"
 #include "kernels/int8_full/q8_math.h"
+#if defined(__aarch64__)
 #include "kernels/int8_neon/int8_gemm.h"
+#endif
 #include "ops/ops_common.h"
 #include "ops/transformer_common.h"
 #endif
 
 namespace bitino {
 
-#if defined(__aarch64__)
+// AArch32 (armeabi-v7a, BF_NEON_A32; 2026-11-12): the same kernels through the intrinsics of kernels/neon_a32.h,
+// except the SDOT / SMMLA GEMMs (I8Conv2D / I8Dense / I8MatMul: ARMv8.2 dot products, AArch64 here), which run the
+// reference kernels there, and the inline-assembly 16x16 LUT block (BITINO_LUTC=v1 only). The integer kernels
+// are exact on both ISAs; fp32 steps (I8Quantize, I8LayerNorm, I8Softmax, the binary-layer epilogues) are discussed
+// in docs/numerical-correctness.md ("AArch32").
+#if defined(__aarch64__) || BF_NEON_A32
 
 // Binary NEON kernels (binary_neon/bconv_neon_opt.cc, binary_scalar/bmatmul_bitplane.cc).
 std::unique_ptr<Kernel> make_bconv2d_neon_opt_kernel();
@@ -49,11 +57,13 @@ std::unique_ptr<Kernel> make_bdense_neon_kernel();
 std::unique_ptr<Kernel> make_bdense_ternary_neon_kernel();
 std::unique_ptr<Kernel> make_bmatmul_neon_kernel();
 
+#if defined(__aarch64__)
 // SMMLA tiles (int8_full_gemm_i8mm.cc, +i8mm TU; called only with kFeatI8mm)
 namespace int8_full_i8mm {
 void tiles_i32(const int8_t* a, const int8_t* w, int64_t kc8, int64_t nob, int32_t* y, int64_t ldy, int nr);
 void pack_tile_rows(const int8_t* const rp[8], int64_t kp, int8_t* dst);
 }  // namespace int8_full_i8mm
+#endif
 
 namespace {
 
@@ -173,6 +183,22 @@ class AddNeon : public Kernel {
     const bool full = a.get_int("qmin", -128) == -128 && a.get_int("qmax", 127) == 127;
     // Same shapes, full output range, at most one input rescaled by a shift (TFLite: the larger scale gets shift 0):
     // the specialized loop; everything else the general one.
+    // One input with the multiplier 2^30 and shift 0 (TFLite: the larger input scale), left_shift 20: that input's
+    // term is exactly (q - z) 2^19, mulhi(x 2^20, 2^30) = floor(x 2^19 + 1/2) = x 2^19 (no SQRDMULH); same shapes or a
+    // broadcast row of b (a multiple of 16 channels).
+    {
+      const bool ah = a.get_int("a_mult", 0) == (int64_t(1) << 30) && !as, bh = a.get_int("b_mult", 0) == (int64_t(1) << 30) && !bs;
+      if (!bscalar_ && a.get_int("left_shift", 20) == 20 && (ah || bh)) {
+        if (olsh) {
+          if (ah) run_half<true, false>(ctx);
+          else run_half<true, true>(ctx);
+        } else {
+          if (ah) run_half<false, false>(ctx);
+          else run_half<false, true>(ctx);
+        }
+        return;
+      }
+    }
     if (!bscalar_ && !brow_ && full && !(as && bs)) {
       if (olsh) {
         if (as) run_same<true, true, false>(ctx);
@@ -239,6 +265,64 @@ class AddNeon : public Kernel {
         }
         const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(r[0]), r[1]), cd = vqmovn_high_s32(vqmovn_s32(r[2]), r[3]);
         vst1q_s8(y + i, vqmovn_high_s16(vqmovn_s16(ab), cd));
+      }
+    });
+  }
+
+  // kHalfB: b is the input with multiplier 2^30 / shift 0 (else a). The other input's term as in run_same (int16
+  // difference, << 20, SQRDMULH, SRSHL), the half input's term (q - z) << 19 (int16 difference << 3, SSHLL #16), sum,
+  // output requantization, + zy, saturating narrows (int32 -> int16 -> int8), clamp: the integer operations of run_t.
+  template <bool kOutLsh, bool kHalfB>
+  void run_half(const KernelContext& ctx) const {
+    const Json& a = ctx.attrs();
+    const int32_t za = static_cast<int32_t>(a.get_int("a_zero", 0)), zb = static_cast<int32_t>(a.get_int("b_zero", 0));
+    const int32_t zy = static_cast<int32_t>(a.get_int("y_zero", 0));
+    // the scaled input (x) and the half input (h)
+    const int32_t xm = static_cast<int32_t>(a.get_int(kHalfB ? "a_mult" : "b_mult", 0)), xs = static_cast<int32_t>(a.get_int(kHalfB ? "a_shift" : "b_shift", 0));
+    const int32_t zx = kHalfB ? za : zb, zh = kHalfB ? zb : za;
+    const int32_t om = static_cast<int32_t>(a.get_int("out_mult", 0)), os = static_cast<int32_t>(a.get_int("out_shift", 0));
+    const int lo = static_cast<int>(a.get_int("qmin", -128)), hi = static_cast<int>(a.get_int("qmax", 127));
+    const int8_t* qa = ctx.in(0).data<int8_t>();
+    const int8_t* qb = ctx.in(1).data<int8_t>();
+    int8_t* y = ctx.out(0).data<int8_t>();
+    const int64_t n = ctx.in(0).size(), brow = brow_;
+    ctx.pool->parallel_for((n + 15) / 16, kSerial / 16, [=](int64_t b0, int64_t b1) {
+      const int32x4_t vxm = vdupq_n_s32(xm), nrx = vdupq_n_s32(std::min(xs, 0));
+      const Rq ro(om, os);
+      const int8x8_t zx8 = vdup_n_s8(static_cast<int8_t>(zx)), zh8 = vdup_n_s8(static_cast<int8_t>(zh));
+      const int8x16_t zx16 = vdupq_n_s8(static_cast<int8_t>(zx)), zh16 = vdupq_n_s8(static_cast<int8_t>(zh));
+      const int32x4_t vzy = vdupq_n_s32(zy);
+      const int8x16_t lo8 = vdupq_n_s8(static_cast<int8_t>(lo)), hi8 = vdupq_n_s8(static_cast<int8_t>(hi));
+      const bool full = lo == -128 && hi == 127;
+      for (int64_t b = b0; b < b1; ++b) {
+        const int64_t i = b * 16;
+        if (i + 16 > n) {
+          const int ls = 20;
+          const int32_t am = static_cast<int32_t>(kHalfB ? xm : (1 << 30)), as = kHalfB ? xs : 0;
+          const int32_t bm = static_cast<int32_t>(kHalfB ? (1 << 30) : xm), bs = kHalfB ? 0 : xs;
+          for (int64_t j = i; j < n; ++j) {
+            const int64_t xa = q8::requant((qa[j] - za) * (int64_t(1) << ls), am, as);
+            const int64_t xb = q8::requant((qb[brow ? j % brow : j] - zb) * (int64_t(1) << ls), bm, bs);
+            y[j] = clamp8(zy + q8::requant(xa + xb, om, os), lo, hi);
+          }
+          continue;
+        }
+        const int8x16_t va = vld1q_s8(qa + i), vb = vld1q_s8(qb + (brow ? i % brow : i));
+        const int8x16_t vx = kHalfB ? va : vb, vh = kHalfB ? vb : va;
+        const int16x8_t dx[2] = {vshlq_n_s16(vsubl_s8(vget_low_s8(vx), zx8), 4), vshlq_n_s16(vsubl_high_s8(vx, zx16), 4)};
+        const int16x8_t dh[2] = {vshlq_n_s16(vsubl_s8(vget_low_s8(vh), zh8), 3), vshlq_n_s16(vsubl_high_s8(vh, zh16), 3)};
+        int32x4_t r[4];
+        for (int k = 0; k < 4; ++k) {
+          const int16x8_t ex = dx[k >> 1], eh = dh[k >> 1];
+          const int32x4_t wx = (k & 1) ? vshll_high_n_s16(ex, 16) : vshll_n_s16(vget_low_s16(ex), 16);
+          const int32x4_t wh = (k & 1) ? vshll_high_n_s16(eh, 16) : vshll_n_s16(vget_low_s16(eh), 16);
+          const int32x4_t s = vaddq_s32(vrshlq_s32(vqrdmulhq_s32(wx, vxm), nrx), wh);
+          r[k] = vqaddq_s32(kOutLsh ? ro(s) : vrshlq_s32(vqrdmulhq_s32(s, ro.m), ro.nr), vzy);
+        }
+        const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(r[0]), r[1]), cd = vqmovn_high_s32(vqmovn_s32(r[2]), r[3]);
+        int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+        if (!full) q = vminq_s8(vmaxq_s8(q, lo8), hi8);
+        vst1q_s8(y + i, q);
       }
     });
   }
@@ -315,6 +399,31 @@ bool add_neon_supported(const KernelContext& ctx) {
 // B'[c] = B[c] - sum_i z_i K[i][c], and acc = B'[c] + sum_i q_i K[i][c]; inputs whose coefficients all fit
 // int16 use widening SMLAL on int16 codes (no int32 widening of q), the others int32 MLA. Requantization
 // skips SQSHL for a non-positive shift and the clamp for the full [-128, 127] range (saturating narrows).
+// Requantization + narrowing of 16 AffineSum accumulators. kMode 0: rshr(mulhi(acc, M), r) + zy (shift <= 0);
+// 1: with the saturating left shift (shift > 0); 2: shift requantization floor(acc' / 2^s) (acc' includes the
+// rounding constants and zy, AffineSumNeon::prepare); 3: the same with an int32 shift (no prescaling). Saturating
+// narrows clamp to [-128, 127]; !kFull also clamps
+// to [lo, hi] (lo / hi within int8, so clamping the saturated codes is clamping the values).
+template <int kMode, bool kFull>
+inline int8x16_t afs_requant(int32x4_t* acc, const Rq& rq, int32x4_t vzy, int32x4_t vsh, int8x16_t vlo8, int8x16_t vhi8) {
+  int16x8_t ab, cd;
+  if (kMode == 3) {  // vsh: int32 lanes of -s
+    for (int k = 0; k < 4; ++k) acc[k] = vshlq_s32(acc[k], vsh);
+    ab = vqmovn_high_s32(vqmovn_s32(acc[0]), acc[1]);
+    cd = vqmovn_high_s32(vqmovn_s32(acc[2]), acc[3]);
+  } else if (kMode == 2) {  // vsh: int16 lanes of -(s - 16) (0 when s <= 16, after the prescaling)
+    const int16x8_t s16 = vreinterpretq_s16_s32(vsh);
+    ab = vshlq_s16(vshrn_high_n_s32(vshrn_n_s32(acc[0], 16), acc[1], 16), s16);
+    cd = vshlq_s16(vshrn_high_n_s32(vshrn_n_s32(acc[2], 16), acc[3], 16), s16);
+  } else {
+    for (int k = 0; k < 4; ++k) acc[k] = vqaddq_s32(kMode == 1 ? rq(acc[k]) : vrshlq_s32(vqrdmulhq_s32(acc[k], rq.m), rq.nr), vzy);
+    ab = vqmovn_high_s32(vqmovn_s32(acc[0]), acc[1]);
+    cd = vqmovn_high_s32(vqmovn_s32(acc[2]), acc[3]);
+  }
+  const int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+  return kFull ? q : vminq_s8(vmaxq_s8(q, vlo8), vhi8);
+}
+
 class AffineSumNeon : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
@@ -344,13 +453,66 @@ class AffineSumNeon : public Kernel {
       fast_ = bound < (int64_t(1) << 31);
       bfold_[ch] = static_cast<int32_t>(b);
     }
+    // Shift requantization (2026-11-12): with mult = 2^30 and shift = -r <= 0 (nearly every I8AffineSum: the quantizer
+    // folds the scales into K), requant(acc) = rshr(mulhi(acc, 2^30), r) = rshr(floor((acc + 1) / 2), r)
+    //   = floor((acc + 1 + [r > 0] 2^r) / 2^(r+1))      (floor((floor(u) + m) / n) = floor((u + m) / n), m, n integers)
+    // and zy + floor(u / 2^s) = floor((u + zy 2^s) / 2^s), so y = clamp(floor((acc + c0) / 2^s)), s = r + 1,
+    // c0 = 1 + [r > 0] 2^r + zy 2^s: the constant goes into the folded bias, the requantization is one arithmetic shift
+    // and the saturating narrows. Taken when every reachable acc + c0 fits int32 (bound below, |q| <= 128).
+    // The shift is done as SHRN #16 (exact: |acc'| < 2^31, so acc' >> 16 fits int16) and, for s > 16, an int16
+    // arithmetic shift by s - 16; for s < 16 the coefficients and the bias are scaled by 2^(16 - s) first (exact,
+    // when the scaled bound still fits), so that the shift is 16.
+    int64_t pre = 0;  // prescale exponent of the shift path
+    {
+      const int32_t m = static_cast<int32_t>(ctx.attrs().get_int("mult", 0)), s = static_cast<int32_t>(ctx.attrs().get_int("shift", 0));
+      const int64_t zy = ctx.attrs().get_int("y_zero", 0);
+      shr_ = fast_ && m == (int32_t(1) << 30) && s <= 0 && s >= -30;
+      if (shr_) {
+        const int r = -s;
+        shr_s_ = r + 1;
+        pre = shr_s_ < 16 ? 16 - shr_s_ : 0;
+        const int64_t c0 = 1 + (r > 0 ? (int64_t(1) << r) : 0) + zy * (int64_t(1) << shr_s_);
+        bshr_.assign(cp_, 0);
+        for (int64_t ch = 0; ch < c_ && shr_; ++ch) {
+          int64_t bound = 0;
+          for (size_t i = 0; i < nin_; ++i) bound += std::abs(static_cast<int64_t>(kfull_[i * cp_ + ch])) * 128;
+          const int64_t b = static_cast<int64_t>(bfold_[ch]) + c0;
+          shr_ = (std::abs(b) + bound) * (int64_t(1) << pre) < (int64_t(1) << 31);
+          bshr_[ch] = static_cast<int32_t>(b * (int64_t(1) << pre));
+        }
+        if (!shr_) pre = 0;
+      }
+      if (shr_ && pre > 0) {
+        // prescaling must not push int16 coefficient rows out of int16 (SMLAL rows are cheaper than the 4 extra
+        // shifts of the int32 shift path, mode 3)
+        auto n16_with = [&](int64_t e) {
+          int cnt = 0;
+          for (size_t i = 0; i < nin_; ++i) {
+            bool fits = true;
+            for (int64_t ch = 0; ch < c_; ++ch) {
+              const int64_t v = static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << e);
+              fits = fits && v >= -32768 && v <= 32767;
+            }
+            cnt += fits;
+          }
+          return cnt;
+        };
+        if (n16_with(pre) < n16_with(0)) {
+          shr3_ = true;
+          for (int64_t ch = 0; ch < c_; ++ch) bshr_[ch] = static_cast<int32_t>(static_cast<int64_t>(bshr_[ch]) >> pre);  // exact: multiples of 2^pre
+          pre = 0;
+        }
+      }
+    }
     // inputs whose coefficients all fit int16 first (order_), their rows in kh_, the others' rows in k32_
+    // (shift path: the prescaled coefficients)
+    auto kv = [&](size_t i, int64_t ch) { return static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << pre); };
     order_.clear();
     n16_ = 0;
     for (int pass = 0; pass < 2; ++pass)
       for (size_t i = 0; i < nin_; ++i) {
         bool fits = true;
-        for (int64_t ch = 0; ch < c_; ++ch) fits = fits && kfull_[i * cp_ + ch] >= -32768 && kfull_[i * cp_ + ch] <= 32767;
+        for (int64_t ch = 0; ch < c_; ++ch) fits = fits && kv(i, ch) >= -32768 && kv(i, ch) <= 32767;
         if (fits == (pass == 0)) order_.push_back(i);
         if (pass == 0 && fits) ++n16_;
       }
@@ -358,9 +520,9 @@ class AffineSumNeon : public Kernel {
     k32_.assign((nin_ - n16_) * cp_, 0);
     for (size_t j = 0; j < nin_; ++j)
       for (int64_t ch = 0; ch < c_; ++ch) {
-        const int32_t v = kfull_[order_[j] * cp_ + ch];
+        const int64_t v = kv(order_[j], ch);
         if (j < n16_) kh_[j * cp_ + ch] = static_cast<int16_t>(v);
-        else k32_[(j - n16_) * cp_ + ch] = v;
+        else k32_[(j - n16_) * cp_ + ch] = static_cast<int32_t>(v);
       }
   }
   void run(const KernelContext& ctx) override {
@@ -370,12 +532,18 @@ class AffineSumNeon : public Kernel {
     // 2 or 4 inputs (nearly every I8AffineSum of the zoo): coefficients and bias in registers, rows inner
 #define BF_AFS(N16, N32)                                  \
   do {                                                    \
-    if (s > 0) {                                          \
-      if (full) run_tiled<N16, N32, true, true>(ctx);     \
-      else run_tiled<N16, N32, true, false>(ctx);         \
+    if (shr3_) {                                          \
+      if (full) run_tiled<N16, N32, 3, true>(ctx);        \
+      else run_tiled<N16, N32, 3, false>(ctx);            \
+    } else if (shr_) {                                    \
+      if (full) run_tiled<N16, N32, 2, true>(ctx);        \
+      else run_tiled<N16, N32, 2, false>(ctx);            \
+    } else if (s > 0) {                                   \
+      if (full) run_tiled<N16, N32, 1, true>(ctx);        \
+      else run_tiled<N16, N32, 1, false>(ctx);            \
     } else {                                              \
-      if (full) run_tiled<N16, N32, false, true>(ctx);    \
-      else run_tiled<N16, N32, false, false>(ctx);        \
+      if (full) run_tiled<N16, N32, 0, true>(ctx);        \
+      else run_tiled<N16, N32, 0, false>(ctx);            \
     }                                                     \
     return;                                               \
   } while (0)
@@ -383,13 +551,20 @@ class AffineSumNeon : public Kernel {
     if (nin_ == 2 && n16_ == 1) BF_AFS(1, 1);
     if (nin_ == 2 && n16_ == 2) BF_AFS(2, 0);
     if (nin_ == 4 && n16_ == 0) BF_AFS(0, 4);
+    if (nin_ == 3 && n16_ == 0) BF_AFS(0, 3);
 #undef BF_AFS
-    if (s > 0) {
-      if (full) run_fast<true, true>(ctx);
-      else run_fast<true, false>(ctx);
+    if (shr3_) {
+      if (full) run_fast<3, true>(ctx);
+      else run_fast<3, false>(ctx);
+    } else if (shr_) {
+      if (full) run_fast<2, true>(ctx);
+      else run_fast<2, false>(ctx);
+    } else if (s > 0) {
+      if (full) run_fast<1, true>(ctx);
+      else run_fast<1, false>(ctx);
     } else {
-      if (full) run_fast<false, true>(ctx);
-      else run_fast<false, false>(ctx);
+      if (full) run_fast<0, true>(ctx);
+      else run_fast<0, false>(ctx);
     }
   }
 
@@ -398,7 +573,8 @@ class AffineSumNeon : public Kernel {
   // per tile of 32 rows and 16-channel block the folded bias and the coefficient rows are loaded once, then every
   // row of the tile runs from registers. Same integer operations per element as run_fast (bias, then the inputs
   // in order_ order; exact int32 sums by the fast-path bound), same requantization and narrowing.
-  template <int N16, int N32, bool kLsh, bool kFull>
+  // kMode: 0 requant without SQSHL (shift <= 0), 1 with SQSHL (shift > 0), 2 shift requantization (shr_, bshr_)
+  template <int N16, int N32, int kMode, bool kFull>
   void run_tiled(const KernelContext& ctx) const {
     constexpr int N = N16 + N32;
     const int64_t rows = ctx.in(0).size() / c_;
@@ -409,14 +585,15 @@ class AffineSumNeon : public Kernel {
     for (int j = 0; j < N; ++j) xp[j] = ctx.in(order_[j]).data<int8_t>();
     int8_t* y = ctx.out(0).data<int8_t>();
     const int64_t c = c_, cp = cp_;
-    const int32_t* bf = bfold_.data();
+    const int32_t* bf = kMode >= 2 ? bshr_.data() : bfold_.data();
     const int32_t* k32 = k32_.data();
     const int16_t* kh = kh_.data();
+    const int32_t sh = shr_s_;
     constexpr int64_t kRt = 32;  // rows per tile
     ctx.pool->parallel_for(rows, std::max<int64_t>(1, kSerial / std::max<int64_t>(c * N, 1)), [=, &ctx](int64_t r0, int64_t r1) {
       const Rq rq(m, s);
-      const int32x4_t vzy = vdupq_n_s32(zy);
-      const int16x8_t vlo = vdupq_n_s16(static_cast<int16_t>(lo)), vhi = vdupq_n_s16(static_cast<int16_t>(hi));
+      const int32x4_t vzy = vdupq_n_s32(zy), vsh = kMode == 3 ? vdupq_n_s32(-sh) : vreinterpretq_s32_s16(vdupq_n_s16(static_cast<int16_t>(sh > 16 ? 16 - sh : 0)));
+      const int8x16_t vlo8 = vdupq_n_s8(static_cast<int8_t>(lo)), vhi8 = vdupq_n_s8(static_cast<int8_t>(hi));
       for (int64_t rt = r0; rt < r1; rt += kRt) {
         const int64_t re = std::min(r1, rt + kRt);
         int64_t ch = 0;
@@ -450,13 +627,8 @@ class AffineSumNeon : public Kernel {
               acc[2] = vmlaq_s32(acc[2], vmovl_s16(vget_low_s16(h)), kw[i][2]);
               acc[3] = vmlaq_s32(acc[3], vmovl_high_s16(h), kw[i][3]);
             }
-            for (int k = 0; k < 4; ++k) acc[k] = vqaddq_s32(kLsh ? rq(acc[k]) : vrshlq_s32(vqrdmulhq_s32(acc[k], rq.m), rq.nr), vzy);
-            if (kFull) {
-              const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(acc[0]), acc[1]), cd = vqmovn_high_s32(vqmovn_s32(acc[2]), acc[3]);
-              vst1q_s8(y + off, vqmovn_high_s16(vqmovn_s16(ab), cd));
-            } else {
-              vst1q_s8(y + off, narrow16(acc[0], acc[1], acc[2], acc[3], vlo, vhi));
-            }
+            const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
+            vst1q_s8(y + off, yq);
           }
         }
         for (; ch < c; ++ch)
@@ -470,7 +642,7 @@ class AffineSumNeon : public Kernel {
     });
   }
 
-  template <bool kLsh, bool kFull>
+  template <int kMode, bool kFull>
   void run_fast(const KernelContext& ctx) const {
     const int64_t rows = ctx.in(0).size() / c_;
     const int32_t m = static_cast<int32_t>(ctx.attrs().get_int("mult", 0)), s = static_cast<int32_t>(ctx.attrs().get_int("shift", 0));
@@ -482,15 +654,67 @@ class AffineSumNeon : public Kernel {
     int8_t* y = ctx.out(0).data<int8_t>();
     const size_t nin = nin_, n16 = n16_;
     const int64_t c = c_, cp = cp_;
-    const int32_t* bf = bfold_.data();
+    const int32_t* bf = kMode >= 2 ? bshr_.data() : bfold_.data();
     const int32_t* k32 = k32_.data();
     const int16_t* kh = kh_.data();
     const int8_t* const* xp = xo.data();
+    const int32_t sh = shr_s_;
     ctx.pool->parallel_for(rows, std::max<int64_t>(1, kSerial / std::max<int64_t>(c * static_cast<int64_t>(nin), 1)), [&](int64_t r0, int64_t r1) {
       const Rq rq(m, s);
-      const int32x4_t vzy = vdupq_n_s32(zy);
-      const int16x8_t vlo = vdupq_n_s16(static_cast<int16_t>(lo)), vhi = vdupq_n_s16(static_cast<int16_t>(hi));
-      for (int64_t r = r0; r < r1; ++r) {
+      const int32x4_t vzy = vdupq_n_s32(zy), vsh = kMode == 3 ? vdupq_n_s32(-sh) : vreinterpretq_s32_s16(vdupq_n_s16(static_cast<int16_t>(sh > 16 ? 16 - sh : 0)));
+      const int8x16_t vlo8 = vdupq_n_s8(static_cast<int8_t>(lo)), vhi8 = vdupq_n_s8(static_cast<int8_t>(hi));
+      // pairs of rows: each coefficient row loaded once per pair and 16-channel unit (explicit accumulators: an
+      // indexed [4][4] array was spilled)
+      int64_t r = r0;
+      for (; r + 2 <= r1; r += 2) {
+        int64_t ch = 0;
+        for (; ch + 16 <= c; ch += 16) {
+          int32x4_t a0[4], a1[4];
+          for (int k = 0; k < 4; ++k) a0[k] = a1[k] = vld1q_s32(bf + ch + 4 * k);
+          const int64_t o0 = r * c + ch, o1 = o0 + c;
+          const int16_t* kr16 = kh + ch;
+          for (size_t i = 0; i < n16; ++i, kr16 += cp) {
+            const int16x8_t ka = vld1q_s16(kr16), kb = vld1q_s16(kr16 + 8);
+            const int8x16_t q0 = vld1q_s8(xp[i] + o0), q1 = vld1q_s8(xp[i] + o1);
+            const int16x8_t l0 = vmovl_s8(vget_low_s8(q0)), h0 = vmovl_high_s8(q0);
+            const int16x8_t l1 = vmovl_s8(vget_low_s8(q1)), h1 = vmovl_high_s8(q1);
+            a0[0] = vmlal_s16(a0[0], vget_low_s16(l0), vget_low_s16(ka));
+            a0[1] = vmlal_high_s16(a0[1], l0, ka);
+            a0[2] = vmlal_s16(a0[2], vget_low_s16(h0), vget_low_s16(kb));
+            a0[3] = vmlal_high_s16(a0[3], h0, kb);
+            a1[0] = vmlal_s16(a1[0], vget_low_s16(l1), vget_low_s16(ka));
+            a1[1] = vmlal_high_s16(a1[1], l1, ka);
+            a1[2] = vmlal_s16(a1[2], vget_low_s16(h1), vget_low_s16(kb));
+            a1[3] = vmlal_high_s16(a1[3], h1, kb);
+          }
+          const int32_t* kr = k32 + ch;
+          for (size_t i = n16; i < nin; ++i, kr += cp) {
+            const int32x4_t k0 = vld1q_s32(kr), k1 = vld1q_s32(kr + 4), k2 = vld1q_s32(kr + 8), k3 = vld1q_s32(kr + 12);
+            const int8x16_t q0 = vld1q_s8(xp[i] + o0), q1 = vld1q_s8(xp[i] + o1);
+            const int16x8_t l0 = vmovl_s8(vget_low_s8(q0)), h0 = vmovl_high_s8(q0);
+            const int16x8_t l1 = vmovl_s8(vget_low_s8(q1)), h1 = vmovl_high_s8(q1);
+            a0[0] = vmlaq_s32(a0[0], vmovl_s16(vget_low_s16(l0)), k0);
+            a0[1] = vmlaq_s32(a0[1], vmovl_high_s16(l0), k1);
+            a0[2] = vmlaq_s32(a0[2], vmovl_s16(vget_low_s16(h0)), k2);
+            a0[3] = vmlaq_s32(a0[3], vmovl_high_s16(h0), k3);
+            a1[0] = vmlaq_s32(a1[0], vmovl_s16(vget_low_s16(l1)), k0);
+            a1[1] = vmlaq_s32(a1[1], vmovl_high_s16(l1), k1);
+            a1[2] = vmlaq_s32(a1[2], vmovl_s16(vget_low_s16(h1)), k2);
+            a1[3] = vmlaq_s32(a1[3], vmovl_high_s16(h1), k3);
+          }
+          const int8x16_t y0 = afs_requant<kMode, kFull>(a0, rq, vzy, vsh, vlo8, vhi8);
+          vst1q_s8(y + o0, y0);
+          const int8x16_t y1 = afs_requant<kMode, kFull>(a1, rq, vzy, vsh, vlo8, vhi8);
+          vst1q_s8(y + o1, y1);
+        }
+        for (; ch < c; ++ch)
+          for (int64_t rr = r; rr < r + 2; ++rr) {
+            int64_t acc = bfull_[ch];
+            for (size_t i = 0; i < nin; ++i) acc += (x[i][rr * c + ch] - zs_[i]) * static_cast<int64_t>(kfull_[i * cp_ + ch]);
+            y[rr * c + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
+          }
+      }
+      for (; r < r1; ++r) {
         const int64_t base = r * c;
         int64_t ch = 0;
         for (; ch + 16 <= c; ch += 16) {
@@ -516,13 +740,8 @@ class AffineSumNeon : public Kernel {
             acc[2] = vmlaq_s32(acc[2], vmovl_s16(vget_low_s16(h)), vld1q_s32(kr + 8));
             acc[3] = vmlaq_s32(acc[3], vmovl_high_s16(h), vld1q_s32(kr + 12));
           }
-          for (int k = 0; k < 4; ++k) acc[k] = vqaddq_s32(kLsh ? rq(acc[k]) : vrshlq_s32(vqrdmulhq_s32(acc[k], rq.m), rq.nr), vzy);
-          if (kFull) {
-            const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(acc[0]), acc[1]), cd = vqmovn_high_s32(vqmovn_s32(acc[2]), acc[3]);
-            vst1q_s8(y + base + ch, vqmovn_high_s16(vqmovn_s16(ab), cd));
-          } else {
-            vst1q_s8(y + base + ch, narrow16(acc[0], acc[1], acc[2], acc[3], vlo, vhi));
-          }
+          const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
+          vst1q_s8(y + base + ch, yq);
         }
         for (; ch < c; ++ch) {
           int64_t acc = bfull_[ch];
@@ -575,7 +794,9 @@ class AffineSumNeon : public Kernel {
 
   size_t nin_ = 0;
   int64_t c_ = 0, cp_ = 0;
-  bool fast_ = false;
+  bool fast_ = false, shr_ = false, shr3_ = false;
+  int32_t shr_s_ = 1;
+  std::vector<int32_t> bshr_;
   std::vector<int32_t> kfull_, bfull_, bfold_;
   std::vector<int32_t> k32_;
   std::vector<int16_t> kh_;
@@ -628,11 +849,30 @@ class LayerNormNeon : public Kernel {
         // S1 = sum (q - z), S2 = sum (q - z)^2
         const int64_t s1 = sq - d * xz, s2 = sq2 - 2 * int64_t(xz) * sq + d * int64_t(xz) * xz;
         const float rf = int8_full::layernorm_row_factor(d, s1, s2, xs, eps);
-        // u = d*(q - z) - S1 = d*q - (S1 + d*z): exact in int32 and in fp32
+        // u = d*(q - z) - S1 = d*q - (S1 + d*z): exact in int32 and in fp32. When d fits int16, d*q - c is one
+        // SMLAL of the int16 codes onto -c (the same int32 values, 2026-11-12); full output range: the saturating
+        // narrows are the clamp.
         const int32x4_t vd = vdupq_n_s32(static_cast<int32_t>(d)), vc = vdupq_n_s32(static_cast<int32_t>(s1 + d * xz));
+        const int32x4_t vnc = vnegq_s32(vc);
+        const int16_t d16 = static_cast<int16_t>(d);
         const float32x4_t vr = vdupq_n_f32(rf);
         int8_t* yr = y + r * d;
         i = 0;
+        if (d <= 32767 && lo == -128 && hi == 127) {
+          for (; i + 16 <= d; i += 16) {
+            const int8x16_t qv = vld1q_s8(qr + i);
+            const int16x8_t l = vmovl_s8(vget_low_s8(qv)), h = vmovl_high_s8(qv);
+            const int32x4_t ui[4] = {vmlal_n_s16(vnc, vget_low_s16(l), d16), vmlal_high_n_s16(vnc, l, d16), vmlal_n_s16(vnc, vget_low_s16(h), d16),
+                                     vmlal_high_n_s16(vnc, h, d16)};
+            int32x4_t o[4];
+            for (int k = 0; k < 4; ++k) {
+              const float32x4_t v = vmulq_f32(vcvtq_f32_s32(ui[k]), vr);
+              o[k] = rne4(vaddq_f32(vmulq_f32(v, vld1q_f32(G + i + 4 * k)), vld1q_f32(B + i + 4 * k)));
+            }
+            const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(o[0]), o[1]), cd = vqmovn_high_s32(vqmovn_s32(o[2]), o[3]);
+            vst1q_s8(yr + i, vqmovn_high_s16(vqmovn_s16(ab), cd));
+          }
+        }
         for (; i + 16 <= d; i += 16) {
           int32x4_t w[4], o[4];
           widen16(vld1q_s8(qr + i), w);
@@ -765,7 +1005,19 @@ class SoftmaxNeon : public Kernel {
 // The vector path adds y_zero in int32 after FCVTNS; the reference adds it in fp32 after
 // nearbyint. They agree when |nearbyint(v)| < 2^24 (exact float add) and both clamp otherwise,
 // provided |y_zero| < 2^23 (true for every zero point the quantizer emits, |z| < 2^20).
+// AArch32 NEON flushes denormals (docs/numerical-correctness.md, "AArch32"): an int8 result rounds a flushed denormal
+// to the same code 0, an fp32 output would not; fp32 outputs stay on the IEEE reference / portable kernels there.
+inline bool a32_f32_output(const KernelContext& ctx) {
+#if BF_NEON_A32
+  return ctx.attrs().get_string("output", "i8") == "f32";
+#else
+  (void)ctx;
+  return false;
+#endif
+}
+
 bool softmax_neon_supported(const KernelContext& ctx) {
+  if (a32_f32_output(ctx)) return false;
   const int64_t z = ctx.attrs().get_int("y_zero", 0);
   return z > -(int64_t(1) << 23) && z < (int64_t(1) << 23);
 }
@@ -957,6 +1209,11 @@ class BinaryLayerNeon : public Kernel {
 
 bool binary_layer_neon_supported(const KernelContext& ctx) {
   const std::string mode = ctx.attrs().get_string("input_binarize", "ge");
+#if BF_NEON_A32
+  // AArch32: int8 outputs only; I8BConv2DRes (fp32 residual sums, PReLU, bit compares of the sums) on the IEEE portable
+  // kernel
+  if (a32_f32_output(ctx) || ctx.node->op == "I8BConv2DRes") return false;
+#endif
   if (ctx.node->op == "I8BConv2DRes") {
     // the pre stage (inputs 10-13) runs in the two-phase epilogue only: int16 dot products, K <= 32767
     const bool pre = ctx.has_in(10) || ctx.has_in(11) || ctx.has_in(12) || ctx.has_in(13);
@@ -1161,6 +1418,7 @@ class BMatMulI8Neon : public Kernel {
   Sub sub_;
 };
 bool bmatmul_i8_neon_supported(const KernelContext& ctx) {
+  if (a32_f32_output(ctx)) return false;
   auto g = matmul_geometry(ctx.attrs(), ctx.in(0).shape(), ctx.in(1).shape());
   const Json& a = ctx.attrs();
   const int64_t bound = g.k * (std::abs(a.get_int("c_ab", 1)) + std::abs(a.get_int("c_rs", 0)) + std::abs(a.get_int("c_cs", 0))) +
@@ -1168,6 +1426,7 @@ bool bmatmul_i8_neon_supported(const KernelContext& ctx) {
   return g.k <= 32767 && bound < (int64_t(1) << 31);  // bmatmul.neon range (int16 tile sums); int32 combination
 }
 
+#if defined(__aarch64__)
 // ---------------------------------------------------- I8Conv2D / I8Dense (SDOT)
 // GEMM per group: rows = output pixels (Dense rows) x columns = the group's output channels, K = taps*kic
 // raw int8 codes (padding taps = pad_q), zero-padded to a multiple of 16 bytes. Operands in the int8_neon
@@ -1339,7 +1598,8 @@ class GemmSdot : public Kernel {
       }
     }
     xz_ = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
-    bits_ = !dense_ && ctx.has_in(5);
+    multi_ = ctx.node->op == "I8Conv2DN";
+    bits_ = !dense_ && !multi_ && ctx.has_in(5);
     if (bits_) {  // bit output thresholds by channel (padded)
       bthr_.assign(static_cast<size_t>(o_ + 16), 0);
       std::copy_n(ctx.in(5).data<int32_t>(), o_, bthr_.data());
@@ -1372,6 +1632,24 @@ class GemmSdot : public Kernel {
       nrs_[o] = std::min(ep.shift[o], 0);
       any_lsh_ = any_lsh_ || lsh_[o] > 0;
     }
+    // I8Conv2DN: mult / shift of every output (the bias is shared)
+    if (multi_) {
+      const size_t k = ctx.outputs.size();
+      outq_.assign(k, OutQ{});
+      for (size_t j = 0; j < k; ++j) {
+        const int8_full::GemmEpilogue ej(ctx, static_cast<int>(j));
+        OutQ& q = outq_[j];
+        q.mult.assign(static_cast<size_t>(o_ + 16), 0);
+        q.lsh.assign(static_cast<size_t>(o_ + 16), 0);
+        q.nrs.assign(static_cast<size_t>(o_ + 16), 0);
+        for (int64_t o = 0; o < o_; ++o) {
+          q.mult[o] = ej.mult[o];
+          q.lsh[o] = std::max(ej.shift[o], 0);
+          q.nrs[o] = std::min(ej.shift[o], 0);
+          q.any_lsh = q.any_lsh || q.lsh[o] > 0;
+        }
+      }
+    }
     // im2col rows: interior pixels of groups == 1, dilation_w == 1 convolutions copy one run of kw*ic bytes
     // per kernel row; 1x1 / stride 1 / no padding convolutions and Dense rows with K % 16 == 0 are read in place
     direct_ = dense_ ? k_ % 16 == 0
@@ -1392,6 +1670,9 @@ class GemmSdot : public Kernel {
           std::memcpy(padded_.data() + ((n * ph_ + iy + g_.pt) * pw_ + g_.pl) * g_.ic, x + (n * g_.ih + iy) * rowb, static_cast<size_t>(rowb));
     }
     int8_full::GemmEpilogue ep(ctx);
+    std::vector<int8_full::GemmEpilogue> eps;
+    if (multi_)
+      for (size_t j = 0; j < ctx.outputs.size(); ++j) eps.emplace_back(ctx, static_cast<int>(j));
     ctx.pool->parallel_for(pb, 1, [&](int64_t t0, int64_t t1) {
       thread_local std::vector<int8_t> rowbuf, apack;
       thread_local std::vector<int32_t> acc;
@@ -1426,10 +1707,17 @@ class GemmSdot : public Kernel {
             }
           } else if (l8_) {
             epilogue_l8(acc.data(), nr, gi, ep, ctx.out(0).data<int8_t>() + r0 * o_);
+          } else if (multi_) {
+            for (size_t j = 0; j < outq_.size(); ++j) {
+              const OutQ& q = outq_[j];
+              int8_t* yj = ctx.out(j).data<int8_t>() + r0 * o_;
+              if (q.any_lsh) epilogue_i8<true>(acc.data(), nr, gi, eps[j], yj, q.mult.data(), q.lsh.data(), q.nrs.data());
+              else epilogue_i8<false>(acc.data(), nr, gi, eps[j], yj, q.mult.data(), q.lsh.data(), q.nrs.data());
+            }
           } else if (any_lsh_) {
-            epilogue_i8<true>(acc.data(), nr, gi, ep, ctx.out(0).data<int8_t>() + r0 * o_);
+            epilogue_i8<true>(acc.data(), nr, gi, ep, ctx.out(0).data<int8_t>() + r0 * o_, mult_.data(), lsh_.data(), nrs_.data());
           } else {
-            epilogue_i8<false>(acc.data(), nr, gi, ep, ctx.out(0).data<int8_t>() + r0 * o_);
+            epilogue_i8<false>(acc.data(), nr, gi, ep, ctx.out(0).data<int8_t>() + r0 * o_, mult_.data(), lsh_.data(), nrs_.data());
           }
           if (bits_) epilogue_bits(acc.data(), nr, gi, ctx.out(1).data<uint32_t>() + r0 * bw_);
         }
@@ -1570,7 +1858,8 @@ class GemmSdot : public Kernel {
   // acc - x_zero*wsum (int32), saturating + bias, requant (SQSHL only when some shift is positive),
   // saturating + y_zero, clamp. Blocks of 16 channels keep their constants in registers over the rows.
   template <bool kLsh>
-  void epilogue_i8(const int32_t* acc, int nr, int64_t gi, const int8_full::GemmEpilogue& ep, int8_t* y) const {
+  void epilogue_i8(const int32_t* acc, int nr, int64_t gi, const int8_full::GemmEpilogue& ep, int8_t* y, const int32_t* mult_p,
+                   const int32_t* lsh_p, const int32_t* nrs_p) const {
     const int64_t c0 = gi * ocg_;
     const int32x4_t vzy = vdupq_n_s32(static_cast<int32_t>(ep.zy));
     const int16x8_t vlo = vdupq_n_s16(static_cast<int16_t>(ep.lo)), vhi = vdupq_n_s16(static_cast<int16_t>(ep.hi));
@@ -1581,9 +1870,9 @@ class GemmSdot : public Kernel {
         const int64_t o = c0 + j + 4 * k;
         xzw[k] = vld1q_s32(xzw_.data() + o);
         bias[k] = vld1q_s32(bias_.data() + o);
-        mult[k] = vld1q_s32(mult_.data() + o);
-        if (kLsh) lsh[k] = vld1q_s32(lsh_.data() + o);
-        nrs[k] = vld1q_s32(nrs_.data() + o);
+        mult[k] = vld1q_s32(mult_p + o);
+        if (kLsh) lsh[k] = vld1q_s32(lsh_p + o);
+        nrs[k] = vld1q_s32(nrs_p + o);
       }
       for (int i = 0; i < nr; ++i) {
         const int32_t* a = acc + i * ldy_ + j;
@@ -1598,8 +1887,8 @@ class GemmSdot : public Kernel {
     }
     for (; j + 4 <= ocg_; j += 4) {  // blocks of 4 channels (grouped convolutions with few channels per group)
       const int64_t o = c0 + j;
-      const int32x4_t xzw = vld1q_s32(xzw_.data() + o), bias = vld1q_s32(bias_.data() + o), mult = vld1q_s32(mult_.data() + o);
-      const int32x4_t lsh = vld1q_s32(lsh_.data() + o), nrs = vld1q_s32(nrs_.data() + o);
+      const int32x4_t xzw = vld1q_s32(xzw_.data() + o), bias = vld1q_s32(bias_.data() + o), mult = vld1q_s32(mult_p + o);
+      const int32x4_t lsh = vld1q_s32(lsh_p + o), nrs = vld1q_s32(nrs_p + o);
       for (int i = 0; i < nr; ++i) {
         int32x4_t s = vqaddq_s32(vsubq_s32(vld1q_s32(acc + i * ldy_ + j), xzw), bias);
         if (kLsh) s = vqshlq_s32(s, lsh);
@@ -1652,7 +1941,12 @@ class GemmSdot : public Kernel {
       }
   }
 
-  bool dense_ = false, direct_ = false, f32_ = false, any_lsh_ = false, l8_ = false, has_bias_f_ = false, bits_ = false;
+  bool dense_ = false, direct_ = false, f32_ = false, any_lsh_ = false, l8_ = false, has_bias_f_ = false, bits_ = false, multi_ = false;
+  struct OutQ {
+    std::vector<int32_t> mult, lsh, nrs;
+    bool any_lsh = false;
+  };
+  std::vector<OutQ> outq_;  // I8Conv2DN outputs
   bool mm_ = false;  // SMMLA tiles (i8mm)
   bool runs_ = false;  // SMMLA with the kernel-row run layout of K (pack_runs)
   int64_t rl8_ = 0, kc8_ = 0;
@@ -1677,11 +1971,13 @@ bool gemm_sdot_supported(const KernelContext& ctx) {
   const Tensor& w = ctx.in(1);
   const int64_t k = w.size() / w.dim(0);
   const int64_t xz = ctx.attrs().get_int("x_zero", 0);
-  const bool grouped = ctx.node->op == "I8Conv2D" && ctx.attrs().get_int("groups", 1) != 1;
+  const bool grouped = ctx.node->op != "I8Dense" && ctx.attrs().get_int("groups", 1) != 1;
   if (grouped && depthwise_neon_supported(ctx)) return false;
   if ((k > 1032 || grouped) && k * (128 + std::abs(xz)) * 127 >= (int64_t(1) << 31)) return false;
   return true;
 }
+
+#endif  // __aarch64__ (SDOT GEMM)
 
 // ------------------------------------------------------ I8Lut (per channel)
 
@@ -1771,6 +2067,7 @@ class LutRowsNeon : public Kernel {
 // the same values). C < 16: scalar lookups.
 //
 // One 16x16 block: rows src + i*ss (16 bytes each) -> dst + i*ds, channel j uses table tab + 256*j.
+#if defined(__aarch64__)
 inline __attribute__((always_inline)) void lut_block16(const uint8_t* __restrict src, int64_t ss, uint8_t* __restrict dst, int64_t ds,
                                                        const uint8_t* __restrict tab) {
   const uint8x16_t k80 = vdupq_n_u8(0x80), k64 = vdupq_n_u8(64);
@@ -1820,6 +2117,58 @@ void lut_channel_rows(const uint8_t* __restrict q, uint8_t* __restrict y, int64_
     if (ch + 16 >= c) break;
   }
 }
+#endif  // __aarch64__ (lut_block16: inline assembly)
+
+// Per-channel tables, 64-row tiles (2026-11-12): the 16x16 blocks of up to 64 rows of one 16-channel block are
+// transposed into a channel-major scratch tile, then each channel's table is loaded once (16 registers) and applied to
+// its up to 4 vectors, and the tile is transposed back. Same lookups as lut_block16 (the table loads per element drop
+// from one 64-byte load per 4 elements to one per 16-64); rows of a partial 16-row group are zero-filled.
+inline void lut_tile64(const uint8_t* __restrict q, uint8_t* __restrict y, int64_t c, int64_t ch, int64_t nr,
+                       const uint8_t* __restrict tab) {
+  alignas(16) uint8_t t[16][4][16];  // [channel][16-row group][row]
+  const int64_t ng = (nr + 15) / 16;
+  for (int64_t g = 0; g < ng; ++g) {
+    uint8x16_t v[16];
+    const int64_t n = std::min<int64_t>(16, nr - 16 * g);
+    for (int i = 0; i < 16; ++i) v[i] = i < n ? vld1q_u8(q + (16 * g + i) * c + ch) : vdupq_n_u8(0);
+    transpose16x16(v);
+    for (int j = 0; j < 16; ++j) vst1q_u8(t[j][g], v[j]);
+  }
+  const uint8x16_t k80 = vdupq_n_u8(0x80), k64 = vdupq_n_u8(64);
+  for (int j = 0; j < 16; ++j) {
+    const uint8_t* tj = tab + (ch + j) * 256;
+    const uint8x16x4_t t0 = vld1q_u8_x4(tj), t1 = vld1q_u8_x4(tj + 64), t2 = vld1q_u8_x4(tj + 128), t3 = vld1q_u8_x4(tj + 192);
+    for (int64_t g = 0; g < ng; ++g) {
+      uint8x16_t u = veorq_u8(vld1q_u8(t[j][g]), k80);
+      uint8x16_t r = vqtbl4q_u8(t0, u);
+      u = vsubq_u8(u, k64);
+      r = vqtbx4q_u8(r, t1, u);
+      u = vsubq_u8(u, k64);
+      r = vqtbx4q_u8(r, t2, u);
+      u = vsubq_u8(u, k64);
+      vst1q_u8(t[j][g], vqtbx4q_u8(r, t3, u));
+    }
+  }
+  for (int64_t g = 0; g < ng; ++g) {
+    uint8x16_t v[16];
+    for (int j = 0; j < 16; ++j) v[j] = vld1q_u8(t[j][g]);
+    transpose16x16(v);
+    const int64_t n = std::min<int64_t>(16, nr - 16 * g);
+    for (int i = 0; i < n; ++i) vst1q_u8(y + (16 * g + i) * c + ch, v[i]);
+  }
+}
+
+bool lut_tile64_on() {
+#if defined(__aarch64__)
+  static const bool on = [] {
+    const char* e = std::getenv("BITINO_LUTC");
+    return !(e && std::string(e) == "v1");
+  }();
+  return on;
+#else
+  return true;
+#endif
+}
 
 class LutChannelsNeon : public Kernel {
  public:
@@ -1843,11 +2192,29 @@ class LutChannelsNeon : public Kernel {
     const auto* tu = reinterpret_cast<const uint8_t*>(tab);
     const auto* qu = reinterpret_cast<const uint8_t*>(q);
     auto* yu = reinterpret_cast<uint8_t*>(y);
+    if (lut_tile64_on()) {
+      // channel blocks of 16 (the last one overlapping the previous when c % 16 != 0: same values rewritten). Walking
+      // one channel block over several row tiles (tables kept in L1) was slower: 16-byte stripes at stride C.
+      const int64_t nblk = (rows + 63) / 64;
+      ctx.pool->parallel_for(nblk, std::max<int64_t>(1, kSerial / (64 * c)), [&](int64_t b0, int64_t b1) {
+        for (int64_t b = b0; b < b1; ++b) {
+          const int64_t nr = std::min<int64_t>(64, rows - b * 64);
+          for (int64_t ch = 0;; ch += 16) {
+            if (ch + 16 > c) ch = c - 16;
+            lut_tile64(qu + b * 64 * c, yu + b * 64 * c, c, ch, nr, tu);
+            if (ch + 16 >= c) break;
+          }
+        }
+      });
+      return;
+    }
+#if defined(__aarch64__)
     const int64_t nblk = (rows + 15) / 16;
     ctx.pool->parallel_for(nblk, std::max<int64_t>(1, kSerial / (16 * c)), [&](int64_t b0, int64_t b1) {
       for (int64_t b = b0; b < b1; ++b)
         lut_channel_rows(qu + b * 16 * c, yu + b * 16 * c, c, std::min<int64_t>(16, rows - b * 16), tu);
     });
+#endif
   }
 };
 bool lut_rows_supported(const KernelContext& ctx) {
@@ -1859,6 +2226,197 @@ bool lut_channels_supported(const KernelContext& ctx) {
   int64_t ax = ctx.attrs().get_int("axis", -1);
   if (ax < 0) ax += ctx.in(0).rank();
   return ctx.in(1).dim(0) > 1 && ax == ctx.in(0).rank() - 1 && ctx.in(1).dtype() == DType::kI8;
+}
+
+// ------------------------------------------------------- I8LutN (twins)
+// k tables on one input (src/graph_rewrite_i8.h). Per-channel tables present (C >= 16): the 64-row tiles of
+// lut_tile64, the input block transposed once and every table applied to it (a one-row table to every channel);
+// one-row tables only: per chunk of 4096 codes, each table loaded once into registers and applied to the chunk.
+inline uint8x16_t lut256(uint8x16_t q, const uint8x16x4_t& t0, const uint8x16x4_t& t1, const uint8x16x4_t& t2, const uint8x16x4_t& t3) {
+  const uint8x16_t k64 = vdupq_n_u8(64);
+  uint8x16_t u = veorq_u8(q, vdupq_n_u8(0x80));
+  uint8x16_t r = vqtbl4q_u8(t0, u);
+  u = vsubq_u8(u, k64);
+  r = vqtbx4q_u8(r, t1, u);
+  u = vsubq_u8(u, k64);
+  r = vqtbx4q_u8(r, t2, u);
+  u = vsubq_u8(u, k64);
+  return vqtbx4q_u8(r, t3, u);
+}
+
+class LutNNeon : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), rows = x.size() / c, n = x.size();
+    const int k = static_cast<int>(ctx.inputs.size()) - 1;
+    const auto* qu = reinterpret_cast<const uint8_t*>(x.data<int8_t>());
+    std::vector<const uint8_t*> tabs(k);
+    std::vector<uint8_t*> ys(k);
+    std::vector<int64_t> tstride(k);
+    bool pc = false;
+    for (int j = 0; j < k; ++j) {
+      tabs[j] = reinterpret_cast<const uint8_t*>(ctx.in(j + 1).data<int8_t>());
+      tstride[j] = ctx.in(j + 1).dim(0) > 1 ? 256 : 0;
+      pc = pc || tstride[j] != 0;
+      ys[j] = reinterpret_cast<uint8_t*>(ctx.out(j).data<int8_t>());
+    }
+    if (!pc) {
+      ctx.pool->parallel_for((n + 4095) / 4096, std::max<int64_t>(1, kSerial / 4096), [&](int64_t b0, int64_t b1) {
+        for (int64_t b = b0; b < b1; ++b) {
+          const int64_t i0 = b * 4096, i1 = std::min(n, i0 + 4096);
+          for (int j = 0; j < k; ++j) {
+            const uint8_t* t = tabs[j];
+            const uint8x16x4_t t0 = vld1q_u8_x4(t), t1 = vld1q_u8_x4(t + 64), t2 = vld1q_u8_x4(t + 128), t3 = vld1q_u8_x4(t + 192);
+            uint8_t* y = ys[j];
+            int64_t i = i0;
+            for (; i + 16 <= i1; i += 16) vst1q_u8(y + i, lut256(vld1q_u8(qu + i), t0, t1, t2, t3));
+            for (; i < i1; ++i) y[i] = t[qu[i] ^ 0x80];
+          }
+        }
+      });
+      return;
+    }
+    const int64_t nblk = (rows + 63) / 64;
+    ctx.pool->parallel_for(nblk, std::max<int64_t>(1, kSerial / (64 * c * k)), [&](int64_t b0, int64_t b1) {
+      alignas(16) uint8_t tin[16][4][16];   // [channel][16-row group][row]
+      alignas(16) uint8_t tout[16][4][16];
+      for (int64_t b = b0; b < b1; ++b) {
+        const int64_t nr = std::min<int64_t>(64, rows - b * 64), ng = (nr + 15) / 16;
+        const uint8_t* q = qu + b * 64 * c;
+        for (int64_t ch = 0;; ch += 16) {
+          if (ch + 16 > c) ch = c - 16;
+          for (int64_t g = 0; g < ng; ++g) {
+            uint8x16_t v[16];
+            const int64_t m = std::min<int64_t>(16, nr - 16 * g);
+            for (int i = 0; i < 16; ++i) v[i] = i < m ? vld1q_u8(q + (16 * g + i) * c + ch) : vdupq_n_u8(0);
+            transpose16x16(v);
+            for (int jj = 0; jj < 16; ++jj) vst1q_u8(tin[jj][g], v[jj]);
+          }
+          for (int j = 0; j < k; ++j) {
+            for (int jj = 0; jj < 16; ++jj) {
+              const uint8_t* t = tabs[j] + (ch + jj) * tstride[j];
+              const uint8x16x4_t t0 = vld1q_u8_x4(t), t1 = vld1q_u8_x4(t + 64), t2 = vld1q_u8_x4(t + 128), t3 = vld1q_u8_x4(t + 192);
+              for (int64_t g = 0; g < ng; ++g) vst1q_u8(tout[jj][g], lut256(vld1q_u8(tin[jj][g]), t0, t1, t2, t3));
+            }
+            uint8_t* y = ys[j] + b * 64 * c;
+            for (int64_t g = 0; g < ng; ++g) {
+              uint8x16_t v[16];
+              for (int jj = 0; jj < 16; ++jj) v[jj] = vld1q_u8(tout[jj][g]);
+              transpose16x16(v);
+              const int64_t m = std::min<int64_t>(16, nr - 16 * g);
+              for (int i = 0; i < m; ++i) vst1q_u8(y + (16 * g + i) * c + ch, v[i]);
+            }
+          }
+          if (ch + 16 >= c) break;
+        }
+      }
+    });
+  }
+};
+// per-channel tables need C >= 16 (16-channel blocks)
+bool lutn_neon_supported(const KernelContext& ctx) {
+  bool pc = false;
+  for (size_t j = 1; j < ctx.inputs.size(); ++j) pc = pc || ctx.in(j).dim(0) > 1;
+  return !pc || ctx.in(0).dim(-1) >= 16;
+}
+
+// ------------------------------------------------------- I8AddN (twins)
+// The rescaled input sum s = xa + xb of AddNeon (run_half: one input with multiplier 2^30 / shift 0; else both
+// SQRDMULH terms) computed once per 16 elements, then every output's requantization, + zy, saturating narrows and
+// clamp. Same shapes or a broadcast row of b (a multiple of 16 channels); int8 zero points; left_shift 20; at most 4
+// outputs.
+class AddNNeon : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override { brow_ = ctx.in(0).shape() == ctx.in(1).shape() ? 0 : ctx.in(1).size(); }
+  void run(const KernelContext& ctx) override {
+    const Json& a = ctx.attrs();
+    const bool ah = a.get_int("a_mult", 0) == (int64_t(1) << 30) && a.get_int("a_shift", 0) == 0;
+    const bool bh = a.get_int("b_mult", 0) == (int64_t(1) << 30) && a.get_int("b_shift", 0) == 0;
+    if (ah) run_t<1>(ctx);
+    else if (bh) run_t<2>(ctx);
+    else run_t<0>(ctx);
+  }
+
+ private:
+  // kHalf: 0 none, 1 a, 2 b is the 2^30 / 0 input (term (q - z) << 19 exactly, see AddNeon::run)
+  template <int kHalf>
+  void run_t(const KernelContext& ctx) const {
+    const Json& a = ctx.attrs();
+    const int32_t za = static_cast<int32_t>(a.get_int("a_zero", 0)), zb = static_cast<int32_t>(a.get_int("b_zero", 0));
+    const int32_t am = static_cast<int32_t>(a.get_int("a_mult", 0)), as = static_cast<int32_t>(a.get_int("a_shift", 0));
+    const int32_t bm = static_cast<int32_t>(a.get_int("b_mult", 0)), bs = static_cast<int32_t>(a.get_int("b_shift", 0));
+    const auto om = a.get_ints("out_mults", {}), os = a.get_ints("out_shifts", {}), zys = a.get_ints("y_zeros", {});
+    const auto los = a.get_ints("qmins", {}), his = a.get_ints("qmaxs", {});
+    const int k = static_cast<int>(ctx.outputs.size());
+    const int8_t* qa = ctx.in(0).data<int8_t>();
+    const int8_t* qb = ctx.in(1).data<int8_t>();
+    int8_t* ys[4] = {nullptr, nullptr, nullptr, nullptr};
+    for (int j = 0; j < k; ++j) ys[j] = ctx.out(j).data<int8_t>();
+    const int64_t n = ctx.in(0).size(), brow = brow_;
+    ctx.pool->parallel_for((n + 15) / 16, kSerial / 16, [&, k](int64_t b0, int64_t b1) {
+      const int32x4_t vam = vdupq_n_s32(am), vbm = vdupq_n_s32(bm), nra = vdupq_n_s32(std::min(as, 0)), nrb = vdupq_n_s32(std::min(bs, 0));
+      const int8x8_t za8 = vdup_n_s8(static_cast<int8_t>(za)), zb8 = vdup_n_s8(static_cast<int8_t>(zb));
+      const int8x16_t za16 = vdupq_n_s8(static_cast<int8_t>(za)), zb16 = vdupq_n_s8(static_cast<int8_t>(zb));
+      Rq ro[4] = {Rq(0, 0), Rq(0, 0), Rq(0, 0), Rq(0, 0)};
+      int32x4_t vzy[4];
+      int8x16_t lo8[4], hi8[4];
+      bool full[4];
+      for (int j = 0; j < k; ++j) {
+        ro[j] = Rq(static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j]));
+        vzy[j] = vdupq_n_s32(static_cast<int32_t>(zys[j]));
+        lo8[j] = vdupq_n_s8(static_cast<int8_t>(los[j]));
+        hi8[j] = vdupq_n_s8(static_cast<int8_t>(his[j]));
+        full[j] = los[j] == -128 && his[j] == 127;
+      }
+      for (int64_t b = b0; b < b1; ++b) {
+        const int64_t i = b * 16;
+        if (i + 16 > n) {
+          for (int64_t e = i; e < n; ++e) {
+            const int64_t xa = q8::requant((qa[e] - za) * (int64_t(1) << 20), am, as);
+            const int64_t xb = q8::requant((qb[brow ? e % brow : e] - zb) * (int64_t(1) << 20), bm, bs);
+            for (int j = 0; j < k; ++j)
+              ys[j][e] = clamp8(zys[j] + q8::requant(xa + xb, static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j])),
+                                static_cast<int>(los[j]), static_cast<int>(his[j]));
+          }
+          continue;
+        }
+        const int8x16_t va = vld1q_s8(qa + i), vb = vld1q_s8(qb + (brow ? i % brow : i));
+        // (q - z) << 4 (scaled input: x << 20 after SSHLL #16) or << 3 (half input: x << 19)
+        constexpr int kSa = kHalf == 1 ? 3 : 4, kSb = kHalf == 2 ? 3 : 4;
+        const int16x8_t da[2] = {vshlq_n_s16(vsubl_s8(vget_low_s8(va), za8), kSa), vshlq_n_s16(vsubl_high_s8(va, za16), kSa)};
+        const int16x8_t db[2] = {vshlq_n_s16(vsubl_s8(vget_low_s8(vb), zb8), kSb), vshlq_n_s16(vsubl_high_s8(vb, zb16), kSb)};
+        int32x4_t sum[4];
+        for (int kk = 0; kk < 4; ++kk) {
+          const int16x8_t ea = da[kk >> 1], eb = db[kk >> 1];
+          int32x4_t wa = (kk & 1) ? vshll_high_n_s16(ea, 16) : vshll_n_s16(vget_low_s16(ea), 16);
+          int32x4_t wb = (kk & 1) ? vshll_high_n_s16(eb, 16) : vshll_n_s16(vget_low_s16(eb), 16);
+          if (kHalf != 1) wa = vrshlq_s32(vqrdmulhq_s32(wa, vam), nra);
+          if (kHalf != 2) wb = vrshlq_s32(vqrdmulhq_s32(wb, vbm), nrb);
+          sum[kk] = vaddq_s32(wa, wb);
+        }
+        for (int j = 0; j < k; ++j) {
+          int32x4_t r[4];
+          for (int kk = 0; kk < 4; ++kk) r[kk] = vqaddq_s32(ro[j](sum[kk]), vzy[j]);
+          const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(r[0]), r[1]), cd = vqmovn_high_s32(vqmovn_s32(r[2]), r[3]);
+          int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+          if (!full[j]) q = vminq_s8(vmaxq_s8(q, lo8[j]), hi8[j]);
+          vst1q_s8(ys[j] + i, q);
+        }
+      }
+    });
+  }
+
+  int64_t brow_ = 0;
+};
+bool addn_neon_supported(const KernelContext& ctx) {
+  const Json& a = ctx.attrs();
+  auto in8 = [](int64_t z) { return z >= -128 && z <= 127; };
+  const Tensor& ta = ctx.in(0);
+  const Tensor& tb = ctx.in(1);
+  const bool row = tb.size() == ta.dim(-1) && tb.dim(-1) == ta.dim(-1) && ta.dim(-1) % 16 == 0;
+  return (ta.shape() == tb.shape() || row) && ctx.outputs.size() <= 4 && in8(a.get_int("a_zero", 0)) && in8(a.get_int("b_zero", 0)) &&
+         a.get_int("left_shift", 20) == 20 && a.get_int("a_shift", 0) <= 0 && a.get_int("b_shift", 0) <= 0;
 }
 
 // ------------------------------------------------------------- I8Transpose
@@ -2169,6 +2727,7 @@ class ConcatNeon : public Kernel {
   }
 };
 
+#if defined(__aarch64__)
 // --------------------------------------------------------- I8MatMul (SDOT)
 // Per batch entry: A = rows of a (M x K) and W = columns of b ([N][K]) packed in the int8_neon tile
 // layout at run time; raw products sum_k a*b by the SDOT micro-kernel (|.| <= K*128*128 < 2^24 for
@@ -2323,6 +2882,8 @@ bool matmul_sdot_supported(const KernelContext& ctx) {
   return g.k <= 1024;
 }
 
+#endif  // __aarch64__ (SDOT MatMul)
+
 // ---------------------------------------------------------------- I8Mul
 // Same shapes, or b broadcast as [N, 1, 1, C] / [1, ..., C] rows (ChannelGate): per row of C channels.
 class MulNeon : public Kernel {
@@ -2349,6 +2910,14 @@ class MulNeon : public Kernel {
     const int8_t* qb = ctx.in(1).data<int8_t>();
     int8_t* y = ctx.out(0).data<int8_t>();
     const int64_t c = c_;
+    if (za >= -128 && za <= 127 && zb >= -128 && zb <= 127) {
+      // (q - z) as int16 (VSUBL of the int8 codes and the int8 zero point, |q - z| <= 255), the exact int32 product
+      // by SMULL, then the same requantization as below (SQSHL only for a positive shift), + zy, saturating narrows
+      // (int32 -> int16 -> int8: a value saturated at int16 is outside [-128, 127] either way) and the clamp.
+      if (sh > 0) run_s16<true>(ctx, qa, qb, y, za, zb, zy, m, sh, lo, hi);
+      else run_s16<false>(ctx, qa, qb, y, za, zb, zy, m, sh, lo, hi);
+      return;
+    }
     ctx.pool->parallel_for(rows_, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [&](int64_t r0, int64_t r1) {
       const Rq rq(m, sh);
       const int32x4_t vza = vdupq_n_s32(za), vzb = vdupq_n_s32(zb), vzy = vdupq_n_s32(zy);
@@ -2371,6 +2940,39 @@ class MulNeon : public Kernel {
   }
 
  private:
+  template <bool kLsh>
+  void run_s16(const KernelContext& ctx, const int8_t* qa, const int8_t* qb, int8_t* y, int32_t za, int32_t zb, int32_t zy, int32_t m,
+               int32_t sh, int lo, int hi) const {
+    const int64_t c = c_, period = brow_period_;
+    ctx.pool->parallel_for(rows_, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [=](int64_t r0, int64_t r1) {
+      const Rq rq(m, sh);
+      const int32x4_t vzy = vdupq_n_s32(zy);
+      const int8x8_t za8 = vdup_n_s8(static_cast<int8_t>(za)), zb8 = vdup_n_s8(static_cast<int8_t>(zb));
+      const int8x16_t za16 = vdupq_n_s8(static_cast<int8_t>(za)), zb16 = vdupq_n_s8(static_cast<int8_t>(zb));
+      const int8x16_t lo8 = vdupq_n_s8(static_cast<int8_t>(lo)), hi8 = vdupq_n_s8(static_cast<int8_t>(hi));
+      const bool full = lo == -128 && hi == 127;
+      for (int64_t r = r0; r < r1; ++r) {
+        const int8_t* ar = qa + r * c;
+        const int8_t* br = qb + (period ? (r / period) : r) * c;
+        int8_t* yr = y + r * c;
+        int64_t i = 0;
+        for (; i + 16 <= c; i += 16) {
+          const int8x16_t a = vld1q_s8(ar + i), b = vld1q_s8(br + i);
+          const int16x8_t al = vsubl_s8(vget_low_s8(a), za8), ah = vsubl_high_s8(a, za16);
+          const int16x8_t bl = vsubl_s8(vget_low_s8(b), zb8), bh = vsubl_high_s8(b, zb16);
+          int32x4_t p[4] = {vmull_s16(vget_low_s16(al), vget_low_s16(bl)), vmull_high_s16(al, bl), vmull_s16(vget_low_s16(ah), vget_low_s16(bh)),
+                            vmull_high_s16(ah, bh)};
+          for (int k = 0; k < 4; ++k) p[k] = vqaddq_s32(kLsh ? rq(p[k]) : vrshlq_s32(vqrdmulhq_s32(p[k], rq.m), rq.nr), vzy);
+          const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(p[0]), p[1]), cd = vqmovn_high_s32(vqmovn_s32(p[2]), p[3]);
+          int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+          if (!full) q = vminq_s8(vmaxq_s8(q, lo8), hi8);
+          vst1q_s8(yr + i, q);
+        }
+        for (; i < c; ++i) yr[i] = clamp8(zy + q8::requant((ar[i] - za) * static_cast<int64_t>(br[i] - zb), m, sh), lo, hi);
+      }
+    });
+  }
+
   int64_t c_ = 1, rows_ = 0, brow_period_ = 0;
 };
 // products of (q - z) fit int32 when |q - z| < 2^15; b same shape or one row of C per sample
@@ -2501,13 +3103,39 @@ class DepthwiseNeon : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
     g_ = conv_geometry(ctx.attrs(), ctx.in(0).shape(), ctx.in(1).shape());
-    // weights transposed to [kh][kw][C]
+    // weights transposed to [kh][kw][C] (int8 for the generic path, int16 for the SMLAL path)
     const int8_t* w = ctx.in(1).data<int8_t>();
-    wt_.assign(static_cast<size_t>(g_.kh * g_.kw * g_.oc + 16), 0);
+    const int64_t taps = g_.kh * g_.kw, cp = (g_.oc + 15) / 16 * 16;
+    wt_.assign(static_cast<size_t>(taps * g_.oc + 16), 0);
+    w16_.assign(static_cast<size_t>(taps * cp), 0);
     for (int64_t o = 0; o < g_.oc; ++o)
-      for (int64_t t = 0; t < g_.kh * g_.kw; ++t) wt_[t * g_.oc + o] = w[o * g_.kh * g_.kw + t];
+      for (int64_t t = 0; t < taps; ++t) {
+        wt_[t * g_.oc + o] = w[o * taps + t];
+        w16_[t * cp + o] = w[o * taps + t];
+      }
+    // int8 output: per-channel requantization constants for the vector epilogue (2026-11-12)
+    int8_full::GemmEpilogue ep(ctx);
+    vec_ = !ep.f32 && !ep.l8;
+    if (vec_) {
+      bias_.assign(static_cast<size_t>(cp), 0);
+      mult_.assign(static_cast<size_t>(cp), 0);
+      lsh_.assign(static_cast<size_t>(cp), 0);
+      nrs_.assign(static_cast<size_t>(cp), 0);
+      for (int64_t o = 0; o < g_.oc; ++o) {
+        bias_[o] = ep.bias_q ? ep.bias_q[o] : 0;
+        mult_[o] = ep.mult[o];
+        lsh_[o] = std::max(ep.shift[o], 0);
+        nrs_[o] = std::min(ep.shift[o], 0);
+        any_lsh_ = any_lsh_ || lsh_[o] > 0;
+      }
+    }
   }
   void run(const KernelContext& ctx) override {
+    if (vec_) {
+      if (any_lsh_) run_s16<true>(ctx);
+      else run_s16<false>(ctx);
+      return;
+    }
     const int8_t* x = ctx.in(0).data<int8_t>();
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
     const int32_t pz = static_cast<int32_t>(ctx.attrs().get_int("pad_q", xz)) - xz;
@@ -2555,8 +3183,83 @@ class DepthwiseNeon : public Kernel {
   }
 
  private:
+  // int8 output: per pixel and 16 channels, acc = sum (x - z) w in int32 by SMLAL on int16 operands (|x - z| <= 255,
+  // |w| <= 127: exact, the supported() bound keeps the sum in int32; padding taps contribute pad_q - z), then
+  // sat32(acc + bias), the per-channel requantization (SQSHL for positive shifts, SQRDMULH, SRSHL), + zy, saturating
+  // narrows and the clamp: GemmEpilogue::q per element. Channel tails (C % 16) per element as the generic path.
+  template <bool kLsh>
+  void run_s16(const KernelContext& ctx) const {
+    const int8_t* x = ctx.in(0).data<int8_t>();
+    const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
+    const int32_t pz = static_cast<int32_t>(ctx.attrs().get_int("pad_q", xz)) - xz;
+    const int8_full::GemmEpilogue ep(ctx);
+    const Conv2DGeom& g = g_;
+    const int64_t pix = g.n * g.oh * g.ow, C = g.oc, cp = (C + 15) / 16 * 16;
+    int8_t* y = ctx.out(0).data<int8_t>();
+    ctx.pool->parallel_for(pix, std::max<int64_t>(1, kSerial / std::max<int64_t>(C * g.kh * g.kw, 1)), [&](int64_t p0, int64_t p1) {
+      const int8x8_t z8 = vdup_n_s8(static_cast<int8_t>(xz));
+      const int8x16_t z16 = vdupq_n_s8(static_cast<int8_t>(xz));
+      const int16x8_t pzv = vdupq_n_s16(static_cast<int16_t>(pz));
+      const int32x4_t vzy = vdupq_n_s32(static_cast<int32_t>(ep.zy));
+      const int8x16_t lo8 = vdupq_n_s8(static_cast<int8_t>(ep.lo)), hi8 = vdupq_n_s8(static_cast<int8_t>(ep.hi));
+      const bool full = ep.lo == -128 && ep.hi == 127;
+      for (int64_t p = p0; p < p1; ++p) {
+        const int64_t n = p / (g.oh * g.ow), oy = (p / g.ow) % g.oh, ox = p % g.ow;
+        int64_t c0 = 0;
+        for (; c0 + 16 <= C; c0 += 16) {
+          int32x4_t acc[4] = {vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0)};
+          for (int64_t ky = 0; ky < g.kh; ++ky) {
+            const int64_t iy = oy * g.sh - g.pt + ky * g.dh;
+            const bool yin = iy >= 0 && iy < g.ih;
+            for (int64_t kx = 0; kx < g.kw; ++kx) {
+              const int64_t ix = ox * g.sw - g.pl + kx * g.dw;
+              int16x8_t xl, xh;
+              if (yin && ix >= 0 && ix < g.iw) {
+                const int8x16_t q = vld1q_s8(x + ((n * g.ih + iy) * g.iw + ix) * C + c0);
+                xl = vsubl_s8(vget_low_s8(q), z8);
+                xh = vsubl_high_s8(q, z16);
+              } else {
+                xl = xh = pzv;
+              }
+              const int16_t* wp = w16_.data() + (ky * g.kw + kx) * cp + c0;
+              const int16x8_t wl = vld1q_s16(wp), wh = vld1q_s16(wp + 8);
+              acc[0] = vmlal_s16(acc[0], vget_low_s16(xl), vget_low_s16(wl));
+              acc[1] = vmlal_high_s16(acc[1], xl, wl);
+              acc[2] = vmlal_s16(acc[2], vget_low_s16(xh), vget_low_s16(wh));
+              acc[3] = vmlal_high_s16(acc[3], xh, wh);
+            }
+          }
+          int32x4_t v[4];
+          for (int k = 0; k < 4; ++k) {
+            const int64_t o = c0 + 4 * k;
+            int32x4_t s = vqaddq_s32(acc[k], vld1q_s32(bias_.data() + o));
+            if (kLsh) s = vqshlq_s32(s, vld1q_s32(lsh_.data() + o));
+            v[k] = vqaddq_s32(vrshlq_s32(vqrdmulhq_s32(s, vld1q_s32(mult_.data() + o)), vld1q_s32(nrs_.data() + o)), vzy);
+          }
+          const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(v[0]), v[1]), cd = vqmovn_high_s32(vqmovn_s32(v[2]), v[3]);
+          int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+          if (!full) q = vminq_s8(vmaxq_s8(q, lo8), hi8);
+          vst1q_s8(y + p * C + c0, q);
+        }
+        for (; c0 < C; ++c0) {
+          int64_t a = 0;
+          for (int64_t ky = 0; ky < g.kh; ++ky)
+            for (int64_t kx = 0; kx < g.kw; ++kx) {
+              const int64_t iy = oy * g.sh - g.pt + ky * g.dh, ix = ox * g.sw - g.pl + kx * g.dw;
+              const bool in = iy >= 0 && iy < g.ih && ix >= 0 && ix < g.iw;
+              a += static_cast<int64_t>(in ? x[((n * g.ih + iy) * g.iw + ix) * C + c0] - xz : pz) * wt_[(ky * g.kw + kx) * C + c0];
+            }
+          y[p * C + c0] = ep.q(a, c0);
+        }
+      }
+    });
+  }
+
   Conv2DGeom g_{};
   std::vector<int8_t> wt_;
+  std::vector<int16_t> w16_;
+  std::vector<int32_t> bias_, mult_, lsh_, nrs_;
+  bool vec_ = false, any_lsh_ = false;
 };
 bool depthwise_neon_supported(const KernelContext& ctx) {
   const int64_t groups = ctx.attrs().get_int("groups", 1);
@@ -2567,6 +3270,172 @@ bool depthwise_neon_supported(const KernelContext& ctx) {
   return groups > 1 && w.dim(0) == groups && w.dim(3) == 1 && ctx.in(0).dim(3) == groups && w.dim(1) * w.dim(2) <= 4096 &&
          xz >= -128 && xz <= 127;
 }
+
+#if BF_NEON_A32
+// ------------------------------------------- I8Conv2D / I8Dense / I8Conv2DN on AArch32 (SMLAL)
+// No dot-product instructions on ARMv7 / Cortex-A53 AArch32: rows of (x - x_zero) as int16 (padding taps pad_q -
+// x_zero, K padded to 8 with zeros), weights as int16 rows [O][Kp], products by SMLAL into int32 (|x - z| <= 255,
+// |w| <= 128: |acc| <= K * 32640 < 2^31, checked), 2 rows x 4 channels per step; the 4 channels' sums are reduced
+// by pairwise adds into one vector and requantized as GemmEpilogue::q (sat32(acc + bias), SQSHL for positive
+// shifts, SQRDMULH, SRSHL, + zy, saturating narrows, clamp) for int8 outputs; fp32 / l8 outputs per element through
+// GemmEpilogue. groups == 1 convolutions and Dense; no bit output (those stay on the reference kernel).
+class GemmS16A32 : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override {
+    dense_ = ctx.node->op == "I8Dense";
+    multi_ = ctx.node->op == "I8Conv2DN";
+    const Tensor& w = ctx.in(1);
+    o_ = w.dim(0);
+    k_ = w.size() / o_;
+    kp_ = (k_ + 7) / 8 * 8;
+    if (dense_) {
+      rows_ = ctx.in(0).size() / k_;
+    } else {
+      g_ = conv_geometry(ctx.attrs(), ctx.in(0).shape(), w.shape());
+      rows_ = g_.n * g_.oh * g_.ow;
+    }
+    op_ = (o_ + 3) / 4 * 4;
+    w16_.assign(static_cast<size_t>(op_ * kp_), 0);
+    const int8_t* wd = w.data<int8_t>();
+    for (int64_t o = 0; o < o_; ++o)
+      for (int64_t kk = 0; kk < k_; ++kk) w16_[o * kp_ + kk] = wd[o * k_ + kk];
+    xz_ = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
+    pz_ = static_cast<int16_t>(ctx.attrs().get_int("pad_q", xz_) - xz_);
+    nout_ = multi_ ? ctx.outputs.size() : 1;
+    const int8_full::GemmEpilogue ep0(ctx);
+    vec_ = multi_ || (!ep0.f32 && !ep0.l8);
+    q_.assign(nout_, Q{});
+    for (size_t j = 0; j < nout_ && vec_; ++j) {
+      const int8_full::GemmEpilogue ep = multi_ ? int8_full::GemmEpilogue(ctx, static_cast<int>(j)) : ep0;
+      Q& q = q_[j];
+      q.bias.assign(static_cast<size_t>(op_), 0);
+      q.mult.assign(static_cast<size_t>(op_), 0);
+      q.lsh.assign(static_cast<size_t>(op_), 0);
+      q.nrs.assign(static_cast<size_t>(op_), 0);
+      for (int64_t o = 0; o < o_; ++o) {
+        q.bias[o] = ep.bias_q ? ep.bias_q[o] : 0;
+        q.mult[o] = ep.mult[o];
+        q.lsh[o] = std::max(ep.shift[o], 0);
+        q.nrs[o] = std::min(ep.shift[o], 0);
+      }
+    }
+  }
+
+  void run(const KernelContext& ctx) override {
+    const int8_t* x = ctx.in(0).data<int8_t>();
+    std::vector<int8_full::GemmEpilogue> eps;
+    if (multi_)
+      for (size_t j = 0; j < nout_; ++j) eps.emplace_back(ctx, static_cast<int>(j));
+    else
+      eps.emplace_back(ctx);
+    const int64_t rp = (rows_ + 1) / 2;
+    ctx.pool->parallel_for(rp, std::max<int64_t>(1, 2048 / std::max<int64_t>(o_ * kp_ / 64, 1)), [&](int64_t p0, int64_t p1) {
+      std::vector<int16_t> rbuf(static_cast<size_t>(2 * kp_));
+      std::vector<int32_t> acc(static_cast<size_t>(2 * op_));
+      for (int64_t p = p0; p < p1; ++p) {
+        const int64_t r0 = 2 * p, nr = std::min<int64_t>(2, rows_ - r0);
+        for (int64_t i = 0; i < 2; ++i) build_row(x, r0 + std::min<int64_t>(i, nr - 1), rbuf.data() + i * kp_);
+        const int16_t* xa = rbuf.data();
+        const int16_t* xb = rbuf.data() + kp_;
+        for (int64_t o = 0; o < op_; o += 4) {
+          int32x4_t a[4], b[4];
+          for (int j = 0; j < 4; ++j) a[j] = b[j] = vdupq_n_s32(0);
+          const int16_t* w0 = w16_.data() + o * kp_;
+          for (int64_t kk = 0; kk < kp_; kk += 8) {
+            const int16x8_t va = vld1q_s16(xa + kk), vb = vld1q_s16(xb + kk);
+            for (int j = 0; j < 4; ++j) {
+              const int16x8_t wv = vld1q_s16(w0 + j * kp_ + kk);
+              a[j] = vmlal_s16(a[j], vget_low_s16(va), vget_low_s16(wv));
+              a[j] = vmlal_s16(a[j], vget_high_s16(va), vget_high_s16(wv));
+              b[j] = vmlal_s16(b[j], vget_low_s16(vb), vget_low_s16(wv));
+              b[j] = vmlal_s16(b[j], vget_high_s16(vb), vget_high_s16(wv));
+            }
+          }
+          vst1q_s32(acc.data() + o, hsum4(a));
+          vst1q_s32(acc.data() + op_ + o, hsum4(b));
+        }
+        for (int64_t i = 0; i < nr; ++i) store_row(ctx, eps, acc.data() + i * op_, r0 + i);
+      }
+    });
+  }
+
+ private:
+  struct Q {
+    std::vector<int32_t> bias, mult, lsh, nrs;
+  };
+  // [sum(v0), sum(v1), sum(v2), sum(v3)] (exact int32 sums)
+  static int32x4_t hsum4(const int32x4_t* v) {
+    const int32x2_t s0 = vpadd_s32(vget_low_s32(v[0]), vget_high_s32(v[0])), s1 = vpadd_s32(vget_low_s32(v[1]), vget_high_s32(v[1]));
+    const int32x2_t s2 = vpadd_s32(vget_low_s32(v[2]), vget_high_s32(v[2])), s3 = vpadd_s32(vget_low_s32(v[3]), vget_high_s32(v[3]));
+    return vcombine_s32(vpadd_s32(s0, s1), vpadd_s32(s2, s3));
+  }
+  void build_row(const int8_t* x, int64_t r, int16_t* row) const {
+    std::fill(row + k_, row + kp_, int16_t(0));
+    if (dense_) {
+      const int8_t* xr = x + r * k_;
+      for (int64_t kk = 0; kk < k_; ++kk) row[kk] = static_cast<int16_t>(xr[kk] - xz_);
+      return;
+    }
+    const int64_t n = r / (g_.oh * g_.ow), oy = (r / g_.ow) % g_.oh, ox = r % g_.ow;
+    int64_t kk = 0;
+    for (int64_t ky = 0; ky < g_.kh; ++ky)
+      for (int64_t kx = 0; kx < g_.kw; ++kx) {
+        const int64_t iy = oy * g_.sh - g_.pt + ky * g_.dh, ix = ox * g_.sw - g_.pl + kx * g_.dw;
+        if (iy >= 0 && iy < g_.ih && ix >= 0 && ix < g_.iw) {
+          const int8_t* xr = x + ((n * g_.ih + iy) * g_.iw + ix) * g_.ic;
+          for (int64_t c = 0; c < g_.ic; ++c) row[kk + c] = static_cast<int16_t>(xr[c] - xz_);
+        } else {
+          for (int64_t c = 0; c < g_.ic; ++c) row[kk + c] = pz_;
+        }
+        kk += g_.ic;
+      }
+  }
+  void store_row(const KernelContext& ctx, const std::vector<int8_full::GemmEpilogue>& eps, const int32_t* acc, int64_t r) const {
+    if (!vec_) {
+      for (int64_t o = 0; o < o_; ++o) eps[0].store(ctx, r * o_ + o, o, acc[o]);
+      return;
+    }
+    for (size_t j = 0; j < nout_; ++j) {
+      const Q& q = q_[j];
+      const int8_full::GemmEpilogue& ep = eps[j];
+      int8_t* y = ctx.out(j).data<int8_t>() + r * o_;
+      const int32x4_t vzy = vdupq_n_s32(static_cast<int32_t>(ep.zy));
+      const int16x4_t lo = vdup_n_s16(static_cast<int16_t>(ep.lo)), hi = vdup_n_s16(static_cast<int16_t>(ep.hi));
+      int64_t o = 0;
+      for (; o + 4 <= o_; o += 4) {
+        int32x4_t s = vqaddq_s32(vld1q_s32(acc + o), vld1q_s32(q.bias.data() + o));
+        s = vqshlq_s32(s, vld1q_s32(q.lsh.data() + o));
+        s = vqaddq_s32(vrshlq_s32(vqrdmulhq_s32(s, vld1q_s32(q.mult.data() + o)), vld1q_s32(q.nrs.data() + o)), vzy);
+        const int16x4_t h = vmin_s16(vmax_s16(vqmovn_s32(s), lo), hi);
+        const int8x8_t b = vmovn_s16(vcombine_s16(h, h));
+        // y + o is not 4-byte aligned in general: a uint32_t* lane store gets an alignment hint on AArch32
+        // (vst1.32 {d}[0], [r:32] -> SIGBUS on a Cortex-A53); memcpy compiles to an unaligned-safe STR
+        const uint32_t w = vget_lane_u32(vreinterpret_u32_s8(b), 0);
+        std::memcpy(y + o, &w, 4);
+      }
+      for (; o < o_; ++o) y[o] = ep.q(acc[o], o);
+    }
+  }
+
+  Conv2DGeom g_{};
+  bool dense_ = false, multi_ = false, vec_ = false;
+  int64_t o_ = 0, op_ = 0, k_ = 0, kp_ = 0, rows_ = 0;
+  int32_t xz_ = 0;
+  int16_t pz_ = 0;
+  size_t nout_ = 1;
+  std::vector<int16_t> w16_;
+  std::vector<Q> q_;
+};
+// groups 1, no bit output, |x - z| <= 255 (int8 zero point) and |acc| <= K * 255 * 128 < 2^31
+bool gemm_s16_a32_supported(const KernelContext& ctx) {
+  const Tensor& w = ctx.in(1);
+  const int64_t k = w.size() / w.dim(0);
+  const int64_t xz = ctx.attrs().get_int("x_zero", 0), pq = ctx.attrs().get_int("pad_q", xz);
+  if (ctx.node->op != "I8Conv2DN" && ctx.has_in(5)) return false;
+  if (ctx.node->op != "I8Dense" && ctx.attrs().get_int("groups", 1) != 1) return false;
+  return xz >= -128 && xz <= 127 && pq >= -128 && pq <= 127 && k * 255 * 128 < (int64_t(1) << 31);
+}
+#endif  // BF_NEON_A32
 
 }  // namespace
 
@@ -2584,11 +3453,22 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8BConv2D", "i8bconv2d.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BConv2DRes", "i8bconv2dres.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BMatMul", "i8bmatmul.neon", kFeatNeon, bmatmul_i8_neon_supported, make_kernel<BMatMulI8Neon>);
+#if defined(__aarch64__)
   add("I8Conv2D", "i8conv2d.neon_sdot", kFeatNeon | kFeatDotProd, gemm_sdot_supported, make_kernel<GemmSdot>);
+#endif
+#if defined(__aarch64__)
   add("I8Dense", "i8dense.neon_sdot", kFeatNeon | kFeatDotProd, gemm_sdot_supported, make_kernel<GemmSdot>);
+#endif
+#if defined(__aarch64__)
+  add("I8Conv2DN", "i8conv2dn.neon_sdot", kFeatNeon | kFeatDotProd, gemm_sdot_supported, make_kernel<GemmSdot>);
+#endif
+#if defined(__aarch64__)
   add("I8MatMul", "i8matmul.neon_sdot", kFeatNeon | kFeatDotProd, matmul_sdot_supported, make_kernel<MatMulSdot>);
+#endif
   add("I8Lut", "i8lut.neon_channels", kFeatNeon, lut_channels_supported, make_kernel<LutChannelsNeon>);
   add("I8Lut", "i8lut.neon_rows", kFeatNeon, lut_rows_supported, make_kernel<LutRowsNeon>);
+  add("I8LutN", "i8lutn.neon", kFeatNeon, lutn_neon_supported, make_kernel<LutNNeon>);
+  add("I8AddN", "i8addn.neon", kFeatNeon, addn_neon_supported, make_kernel<AddNNeon>);
   add("I8Transpose", "i8transpose.neon", kFeatNeon, nullptr, make_kernel<TransposeNeon>);
   add("I8ReduceMean", "i8reducemean.neon", kFeatNeon, mean_last_supported, make_kernel<MeanLastNeon>);
   add("I8ReduceMean", "i8reducemean.neon_mid", kFeatNeon, mean_mid_supported, make_kernel<MeanMidNeon>);
@@ -2599,6 +3479,11 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8MaxPool2D", "i8maxpool2d.neon", kFeatNeon, pool_neon_supported, make_kernel<PoolNeon>);
   add("I8AvgPool2D", "i8avgpool2d.neon", kFeatNeon, nullptr, make_kernel<PoolNeon>);
   add("I8Conv2D", "i8conv2d.neon_depthwise", kFeatNeon, depthwise_neon_supported, make_kernel<DepthwiseNeon>);
+#if BF_NEON_A32
+  add("I8Conv2D", "i8conv2d.neon_a32", kFeatNeon, gemm_s16_a32_supported, make_kernel<GemmS16A32>);
+  add("I8Dense", "i8dense.neon_a32", kFeatNeon, gemm_s16_a32_supported, make_kernel<GemmS16A32>);
+  add("I8Conv2DN", "i8conv2dn.neon_a32", kFeatNeon, gemm_s16_a32_supported, make_kernel<GemmS16A32>);
+#endif
 }
 
 #else

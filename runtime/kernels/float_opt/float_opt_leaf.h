@@ -640,14 +640,16 @@ void leaf_fe_rows(const FeEvalArgs& e, float* y, int64_t r0, int64_t r1, void* s
   const int32_t** rid = reinterpret_cast<const int32_t**>(rp + e.n_ops);
   float* rowbuf = reinterpret_cast<float*>(rid + e.n_ops);
   if (e.flat && c % CW == 0) {
-    // Only plain row sources: rows [r0, r1) are one run of chunks (no per-row setup).
-    for (int32_t j = 0; j < e.n_row_ops; ++j) {
-      const FeMicro& m = e.ops[e.row_ops[j]];
-      rp[e.row_ops[j]] = (m.p ? m.p : y) + r0 * c;
+    // Only plain row sources and gates: the rows of one batch are one run of chunks (no per-row setup).
+    for (int64_t s0 = r0; s0 < r1;) {
+      const int64_t b = s0 / e.rows_per_batch, s1 = leaf_min_i(r1, (b + 1) * e.rows_per_batch);
+      for (int32_t j = 0; j < e.n_row_ops; ++j) {
+        const FeMicro& m = e.ops[e.row_ops[j]];
+        rp[e.row_ops[j]] = m.op == kFeGate ? m.p + b * c : (m.p ? m.p : y) + s0 * c;
+      }
+      FeChunk<V, NV>::run_chunks(e, rp, rid, 0, 0, (s1 - s0) * c / CW, c, y + s0 * c);
+      s0 = s1;
     }
-    float* yb = y + r0 * c;
-    const int64_t n = (r1 - r0) * c;
-    if (n > 0) FeChunk<V, NV>::run_chunks(e, rp, rid, 0, 0, n / CW, c, yb);
     return;
   }
   for (int64_t r = r0; r < r1; ++r) {
@@ -662,6 +664,11 @@ void leaf_fe_rows(const FeEvalArgs& e, float* y, int64_t r0, int64_t r1, void* s
         case kFeSrcRow: rp[k] = (m.p ? m.p : y) + r * c; break;
         case kFeSrcTile: rp[k] = m.p + r * m.w; break;
         case kFeSrcGather: rid[k] = m.ids + r * (c / m.w); break;
+        case kFeSrcGatherWhole: {
+          const int64_t id = m.ids[r];
+          rp[k] = id < 0 || id >= m.v ? m.q : m.p + id * c;
+          break;
+        }
         case kFeSrcTileRow: {
           float* d = rowbuf + m.slot * c;
           const float* x = m.p + r * m.w;

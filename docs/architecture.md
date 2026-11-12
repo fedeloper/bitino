@@ -39,6 +39,10 @@ code location and its own tests.
      (the next layer reads the bits). All are bit-exact (same float operations in the same order per element,
      the stored bit is the binarization the consumer would have computed); the `Model` is never modified
      (`docs/operators.md` § Plan-time rewrites);
+  1c. int8_full rewrites with `SessionOptions::fuse` (`src/graph_rewrite_i8.h`, any stage, I8* nodes only): element-wise
+     ops of one tensor collapsed to a LUT, LUT chains composed, LUTs read only by binarizations folded into integer
+     thresholds, the out_lut absorption into `I8BConv2DRes`, and twin nodes (same inputs) merged into internal
+     multi-output nodes (`I8LutN`, `I8AddN`, `I8Conv2DN`); exact by construction (`docs/int8.md` § "int8_full latency");
   2. memory planning (graph inputs and outputs get dedicated buffers; intermediates share
      buffers by liveness; a node never aliases its own inputs, except that a `Reshape` output is a
      view of its input's buffer, which then lives until the last use of any view, unless the

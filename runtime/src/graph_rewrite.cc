@@ -1,6 +1,8 @@
 #include "src/graph_rewrite.h"
 
 #include <algorithm>
+#include <cmath>
+#include <cstring>
 #include <map>
 #include <tuple>
 #include <string>
@@ -86,6 +88,152 @@ int fold_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, co
       if (bn.inputs.size() < 5) bn.inputs.resize(5, -1);
       bn.inputs[0] = x;
       bn.inputs[4] = thr_id;
+    }
+    removed[n] = true;
+    ++folded;
+  }
+  std::vector<Node> kept;
+  for (size_t n = 0; n < nodes.size(); ++n)
+    if (!removed[n]) kept.push_back(std::move(nodes[n]));
+  nodes.swap(kept);
+  return folded;
+}
+
+// ------------------------------------------------- scaled threshold folding
+// ChannelAffine(x, scale s, bias b or none) whose output only feeds the binarized f32 input 0 of BConv2D / BDense
+// nodes (ge / gt, no threshold input, no w_zero) is removed (DenseNet / MeliusNet batch norms before each binary
+// convolution); the consumers binarize x against per-channel thresholds instead. f(x) = fl(fl(x * s) + b) (the
+// ChannelAffine kernels' separately rounded operations) is monotone in x, so {x : f(x) >= 0} (gt: f(x) > 0) is
+// {x >= t} for s > 0 and {x <= u} for s < 0, with t / u found by bisection over the ordered floats. A channel with
+// s < 0 is binarized as x >= next(u) (the negated value), and the consumer's weights of that input channel are
+// negated (bits flipped in a copy of the weights), which leaves every product unchanged; only consumers without
+// groups and with pad_value 0 accept negated channels. Exact for finite x (as fold_thresholds); channels with
+// s == 0, non-finite s or b, or an always / never true binarization leave the node alone.
+inline int64_t float_order(float v) {
+  uint32_t u;
+  std::memcpy(&u, &v, 4);
+  return (u & 0x80000000u) ? -static_cast<int64_t>(u & 0x7fffffffu) : static_cast<int64_t>(u);
+}
+inline float order_float(int64_t k) {
+  const uint32_t u = k >= 0 ? static_cast<uint32_t>(k) : (0x80000000u | static_cast<uint32_t>(-k));
+  float v;
+  std::memcpy(&v, &u, 4);
+  return v;
+}
+
+// Threshold of channel (s, b) in ge form for the consumer mode `gt`: x >= *t <=> binarized value +1 (finite x).
+// *negate: the channel's value is negated (s < 0). False if the channel cannot be folded.
+bool scaled_threshold(float s, float b, bool gt, float* t, bool* negate) {
+  if (!std::isfinite(s) || !std::isfinite(b) || s == 0.f) return false;
+  auto pos = [&](int64_t k) {
+    const float y = order_float(k) * s;  // separately rounded (-ffp-contract=off), as ChannelAffine
+    const float v = y + b;
+    return gt ? v > 0.f : v >= 0.f;
+  };
+  const int64_t lo = float_order(-INFINITY), hi = float_order(INFINITY);
+  if (s > 0.f) {  // smallest k with pos(k)
+    if (!pos(hi) || pos(lo)) return false;
+    int64_t a = lo, z = hi;  // pos(a) false, pos(z) true
+    while (z - a > 1) {
+      const int64_t mid = a + (z - a) / 2;
+      (pos(mid) ? z : a) = mid;
+    }
+    *t = order_float(z);
+    *negate = false;
+  } else {  // largest k with pos(k), then the next float
+    if (!pos(lo) || pos(hi)) return false;
+    int64_t a = lo, z = hi;  // pos(a) true, pos(z) false
+    while (z - a > 1) {
+      const int64_t mid = a + (z - a) / 2;
+      (pos(mid) ? a : z) = mid;
+    }
+    *t = order_float(z);
+    *negate = true;
+  }
+  return true;
+}
+
+int fold_scaled_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& outputs) {
+  int folded = 0;
+  Uses u = compute_uses(nodes, infos.size(), outputs);
+  std::vector<bool> removed(nodes.size(), false);
+  for (size_t n = 0; n < nodes.size(); ++n) {
+    Node& ca = nodes[n];
+    if (ca.op != "ChannelAffine") continue;
+    const int scale = in_at(ca, 1), bias = in_at(ca, 2), x = in_at(ca, 0), t = ca.outputs[0];
+    if (scale < 0 || !infos[scale].is_constant || (bias >= 0 && !infos[bias].is_constant) || u.is_output[t] || u.count[t] == 0) continue;
+    std::vector<size_t> cons;
+    bool ok = true, gt = false;
+    for (size_t c = n + 1; c < nodes.size() && ok; ++c) {
+      bool uses_t = false;
+      for (int id : nodes[c].inputs) uses_t |= id == t;
+      if (!uses_t) continue;
+      const Node& cn = nodes[c];
+      const std::string m = cn.attrs.get_string("input_binarize", "ge");
+      if (removed[c] || !binarizes_f32_input(cn, t) || m == "sign_zero" || (cn.op == "BDense" && in_at(cn, 3) >= 0) ||
+          !infos[in_at(cn, 1)].is_constant || (!cons.empty() && (m == "gt") != gt)) {
+        ok = false;
+      } else {
+        gt = m == "gt";
+        cons.push_back(c);
+      }
+    }
+    if (!ok || static_cast<int>(cons.size()) != u.count[t]) continue;
+    const Tensor& st = infos[scale].constant;
+    const int64_t ch = st.size();
+    if (infos[t].shape.empty() || infos[t].shape.back() != ch || (bias >= 0 && infos[bias].constant.size() != ch)) continue;
+    std::vector<float> thr(static_cast<size_t>(ch));
+    std::vector<uint8_t> neg(static_cast<size_t>(ch), 0);
+    bool any_neg = false;
+    for (int64_t c = 0; c < ch && ok; ++c) {
+      bool ng = false;
+      ok = scaled_threshold(st.data<float>()[c], bias >= 0 ? infos[bias].constant.data<float>()[c] : 0.f, gt, &thr[c], &ng);
+      neg[c] = ng;
+      any_neg |= ng;
+    }
+    if (!ok) continue;
+    if (any_neg)  // negated channels: the consumers' weights are flipped (groups 1, no padding value to correct)
+      for (size_t c : cons) {
+        const Node& cn = nodes[c];
+        const Tensor& w = infos[in_at(cn, 1)].constant;
+        if (w.dtype() != DType::kBit || w.dim(-1) != ch ||
+            (cn.op == "BConv2D" && (cn.attrs.get_int("groups", 1) != 1 || cn.attrs.get_number("pad_value", 0.0) != 0.0)))
+          ok = false;
+      }
+    if (!ok) continue;
+    TensorInfo th;
+    th.name = ca.name + "/folded_scaled_threshold";
+    th.dtype = DType::kF32;
+    th.shape = {ch};
+    th.is_constant = true;
+    th.constant = Tensor::allocate(DType::kF32, th.shape);
+    std::copy(thr.begin(), thr.end(), th.constant.data<float>());
+    const int thr_id = static_cast<int>(infos.size());
+    infos.push_back(std::move(th));
+    for (size_t c : cons) {
+      Node& bn = nodes[c];
+      if (any_neg) {
+        const TensorInfo& wi = infos[in_at(bn, 1)];
+        TensorInfo nw;
+        nw.name = wi.name + "/negated_inputs_" + ca.name;
+        nw.dtype = DType::kBit;
+        nw.shape = wi.shape;
+        nw.layout = wi.layout;
+        nw.is_constant = true;
+        nw.constant = Tensor::allocate(DType::kBit, wi.shape);
+        std::memcpy(nw.constant.raw(), wi.constant.raw(), wi.constant.bytes());
+        uint32_t* words = nw.constant.data<uint32_t>();
+        const int64_t rw = bit_words(ch), rows = num_elements(wi.shape) / ch;
+        for (int64_t r = 0; r < rows; ++r)
+          for (int64_t c2 = 0; c2 < ch; ++c2)
+            if (neg[c2]) words[r * rw + (c2 >> 5)] ^= 1u << (c2 & 31);
+        bn.inputs[1] = static_cast<int>(infos.size());
+        infos.push_back(std::move(nw));
+      }
+      if (bn.inputs.size() < 5) bn.inputs.resize(5, -1);
+      bn.inputs[0] = x;
+      bn.inputs[4] = thr_id;
+      bn.attrs["input_binarize"] = Json("ge");
     }
     removed[n] = true;
     ++folded;
@@ -544,6 +692,7 @@ RewriteStats rewrite_graph(std::vector<Node>& nodes, std::vector<TensorInfo>& in
                            const RewriteOptions& opts) {
   RewriteStats st;
   if (opts.fold_thresholds) st.thresholds_folded = fold_thresholds(nodes, infos, graph_outputs);
+  if (opts.fold_thresholds) st.thresholds_folded += fold_scaled_thresholds(nodes, infos, graph_outputs);
   if (opts.fuse_elementwise) {
     RewriteStats f = Fuser(nodes, infos, graph_outputs, opts).run();
     st.fused_nodes = f.fused_nodes;

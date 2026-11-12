@@ -130,6 +130,58 @@ void infer_add_mul(const Node& n, const Ins& ins, Outs& outs) {
   set_out(outs, DType::kI8, a.shape);
 }
 
+// Internal twin operators (created by the int8 plan-time rewrites, src/graph_rewrite_i8.h; never in a model file):
+// I8LutN(x, T_0, ..., T_{k-1}) -> y_0..y_{k-1}: y_j = I8Lut(x, T_j) with int8 tables of 1 row or one row per channel of
+// the last axis. I8AddN(a, b) -> y_0..y_{k-1}: y_j = I8Add(a, b) with the shared input attributes and the j-th entries
+// of out_mults / out_shifts / y_zeros / qmins / qmaxs.
+void infer_lutn(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  BF_CHECK(!x.shape.empty() && ins.size() >= 3 && outs.size() == ins.size() - 1, "I8LutN: x, k >= 2 tables, k outputs");
+  for (size_t j = 1; j < ins.size(); ++j) {
+    const auto& t = req(ins, j, "table");
+    BF_CHECK(t.dtype == DType::kI8 && t.shape.size() == 2 && t.shape[1] == 256 && (t.shape[0] == 1 || t.shape[0] == x.shape.back()),
+             "I8LutN tables must be i8 [1 | C, 256]");
+    outs[j - 1]->dtype = DType::kI8;
+    outs[j - 1]->shape = x.shape;
+  }
+}
+
+// I8Conv2DN(x, w, bias?, mult_0, shift_0, ..., mult_{k-1}, shift_{k-1}) -> y_0..y_{k-1}: k I8Conv2D (int8 output, no bit
+// output) with the same x, w, bias and geometry, differing in mult / shift and y_zeros[j] / qmins[j] / qmaxs[j].
+void infer_conv2dn(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  const auto& w = req_i8(ins, 1, "w");
+  auto g = conv_geometry(n.attrs, x.shape, w.shape);
+  const size_t k = outs.size();
+  BF_CHECK(k >= 2 && ins.size() == 3 + 2 * k, "I8Conv2DN: x, w, bias?, then mult / shift per output");
+  if (has(ins, 2)) check_vec(ins, 2, DType::kI32, g.oc, "bias");
+  for (const char* key : {"y_zeros", "qmins", "qmaxs"}) BF_CHECK(n.attrs.get_ints(key, {}).size() == k, "I8Conv2DN: ", key, " per output");
+  const auto lo = n.attrs.get_ints("qmins", {}), hi = n.attrs.get_ints("qmaxs", {});
+  for (size_t j = 0; j < k; ++j) {
+    check_vec(ins, 3 + 2 * j, DType::kI32, g.oc, "mult");
+    check_vec(ins, 4 + 2 * j, DType::kI32, g.oc, "shift");
+    BF_CHECK(-128 <= lo[j] && lo[j] <= hi[j] && hi[j] <= 127, "I8Conv2DN: qmin/qmax out of range");
+    outs[j]->dtype = DType::kI8;
+    outs[j]->shape = {g.n, g.oh, g.ow, g.oc};
+  }
+}
+
+void infer_addn(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& a = req_i8(ins, 0, "a");
+  const auto& b = req_i8(ins, 1, "b");
+  BF_CHECK(broadcastable(a.shape, b.shape), n.op, ": b ", shape_str(b.shape), " does not broadcast to a ", shape_str(a.shape));
+  const size_t k = outs.size();
+  BF_CHECK(k >= 2, "I8AddN needs >= 2 outputs");
+  for (const char* key : {"out_mults", "out_shifts", "y_zeros", "qmins", "qmaxs"})
+    BF_CHECK(n.attrs.get_ints(key, {}).size() == k, "I8AddN: ", key, " needs one entry per output");
+  const auto lo = n.attrs.get_ints("qmins", {}), hi = n.attrs.get_ints("qmaxs", {});
+  for (size_t j = 0; j < k; ++j) {
+    BF_CHECK(-128 <= lo[j] && lo[j] <= hi[j] && hi[j] <= 127, "I8AddN: qmin/qmax out of range");
+    outs[j]->dtype = DType::kI8;
+    outs[j]->shape = a.shape;
+  }
+}
+
 // I8AffineSum(x_0..x_{N-1}, K i32[N, C'], B i32[C']), C' in {1, C}: same-shape int8 inputs.
 void infer_affine_sum(const Node& n, const Ins& ins, Outs& outs) {
   BF_CHECK(ins.size() >= 3, "I8AffineSum needs at least one input plus K and B");
@@ -421,6 +473,9 @@ void register_int8_full_op_defs(OpRegistry& reg) {
   reg.add_op({"I8Add", infer_add_mul});
   reg.add_op({"I8Mul", infer_add_mul});
   reg.add_op({"I8AffineSum", infer_affine_sum});
+  reg.add_op({"I8LutN", infer_lutn});
+  reg.add_op({"I8AddN", infer_addn});
+  reg.add_op({"I8Conv2DN", infer_conv2dn});
   reg.add_op({"I8Conv2D", infer_conv});
   reg.add_op({"I8Dense", infer_dense});
   reg.add_op({"I8MatMul", infer_matmul});

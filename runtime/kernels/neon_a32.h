@@ -264,6 +264,47 @@ BF_A32_INLINE uint32_t bf_a32_udiv(uint32_t a, uint32_t b) {
 #endif
 }
 
+// ---- integer intrinsics of the int8_full NEON kernels (kernels/int8_full/int8_full_neon.cc; 2026-11-12): the
+// AArch64 "high half" forms are the AArch32 operation on the high halves (same lanes, same saturation), the
+// reductions are pairwise-add / max trees (exact integer sums), TRN1 / TRN2 are the two results of VTRN.
+BF_A32_INLINE int32x4_t vmlal_high_s16(int32x4_t a, int16x8_t b, int16x8_t c) { return vmlal_s16(a, vget_high_s16(b), vget_high_s16(c)); }
+BF_A32_INLINE int32x4_t vmull_high_s16(int16x8_t a, int16x8_t b) { return vmull_s16(vget_high_s16(a), vget_high_s16(b)); }
+BF_A32_INLINE int32x4_t vmlal_high_n_s16(int32x4_t a, int16x8_t b, int16_t c) { return vmlal_n_s16(a, vget_high_s16(b), c); }
+BF_A32_INLINE int16x8_t vqmovn_high_s32(int16x4_t r, int32x4_t a) { return vcombine_s16(r, vqmovn_s32(a)); }
+BF_A32_INLINE int8x16_t vqmovn_high_s16(int8x8_t r, int16x8_t a) { return vcombine_s8(r, vqmovn_s16(a)); }
+BF_A32_INLINE int16x8_t vsubl_high_s8(int8x16_t a, int8x16_t b) { return vsubl_s8(vget_high_s8(a), vget_high_s8(b)); }
+BF_A32_INLINE int16x8_t vaddl_high_s8(int8x16_t a, int8x16_t b) { return vaddl_s8(vget_high_s8(a), vget_high_s8(b)); }
+BF_A32_INLINE int16x8_t vaddw_high_s8(int16x8_t a, int8x16_t b) { return vaddw_s8(a, vget_high_s8(b)); }
+BF_A32_INLINE int32x4_t vaddw_high_s16(int32x4_t a, int16x8_t b) { return vaddw_s16(a, vget_high_s16(b)); }
+#define vshll_high_n_s16(a, n) vshll_n_s16(vget_high_s16(a), (n))
+#define vshrn_high_n_s32(r, a, n) vcombine_s16((r), vshrn_n_s32((a), (n)))
+// sum of 8 bytes modulo 256 (ADDV.8B)
+BF_A32_INLINE uint8_t vaddv_u8(uint8x8_t v) {
+  const uint64x1_t s = vpaddl_u32(vpaddl_u16(vpaddl_u8(v)));
+  return static_cast<uint8_t>(vget_lane_u64(s, 0));
+}
+BF_A32_INLINE int32_t vaddlvq_s16(int16x8_t v) {
+  const int64x2_t s = vpaddlq_s32(vpaddlq_s16(v));
+  return static_cast<int32_t>(vgetq_lane_s64(s, 0) + vgetq_lane_s64(s, 1));
+}
+BF_A32_INLINE int8_t vmaxvq_s8(int8x16_t v) {
+  int8x8_t m = vpmax_s8(vget_low_s8(v), vget_high_s8(v));
+  m = vpmax_s8(m, m);
+  m = vpmax_s8(m, m);
+  m = vpmax_s8(m, m);
+  return vget_lane_s8(m, 0);
+}
+BF_A32_INLINE uint16x8_t vcltzq_s16(int16x8_t v) { return vcltq_s16(v, vdupq_n_s16(0)); }
+BF_A32_INLINE uint32x4_t vcltzq_s32(int32x4_t v) { return vcltq_s32(v, vdupq_n_s32(0)); }
+BF_A32_INLINE uint8x16_t vtrn1q_u8(uint8x16_t a, uint8x16_t b) { return vtrnq_u8(a, b).val[0]; }
+BF_A32_INLINE uint8x16_t vtrn2q_u8(uint8x16_t a, uint8x16_t b) { return vtrnq_u8(a, b).val[1]; }
+BF_A32_INLINE uint16x8_t vtrn1q_u16(uint16x8_t a, uint16x8_t b) { return vtrnq_u16(a, b).val[0]; }
+BF_A32_INLINE uint16x8_t vtrn2q_u16(uint16x8_t a, uint16x8_t b) { return vtrnq_u16(a, b).val[1]; }
+BF_A32_INLINE uint32x4_t vtrn1q_u32(uint32x4_t a, uint32x4_t b) { return vtrnq_u32(a, b).val[0]; }
+BF_A32_INLINE uint32x4_t vtrn2q_u32(uint32x4_t a, uint32x4_t b) { return vtrnq_u32(a, b).val[1]; }
+BF_A32_INLINE uint64x2_t vtrn1q_u64(uint64x2_t a, uint64x2_t b) { return vcombine_u64(vget_low_u64(a), vget_low_u64(b)); }
+BF_A32_INLINE uint64x2_t vtrn2q_u64(uint64x2_t a, uint64x2_t b) { return vcombine_u64(vget_high_u64(a), vget_high_u64(b)); }
+
 #undef BF_A32_INLINE
 #else
 #define BF_NEON_A32 0

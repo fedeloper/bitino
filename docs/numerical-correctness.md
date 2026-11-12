@@ -311,6 +311,16 @@ the AArch32 builds of the NEON kernels do about it:
   (`float_conv2d_neon_gemm_tile_order_exact`). Stage `neon` stays bit-identical to the numpy executor on the
   device eval sets (validate_model.py `--accept-exact-numpy`); stage `all` is judged by the usual tolerances.
 
+* int8_full on armeabi-v7a (2026-11-12): the `int8_full_neon` kernels run there through `kernels/neon_a32.h`.
+  Integer kernels (LUTs, AffineSum, Add, Mul, pooling, means, the SMLAL GEMM `i8conv2d.neon_a32`) are exact on both
+  ISAs. The fp32 steps end in an int8 rounding, which absorbs a flushed denormal (a denormal and +-0 both round to
+  code 0): I8Quantize (`x / s` by IEEE VFP division, or an exact power-of-two reciprocal), I8LayerNorm (`u * r` with an
+  integer `|u| >= 1` cannot be denormal; `v * G` denormal only for `|G| < 2^-100`, and then `w + B` equals the IEEE sum
+  whenever its rounding can be nonzero), I8Softmax, the int8 outputs of the binary layers. fp32 graph outputs
+  (`output: f32` of I8BDense / I8BConv2D / I8BMatMul / I8Softmax) and I8BConv2DRes (fp32 residual sums and bit
+  compares) stay on the IEEE portable / reference kernels on armeabi-v7a, so int8_full outputs are byte-identical to the
+  AArch64 ones (checked under qemu-arm and on the Redmi 9A).
+
 ## Binarization semantics that must be preserved
 
 | Source | sign(0) | padding of binarized inputs | IR attributes |

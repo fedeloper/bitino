@@ -10,6 +10,7 @@
 #include "bitino/error.h"
 #include "bitino/util.h"
 #include "src/graph_rewrite.h"
+#include "src/graph_rewrite_i8.h"
 
 namespace bitino {
 namespace {
@@ -107,6 +108,31 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     }
   }
 
+  // 1c'. int8_full rewrites (bit-exact, independent of the tiers; src/graph_rewrite_i8.h): LUT composition and
+  // threshold folding through LUTs here, twin merging after 1c.
+  auto check_rewritten = [&](const char* what) {
+    for (const Node& node : nodes_) {
+      if (node.op != "I8LutN" && node.op != "I8AddN" && node.op != "I8Conv2DN" && node.op != "I8Lut" && node.op != "I8BConv2D" && node.op != "I8BDense") continue;
+      std::vector<const TensorInfo*> ins;
+      for (int id : node.inputs) ins.push_back(id >= 0 ? &infos_[id] : nullptr);
+      std::vector<TensorInfo> check;
+      for (int id : node.outputs) check.push_back(infos_[id]);
+      std::vector<TensorInfo*> outs;
+      for (auto& c : check) outs.push_back(&c);
+      reg.find_op(node.op)->infer(node, ins, outs);
+      for (size_t i = 0; i < check.size(); ++i)
+        BF_CHECK(check[i].shape == infos_[node.outputs[i]].shape && check[i].dtype == infos_[node.outputs[i]].dtype, what, ": rewritten node '",
+                 node.name, "' changed an output shape or dtype");
+    }
+  };
+  if (opts_.fuse) {
+    I8RewriteStats st = rewrite_int8_luts(nodes_, infos_, g.outputs);
+    i8_rewrites_[0] += st.composed_luts + st.collapsed_ops;
+    i8_rewrites_[1] += st.folded_luts;
+    i8_rewrites_[2] += st.removed_luts;
+    if (st.composed_luts || st.folded_luts || st.collapsed_ops) check_rewritten("int8 LUT rewrite");
+  }
+
   // 1c. int8_full rewrite (bit-exact, independent of the tiers): an I8Lut with one table row whose input is output 0
   // of an I8BConv2DRes, read by nothing else and not a graph output, becomes that node's out_lut (input 9): the
   // kernel writes the remapped codes and the separate pass (and its parallel region) disappears.
@@ -143,6 +169,14 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
         if (!drop[s]) kept.push_back(std::move(nodes_[s]));
       nodes_ = std::move(kept);
     }
+  }
+
+  if (opts_.fuse) {
+    I8RewriteStats st = rewrite_int8_twins(nodes_, infos_, g.outputs);
+    i8_rewrites_[3] += st.lut_twins;
+    i8_rewrites_[4] += st.add_twins + st.conv_twins;
+    i8_rewrites_[5] += st.merged_nodes;
+    if (st.lut_twins || st.add_twins || st.conv_twins) check_rewritten("int8 twin rewrite");
   }
 
   // 2. Activation memory: constants are views into the model; graph inputs and
@@ -269,8 +303,11 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
   }
 #endif
   profile_.resize(steps_.size());
-  for (size_t i = 0; i < steps_.size(); ++i)
-    profile_[i] = NodeProfile{steps_[i].node->name, steps_[i].node->op, steps_[i].def->name, 0, 0};
+  for (size_t i = 0; i < steps_.size(); ++i) {
+    profile_[i] = NodeProfile{steps_[i].node->name, steps_[i].node->op, steps_[i].def->name, 0, 0, 0};
+    if (!steps_[i].node->outputs.empty() && steps_[i].node->outputs[0] >= 0)
+      profile_[i].out_elems = num_elements(infos_[steps_[i].node->outputs[0]].shape);
+  }
   prepare_ms_ = now_ms() - t0;
 }
 

@@ -58,6 +58,16 @@ struct GemmEpilogue {
       hi = static_cast<int>(ctx.attrs().get_int("qmax", 127));
     }
   }
+  // Output j of I8Conv2DN (internal twin node, src/graph_rewrite_i8.h): bias in(2), mult in(3 + 2j), shift in(4 + 2j),
+  // y_zeros[j] / qmins[j] / qmaxs[j]; int8 output.
+  GemmEpilogue(const KernelContext& ctx, int j) {
+    bias_q = ctx.has_in(2) ? ctx.in(2).data<int32_t>() : nullptr;
+    mult = ctx.in(3 + 2 * j).data<int32_t>();
+    shift = ctx.in(4 + 2 * j).data<int32_t>();
+    zy = ctx.attrs().get_ints("y_zeros", {})[static_cast<size_t>(j)];
+    lo = static_cast<int>(ctx.attrs().get_ints("qmins", {})[static_cast<size_t>(j)]);
+    hi = static_cast<int>(ctx.attrs().get_ints("qmaxs", {})[static_cast<size_t>(j)]);
+  }
   int8_t q(int64_t acc, int64_t o) const {
     const int64_t a = acc + (bias_q ? bias_q[o] : 0);
     return q8::clamp8(zy + q8::requant(q8::sat32(a), mult[o], shift[o]), lo, hi);

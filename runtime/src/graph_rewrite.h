@@ -8,6 +8,11 @@
 //    no threshold input) is removed and becomes the consumers' threshold -b.
 //    Exact because fl(x + b) and x + b have the same sign (and are zero
 //    together) for finite x, b: fl(x + b) >= 0 <=> x >= -b, likewise > 0, < 0.
+//    With a scale s (fold_scaled_thresholds; ge / gt consumers): the channel's
+//    threshold t, fl(fl(x * s) + b) >= 0 (gt: > 0) <=> x >= t, is found by
+//    bisection over the ordered floats (monotone for s != 0); channels with
+//    s < 0 are binarized negated and the consumers' weights of that channel
+//    flipped (a BConv2D only without groups and with pad_value 0). Finite x.
 //  * fuse_elementwise: maximal trees of elementwise nodes (ChannelAffine, Add,
 //    Mul, Activation relu/relu6/hardtanh/prelu/leaky_relu/sign/sign_zero,
 //    ChannelGate) whose inner results have exactly one consumer become one

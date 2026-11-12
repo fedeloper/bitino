@@ -32,6 +32,8 @@
 // panels); the N split is only used when there are too few (group, pixel
 // block) items to feed the pool.
 #include <cstring>
+#include <type_traits>
+#include <vector>
 
 #include "kernels/float_opt/float_opt.h"
 #include "kernels/float_opt/float_opt_args.h"
@@ -290,8 +292,103 @@ inline void gemv_kernel(const float* a, int64_t kc, const float* bp, float* c, i
   std::memcpy(c, tile, static_cast<size_t>(nvalid) * sizeof(float));
 }
 
+// ---- 4-column panels (N <= 4: e.g. the RGB output convolution of image restoration / super-resolution models,
+// where an 8-column tile computes 5 of 8 columns on padding). Same per-element arithmetic as micro_kernel /
+// gemv_kernel, so the results do not depend on the panel width: tile rows start from the bias (or C) and take one
+// madd per k in ascending order; GEMV rows keep gemv_kernel's four partial sums (one per k mod 4).
+// Rows per tile: 8 (AArch64: 8 accumulators + 8 A + 4 B registers), 4 on 32-bit ARM (the by-scalar operand of
+// VMLA must sit in q0-q7).
+constexpr int kMR4 = BF_FLOAT_OPT_NEON32 ? 4 : 8;
+
+template <int MR>
+inline void micro_kernel_n4(const float* a, int64_t lda, int mvalid, int64_t kc, const float* bp, float* c, int64_t ldc, int nvalid,
+                            const float* bias, bool last, Activation act) {
+  const float* ar[MR];
+  for (int i = 0; i < MR; ++i) ar[i] = a + std::min(i, mvalid - 1) * lda;
+  f32x4 acc[MR];
+  if (bias) {
+    const f32x4 b0 = load(bias);
+    for (int i = 0; i < MR; ++i) acc[i] = b0;
+  } else {
+    for (int i = 0; i < MR; ++i) {
+      float t[4] = {0.f, 0.f, 0.f, 0.f};
+      if (i < mvalid)
+        for (int j = 0; j < nvalid; ++j) t[j] = c[i * ldc + j];
+      acc[i] = load(t);
+    }
+  }
+  int64_t k = 0;
+  for (; k + 4 <= kc; k += 4) {
+    const float* b = bp + k * 4;
+    const f32x4 b0 = load(b), b1 = load(b + 4), b2 = load(b + 8), b3 = load(b + 12);
+    for (int i = 0; i < MR; ++i) {
+      const f32x4 av = load(ar[i] + k);
+      acc[i] = madd_lane<0>(acc[i], b0, av);
+      acc[i] = madd_lane<1>(acc[i], b1, av);
+      acc[i] = madd_lane<2>(acc[i], b2, av);
+      acc[i] = madd_lane<3>(acc[i], b3, av);
+    }
+  }
+  for (; k < kc; ++k) {
+    const f32x4 b0 = load(bp + k * 4);
+    for (int i = 0; i < MR; ++i) acc[i] = madd(acc[i], b0, dup(ar[i][k]));
+  }
+  for (int i = 0; i < mvalid; ++i) {
+    const f32x4 v = last ? activate(act, acc[i]) : acc[i];
+    if (nvalid == 4) {
+      store(c + i * ldc, v);
+    } else {
+      float t[4];
+      store(t, v);
+      for (int j = 0; j < nvalid; ++j) c[i * ldc + j] = t[j];
+    }
+  }
+}
+
+// gemv_kernel on a 4-column panel (its columns 0-3).
+inline void gemv_kernel_n4(const float* a, int64_t kc, const float* bp, float* c, int nvalid, const float* bias, bool last,
+                           Activation act) {
+  f32x4 s[4];
+  for (auto& r : s) r = dup(0.f);
+  int64_t k = 0;
+  for (; k + 4 <= kc; k += 4) {
+    const f32x4 av = load(a + k);
+    const float* b = bp + k * 4;
+    s[0] = madd_lane<0>(s[0], load(b), av);
+    s[1] = madd_lane<1>(s[1], load(b + 4), av);
+    s[2] = madd_lane<2>(s[2], load(b + 8), av);
+    s[3] = madd_lane<3>(s[3], load(b + 12), av);
+  }
+  for (; k < kc; ++k) s[0] = madd(s[0], load(bp + k * 4), dup(a[k]));
+  float tile[4] = {0.f, 0.f, 0.f, 0.f};
+  if (bias) std::memcpy(tile, bias, sizeof tile);
+  else std::memcpy(tile, c, static_cast<size_t>(nvalid) * sizeof(float));
+  const f32x4 v = add(load(tile), add(add(s[0], s[1]), add(s[2], s[3])));
+  store(tile, last ? activate(act, v) : v);
+  std::memcpy(c, tile, static_cast<size_t>(nvalid) * sizeof(float));
+}
+
+void gemm_block_simd4_n4(const GemmBlockArgs& g) {
+  const bool last = g.last != 0;
+  const Activation act = static_cast<Activation>(g.act);
+  const int64_t rows = g.rows, lda = g.lda, ldc = g.ldc;
+  // rows of whole 8-row tiles or of a masked tile (>= 4 rows) in gemm_block_simd4; the rest are GEMV rows
+  const int64_t rem = rows % kMR, tile_rows = rem >= 4 ? rows : rows - rem;
+  for (int64_t p = g.p0; p < g.p1; ++p) {
+    const float* bp = g.bp + p * g.panel_stride;
+    const float* bias_p = g.bias ? g.bias + p * 4 : nullptr;
+    const int nvalid = static_cast<int>(std::min<int64_t>(4, g.ncols - p * 4));
+    float* cp = g.c + p * 4;
+    for (int64_t m = 0; m < tile_rows; m += kMR4)
+      micro_kernel_n4<kMR4>(g.a + m * lda, lda, static_cast<int>(std::min<int64_t>(kMR4, tile_rows - m)), g.kc, bp, cp + m * ldc, ldc,
+                            nvalid, bias_p, last, act);
+    for (int64_t m = tile_rows; m < rows; ++m) gemv_kernel_n4(g.a + m * lda, g.kc, bp, cp + m * ldc, nvalid, bias_p, last, act);
+  }
+}
+
 // One GEMM block on the Simd4 backend (GemmBlockArgs: float_opt_args.h).
 void gemm_block_simd4(const GemmBlockArgs& g) {
+  if (g.nr == 4) return gemm_block_simd4_n4(g);
   const bool last = g.last != 0;
   const Activation act = static_cast<Activation>(g.act);
   for (int64_t p = g.p0; p < g.p1; ++p) {
@@ -314,11 +411,13 @@ void gemm_block_simd4(const GemmBlockArgs& g) {
 
 // ------------------------------------------------------------- backends
 struct Simd4Gemm {
-  // pixels per work item (multiple of kMR); 32-bit ARM: 32, so that an im2col block of a 7x7x3 stem (147 floats a
-  // row) stays in the A53's 32 KB L1 while it is read once per panel
-  static constexpr int64_t kMB = BF_FLOAT_OPT_NEON32 ? 32 : 64;
+  // pixels per work item (multiple of kMR): 32, so that an im2col block of a 7x7x3 stem (147 floats a row) stays in
+  // L1 while it is read once per panel (A53 32 KB; on the Cortex-A75 the stem gained 3 % over 64, the X3 is
+  // neutral; ledger float_opt.md 2026-11-12 round 2). Row tiles / GEMV rows depend only on M % 8: unchanged.
+  static constexpr int64_t kMB = 32;
   static constexpr int64_t kRowStep = 8;  // row tile
-  static int64_t nr_for(int64_t) { return kNR; }
+  // 4-column panels for N <= 4 (not on AArch32: unmeasured there, the 8-column asm tile kept)
+  static int64_t nr_for(int64_t n) { return n <= 4 && !BF_FLOAT_OPT_NEON32 ? 4 : kNR; }
   static void block(const GemmBlockArgs& g) { gemm_block_simd4(g); }
 };
 
@@ -414,7 +513,7 @@ struct GemmPlan {
     pool->parallel_for(mblocks * G * nchunks, grain, [&](int64_t t0, int64_t t1) {
       ScratchLease lease(scratch);
       float* buf = lease.data();
-      int64_t built = -1;  // (group, A block) already in `buf` (single K block only)
+      int64_t built = -1, built_lda = 0;  // (group, A block) already in `buf` (single K block only), its row stride
       for (int64_t t = t0; t < t1; ++t) {
         const int64_t blk = t / (G * nchunks), g = (t / nchunks) % G, ch = t % nchunks;
         const int64_t m0 = blk * mb, rows = std::min(mb, M - m0);
@@ -435,10 +534,13 @@ struct GemmPlan {
           const float* a;
           if (kc == K && built == gm) {
             a = buf;
-            lda = K;
+            lda = built_lda;
           } else {
             a = get_a(g, m0, rows, k0, kc, buf, &lda);
-            if (kc == K && a == buf) built = gm;
+            if (kc == K && a == buf) {
+              built = gm;
+              built_lda = lda;
+            }
           }
           args.a = a;
           args.lda = lda;
@@ -511,6 +613,91 @@ inline void copy_floats(float* d, const float* s, int64_t n) {
   }
 }
 
+// ------------------------------------------------- narrow direct convolution
+// Convolutions with at most 4 output channels per group, stride 1, dilation 1 and a kh x kw > 1 kernel or groups > 1:
+// the RGB output layer of image restoration / super-resolution models, depthwise layers with a channel multiplier
+// (BSRC: 64 -> 128 channels, groups 64) and the grouped 1x1 that folds them back. The GEMM spends most of its time
+// building im2col rows (each value used for <= 4 multiply-adds) or, for tiny groups, in per-tile overhead. Instead
+// the input is transposed once per run into padded channel rows xt[n][iy][c][ix] (pad_value around the image, as
+// im2col fills padding taps), and each vector lane is an output pixel: per group, 4 * kNarrowPV consecutive pixels
+// of an output row times its outputs, for every k = (ky, kx, c) of the group in ascending order
+// acc = madd(acc, x, w[k]) from the bias, the activation at the end. That is the GEMM's chain for every output
+// (8-row tiles and masked tiles; used only when the GEMM plan has no GEMV rows, whose four partial sums differ), so
+// the results are bit-identical to the GEMM path.
+constexpr int kNarrowPV = BF_FLOAT_OPT_NEON32 ? 2 : 4;  // pixel vectors per tile (AArch32: 16 q registers)
+
+// dst[c * ws + i] = x[i * ic + c] for i < iw, c < ic (one input row into its channel rows).
+inline void transpose_row(const float* x, int64_t iw, int64_t ic, float* dst, int64_t ws) {
+  int64_t i = 0;
+#if BF_FLOAT_OPT_NEON || BF_FLOAT_OPT_NEON32
+  if (ic % 4 == 0)
+    for (; i + 4 <= iw; i += 4)
+      for (int64_t c = 0; c < ic; c += 4) {
+        const float32x4x2_t t0 = vtrnq_f32(vld1q_f32(x + i * ic + c), vld1q_f32(x + (i + 1) * ic + c));
+        const float32x4x2_t t1 = vtrnq_f32(vld1q_f32(x + (i + 2) * ic + c), vld1q_f32(x + (i + 3) * ic + c));
+        float* d = dst + c * ws + i;
+        vst1q_f32(d, vcombine_f32(vget_low_f32(t0.val[0]), vget_low_f32(t1.val[0])));
+        vst1q_f32(d + ws, vcombine_f32(vget_low_f32(t0.val[1]), vget_low_f32(t1.val[1])));
+        vst1q_f32(d + 2 * ws, vcombine_f32(vget_high_f32(t0.val[0]), vget_high_f32(t1.val[0])));
+        vst1q_f32(d + 3 * ws, vcombine_f32(vget_high_f32(t0.val[1]), vget_high_f32(t1.val[1])));
+      }
+#endif
+  for (; i < iw; ++i)
+    for (int64_t c = 0; c < ic; ++c) dst[c * ws + i] = x[i * ic + c];
+}
+
+template <int NO>
+inline __attribute__((always_inline)) void narrow_madd(f32x4 (&acc)[NO], f32x4 x, f32x4 w) {
+  acc[0] = madd_lane<0>(acc[0], x, w);
+  if constexpr (NO > 1) acc[1] = madd_lane<1>(acc[1], x, w);
+  if constexpr (NO > 2) acc[2] = madd_lane<2>(acc[2], x, w);
+  if constexpr (NO > 3) acc[3] = madd_lane<3>(acc[3], x, w);
+}
+
+// One tile of 4 * kNarrowPV output pixels of one group: xr = the channel row of the group's first input channel at the
+// tile's first input pixel (padded coordinates; kernel row ky is cs floats further), kic channel rows ws floats
+// apart, wn = the group's packed weights [kh * kw * kic][4], bias[4]; t[o * TP + p] = output o of pixel p.
+template <int NO>
+inline void narrow_conv_tile(const float* xr, int64_t cs, int64_t kic, int64_t ws, int64_t kh, int64_t kw, const float* wn,
+                             const float* bias, Activation act, float* t) {
+  constexpr int PV = kNarrowPV, TP = 4 * PV;
+  f32x4 acc[PV][NO];
+  for (int v = 0; v < PV; ++v)
+    for (int o = 0; o < NO; ++o) acc[v][o] = dup(bias[o]);
+  const float* wk = wn;
+  for (int64_t ky = 0; ky < kh; ++ky) {
+    const float* row = xr + ky * cs;
+    for (int64_t kx = 0; kx < kw; ++kx)
+      for (int64_t c = 0; c < kic; ++c, wk += 4) {
+        const f32x4 w = load(wk);
+        const float* q = row + c * ws + kx;
+        for (int v = 0; v < PV; ++v) narrow_madd<NO>(acc[v], load(q + 4 * v), w);
+      }
+  }
+  for (int v = 0; v < PV; ++v)
+    for (int o = 0; o < NO; ++o) store(t + o * TP + 4 * v, activate(act, acc[v][o]));
+}
+
+// t[c * tp + p] (c < oc, p < np) -> y[p * oc + c]: 4x4 transposes for whole blocks, scalar otherwise.
+inline void narrow_store(const float* t, int64_t tp, int64_t oc, int64_t np, float* y) {
+  int64_t p = 0;
+#if BF_FLOAT_OPT_NEON || BF_FLOAT_OPT_NEON32
+  if (oc % 4 == 0)
+    for (; p + 4 <= np; p += 4)
+      for (int64_t c = 0; c < oc; c += 4) {
+        const float32x4x2_t a = vtrnq_f32(vld1q_f32(t + c * tp + p), vld1q_f32(t + (c + 1) * tp + p));
+        const float32x4x2_t b = vtrnq_f32(vld1q_f32(t + (c + 2) * tp + p), vld1q_f32(t + (c + 3) * tp + p));
+        float* d = y + p * oc + c;
+        vst1q_f32(d, vcombine_f32(vget_low_f32(a.val[0]), vget_low_f32(b.val[0])));
+        vst1q_f32(d + oc, vcombine_f32(vget_low_f32(a.val[1]), vget_low_f32(b.val[1])));
+        vst1q_f32(d + 2 * oc, vcombine_f32(vget_high_f32(a.val[0]), vget_high_f32(b.val[0])));
+        vst1q_f32(d + 3 * oc, vcombine_f32(vget_high_f32(a.val[1]), vget_high_f32(b.val[1])));
+      }
+#endif
+  for (; p < np; ++p)
+    for (int64_t c = 0; c < oc; ++c) y[p * oc + c] = t[c * tp + p];
+}
+
 template <class B>
 class Conv2DGemm : public Kernel {
  public:
@@ -527,7 +714,8 @@ class Conv2DGemm : public Kernel {
       std::fill_n(static_cast<float*>(padrow_.get()), g_.ic, pad_value_);
     }
     scratch_.init(ctx.pool->num_threads(),
-                  direct_ ? 1 : static_cast<size_t>(plan_.mb * plan_.KC * (plan_.all_groups ? g_.groups : 1)));
+                  direct_ ? 1 : static_cast<size_t>(plan_.mb * round_up(plan_.KC, 4) * (plan_.all_groups ? g_.groups : 1)));
+    prepare_narrow(ctx);
   }
   size_t prepacked_bytes() const override { return plan_.bytes(); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
@@ -535,7 +723,9 @@ class Conv2DGemm : public Kernel {
   void run(const KernelContext& ctx) override {
     const float* x = ctx.in(0).data<float>();
     float* y = ctx.out(0).data<float>();
-    if (direct_) {
+    if (narrow_) {
+      run_narrow(ctx, x, y);
+    } else if (direct_) {
       const int64_t ic = g_.ic, kic = g_.kic;
       plan_.run(ctx.pool, scratch_, y, [&](int64_t grp, int64_t m0, int64_t, int64_t k0, int64_t, float*, int64_t* lda) {
         *lda = ic;
@@ -545,8 +735,10 @@ class Conv2DGemm : public Kernel {
       plan_.run_all_groups(ctx.pool, scratch_, y, [&](int64_t m0, int64_t rows, float* buf) { im2col_groups(x, m0, rows, buf); });
     } else {
       plan_.run(ctx.pool, scratch_, y, [&](int64_t grp, int64_t m0, int64_t rows, int64_t k0, int64_t kc, float* buf, int64_t* lda) {
-        im2col(x, grp * g_.kic, m0, rows, k0, kc, buf);
-        *lda = kc;
+        // rows 16-byte aligned (K = 147 of a 7x7 RGB stem: 7 % faster on the Cortex-A75, 3 % on the A53)
+        const int64_t ld = round_up(kc, 4);
+        im2col(x, grp * g_.kic, m0, rows, k0, kc, buf, ld);
+        *lda = ld;
         return static_cast<const float*>(buf);
       });
     }
@@ -554,8 +746,8 @@ class Conv2DGemm : public Kernel {
 
  private:
   // Patch rows of pixels [m0, m0+rows), columns [k0, k0+kc) of the group whose
-  // input channels start at coff -> dst[rows][kc].
-  void im2col(const float* x, int64_t coff, int64_t m0, int64_t rows, int64_t k0, int64_t kc, float* dst) const {
+  // input channels start at coff -> dst[rows][kc] with row stride ld.
+  void im2col(const float* x, int64_t coff, int64_t m0, int64_t rows, int64_t k0, int64_t kc, float* dst, int64_t ld) const {
     const Conv2DGeom& g = g_;
     const int64_t kic = g.kic;
     // With dw == 1 and one group, the in-bounds taps of a kernel row are
@@ -575,7 +767,7 @@ class Conv2DGemm : public Kernel {
           ++n;
         }
       }
-      float* d = dst + r * kc;
+      float* d = dst + r * ld;
       int64_t left = kc, c0 = c00, ky = ky00, kx = kx00;
       while (left > 0) {
         const int64_t iy = iy0 + ky * g.dh, ix = ix0 + kx * g.dw;
@@ -649,9 +841,83 @@ class Conv2DGemm : public Kernel {
     }
   }
 
+  // Narrow direct convolution (see narrow_conv_tile): Simd4 backend, <= 4 outputs per group, stride and dilation 1,
+  // kh * kw > 1 or groups > 1, and no GEMV rows in the GEMM plan (pixel blocks of plan_.mb rows: the last block's
+  // rows % 8 is 0 or >= 4).
+  void prepare_narrow(const KernelContext& ctx) {
+    const Conv2DGeom& g = g_;
+    const int64_t ocg = g.oc / g.groups, m = g.n * g.oh * g.ow, r = m % plan_.mb % kMR;
+    narrow_ = std::is_same<B, Simd4Gemm>::value && ocg <= 4 && g.sh == 1 && g.sw == 1 && g.dh == 1 && g.dw == 1 &&
+              (g.kh * g.kw > 1 || g.groups > 1) && (r == 0 || r >= 4);
+    // Cortex-A53 (AArch32): the per-run transposition of the input costs more than the im2col it saves for small
+    // kernels (128x128 64->3 3x3: GEMM 38.5 ms, narrow 48.3 ms; 9x9: 347 -> 307 ms)
+    if (BF_FLOAT_OPT_NEON32 && g.groups == 1 && g.kh * g.kw < 25) narrow_ = false;
+    if (!narrow_) return;
+    const int64_t k = g.kh * g.kw * g.kic;
+    hp_ = g.ih + g.pt + g.pb;
+    ws_ = round_up(std::max(g.iw + g.pl + g.pr, round_up(g.ow, 4 * kNarrowPV) + g.kw - 1), 4);
+    wn_.assign(static_cast<size_t>(g.groups * k * 4), 0.f);
+    nbias_.assign(static_cast<size_t>(g.groups * 4), 0.f);
+    const float* w = ctx.in(1).data<float>();
+    const float* b = opt_f32(ctx, 2);
+    for (int64_t gi = 0; gi < g.groups; ++gi)
+      for (int64_t j = 0; j < ocg; ++j) {
+        const int64_t o = gi * ocg + j;
+        for (int64_t kk = 0; kk < k; ++kk) wn_[(gi * k + kk) * 4 + j] = w[o * k + kk];
+        nbias_[gi * 4 + j] = b ? b[o] : 0.f;
+      }
+    // padded channel rows; the padding (and the columns past the image read by the last tile of a row) keep pad_value
+    const size_t floats = static_cast<size_t>(g.n * hp_ * g.ic * ws_);
+    xt_ = aligned_alloc_shared(floats * sizeof(float));
+    std::fill_n(static_cast<float*>(xt_.get()), floats, pad_value_);
+    nscratch_.init(ctx.pool->num_threads(), static_cast<size_t>(g.oc * 4 * kNarrowPV));
+  }
+  void run_narrow(const KernelContext& ctx, const float* x, float* y) {
+    const Conv2DGeom& g = g_;
+    float* xt = static_cast<float*>(xt_.get());
+    const int64_t ic = g.ic, ws = ws_, hp = hp_;
+    const int64_t in_rows = g.n * g.ih, out_rows = g.n * g.oh;
+    ctx.pool->parallel_for(in_rows, parallel_grain(in_rows, in_rows * g.iw * ic * 8, kInlineMacs), [&](int64_t r0, int64_t r1) {
+      for (int64_t r = r0; r < r1; ++r) {
+        const int64_t n = r / g.ih, iy = r % g.ih;
+        transpose_row(x + r * g.iw * ic, g.iw, ic, xt + ((n * hp + iy + g.pt) * ic) * ws + g.pl, ws);
+      }
+    });
+    const int64_t kic = g.kic, ocg = g.oc / g.groups, kg = g.kh * g.kw * kic, row_macs = g.ow * kg * g.oc;
+    constexpr int64_t TP = 4 * kNarrowPV;
+    const Activation act = plan_.act;
+    ctx.pool->parallel_for(out_rows, parallel_grain(out_rows, out_rows * row_macs, kInlineMacs), [&](int64_t r0, int64_t r1) {
+      ScratchLease lease(nscratch_);
+      float* t = lease.data();  // [oc][TP]: one tile, all groups
+      for (int64_t r = r0; r < r1; ++r) {
+        const int64_t n = r / g.oh, oy = r % g.oh;
+        float* yr = y + r * g.ow * g.oc;
+        for (int64_t ox0 = 0; ox0 < g.ow; ox0 += TP) {
+          for (int64_t gi = 0; gi < g.groups; ++gi) {
+            const float* xr = xt + ((n * hp + oy) * ic + gi * kic) * ws + ox0;
+            const float* wg = wn_.data() + gi * kg * 4;
+            const float* bg = nbias_.data() + gi * 4;
+            float* tg = t + gi * ocg * TP;
+            switch (ocg) {
+              case 1: narrow_conv_tile<1>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
+              case 2: narrow_conv_tile<2>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
+              case 3: narrow_conv_tile<3>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
+              default: narrow_conv_tile<4>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
+            }
+          }
+          narrow_store(t, TP, g.oc, std::min<int64_t>(TP, g.ow - ox0), yr + ox0 * g.oc);
+        }
+      }
+    });
+  }
+
   Conv2DGeom g_;
   float pad_value_ = 0;
-  bool direct_ = false;
+  bool direct_ = false, narrow_ = false;
+  int64_t hp_ = 0, ws_ = 0;
+  std::vector<float> wn_, nbias_;  // narrow: weights [groups][K / groups][4], bias [groups][4]
+  std::shared_ptr<void> xt_;       // narrow: padded channel rows [n][hp][ic][ws]
+  ScratchSlots nscratch_;          // narrow: per thread, one output tile [oc][4 * kNarrowPV]
   std::shared_ptr<void> padrow_;  // [ic] pad_value (grouped im2col)
   GemmPlan<B> plan_;
   ScratchSlots scratch_;

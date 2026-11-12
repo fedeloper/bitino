@@ -103,7 +103,9 @@ namespace bmmn {
 constexpr int kNB = 8;              // columns per block
 constexpr int64_t kChunk = 15;      // words per uint8 round: 15 * 8 = 120 per byte, pairwise sums <= 240
 constexpr int64_t kMaxK = 32767;    // larger k: portable kernel
-enum Mode { kGeneral, kAFull, kBFull, kBothFull };
+// kNoNeg: both operands {0, 1} (gt0 x gt0, e.g. the binary attention of GSB-DeiT): the neg planes are 0, so the
+// sum is popcount(nz_a & nz_b) alone.
+enum Mode { kGeneral, kAFull, kBFull, kBothFull, kNoNeg };
 
 inline uint32_t lane_mask(int64_t k, int64_t w) {
   const int64_t valid = k - 32 * w;
@@ -212,6 +214,11 @@ inline void tile_round(const uint32_t* a, int64_t astride, int64_t w32, const ui
     const uint32x4_t bs[2] = {vld1q_u32(bw + 8), vld1q_u32(bw + 12)};
     for (int r = 0; r < R; ++r) {
       const uint32_t* ar = a + r * astride;
+      if (M == kNoNeg) {
+        const uint32x4_t an = vld1q_dup_u32(ar + w);
+        for (int v = 0; v < 2; ++v) cm[r][v] = vaddq_u8(cm[r][v], vcntq_u8(vreinterpretq_u8_u32(vandq_u32(an, bn[v]))));
+        continue;
+      }
       const uint32x4_t as = vld1q_dup_u32(ar + w32 + w);
       const uint32x4_t an = (M == kAFull || M == kBothFull) ? vdupq_n_u32(0u) : vld1q_dup_u32(ar + w);
       for (int v = 0; v < 2; ++v) {
@@ -235,6 +242,12 @@ inline void tile_round(const uint32_t* a, int64_t astride, int64_t w32, const ui
   // bytes 4c..4c+3 of half v count column 4v+c: pairwise widen, then pairwise add
   // across both halves gives the 8 columns in order
   for (int r = 0; r < R; ++r) {
+    if (M == kNoNeg) {
+      const uint16x8_t sm = vpaddq_u16(vpaddlq_u8(cm[r][0]), vpaddlq_u8(cm[r][1]));
+      cm16[r] = first ? sm : vaddq_u16(cm16[r], sm);
+      cd16[r] = vdupq_n_u16(0);
+      continue;
+    }
     const uint16x8_t sd = vpaddq_u16(vpaddlq_u8(cd[r][0]), vpaddlq_u8(cd[r][1]));
     cd16[r] = first ? sd : vaddq_u16(cd16[r], sd);
     if (M == kGeneral) {
@@ -257,7 +270,7 @@ inline void tile(const uint32_t* a, int64_t astride, int64_t w32, const uint32_t
   }
   for (int r = 0; r < R; ++r) {
     uint16x8_t base;
-    if (M == kGeneral) base = cm16[r];
+    if (M == kGeneral || M == kNoNeg) base = cm16[r];
     else if (M == kAFull) base = vld1q_u16(colnz);
     else if (M == kBFull) base = vdupq_n_u16(static_cast<uint16_t>(rownz[r]));
     else base = vdupq_n_u16(static_cast<uint16_t>(rownz[r]));  // both full: rownz = k
@@ -285,6 +298,7 @@ template <int R, bool kUnit>
 inline void tile_mode(Mode mode, const uint32_t* a, int64_t astride, int64_t w32, const uint32_t* blk, const uint16_t* colnz,
                       const int32_t* rownz, float scale, float* y, int64_t ystride, int nc) {
   switch (mode) {
+    case kNoNeg: tile<R, kNoNeg, kUnit>(a, astride, w32, blk, colnz, rownz, scale, y, ystride, nc); break;
     case kBothFull: tile<R, kBothFull, kUnit>(a, astride, w32, blk, colnz, rownz, scale, y, ystride, nc); break;
     case kAFull: tile<R, kAFull, kUnit>(a, astride, w32, blk, colnz, rownz, scale, y, ystride, nc); break;
     case kBFull: tile<R, kBFull, kUnit>(a, astride, w32, blk, colnz, rownz, scale, y, ystride, nc); break;
@@ -719,11 +733,13 @@ class BMatMulNeon : public Kernel {
     const uint16_t* cz0 = colnz_.data() + bi * nblk_ * bmmn::kNB;
     const uint8_t* bfull = blkfull_.data() + bi * nblk_;
     float* yb = y + bi * g_.m * n;
+    const bool noneg = ma_ == BMode::kGt0 && mb_ == BMode::kGt0;  // {0, 1} x {0, 1}: neg planes are 0
     int64_t r = r0;
     for (; r + 4 <= r1; r += 4) {
       const bool afull = rfull[r] && rfull[r + 1] && rfull[r + 2] && rfull[r + 3];
       for (int64_t jb = 0; jb < nblk_; ++jb) {
-        const bmmn::Mode mode = afull ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
+        const bmmn::Mode mode = noneg ? bmmn::kNoNeg
+                                      : afull ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
         const int nc = static_cast<int>(std::min<int64_t>(bmmn::kNB, n - jb * bmmn::kNB));
         bmmn::tile_any<4>(mode, ap + r * row, row, W, blk0 + jb * 16 * W, cz0 + jb * bmmn::kNB, rnz + r, scale_, unit_,
                           yb + r * n + jb * bmmn::kNB, n, nc);
@@ -731,7 +747,8 @@ class BMatMulNeon : public Kernel {
     }
     for (; r < r1; ++r)
       for (int64_t jb = 0; jb < nblk_; ++jb) {
-        const bmmn::Mode mode = rfull[r] ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
+        const bmmn::Mode mode = noneg ? bmmn::kNoNeg
+                                      : rfull[r] ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
         const int nc = static_cast<int>(std::min<int64_t>(bmmn::kNB, n - jb * bmmn::kNB));
         bmmn::tile_any<1>(mode, ap + r * row, row, W, blk0 + jb * 16 * W, cz0 + jb * bmmn::kNB, rnz + r, scale_, unit_,
                           yb + r * n + jb * bmmn::kNB, n, nc);

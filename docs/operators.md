@@ -64,12 +64,19 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
 * **Threshold folding.** `ChannelAffine(x, scale=none, bias b)` whose output only feeds the f32 input of
   `BConv2D`/`BDense` (`ge`, `gt`, `sign_zero`, no threshold) is removed; the consumers get `threshold = −b`.
   `fl(x + b)` has the sign of `x + b` (and is zero exactly when it is) for finite operands.
+  With a scale (`ChannelAffine(x, s, b)` before `ge` / `gt` consumers: DenseNet / MeliusNet batch norms) the
+  per-channel threshold `t` with `fl(fl(x·s) + b) ≥ 0` (`gt`: `> 0`) ⇔ `x ≥ t` is found by bisection over the
+  ordered floats (the expression is monotone in `x` for `s ≠ 0`); a channel with `s < 0` is binarized negated
+  (`x ≥ next(u)`, `u` the largest `x` giving +1) and its weight bits are flipped in a copy of each consumer's
+  weights, so every product is unchanged. `BConv2D` consumers with negated channels need `groups == 1` and
+  `pad_value == 0` (a padded tap cannot be negated); channels with `s == 0`, non-finite parameters or a
+  constant binarization keep the node. Exact for finite inputs (NaN inputs of negated channels would differ).
 * **Elementwise fusion.** Maximal trees of `ChannelAffine`, `Add` (+relu/relu6), `Mul`, `Activation`
   (relu, relu6, hardtanh, prelu, leaky_relu, sign, sign_zero) and `ChannelGate` whose inner tensors have one
   consumer become one internal `FusedElementwise` node (`runtime/ops/fused_elementwise.h`): a stack program,
   one pass over memory instead of one per node. The `float_opt` kernels compile it at prepare time into
   register micro-ops (`FeMicro`, `runtime/kernels/float_opt/float_opt_args.h`) and run the whole program on one
-  chunk of 32 floats of a row at a time (`leaf_fe_rows`, `float_opt_leaf.h`; NEON / portable 4-lane and AVX2):
+  chunk of 32 floats of a row at a time (16 when only that divides the row, e.g. 16 or 48 channels) (`leaf_fe_rows`, `float_opt_leaf.h`; NEON / portable 4-lane and AVX2):
   the stack top and a binary op's operand stay in vector registers, a load feeding a binary op is fused into it
   in either operand position (operand order kept), deeper stack values are spilled to a small local array, and
   `bias -> prelu -> bias` (RPReLU) is one micro-op. The program ends with a sentinel micro-op and the full-width
@@ -99,6 +106,15 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   old `bconv2d.neon` and the ternary (`sign_zero`) BDense kernels reject such nodes; hosting in an op is off when
   a kernel is forced for it (`SessionOptions::host_epilogues`, `bitino_bench --no-epilogues` keeps such trees
   as separate fused nodes).
+
+* **int8_full rewrites** (`runtime/src/graph_rewrite_i8.cc`, with `SessionOptions::fuse`, at every stage; I8* graphs
+  only, exact by construction, details in `docs/int8.md` § "int8_full latency"): `collapse_unary` (an `I8Mul` /
+  `I8Add` / `I8AffineSum` whose operands are all `x` or `I8Lut(x)` of one tensor becomes one `I8Lut` of `x`, its table
+  the operator's integer formula on all 256 codes), `compose_luts` (`I8Lut` of an `I8Lut` -> one table),
+  `fold_lut_thresholds` (a binary layer binarizing an `I8Lut` output reads the LUT input with integer thresholds when
+  every channel's set `{x : L[x] >= T}` is an upper set), and twin merging (nodes reading the same inputs: `I8Lut`
+  -> internal `I8LutN`, `I8Add` with equal input parameters -> `I8AddN`, `I8Conv2D` with byte-identical weights /
+  bias -> `I8Conv2DN`: one pass, one shared computation, one output stage per twin).
 
 * **Bit-packed outputs.** Last rewrite (after fusion, so epilogue-fused outputs qualify): a `BConv2D`, or a
   `BDense` with a binary (`ge` / `gt`) input and no `w_zero`, whose f32 output (possibly the output of its hosted

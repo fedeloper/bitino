@@ -147,7 +147,7 @@ BF_TEST(fused_elementwise_bit_exact_with_unfused_graph) {
   // A BNext / ReActNet / BHViT-like elementwise DAG: two binary-conv-free
   // branches combined through ChannelAffine, Add (+relu), prelu, Mul,
   // ChannelGate (sigmoid and none), hardtanh, leaky_relu, relu6, sign, sign_zero.
-  for (Shape s : {Shape{1, 3, 5, 7}, Shape{2, 9, 11, 40}, Shape{1, 28, 28, 64}}) {
+  for (Shape s : {Shape{1, 3, 5, 7}, Shape{2, 9, 11, 40}, Shape{1, 28, 28, 64}, Shape{2, 6, 7, 16}, Shape{1, 5, 9, 48}}) {
     const int64_t c = s.back(), n = s[0];
     auto s1 = randn(c, 1), b1 = randn(c, 2), b2 = randn(c, 3), sl = randn(c, 4, 0.25f), s3 = randn(c, 5);
     bftest::ModelBuilder m2;
@@ -332,7 +332,7 @@ BF_TEST(threshold_folding_bit_exact) {
       expect_identical(opt.y, ref.y, std::string("threshold folding ") + mode);
     }
   }
-  // Not folded: a scale, or a non-binary consumer.
+  // Not folded: a non-binary consumer (the scaled ChannelAffine is folded by fold_scaled_thresholds).
   const int64_t c = 8;
   auto sc = randn(c, 1), bias = randn(c, 2);
   std::vector<int8_t> wd(4 * c, 1);
@@ -351,7 +351,92 @@ BF_TEST(threshold_folding_bit_exact) {
   mb.output("y");
   mb.output("y3");
   const Out r = run(mb.build(), tiers(kOpt), {});
-  EXPECT_EQ(r.folded, 0);
+  EXPECT_EQ(r.folded, 1);
+}
+
+BF_TEST(scaled_threshold_folding_bit_exact) {
+  // ChannelAffine(scale, bias) -> BConv2D / BDense (ge, gt): folded into per-channel thresholds found by bisection
+  // (graph_rewrite.cc fold_scaled_thresholds); channels with a negative scale are binarized negated and the
+  // consumers' weights of that channel flipped. Scales of both signs and magnitudes 1e-6 .. 1e6, biases incl. +-0,
+  // no bias; inputs at the threshold x = -b / s and 1-3 ulps around it, +-0, +-inf, where a wrong threshold would
+  // flip a bit. Bit-identical to the reference graph. Grouped / pad_value consumers keep the node when a scale is
+  // negative, and fold it when all are positive.
+  for (const char* mode : {"ge", "gt"})
+    for (bool with_bias : {true, false}) {
+      const int64_t c = 40, o = 24;
+      auto sc = randn(c, 11), bias = randn(c, 12);
+      for (int64_t i = 0; i < c; ++i) sc[i] *= std::pow(10.f, static_cast<float>(i % 13) - 6.f);
+      bias[3] = 0.f;
+      bias[4] = -0.f;
+      if (!with_bias)
+        for (auto& b : bias) b = 0.f;
+      std::vector<int8_t> w(o * 9 * c), wd(o * c);
+      std::mt19937 rng(19);
+      for (auto& v : w) v = rng() & 1 ? 1 : -1;
+      for (auto& v : wd) v = rng() & 1 ? 1 : -1;
+      auto wb = bftest::pack_pm1(w, o * 9, c);
+      auto wdb = bftest::pack_pm1(wd, o, c);
+      auto mul = randn(o, 13);
+      const Shape s = {1, 6, 7, c};
+      std::vector<float> x = randn(num_elements(s), 14, 3.f);
+      for (size_t i = 0; i < x.size(); ++i) {
+        const float t = -bias[i % c] / sc[i % c];
+        switch (i % 9) {
+          case 0: x[i] = t; break;
+          case 1: x[i] = std::nextafter(t, 1e30f); break;
+          case 2: x[i] = std::nextafter(t, -1e30f); break;
+          case 3: x[i] = std::nextafter(std::nextafter(std::nextafter(t, 1e30f), 1e30f), 1e30f); break;
+          case 4: x[i] = std::nextafter(std::nextafter(t, -1e30f), -1e30f); break;
+          case 5: x[i] = (i & 16) ? 0.f : -0.f; break;
+          case 6: x[i] = (i & 32) ? INFINITY : -INFINITY; break;
+          default: break;
+        }
+      }
+      bftest::ModelBuilder mb;
+      mb.constant("s", DType::kF32, {c}, sc.data());
+      if (with_bias) mb.constant("bias", DType::kF32, {c}, bias.data());
+      mb.constant("w", DType::kBit, {o, 3, 3, c}, wb.data());
+      mb.constant("wd", DType::kBit, {o, c}, wdb.data());
+      mb.constant("mul", DType::kF32, {o}, mul.data());
+      mb.input("x", DType::kF32, s);
+      mb.node("ChannelAffine", {"x", "s", with_bias ? "bias" : ""}, {"t"});
+      mb.node("BConv2D", {"t", "w", "mul"}, {"y1"}, Json(Json::Object{{"pads", ints({1, 1, 1, 1})}, {"input_binarize", mode}}));
+      mb.node("BDense", {"t", "wd", "mul"}, {"y2"}, Json(Json::Object{{"input_binarize", mode}}));
+      mb.node("Add", {"y1", "y2"}, {"y"});
+      mb.output("y");
+      auto m = mb.build();
+      const Out ref = run(m, tiers(kRef), {x});
+      for (int threads : {1, 2}) {
+        const Out opt = run(m, tiers(kOpt), {x}, threads);
+        EXPECT_EQ(opt.folded, 1);
+        expect_identical(opt.y, ref.y, std::string("scaled threshold folding ") + mode + (with_bias ? " bias" : " no bias"));
+      }
+    }
+  // Grouped consumer: folded only when no scale is negative.
+  for (bool all_pos : {false, true}) {
+    const int64_t c = 64, o = 32;
+    auto sc = randn(c, 21), bias = randn(c, 22);
+    if (all_pos)
+      for (auto& v : sc) v = std::fabs(v) + 0.1f;
+    std::vector<int8_t> w(o * 9 * (c / 2));
+    std::mt19937 rng(23);
+    for (auto& v : w) v = rng() & 1 ? 1 : -1;
+    auto wb = bftest::pack_pm1(w, o * 9, c / 2);
+    bftest::ModelBuilder mb;
+    mb.constant("s", DType::kF32, {c}, sc.data());
+    mb.constant("bias", DType::kF32, {c}, bias.data());
+    mb.constant("w", DType::kBit, {o, 3, 3, c / 2}, wb.data());
+    mb.input("x", DType::kF32, {1, 5, 6, c});
+    mb.node("ChannelAffine", {"x", "s", "bias"}, {"t"});
+    mb.node("BConv2D", {"t", "w"}, {"y"}, Json(Json::Object{{"pads", ints({1, 1, 1, 1})}, {"groups", Json(2)}}));
+    mb.output("y");
+    auto m = mb.build();
+    const std::vector<float> x = randn(5 * 6 * c, 24);
+    const Out ref = run(m, tiers(kRef), {x});
+    const Out opt = run(m, tiers(kOpt), {x}, 1);
+    EXPECT_EQ(opt.folded, all_pos ? 1 : 0);
+    expect_identical(opt.y, ref.y, std::string("grouped scaled threshold folding ") + (all_pos ? "positive" : "mixed"));
+  }
 }
 
 BF_TEST(bconv_hosted_epilogue_bit_exact) {
@@ -941,7 +1026,7 @@ BF_TEST(layernorm_reduce_mean_fake_quant_bit_exact) {
   }
   // FakeQuant (BHViT attention probabilities: axis 1, pre_scale 3, levels 0..3)
   // with inputs placed exactly on rounding ties after t = x*pre/s + z.
-  for (Shape s : {Shape{4, 4, 50, 50}, Shape{3, 7}, Shape{2, 3, 5, 9}}) {
+  for (Shape s : {Shape{4, 4, 50, 50}, Shape{3, 7}, Shape{2, 3, 5, 9}, Shape{1, 8, 8, 3}, Shape{2, 5, 3}}) {
     for (int64_t axis : {int64_t(1), int64_t(-1)}) {
       const int64_t c = s[axis < 0 ? s.size() - 1 : axis];
       std::vector<float> sc(c), zp(c);
@@ -1209,7 +1294,8 @@ BF_TEST(transpose_concat_gather_addbroadcast_mul_gate_bit_exact) {
     std::vector<int64_t> perm;
   };
   for (const TCase& t : {TCase{{1, 64, 12, 64}, {0, 2, 1, 3}}, TCase{{1, 8, 7, 8, 7, 16}, {0, 1, 3, 2, 4, 5}}, TCase{{3, 5, 7}, {2, 0, 1}},
-                         TCase{{4, 6}, {1, 0}}, TCase{{2, 3, 4}, {0, 1, 2}}, TCase{{2, 3, 4, 5}, {3, 2, 1, 0}}}) {
+                         TCase{{4, 6}, {1, 0}}, TCase{{2, 3, 4}, {0, 1, 2}}, TCase{{2, 3, 4, 5}, {3, 2, 1, 0}},
+                         TCase{{1, 6, 5, 8, 2, 2}, {0, 1, 4, 2, 5, 3}}, TCase{{2, 40, 33, 3, 2, 2}, {0, 1, 4, 2, 5, 3}}}) {
     Json::Array p;
     for (auto v : t.perm) p.push_back(Json(v));
     bftest::ModelBuilder mb;

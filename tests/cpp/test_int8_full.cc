@@ -163,6 +163,9 @@ std::vector<int8_t> run_model(const bftest::ModelBuilder& mb, const std::string&
   SessionOptions so;
   so.num_threads = threads;
   so.spin_run = threads > 1;  // multi-threaded runs also exercise the hot thread-pool mode
+  // kernel tests: no Session rewrites (the int8 rewrites of src/graph_rewrite_i8.h may replace the node under test,
+  // e.g. a one-input I8AffineSum by an I8Lut; they are tested in test_int8_fused.cc)
+  so.fuse = false;
   std::set<std::string> tiers;
   size_t p = 0;
   while (p <= stage_tiers.size()) {

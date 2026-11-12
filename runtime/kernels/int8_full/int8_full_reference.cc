@@ -146,6 +146,54 @@ class MulRef : public AddMulRef {
   MulRef() : AddMulRef(false) {}
 };
 
+// ------------------------------------------------------ twins (internal)
+// I8LutN: y_j = table_j[x] (row = channel of the last axis for per-channel tables); I8AddN: the I8Add of AddMulRef
+// with the j-th output parameters (xa + xb computed as there, once per element per output: the reference stays literal).
+class LutNRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), n = x.size();
+    const int8_t* q = x.data<int8_t>();
+    for (size_t j = 0; j + 1 < ctx.inputs.size(); ++j) {
+      const Tensor& t = ctx.in(j + 1);
+      const int8_t* tab = t.data<int8_t>();
+      const bool pc = t.dim(0) > 1;
+      int8_t* y = ctx.out(j).data<int8_t>();
+      for (int64_t i = 0; i < n; ++i) y[i] = tab[(pc ? i % c : 0) * 256 + q[i] + 128];
+    }
+  }
+};
+
+class AddNRef : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override { bidx_ = bcast_index(ctx.in(0).shape(), ctx.in(1).shape()); }
+  void run(const KernelContext& ctx) override {
+    const Json& a = ctx.attrs();
+    const int64_t za = a.get_int("a_zero", 0), zb = a.get_int("b_zero", 0);
+    const int ls = static_cast<int>(a.get_int("left_shift", 20));
+    const int32_t am = static_cast<int32_t>(a.get_int("a_mult", 0)), as = static_cast<int32_t>(a.get_int("a_shift", 0));
+    const int32_t bm = static_cast<int32_t>(a.get_int("b_mult", 0)), bs = static_cast<int32_t>(a.get_int("b_shift", 0));
+    const auto om = a.get_ints("out_mults", {}), os = a.get_ints("out_shifts", {}), zy = a.get_ints("y_zeros", {});
+    const auto lo = a.get_ints("qmins", {}), hi = a.get_ints("qmaxs", {});
+    const int8_t* qa = ctx.in(0).data<int8_t>();
+    const int8_t* qb = ctx.in(1).data<int8_t>();
+    const int64_t n = ctx.in(0).size();
+    for (size_t j = 0; j < ctx.outputs.size(); ++j) {
+      int8_t* y = ctx.out(j).data<int8_t>();
+      for (int64_t i = 0; i < n; ++i) {
+        int64_t xa = q8::requant((qa[i] - za) * (int64_t(1) << ls), am, as);
+        int64_t xb = q8::requant((qb[bidx_[i]] - zb) * (int64_t(1) << ls), bm, bs);
+        y[i] = clamp8(zy[j] + q8::requant(xa + xb, static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j])), static_cast<int>(lo[j]),
+                      static_cast<int>(hi[j]));
+      }
+    }
+  }
+
+ private:
+  std::vector<int64_t> bidx_;
+};
+
 // --------------------------------------------------------------- AffineSum
 // acc = sum_i (q_i - z_i) * K[i][c] + B[c] (int64; the quantizer keeps it within int32),
 // y = clamp(y_zero + requant(acc, mult, shift)).
@@ -185,8 +233,13 @@ class Conv2DRef : public Kernel {
     const int8_t* wd = w.data<int8_t>();
     int8_full::GemmEpilogue ep(ctx);
     const int64_t ocg = g.oc / g.groups;
+    // I8Conv2DN: one accumulator per element, the epilogue of every output
+    const bool multi = ctx.node->op == "I8Conv2DN";
+    std::vector<int8_full::GemmEpilogue> eps;
+    if (multi)
+      for (size_t j = 0; j < ctx.outputs.size(); ++j) eps.emplace_back(ctx, static_cast<int>(j));
     // bit output: bit -1 iff !(acc >= bit_thr[o])
-    const int32_t* bthr = ctx.has_in(5) ? ctx.in(5).data<int32_t>() : nullptr;
+    const int32_t* bthr = !multi && ctx.has_in(5) ? ctx.in(5).data<int32_t>() : nullptr;
     const int64_t bw = bit_words(g.oc);
     if (bthr) std::fill_n(ctx.out(1).data<uint32_t>(), g.n * g.oh * g.ow * bw, 0u);
     for (int64_t n = 0; n < g.n; ++n)
@@ -204,6 +257,10 @@ class Conv2DRef : public Kernel {
                 const int8_t* xr = in ? xd + ((n * g.ih + iy) * g.iw + ix) * g.ic + gi * g.kic : nullptr;
                 for (int64_t c = 0; c < g.kic; ++c) acc += static_cast<int64_t>(in ? xr[c] - xz : pz) * wr[c];
               }
+            if (multi) {
+              for (size_t j = 0; j < eps.size(); ++j) ctx.out(j).data<int8_t>()[p * g.oc + o] = eps[j].q(acc, o);
+              continue;
+            }
             ep.store(ctx, p * g.oc + o, o, acc);
             if (bthr && !(acc >= bthr[o])) ctx.out(1).data<uint32_t>()[p * bw + (o >> 5)] |= 1u << (o & 31);
           }
@@ -678,7 +735,10 @@ void register_int8_full_reference_kernels(OpRegistry& reg) {
   add("I8Add", "i8add.reference", make_kernel<AddRef>);
   add("I8Mul", "i8mul.reference", make_kernel<MulRef>);
   add("I8AffineSum", "i8affinesum.reference", make_kernel<AffineSumRef>);
+  add("I8LutN", "i8lutn.reference", make_kernel<LutNRef>);
+  add("I8AddN", "i8addn.reference", make_kernel<AddNRef>);
   add("I8Conv2D", "i8conv2d.reference", make_kernel<Conv2DRef>);
+  add("I8Conv2DN", "i8conv2dn.reference", make_kernel<Conv2DRef>);
   add("I8Dense", "i8dense.reference", make_kernel<DenseRef>);
   add("I8MatMul", "i8matmul.reference", make_kernel<MatMulRef>);
   add("I8LayerNorm", "i8layernorm.reference", make_kernel<LayerNormRef>);

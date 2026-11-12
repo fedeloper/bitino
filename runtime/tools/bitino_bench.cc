@@ -382,7 +382,14 @@ int main(int argc, char** argv) {
                                              {"hosted_epilogues", Json(session.hosted_epilogues())},
                                              {"bit_outputs", Json(session.bit_outputs())},
                                              {"shared_binarizations", Json(session.shared_binarizations())},
-                                             {"aliased_reshapes", Json(session.aliased_reshapes())}});
+                                             {"aliased_reshapes", Json(session.aliased_reshapes())},
+                                             {"i8_absorbed_luts", Json(session.absorbed_luts())},
+                                             {"i8_composed_luts", Json(session.i8_rewrites()[0])},
+                                             {"i8_folded_luts", Json(session.i8_rewrites()[1])},
+                                             {"i8_removed_luts", Json(session.i8_rewrites()[2])},
+                                             {"i8_lut_twins", Json(session.i8_rewrites()[3])},
+                                             {"i8_add_twins", Json(session.i8_rewrites()[4])},
+                                             {"i8_merged_nodes", Json(session.i8_rewrites()[5])}});
     cfg["spin_us"] = spin_us;
     cfg["spin_run"] = spin_run;
     cfg["nodes"] = static_cast<int64_t>(session.kernel_choices().size());
@@ -420,7 +427,7 @@ int main(int argc, char** argv) {
       Json::Array nodes;
       for (const auto& p : session.profile()) {
         double per_call = p.calls ? p.total_ms / p.calls : 0.0;
-        nodes.push_back(Json(Json::Object{{"node", p.name}, {"op", p.op}, {"kernel", p.kernel}, {"ms", per_call}}));
+        nodes.push_back(Json(Json::Object{{"node", p.name}, {"op", p.op}, {"kernel", p.kernel}, {"ms", per_call}, {"elems", Json(p.out_elems)}}));
         by_op[p.op].first += per_call;
       }
       Json ops = Json::Object{};

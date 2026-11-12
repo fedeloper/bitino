@@ -70,6 +70,7 @@ struct NodeProfile {
   std::string name, op, kernel;
   double total_ms = 0;
   int64_t calls = 0;
+  int64_t out_elems = 0;  // elements of output 0 (per-element costs in profiles)
 };
 
 class Session {
@@ -102,6 +103,8 @@ class Session {
   int fused_nodes() const { return fused_nodes_; }
   int absorbed_nodes() const { return absorbed_nodes_; }
   int absorbed_luts() const { return absorbed_luts_; }  // I8Lut nodes folded into an I8BConv2DRes (out_lut)
+  // int8_full rewrites (src/graph_rewrite_i8.h): composed / folded / removed I8Lut nodes, twin nodes created, nodes merged
+  const std::vector<int>& i8_rewrites() const { return i8_rewrites_; }
   int folded_thresholds() const { return folded_thresholds_; }
   int hosted_epilogues() const { return hosted_epilogues_; }
   int bit_outputs() const { return bit_outputs_; }
@@ -134,6 +137,7 @@ class Session {
   size_t activation_bytes_ = 0;
   size_t released_bytes_ = 0;
   int absorbed_luts_ = 0;
+  std::vector<int> i8_rewrites_ = std::vector<int>(6, 0);
   int fused_nodes_ = 0, absorbed_nodes_ = 0, folded_thresholds_ = 0, aliased_reshapes_ = 0, hosted_epilogues_ = 0, bit_outputs_ = 0;
   int shared_binarizations_ = 0;
 };

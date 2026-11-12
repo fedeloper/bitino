@@ -108,6 +108,7 @@ enum : int32_t {
   kFeSrcGather,      // [gather] ids[r * (c / w) + ch / w] = id: id in [0, v) ? p[id * w + ch % w] : 0
   kFeSrcTileRow,     // [row]    as kFeSrcTile / kFeSrcGather when w does not fit the chunk width:
   kFeSrcGatherRow,   // [row]      the row is first copied to the per-thread row buffer `slot`
+  kFeSrcGatherWhole, // [row]    gather of whole rows (w == c): the row pointer is p + id * c, or q (a row of c zeros)
 };
 
 struct FeMicro {
@@ -123,7 +124,8 @@ struct FeMicro {
 
 // rows_per_batch: batch of row r = r / rows_per_batch (kFeGate: p + batch * c).
 // row_ops: indices of the micro-ops that need a per-row pointer (sources, gate).
-// flat (with c a multiple of the chunk): rows [r0, r1) are evaluated as one run of chunks.
+// flat (with c a multiple of the chunk): rows [r0, r1) are evaluated as one run of chunks (per batch: a gate's
+// factors are those of the batch).
 // scratch (per thread, pointer aligned): 2 * n_ops pointers, then n_slots * c floats of row buffers.
 struct FeEvalArgs {
   const FeMicro* ops;
@@ -131,7 +133,7 @@ struct FeEvalArgs {
   const int32_t* row_ops;
   int32_t n_row_ops, n_slots;
   int32_t chunk;  // floats per register chunk: the backend's full width, or half of it
-  int32_t flat;   // every source is a plain row source and there is no gate: rows may run as one run of chunks
+  int32_t flat;   // every source is a plain row source (or a gate): rows of one batch may run as one run of chunks
   int64_t c, rows_per_batch;
 };
 

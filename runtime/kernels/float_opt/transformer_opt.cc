@@ -752,6 +752,27 @@ class FakeQuantOpt : public Kernel {
     const float* z = ctx.in(2).data<float>();
     float* y = ctx.out(0).data<float>();
     const float pre = pre_, lo = qmin_, hi = qmax_;
+    if (sp.inner == 1 && sp.len % 8 != 0 && sp.len < 32) {
+      // Short rows (e.g. the 3 channels of a CIFAR input) would each end in a staged partial vector: rows of
+      // lcm(len, 8) floats with the scale and zero point repeated instead (the same operations per element).
+      int64_t l = sp.len;
+      while (l % 8 != 0) l += sp.len;
+      rep_s_.resize(static_cast<size_t>(l));
+      rep_z_.resize(static_cast<size_t>(l));
+      for (int64_t i = 0; i < l; ++i) {
+        rep_s_[i] = s[i % sp.len];
+        rep_z_[i] = z[i % sp.len];
+      }
+      const int64_t n = sp.outer * sp.len, rows = n / l, tail_rows = (n - rows * l) / sp.len;
+      const float* rs = rep_s_.data();
+      const float* rz = rep_z_.data();
+      parallel_rows(ctx.pool, rows, l, [&](int64_t r0, int64_t r1) { B::fake_quant(x, rs, rz, y, l, 1, r0, r1, pre, lo, hi); });
+      if (tail_rows > 0) {
+        const int64_t off = rows * l;
+        B::fake_quant(x + off, s, z, y + off, sp.len, 1, 0, tail_rows, pre, lo, hi);
+      }
+      return;
+    }
     if (sp.inner == 1) {
       parallel_rows(ctx.pool, sp.outer, sp.len, [&](int64_t r0, int64_t r1) { B::fake_quant(x, s, z, y, sp.len, 1, r0, r1, pre, lo, hi); });
     } else {
@@ -763,6 +784,7 @@ class FakeQuantOpt : public Kernel {
  private:
   AxisSplit sp_;
   float pre_ = 1.f, qmin_ = 0.f, qmax_ = 1.f;
+  std::vector<float> rep_s_, rep_z_;  // short rows: scale / zero point repeated over lcm(len, 8) floats
 };
 
 // ----------------------------------------------------------- AddBroadcast
@@ -852,6 +874,34 @@ class TransposeOpt : public Kernel {
     float* y = ctx.out(0).data<float>();
     const int64_t n = ctx.in(0).size(), run = run_, outer = run > 0 ? n / run : 0;
     const int split = split_;
+    if (run == 1 && split >= 1 && n > 0) {
+      // No contiguous suffix (e.g. the pixel shuffle [N, H, W, C, 2, 2] -> [N, H, 2, W, 2, C]): rows of the last output
+      // dim, each a strided copy, the index carried once per row instead of per element.
+      const int64_t len = od_[split - 1], s = st_[split - 1], rows = n / len;
+      const int lead = split - 1;
+      parallel_rows(ctx.pool, rows, len, [&](int64_t r0, int64_t r1) {
+        int64_t idx[8] = {0}, src = 0, rem = r0;
+        for (int d = lead - 1; d >= 0; --d) {
+          idx[d] = rem % od_[d];
+          rem /= od_[d];
+          src += idx[d] * st_[d];
+        }
+        for (int64_t r = r0; r < r1; ++r) {
+          float* yr = y + r * len;
+          const float* xr = x + src;
+          for (int64_t j = 0; j < len; ++j) yr[j] = xr[j * s];
+          for (int d = lead - 1; d >= 0; --d) {
+            if (++idx[d] < od_[d]) {
+              src += st_[d];
+              break;
+            }
+            src -= st_[d] * (od_[d] - 1);
+            idx[d] = 0;
+          }
+        }
+      });
+      return;
+    }
     parallel_rows(ctx.pool, outer, run, [&](int64_t o0, int64_t o1) {
       int64_t idx[8] = {0}, src = 0, rem = o0;
       for (int d = split - 1; d >= 0; --d) {

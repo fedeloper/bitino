@@ -85,6 +85,7 @@ set(BITINO_SOURCES
   runtime/kernels/binary_avx2/binary_avx2_kernels.cc
   runtime/kernels/binary_avx2/binary_avx2_simd.cc
   runtime/src/graph_rewrite.cc
+  runtime/src/graph_rewrite_i8.cc
   runtime/ops/op_defs_fused.cc
   runtime/kernels/reference/fused_reference.cc
   runtime/kernels/float_opt/fused_elementwise.cc
@@ -194,7 +195,7 @@ if(BITINO_BUILD_TESTS)
   add_executable(bitino_tests tests/cpp/test_main.cc tests/cpp/test_core.cc tests/cpp/test_binary_kernels.cc
     tests/cpp/test_int8_kernels.cc tests/cpp/test_float_kernels.cc tests/cpp/test_transformer_ops.cc
     tests/cpp/test_bhvit_ops.cc tests/cpp/test_brevitas_ops.cc tests/cpp/test_larq_ops.cc
-    tests/cpp/test_torch_cnn.cc tests/cpp/test_int8_full.cc)
+    tests/cpp/test_torch_cnn.cc tests/cpp/test_int8_full.cc tests/cpp/test_int8_fused.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_binary_avx2.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_transformer_opt.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_bit_outputs.cc)
