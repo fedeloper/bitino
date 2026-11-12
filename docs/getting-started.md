@@ -69,6 +69,15 @@ synthetic eval set (seeded random inputs of the right shape). That is enough for
 runtime-vs-reference checks; to reproduce the published accuracy, build the real eval set with
 `tools/build_eval_set.py` from your copy of the dataset and pass `--eval-dir`.
 
+Each recipe has a state (`bitino list --converted`, `bitino info <id>`): `verified` (run end to end from a clean
+cache: the converted data section was identical to the published conversion), `needs-manual-step` (verified, but
+one file cannot be downloaded by a script; `fetch` prints what to download and from where), `broken` (the
+authors' file is no longer online; `fetch` says why) or `reconstructed` (not run end to end yet).
+
+Many weights live on the authors' Google Drive. `fetch` downloads public Drive files directly (no account); when
+Drive refuses (a file's daily download quota, a sign-in page) it stops and prints the authors' link: download the
+file in a browser and pass it with `--file NAME=PATH`.
+
 Other options: `--file weights=PATH` (use a file you downloaded by hand, e.g. from Google Drive; its SHA-256 is
 still checked), `--source repo=DIR` (local source tree), `--int8 --calib-dir DIR` (also build the int8_full file
 with the recorded quantizer flags), `--threads N` (worker processes and framework threads of the converter,

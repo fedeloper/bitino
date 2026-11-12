@@ -1,25 +1,1036 @@
 {
  "schema": "bitino.recipes_verified.v1",
- "note": "Recipes run end to end with `bitino fetch` from a clean cache: downloads from the original sources (SHA-256 checked), source code at the recorded commit, conversion with python -I, synthetic eval set. 'identical' = the converted file's data section (data_sha256) and graph (tensors, inputs, nodes, outputs) equal the published conversion; only the provenance manifest (date, adapter name, library versions) differs.",
+ "note": "Recipes run end to end with `bitino fetch` from a clean cache: downloads from the original sources (SHA-256 checked), source code at the recorded commit, conversion with python -I, synthetic eval set. 'identical' = the converted file's data section (data_sha256) and graph (tensors, inputs, nodes, outputs) equal the published conversion; only the provenance manifest (date, adapter name, library versions) differs. needs_manual_step: verified the same way once the listed file was supplied with --file; broken: cannot run today, with the reason.",
  "verified": {
-  "larq-zoo-quicknet-small": {
-   "date": "2026-11-05", "framework": "Keras / Larq (TensorFlow 2.15.1, larq 0.13.3, larq-zoo 2.4.0, Python 3.11)",
-   "source": "GitHub release asset larq/zoo quicknet-v1.0", "result": "model.bitino identical (data + graph)",
-   "int8_verified": ["model_int8_full.bitino"],
-   "int8_note": "model_int8_full.bitino identical (data + graph) with the recorded calibration set imagenet100-train-calib-512 (n 128, percentile 99.99); the calibration images are not redistributed"
+  "ab-bnn-cifar10-reactnet18": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 48888127,
+   "seconds": 8.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "ab-bnn-cifar10-reactneta": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 117447679,
+   "seconds": 11.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "ab-bnn-cifar100-reactnet18": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 49072831,
+   "seconds": 8.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "ab-bnn-cifar100-reactneta": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 117816703,
+   "seconds": 12.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
   },
   "ab-bnn-imagenet-reactnet18": {
-   "date": "2026-11-05", "framework": "PyTorch 2.6.0 CPU (Python 3.12)",
-   "source": "Hugging Face Ruichen0424/AB-BNN @8b8465a7 + GitHub Ruichen0424/AB-BNN @3485ea74",
-   "result": "model.bitino identical (data + graph)"
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 50950335,
+   "seconds": 16.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
   },
-  "omz-resnet18-xnor-binary-onnx-0001": {
-   "date": "2026-11-05", "framework": "OpenVINO IR (OpenVINO runtime as the fp32 reference, Python 3.12)",
-   "source": "storage.openvinotoolkit.org Open Model Zoo 2023.0 (.xml + .bin)", "result": "model.bitino identical (data + graph)"
+  "ab-bnn-imagenet-reactnet34": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 91466015,
+   "seconds": 21.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "ab-bnn-imagenet-reactneta": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "huggingface.co; https://github.com/Ruichen0424/AB-BNN @ 3485ea743fd5",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 121506687,
+   "seconds": 19.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "adabin-resnet20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "github.com; https://github.com/huawei-noah/Efficient-Computing @ 225ddd2e6ca4",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 38387829,
+   "seconds": 94.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "aliasgharshinwari-finn-cnv-w1a1-cifar10": {
+   "date": "2026-11-12",
+   "framework": "brevitas 0.11.0 + torch (env brevitas)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 6274317,
+   "seconds": 4.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-deblocking": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 12311938,
+   "seconds": 40.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-denoise": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 12310386,
+   "seconds": 48.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-sr-l-x2": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 15159570,
+   "seconds": 55.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-sr-l-x4": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 15751054,
+   "seconds": 124.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-sr-m-x2": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 15165190,
+   "seconds": 20.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bbcu-sr-m-x4": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/Zj-BinXia/BBCU @ c47df53078dd",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 15760252,
+   "seconds": 20.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bhvit-small-binary": {
+   "date": "2026-11-12",
+   "framework": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40) (env bhvit)",
+   "source": "drive.google.com; https://github.com/IMRL/BHViT @ 4093f5bcea57",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 273908446,
+   "seconds": 86.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bhvit-small-somefp": {
+   "date": "2026-11-12",
+   "framework": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40) (env bhvit)",
+   "source": "drive.google.com; https://github.com/IMRL/BHViT @ 4093f5bcea57",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 273858654,
+   "seconds": 95.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bhvit-tiny-binary": {
+   "date": "2026-11-12",
+   "framework": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40) (env bhvit)",
+   "source": "drive.google.com; https://github.com/IMRL/BHViT @ 4093f5bcea57",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 166861810,
+   "seconds": 38.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bhvit-tiny-somefp": {
+   "date": "2026-11-12",
+   "framework": "PyTorch 2.5.1 CPU + transformers 4.39.2 + timm 1.0.27 (the BHViT model code needs transformers < 4.40) (env bhvit)",
+   "source": "drive.google.com; https://github.com/IMRL/BHViT @ 4093f5bcea57",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 166811954,
+   "seconds": 39.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bi-vit-deit-small": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/YanjingLi0202/Bi-ViT @ c4fff79338da",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 269553809,
+   "seconds": 80.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bi-vit-deit-tiny": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/YanjingLi0202/Bi-ViT @ c4fff79338da",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 71411345,
+   "seconds": 23.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bibert-bert-base-mnli": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/htqin/BiBERT @ 014399cb38a2",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 438738183,
+   "seconds": 66.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bibert-bert-base-mrpc": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/htqin/BiBERT @ 014399cb38a2",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 438723818,
+   "seconds": 74.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bibert-bert-base-qqp": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/htqin/BiBERT @ 014399cb38a2",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 438723817,
+   "seconds": 61.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bibert-bert-base-sst2": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/htqin/BiBERT @ 014399cb38a2",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 438723819,
+   "seconds": 47.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bimatting-bimobilenet-backbone": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "github.com; https://github.com/htqin/BiMatting @ 57cfc4e1ebc3",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 177242298,
+   "seconds": 25.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "biper-resnet18-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/edmav4/BiPer @ 0c07fdd6f7ad",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 88519620,
+   "seconds": 13.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "biper-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/edmav4/BiPer @ 0c07fdd6f7ad",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 94030638,
+   "seconds": 29.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "biper-resnet20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/edmav4/BiPer @ 0c07fdd6f7ad",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 2609616,
+   "seconds": 8.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "biper-resnet34-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/edmav4/BiPer @ 0c07fdd6f7ad",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 175016302,
+   "seconds": 34.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "biper-vgg-small-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/edmav4/BiPer @ 0c07fdd6f7ad",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 37696070,
+   "seconds": 11.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bitorch-densenet28-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "api.wandb.ai; bitorch @ 0.3.0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 62440171,
+   "seconds": 26.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bitorch-meliusnet22-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "api.wandb.ai; bitorch @ 0.3.0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 186879521,
+   "seconds": 32.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
   },
   "bitorch-resnete18-imagenet": {
-   "date": "2026-11-05", "framework": "PyTorch 2.6.0 CPU + bitorch 0.3.0 model code (PyPI wheel, SHA-256 checked)",
-   "source": "bitorch model hub (W&B artifact) + PyPI bitorch-0.3.0 wheel", "result": "model.bitino identical (data + graph)"
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "api.wandb.ai; bitorch @ 0.3.0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 243601661,
+   "seconds": 24.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnas-a-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yonseivnl/bnas @ cdb58f7826d9",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 25482388,
+   "seconds": 21.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnas-d-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yonseivnl/bnas @ cdb58f7826d9",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 230593464,
+   "seconds": 79.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnas-e-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yonseivnl/bnas @ cdb58f7826d9",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 259328624,
+   "seconds": 62.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnas-h-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yonseivnl/bnas @ cdb58f7826d9",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1283917065,
+   "seconds": 813.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnext-large": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1307678886,
+   "seconds": 374.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnext-middle": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 538964041,
+   "seconds": 171.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnext-small": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 275026809,
+   "seconds": 108.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnext-tiny": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/hpi-xnor/BNext @ dfcf347a30e3",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 124010041,
+   "seconds": 36.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnn-pynq-cnv-w1a1-cifar10": {
+   "date": "2026-11-12",
+   "framework": "numpy only (the runtime-side tooling) (env base)",
+   "source": "raw.githubusercontent.com; https://github.com/Lasagne/Lasagne @ 5d3c63cb315c; https://github.com/Xilinx/BNN-PYNQ @ d39c1c75403d",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 179444232,
+   "seconds": 24.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnn-pynq-cnv-w1a1-gtsrb": {
+   "date": "2026-11-12",
+   "framework": "numpy only (the runtime-side tooling) (env base)",
+   "source": "raw.githubusercontent.com; https://github.com/Lasagne/Lasagne @ 5d3c63cb315c; https://github.com/Xilinx/BNN-PYNQ @ d39c1c75403d",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 179513864,
+   "seconds": 22.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bnn-pynq-lfc-w1a1-mnist": {
+   "date": "2026-11-12",
+   "framework": "numpy only (the runtime-side tooling) (env base)",
+   "source": "raw.githubusercontent.com; https://github.com/Lasagne/Lasagne @ 5d3c63cb315c; https://github.com/Xilinx/BNN-PYNQ @ d39c1c75403d",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 184931744,
+   "seconds": 11.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brevitas-bnn-pynq-cnv-1w1a": {
+   "date": "2026-11-12",
+   "framework": "brevitas 0.11.0 + torch (env brevitas)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 6227617,
+   "seconds": 2.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brevitas-bnn-pynq-lfc-1w1a": {
+   "date": "2026-11-12",
+   "framework": "brevitas 0.11.0 + torch (env brevitas)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 11699992,
+   "seconds": 2.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brevitas-bnn-pynq-sfc-1w1a": {
+   "date": "2026-11-12",
+   "framework": "brevitas 0.11.0 + torch (env brevitas)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1359640,
+   "seconds": 2.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brevitas-bnn-pynq-tfc-1w1a": {
+   "date": "2026-11-12",
+   "framework": "brevitas 0.11.0 + torch (env brevitas)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 249073,
+   "seconds": 2.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brillsson-binarydensenet28": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "www.dropbox.com; https://github.com/HarlinLee/brillsson @ 31887e8708e0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 93018555,
+   "seconds": 25.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brillsson-meliusnet22": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "www.dropbox.com; https://github.com/HarlinLee/brillsson @ 31887e8708e0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 93018555,
+   "seconds": 26.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "brillsson-quicknet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "www.dropbox.com; https://github.com/HarlinLee/brillsson @ 31887e8708e0",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 93018555,
+   "seconds": 20.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bsrc2023-binary-sr-x2-v0": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "raw.githubusercontent.com; https://github.com/ilyazhara/BSRC-2023 @ 62bbcf29cc95",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 33989783,
+   "seconds": 35.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bsrc2023-binary-sr-x2-v1": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "raw.githubusercontent.com; https://github.com/ilyazhara/BSRC-2023 @ 62bbcf29cc95",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 35416759,
+   "seconds": 109.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bsrc2023-binary-sr-x4-v0": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "raw.githubusercontent.com; https://github.com/ilyazhara/BSRC-2023 @ 62bbcf29cc95",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 31362575,
+   "seconds": 84.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "bsrc2023-binary-sr-x4-v1": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "raw.githubusercontent.com; https://github.com/ilyazhara/BSRC-2023 @ 62bbcf29cc95",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 31629075,
+   "seconds": 91.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "burn-reacta-stage2": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/naver-ai/burn @ cad8c75f9d11",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 187241062,
+   "seconds": 44.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "dabnn-bireal18": {
+   "date": "2026-11-12",
+   "framework": "qonnx 1.0.0 + onnx + onnxruntime (env qonnx)",
+   "source": "drive.google.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 51149593,
+   "seconds": 29.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "dabnn-bireal18-stem": {
+   "date": "2026-11-12",
+   "framework": "qonnx 1.0.0 + onnx + onnxruntime (env qonnx)",
+   "source": "drive.google.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 51185092,
+   "seconds": 26.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "fda-bnn-resnet20-cifar10-mindspore": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "download.mindspore.cn, gitee.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1100840,
+   "seconds": 14.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "finn-examples-bnn-pynq-cnv-w1a1": {
+   "date": "2026-11-12",
+   "framework": "qonnx 1.0.0 + onnx + onnxruntime (env qonnx)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1570253,
+   "seconds": 3.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "finn-examples-bnn-pynq-tfc-w1a1": {
+   "date": "2026-11-12",
+   "framework": "qonnx 1.0.0 + onnx + onnxruntime (env qonnx)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1570253,
+   "seconds": 1.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "finn-examples-cnv-w1a1-gtsrb": {
+   "date": "2026-11-12",
+   "framework": "qonnx 1.0.0 + onnx + onnxruntime (env qonnx)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 368728,
+   "seconds": 2.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "gsb-deit-s-cifar100-stage2": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/IMRL/GSB-Vision-Transformer @ 69c908f614a7",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 295936242,
+   "seconds": 117.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "ida-det-bires18-imagenet-backbone": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/SteveTsui/IDa-Det @ 2a00945506e4",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 49279384,
+   "seconds": 28.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-alexnet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 247497376,
+   "seconds": 34.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-densenet28": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 20822496,
+   "seconds": 42.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-densenet37": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 35218888,
+   "seconds": 48.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-densenet37-dilated": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 35217096,
+   "seconds": 84.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-densenet45": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 56098760,
+   "seconds": 63.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-binary-resnet-e18": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 46956504,
+   "seconds": 27.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-birealnet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 46949488,
+   "seconds": 27.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-dorefanet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 249671944,
+   "seconds": 93.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-meliusnet22": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 28233008,
+   "seconds": 46.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-quicknet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 53154808,
+   "seconds": 20.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-quicknet-large": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 93731272,
+   "seconds": 30.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-quicknet-small": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "int8_verified": [
+    "model_int8_full.bitino"
+   ],
+   "int8_note": "model_int8_full.bitino identical (data + graph) with the recorded calibration set imagenet100-train-calib-512 (n 128, percentile 99.99); the calibration images are not redistributed",
+   "bytes_downloaded": 50837992,
+   "seconds": 16.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-quicknet-xl-legacy": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com; https://github.com/larq/zoo @ 40f4cdc29f85",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 89161309,
+   "seconds": 31.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-real-to-binary-net": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 48323880,
+   "seconds": 36.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larq-zoo-xnornet": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "github.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 249649144,
+   "seconds": 40.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larqface-binarydensenet28-msceleb": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "drive.google.com; https://github.com/lluevano/insightface_larq_keras @ 606443641394",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 126709706,
+   "seconds": 24.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larqface-binarydensenet37-msceleb": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "drive.google.com; https://github.com/lluevano/insightface_larq_keras @ 606443641394",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 141168810,
+   "seconds": 26.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larqface-binarydensenet45-msceleb": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "drive.google.com; https://github.com/lluevano/insightface_larq_keras @ 606443641394",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 162165514,
+   "seconds": 32.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larqface-binaryfacenet-msceleb": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "drive.google.com; https://github.com/lluevano/insightface_larq_keras @ 606443641394",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 107827138,
+   "seconds": 23.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "larqface-quicknet-msceleb": {
+   "date": "2026-11-12",
+   "framework": "TensorFlow 2.15.1 + larq 0.13.3 + larq-zoo 2.4.0 (env larq)",
+   "source": "drive.google.com; https://github.com/lluevano/insightface_larq_keras @ 606443641394",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 158999338,
+   "seconds": 19.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "nncf-resnet18-binarization-dorefa": {
+   "date": "2026-11-12",
+   "framework": "nncf 2.9.0 + torch 2.1.2 (env nncf)",
+   "source": "storage.openvinotoolkit.org; https://github.com/openvinotoolkit/nncf @ f4b73bf",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 520352003,
+   "seconds": 47.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "nncf-resnet18-binarization-xnor": {
+   "date": "2026-11-12",
+   "framework": "nncf 2.9.0 + torch 2.1.2 (env nncf)",
+   "source": "storage.openvinotoolkit.org; https://github.com/openvinotoolkit/nncf @ f4b73bf",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 520350851,
+   "seconds": 46.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001": {
+   "date": "2026-11-12",
+   "framework": "OpenVINO runtime (fp32 reference) (env openvino)",
+   "source": "storage.openvinotoolkit.org",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 4349098,
+   "seconds": 9.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001-fp16": {
+   "date": "2026-11-12",
+   "framework": "OpenVINO runtime (fp32 reference) (env openvino)",
+   "source": "storage.openvinotoolkit.org",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 3003678,
+   "seconds": 8.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "omz-resnet50-binary-0001": {
+   "date": "2026-11-12",
+   "framework": "OpenVINO runtime (fp32 reference) (env openvino)",
+   "source": "storage.openvinotoolkit.org",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 22466441,
+   "seconds": 46.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "omz-resnet50-binary-0001-fp16": {
+   "date": "2026-11-12",
+   "framework": "OpenVINO runtime (fp32 reference) (env openvino)",
+   "source": "storage.openvinotoolkit.org",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 12831761,
+   "seconds": 41.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-resnet18-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 45444260,
+   "seconds": 34.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 47507897,
+   "seconds": 87.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-resnet20-bireal-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1547804,
+   "seconds": 12.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-resnet20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 1547804,
+   "seconds": 12.7,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-resnet34-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 88305294,
+   "seconds": 148.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbnn-vgg-small-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/RBNN @ 0b5e73b8df14",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 19139842,
+   "seconds": 19.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "rbonn-reactnet-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/SteveTsui/RBONN @ c3ae0baea904",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 46987361,
+   "seconds": 29.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "recu-resnet18-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yuanchunyu/ReCU @ 0d748a6d4510",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 89636310,
+   "seconds": 16.1,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "recu-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yuanchunyu/ReCU @ 0d748a6d4510",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 93763441,
+   "seconds": 29.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "recu-resnet20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yuanchunyu/ReCU @ 0d748a6d4510",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 2329654,
+   "seconds": 6.2,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "recu-resnet34-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yuanchunyu/ReCU @ 0d748a6d4510",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 174729903,
+   "seconds": 27.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "recu-vgg-small-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yuanchunyu/ReCU @ 0d748a6d4510",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 37436066,
+   "seconds": 8.9,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "sa-bnn-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 140553510,
+   "seconds": 22.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "shuaiz-bireal20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "github.com; https://github.com/ShuaiZ1037/bnn-xnor-bireal @ a828667fa658",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 10282286,
+   "seconds": 5.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "siman-resnet18-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/SiMaN @ 998669a5ec0b",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 134280077,
+   "seconds": 24.5,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "siman-resnet18-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/SiMaN @ 998669a5ec0b",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 137751783,
+   "seconds": 49.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "siman-resnet20-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/SiMaN @ 998669a5ec0b",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 3419513,
+   "seconds": 9.3,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "siman-resnet34-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/SiMaN @ 998669a5ec0b",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 259161064,
+   "seconds": 100.6,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "siman-vgg-small-cifar10": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/lmbxmu/SiMaN @ 998669a5ec0b",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 55743722,
+   "seconds": 24.4,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "snn-subbit-reactnet18-w0.67a1-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yikaiw/SNN @ 073c3b5a555f",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 141177865,
+   "seconds": 39.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "snn-subbit-reactnet18-w1a1-imagenet": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "drive.google.com; https://github.com/yikaiw/SNN @ 073c3b5a555f",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 141050377,
+   "seconds": 30.0,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  },
+  "tensorpack-dorefa-alexnet-w1a1-g32": {
+   "date": "2026-11-12",
+   "framework": "PyTorch CPU; the recorded conversions used torch 2.6.0 / torchvision 0.21.0 (env torch)",
+   "source": "models.tensorpack.com; https://github.com/tensorpack/tensorpack @ 1547a54e8546",
+   "result": "model.bitino identical (data + graph)",
+   "bytes_downloaded": 231423251,
+   "seconds": 45.8,
+   "check": "clean BITINO_HOME, every download SHA-256 checked, python -I converters, synthetic eval set; data_sha256 also compared with the validated artifact"
+  }
+ },
+ "broken": {
+  "s2bnn-reacta-distill-only": {
+   "date": "2026-11-12",
+   "download": "weights",
+   "reason": "the authors' only download link (the OneDrive/SharePoint share linked as 'Our Distillation Loss Only' in the S2-BNN README) has expired: SharePoint answers 'Sorry, the link has expired' (checked 2026-11-12, with and without download=1); the README has no other copy",
+   "instructions": "ask the authors (Zhiqiang Shen; https://github.com/szq0214/S2-BNN) for a renewed link to S2BNN_for_share/Distillation_only/step2/checkpoint_0199.pth.tar, then run `bitino fetch s2bnn-reacta-distill-only --file weights=PATH` (SHA-256 882b5825f471d936b2bdca9a02f924717ed452f11bf2512bae88205fb9b08ea8 is checked)",
+   "note": "with the original checkpoint supplied through --file weights=PATH the rest of the recipe converts to an identical file (data + graph; checked 2026-11-12 with the copy from the published conversion)"
   }
  }
 }

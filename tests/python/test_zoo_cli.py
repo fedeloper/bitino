@@ -34,15 +34,22 @@ def test_recipes_schema():
     assert RECIPES["schema"].endswith(".recipes.v1")
     for mid, r in RECIPES["recipes"].items():
         assert r["model_id"] == mid
-        assert r["state"] in ("verified", "reconstructed")
+        assert r["state"] in ("verified", "needs-manual-step", "broken", "reconstructed")
         assert r["env"] in RECIPES["envs"], (mid, r["env"])
+        assert all(s["env"] in RECIPES["envs"] for s in r["steps"]), mid
         assert r["steps"] and all(os.path.exists(os.path.join(ROOT, s["tool"])) for s in r["steps"]), mid
         for d in r["downloads"]:
             assert d.get("url"), mid
+            assert d.get("sha256"), (mid, d.get("name"))   # every download is checked
+            assert " " not in d["url"], (mid, d["url"])
         exp = r["expected"].get("model" + zoo.MODEL_EXT)
         assert exp and len(exp["data_sha256"]) == 64 and len(exp["graph_sha256"]) == 64, mid
         if r["state"] == "verified":
             assert r.get("verified", {}).get("date"), mid
+        if r["state"] == "broken":
+            assert r.get("broken", {}).get("reason"), mid
+        if r["state"] == "needs-manual-step":
+            assert r.get("manual_step", {}).get("instructions"), mid
 
 
 def test_results_exist_for_every_recipe():
@@ -87,3 +94,30 @@ def test_fetch_dry_run():
     mid = sorted(RECIPES["recipes"])[0]
     out = run_cli("fetch", mid, "--dry-run")
     assert json.loads(out)["model_id"] == mid
+
+
+def test_fetch_drive_links():
+    from bitino import fetch as F
+    fid = "1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas"
+    for u in (f"https://drive.google.com/file/d/{fid}/view?usp=sharing", f"https://drive.google.com/uc?export=download&id={fid}",
+              f"https://drive.google.com/uc?id={fid}"):
+        assert F.drive_file_id(u) == fid
+        assert F.direct_url(u) == f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t"
+    assert F.drive_file_id("https://huggingface.co/x/y/resolve/abc/m.h5?id=" + fid) is None
+    page = ('<html><form id="download-form" action="https://drive.usercontent.google.com/download" method="get">'
+            f'<input type="hidden" name="id" value="{fid}"><input type="hidden" name="export" value="download">'
+            '<input type="hidden" name="confirm" value="t"><input type="hidden" name="uuid" value="u-1"></form></html>')
+    nxt = F._drive_form(page)
+    assert nxt.startswith("https://drive.usercontent.google.com/download?") and f"id={fid}" in nxt and "uuid=u-1" in nxt
+
+
+def test_synthetic_eval_inputs(tmp_path):
+    np = pytest.importorskip("numpy")
+    from bitino import fetch as F
+    rec = {"eval": {"dir": "sst2/eval128", "preprocess": "bibert", "input_shape": [1, 64]}}
+    d = F.synthetic_eval(rec, str(tmp_path), 4)
+    ids = np.fromfile(os.path.join(d, "input_ids.i32"), np.int32).reshape(4, 64)
+    assert (ids[:, 0] == 101).all() and (ids[:, -1] == 102).all()
+    rec = {"eval": {"dir": "eval128_cifar10_finn", "preprocess": "cifar10_pixels", "input_shape": [1, 32, 32, 3]}}
+    x = np.fromfile(os.path.join(F.synthetic_eval(rec, str(tmp_path), 4), "cifar10_pixels.f32"), np.float32)
+    assert x.min() >= 0 and x.max() <= 255 and (x == np.round(x)).all()

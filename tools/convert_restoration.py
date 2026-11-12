@@ -75,10 +75,10 @@ def preprocess_key(family: str, model_id: str) -> str:
 
 
 def metric_of(family: str, manifest: dict) -> tuple[str, int]:
-    it = manifest["image_task"]
+    it = manifest.get("image_task") or {}   # absent in the synthetic eval sets of `bitino fetch` (no targets)
     if family == "bsrc":
-        return "bsrc_y", int(it["crop_border"])
-    return it["metric"], int(it["crop_border"])
+        return "bsrc_y", int(it.get("crop_border", 0))
+    return it.get("metric", "psnr"), int(it.get("crop_border", 0))
 
 
 # ------------------------------------------------------------------ source loading
@@ -305,7 +305,10 @@ def _run_one(job):
     return out32, out64, z32, z64, outx, None
 
 
-def crop_quality(outs: np.ndarray, targets: np.ndarray, metric: str, border: int) -> dict:
+def crop_quality(outs: np.ndarray, targets: np.ndarray | None, metric: str, border: int) -> dict:
+    if targets is None:   # synthetic eval set (bitino fetch without --eval-dir): no ground truth
+        return {"metric": metric, "crop_border": border, "psnr_mean": float("nan"), "ssim_mean": None,
+                "note": "no target images in the eval set"}
     ps, ss = [], []
     for o, t in zip(outs, targets):
         p, s = image_quality(o, t, metric, border)
@@ -354,10 +357,11 @@ def main(family: str) -> int:
     em = json.load(open(os.path.join(args.eval_dir, "manifest.json")))
     pre = em["preprocessing"][key]
     x = np.fromfile(os.path.join(args.eval_dir, pre["file"]), np.float32).reshape(pre["shape"])
-    tg = em["targets"]
-    targets = np.fromfile(os.path.join(args.eval_dir, tg["file"]), np.uint8).reshape(tg["shape"])
+    tg = em.get("targets")
+    targets = np.fromfile(os.path.join(args.eval_dir, tg["file"]), np.uint8).reshape(tg["shape"]) if tg else None
     if args.max_samples:
-        x, targets = x[: args.max_samples], targets[: args.max_samples]
+        x = x[: args.max_samples]
+        targets = targets[: args.max_samples] if targets is not None else None
     n, h, w, _ = x.shape
     metric, border = metric_of(family, em)
     rng_out = fam["output_range"]

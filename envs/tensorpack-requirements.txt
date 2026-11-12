@@ -1,0 +1,15 @@
+# Reference environment for the official tensorpack DoReFa-Net AlexNet logits (tools/tensorpack_dorefa_reference.py,
+# first step of the tensorpack-dorefa-alexnet-w1a1-g32 recipe). The published conversion used Python 3.11,
+# TensorFlow 2.15.1 (tf.compat.v1 graph mode), tensorpack 0.11, numpy 1.26.4, OpenCV 4.8.1.
+#   python3.11 -m venv ~/.venvs/bitino-tensorpack
+#   ~/.venvs/bitino-tensorpack/bin/pip install -r envs/tensorpack-requirements.txt
+# then: bitino fetch tensorpack-dorefa-alexnet-w1a1-g32 --python tensorpack=~/.venvs/bitino-tensorpack/bin/python
+tensorflow-cpu==2.15.1
+tensorpack==0.11
+numpy==1.26.4
+opencv-python-headless==4.8.1.78
+msgpack==1.0.8
+msgpack-numpy==0.4.8
+tabulate==0.9.0
+termcolor
+psutil

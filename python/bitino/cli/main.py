@@ -100,7 +100,7 @@ def cmd_list(a) -> int:
     if a.json:
         print(json.dumps(out, indent=1))
         return 0
-    print(f"{'model_id':44s} {'task':28s} {'recipe':13s} {'release':7s} {'accuracy (ref -> bitino, set)':40s}")
+    print(f"{'model_id':44s} {'task':28s} {'recipe':17s} {'release':7s} {'accuracy (ref -> bitino, set)':40s}")
     for r in out:
         if r["converted"]:
             acc = ""
@@ -108,7 +108,7 @@ def cmd_list(a) -> int:
                 pct = "PSNR" not in (r.get("metric") or "")
                 f = (lambda v: f"{100 * v:.1f}%") if pct else (lambda v: f"{v:.2f}")
                 acc = f"{f(r['reference'])} -> {f(r['runtime'])} ({(r.get('eval_set') or '').split(' ')[0].rstrip(',')})"
-            print(f"{r['model_id'][:44]:44s} {r['task'][:28]:28s} {r['recipe']:13s} {'yes' if r['release'] else '-':7s} {acc[:60]}")
+            print(f"{r['model_id'][:44]:44s} {r['task'][:28]:28s} {r['recipe']:17s} {'yes' if r['release'] else '-':7s} {acc[:60]}")
         else:
             print(f"{r['model_id'][:44]:44s} {r['task'][:28]:28s} {'-':13s} {'-':7s} not converted ({r.get('conversion') or r.get('status')})")
     n_conv = sum(1 for r in out if r["converted"])

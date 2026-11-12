@@ -59,8 +59,10 @@ The calibration set must come from the training split (disjoint from every eval 
 
 ```bash
 python3 tools/build_recipes.py --artifacts <dir containing artifacts/>   # registry/recipes.json
-bitino fetch <id> --python <env>=<python>       # run the recipe end to end; then record it in
-                                                 # registry/recipes_verified.json (state "verified")
+BITINO_HOME=$(mktemp -d) bitino fetch <id> --python <env>=<python>
+                                                 # run the recipe end to end from an empty cache; then record it
+                                                 # in registry/recipes_verified.json ("verified", or
+                                                 # "needs_manual_step" / "broken" with the reason)
 python3 tools/ingest_speed.py --device <phone id> <benchmark output dirs>  # measured phone runs (tools/benchmark.py;
                                                  # phone ids in results/devices.json)
 python3 tools/build_site.py --readme-only        # README / docs/MODEL_ZOO.md tables

@@ -394,10 +394,15 @@ def readme_tables(d: dict) -> dict[str, str]:
     devs = d["devices"]
     n_conv, n_rel = len(ms), sum(1 for m in ms if m["release"])
     n_ver = sum(1 for m in ms if m["recipe"] == "verified")
+    n_man = sum(1 for m in ms if m["recipe"] == "needs-manual-step")
+    n_brk = sum(1 for m in ms if m["recipe"] == "broken")
     stats = (f"**{d['registry_total']}** binary networks investigated, **{d['verified_weights']}** with verified public "
              f"weights, **{n_conv}** converted and validated against their original framework, **{n_rel}** redistributable "
-             f"as converted files (explicit permissive weights licence). Fetch recipes: {n_ver} verified end to end, "
-             f"{n_conv - n_ver} reconstructed from the conversion records.")
+             f"as converted files (explicit permissive weights licence). Fetch recipes: {n_ver} verified end to end"
+             + (f", {n_man} verified with a manual download step" if n_man else "")
+             + (f", {n_brk} broken upstream" if n_brk else "")
+             + (f", {n_conv - n_ver - n_man - n_brk} reconstructed from the conversion records" if n_conv - n_ver - n_man - n_brk else "")
+             + ".")
     hi = sorted((m for m in ms if m["phones"]), key=lambda m: m["id"])
     pids = list(d["speed"])
 

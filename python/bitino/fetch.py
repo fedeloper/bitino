@@ -23,14 +23,20 @@ from __future__ import annotations
 
 import datetime
 import hashlib
+import html
+import http.cookiejar
 import json
 import os
+import re
 import shutil
 import struct
 import subprocess
 import sys
 import tarfile
 import tempfile
+import time
+import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -76,8 +82,74 @@ def graph_sha256(path: str) -> str:
     return hashlib.sha256(g.encode()).hexdigest()
 
 
-def download(url: str, dest: str, sha256: str | None) -> str:
-    """Streams url to dest (a path inside a fresh directory), verifying SHA-256 if given. Returns the hash."""
+_DRIVE_ID = re.compile(r"(?:[?&]id=|/file/d/)([\w-]{20,})")
+
+
+def drive_file_id(url: str) -> str | None:
+    """File id of a Google Drive file link (uc?id=, open?id=, /file/d/<id>/view, drive.usercontent), else None."""
+    if "drive.google.com" not in url and "drive.usercontent.google.com" not in url:
+        return None
+    m = _DRIVE_ID.search(url)
+    return m.group(1) if m else None
+
+
+def direct_url(url: str) -> str:
+    """The URL that serves the file's bytes: Google Drive file links become the drive.usercontent download
+    endpoint (confirm=t skips the "can't scan for viruses" page of files over ~100 MB); others are unchanged."""
+    fid = drive_file_id(url)
+    if fid:
+        return f"https://drive.usercontent.google.com/download?id={fid}&export=download&confirm=t"
+    return url
+
+
+class _HTMLPage(Exception):
+    def __init__(self, text: str):
+        super().__init__("HTML page")
+        self.text = text
+
+
+def _drive_form(text: str) -> str | None:
+    """Google Drive's download-confirmation page: the URL its form submits to, else None."""
+    m = re.search(r'<form[^>]*id="download-form"[^>]*action="([^"]+)"[^>]*>(.*?)</form>', text, re.S)
+    if not m:
+        return None
+    fields = dict(re.findall(r'<input[^>]*type="hidden"[^>]*name="([^"]+)"[^>]*value="([^"]*)"', m.group(2)))
+    if "id" not in fields:
+        return None
+    return html.unescape(m.group(1)) + "?" + urllib.parse.urlencode(fields)
+
+
+# Session cookies only (no stored credentials): OneDrive/SharePoint share links set an access cookie on the first
+# redirect and serve the file on the next request.
+_OPENER = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+
+
+def _stream(url: str, tmp: str) -> tuple[str, int]:
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    h = hashlib.sha256()
+    n = 0
+    with _OPENER.open(req, timeout=120) as r, open(tmp, "wb") as f:
+        ctype = r.headers.get("Content-Type", "")
+        first = True
+        for chunk in iter(lambda: r.read(1 << 20), b""):
+            if first and ctype.startswith("text/html") and (b"<html" in chunk[:4096].lower() or b"<!doctype html" in chunk[:4096].lower()):
+                raise _HTMLPage((chunk + r.read(1 << 20)).decode("utf-8", "replace"))
+            first = False
+            h.update(chunk)
+            f.write(chunk)
+            n += len(chunk)
+    return h.hexdigest(), n
+
+
+BYTES_DOWNLOADED = [0]   # running total of this process (reported by fetch records)
+
+
+def download(url: str, dest: str, sha256: str | None, retries: int = 3) -> str:
+    """Streams url to dest (a path inside a fresh directory), verifying SHA-256 if given. Returns the hash.
+
+    Transient failures (timeouts, connection resets, HTTP 429/5xx) are retried with backoff. Google Drive links
+    go through direct_url() and its confirmation form; Drive's quota / sign-in pages raise a FetchError that says
+    how to download the file by hand."""
     if os.path.exists(dest):
         got = sha256_file(dest)
         if not sha256 or got == sha256:
@@ -85,27 +157,63 @@ def download(url: str, dest: str, sha256: str | None) -> str:
             return got
         os.remove(dest)
     os.makedirs(os.path.dirname(dest), exist_ok=True)
-    log(f"download {url}")
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    h = hashlib.sha256()
+    src = direct_url(url)
+    log(f"download {url}" + (f" (via {src})" if src != url else ""))
     tmp = dest + ".part"
-    with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as f:
-        ctype = r.headers.get("Content-Type", "")
-        first = True
-        for chunk in iter(lambda: r.read(1 << 20), b""):
-            if first and ctype.startswith("text/html") and b"<html" in chunk[:2048].lower():
-                raise FetchError(f"{url} returned an HTML page (login wall or confirmation page); download it "
-                                 f"manually and pass --file NAME=PATH")
-            first = False
-            h.update(chunk)
-            f.write(chunk)
-    got = h.hexdigest()
+    got = None
+    for attempt in range(retries):
+        try:
+            try:
+                got, n = _stream(src, tmp)
+            except _HTMLPage as page:
+                nxt = _drive_form(page.text) if drive_file_id(url) else None
+                if not nxt:
+                    raise
+                log("Google Drive confirmation page; following its download form")
+                got, n = _stream(nxt, tmp)
+            BYTES_DOWNLOADED[0] += n
+            break
+        except _HTMLPage as page:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            low = page.text.lower()
+            if drive_file_id(url) and ("quota" in low or "too many users" in low):
+                why = "Google Drive refused the download (the file's daily download quota is exhausted)"
+            elif drive_file_id(url) and ("accounts.google.com" in low or "sign in" in low):
+                why = "Google Drive asks for a sign-in (the file is not shared publicly any more)"
+            else:
+                why = f"{url} returned an HTML page (login wall or confirmation page)"
+            raise FetchError(f"{why}. Open {url} in a browser, download the file, then pass --file NAME=PATH "
+                             f"(the SHA-256 is still checked)")
+        except (urllib.error.URLError, TimeoutError, ConnectionError, OSError) as e:
+            code = getattr(e, "code", None)
+            if os.path.exists(tmp):
+                os.remove(tmp)
+            if (code is not None and code not in (408, 429) and code < 500) or attempt == retries - 1:
+                raise FetchError(f"download of {url} failed: {e}") from e
+            wait = 10 * 3 ** attempt
+            log(f"download failed ({e}); retrying in {wait} s")
+            time.sleep(wait)
     if sha256 and got != sha256.lower():
         os.remove(tmp)
         raise FetchError(f"SHA-256 mismatch for {url}: expected {sha256}, got {got} (file deleted)")
     os.replace(tmp, dest)
     if not sha256:
         log(f"WARNING: no recorded SHA-256 for {os.path.basename(dest)}; got {got}")
+    return got
+
+
+def extract_member(archive: str, member: str, dest: str, sha256: str | None) -> str:
+    """One file of a zip archive (a release that bundles several models) -> dest, SHA-256 checked."""
+    with zipfile.ZipFile(archive) as z:
+        _safe_members([member])
+        with z.open(member) as src, open(dest + ".part", "wb") as f:
+            shutil.copyfileobj(src, f, 1 << 20)
+    got = sha256_file(dest + ".part")
+    if sha256 and got != sha256.lower():
+        os.remove(dest + ".part")
+        raise FetchError(f"SHA-256 mismatch for {member} in {os.path.basename(archive)}: expected {sha256}, got {got}")
+    os.replace(dest + ".part", dest)
     return got
 
 
@@ -223,14 +331,37 @@ def synthetic_eval(recipe: dict, home: str, n: int, seed: int = 0) -> str:
         return d
     os.makedirs(d, exist_ok=True)
     rng = np.random.default_rng(seed)
-    x = rng.standard_normal([n] + shape[1:]).astype(np.float32)
+    extra_pre = {}
+    if key == "bibert":   # token inputs: [CLS] random word-piece ids [SEP], one segment, full attention mask
+        L = shape[1]
+        ids = rng.integers(1000, 30000, size=(n, L), dtype=np.int32)
+        ids[:, 0], ids[:, -1] = 101, 102
+        ids.tofile(os.path.join(d, "input_ids.i32"))
+        np.zeros((n, L), np.int32).tofile(os.path.join(d, "token_type_ids.i32"))
+        np.ones((n, L), np.float32).tofile(os.path.join(d, "attention_mask.f32"))
+        (np.arange(n) % 2).astype(np.int32).tofile(os.path.join(d, "labels.i32"))
+        x = np.concatenate([ids.view(np.float32), np.zeros((n, L), np.int32).view(np.float32),
+                            np.ones((n, L), np.float32)], axis=1)   # per-sample record, bench input order
+    elif key == "tensorpack_bgr":   # uint8 BGR crops for the TF reference + the float input its graph computes
+        u8 = rng.integers(0, 256, size=[n] + shape[1:], dtype=np.uint8)
+        u8.tofile(os.path.join(d, key + "_u8.u8"))
+        extra_pre["uint8_file"] = key + "_u8.u8"
+        mean = np.asarray([0.406, 0.456, 0.485], np.float32) * np.float32(255.0)
+        std = np.asarray([0.225, 0.224, 0.229], np.float32) * np.float32(255.0)
+        x = ((u8.astype(np.float32) - mean) * (np.float32(1.0) / std)).astype(np.float32)   # tools/eval_sets/tensorpack_bgr.py
+    elif key.endswith("_pixels"):   # raw 8-bit pixel values (FINN / QONNX graphs check the UINT8 input type)
+        x = rng.integers(0, 256, size=[n] + shape[1:]).astype(np.float32)
+    elif key.endswith("_totensor"):   # ToTensor(): k / 255
+        x = (rng.integers(0, 256, size=[n] + shape[1:]) / 255.0).astype(np.float32)
+    else:
+        x = rng.standard_normal([n] + shape[1:]).astype(np.float32)
     x.tofile(os.path.join(d, key + ".f32"))
     man = {"schema": "bitino.eval_set.v1", "name": f"synthetic-{n}",
-           "source": "seeded random N(0,1) inputs written by bitino fetch (no dataset); accuracy is meaningless",
+           "source": "seeded random inputs of the model's input type, written by bitino fetch (no dataset); accuracy is meaningless",
            "n_classes_covered": n_cls,
            "preprocessing": {key: {"shape": [n] + shape[1:], "dtype": "float32", "layout": pre_def.get("layout", "NHWC"),
                                    "file": key + ".f32", "sha256": sha256_file(os.path.join(d, key + ".f32")),
-                                   "definition": pre_def.get("definition", key)}},
+                                   "definition": pre_def.get("definition", key), **extra_pre}},
            "samples": [{"file": f"synthetic/{i}", "label": int(i % n_cls)} for i in range(n)],
            "limitations": "synthetic inputs: only for conversion and runtime-vs-reference checks"}
     with open(man_p, "w") as f:
@@ -286,6 +417,13 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
     log(f"{model_id}: recipe state {rec['state']}, env {rec['env']}, converter {rec['converter']}")
     for n in rec.get("notes", []):
         log(f"note: {n}")
+    if rec["state"] == "broken":
+        b = rec.get("broken") or {}
+        if not (b.get("download") and b["download"] in (files or {})):
+            raise FetchError(f"{model_id}: this recipe cannot run today: {b.get('reason', 'see registry/recipes_verified.json')}"
+                             + (f"\n{b['instructions']}" if b.get("instructions") else ""))
+    if rec["state"] == "needs-manual-step" and (rec.get("manual_step") or {}).get("instructions"):
+        log(f"manual step: {rec['manual_step']['instructions']}")
     ctx = {"model_id": model_id, "downloads": dl_dir, "out_dir": out_dir, "work": work, "threads": str(max(1, threads))}
     record = {"model_id": model_id, "recipe_state": rec["state"], "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
               "downloads": [], "sources": [], "commands": []}
@@ -307,18 +445,30 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
         if name in files:
             path = os.path.abspath(os.path.expanduser(files[name]))
             got = sha256_file(path)
+            if d.get("member") and d.get("archive_sha256") == got:   # the whole zip release was passed
+                path = os.path.join(dl_dir, d["file"])
+                got = extract_member(os.path.abspath(os.path.expanduser(files[name])), d["member"], path, d.get("sha256"))
             if d.get("sha256") and got != d["sha256"]:
                 raise FetchError(f"{path}: SHA-256 {got} does not match the recorded {d['sha256']}")
         else:
             if d.get("manual") and not d.get("url"):
                 raise FetchError(f"{name}: {d['manual']}")
-            path = os.path.join(dl_dir, d["file"])
-            try:
-                got = download(d["url"], path, d.get("sha256"))
-            except FetchError:
-                raise
-            except Exception as e:
-                raise FetchError(f"download of {d['url']} failed: {e}" + (f"\n{d['manual']}" if d.get("manual") else ""))
+            if d.get("member"):   # one file of a zip release: download the archive, extract the member
+                arch = os.path.join(dl_dir, d["archive_file"])
+                try:
+                    download(d["url"], arch, d.get("archive_sha256"))
+                except FetchError as e:
+                    raise FetchError(f"{e}" + (f"\n{d['manual']}" if d.get("manual") else ""))
+                path = os.path.join(dl_dir, d["file"])
+                got = extract_member(arch, d["member"], path, d.get("sha256"))
+            else:
+                path = os.path.join(dl_dir, d["file"])
+                try:
+                    got = download(d["url"], path, d.get("sha256"))
+                except FetchError as e:
+                    raise FetchError(f"{e}" + (f"\n{d['manual']}" if d.get("manual") else ""))
+                except Exception as e:
+                    raise FetchError(f"download of {d['url']} failed: {e}" + (f"\n{d['manual']}" if d.get("manual") else ""))
         ctx["download:" + name] = path
         if i == 0:
             ctx["weights"] = path
@@ -344,7 +494,9 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
                TF_NUM_INTRAOP_THREADS=str(threads), TF_NUM_INTEROP_THREADS="1")
     for step in rec["steps"]:
         py = resolve_python(step["env"], python)
-        ctx_py = {f"python:{k}": v for k, v in python.items()}
+        # {python:ENV} placeholders (a second reference environment the converter calls, e.g. Python 2.7 Theano)
+        ctx_py = {f"python:{k}": resolve_python(k, python)
+                  for a in step["args"] for k in re.findall(r"\{python:([\w-]+)\}", a)}
         argv = [py, "-I", os.path.join(zoo.ROOT, step["tool"])] + [_fmt(a, ctx | ctx_py) for a in step["args"]]
         log("run " + " ".join(argv))
         record["commands"].append(argv)
@@ -385,6 +537,7 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
             g = record['results'][q['file']]['identical_graph']
             log(f"{q['file']}: data section {'IDENTICAL to' if got == exp else 'DIFFERS from'} the published file; "
                 f"graph {'identical' if g else 'differs' if g is False else 'not recorded'}")
+    record["bytes_downloaded"] = BYTES_DOWNLOADED[0]
     with open(os.path.join(out_dir, "fetch_record.json"), "w") as f:
         json.dump(record, f, indent=1)
     return record

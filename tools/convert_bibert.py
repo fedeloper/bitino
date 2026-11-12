@@ -311,7 +311,10 @@ def main() -> int:
                        "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(), "python": platform.python_version(),
                        "torch": torch.__version__},
         "input": {"names": ["input_ids", "token_type_ids", "attention_mask"], "shape": [1, L],
-                  "dtypes": ["i32", "i32", "f32"], "preprocessing": em["tokenization"]},
+                  "dtypes": ["i32", "i32", "f32"], "preprocessing": em.get("tokenization") or {
+                      "format": "[CLS] tokens [SEP] + zero padding; token_type 0; mask 1/0", "max_seq_length": L,
+                      "note": "converted on an eval set without a tokenization record (bitino fetch synthetic set); "
+                              "tokenize as BiBERT quant_task_glue.py (BertTokenizer, do_lower_case=True)"}},
         "outputs": ["logits"], "op_versions": {"format": 1},
         "layer_precision": info["layer_precision"], "exact_zero_weights_total": info["exact_zero_weights_total"],
         "unused_parameters": info["unused_parameters"],

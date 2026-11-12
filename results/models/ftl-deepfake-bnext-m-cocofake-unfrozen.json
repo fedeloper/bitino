@@ -11,7 +11,12 @@
  ],
  "adapter": "bitino.adapters.torch_ftl_deepfake",
  "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
- "files": {},
+ "files": {
+  "model.bitino": {
+   "bytes": 42969088,
+   "data_sha256": "20a636fc4023bc1b864f353aed71ad46b177042e1514ca44f967d2e1bf1bd93f"
+  }
+ },
  "accuracy": {
   "headline": {
    "eval_set": "cifake-test-subset-128",

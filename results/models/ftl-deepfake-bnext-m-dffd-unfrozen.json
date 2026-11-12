@@ -11,11 +11,16 @@
  ],
  "adapter": "bitino.adapters.torch_ftl_deepfake",
  "numerical_verification": "passed (Level 3, numpy executor)",
- "files": {},
+ "files": {
+  "model.bitino": {
+   "bytes": 42969088,
+   "data_sha256": "c23352cd0436ec0dad371644c2f5ba798fa337fc2216c17e43d9e14e8f54c113"
+  }
+ },
  "accuracy": {
   "headline": {
    "eval_set": "cifake-test-subset-128",
-   "n": 128,
+   "n": 64,
    "metric": "top-1",
    "reference": null,
    "reference_kind": "source framework, float32",

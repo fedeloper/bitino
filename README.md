@@ -10,7 +10,7 @@ runtime with NEON (ARMv8.2 dotprod, i8mm) and AVX2 / AVX-VNNI kernels, converter
 public weights.
 
 <!-- generated:stats -->
-**343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 4 verified end to end, 128 reconstructed from the conversion records.
+**343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 113 verified end to end, 1 broken upstream, 18 reconstructed from the conversion records.
 <!-- /generated:stats -->
 
 *Un bitino* is Italian for “a little bit”, which is all a binary network needs per weight.
@@ -338,9 +338,11 @@ Full walk-through: [docs/adding-a-model.md](docs/adding-a-model.md).
   policy, which holds the clocks below their maximum with the screen off (◇, ceilings recorded per run). The S22
   numbers are from an older runtime on a thermally capped phone (charging over USB) and are labelled so. x86 host
   numbers are from an older runtime.
-* **Fetch recipes:** a few are verified end to end; the others are reconstructed from the conversion records
-  (state shown by `bitino list`). Some sources need a manual download (Google Drive, Baidu) or a second reference
-  environment (MindSpore, tensorpack, Python 2.7 Theano).
+* **Fetch recipes:** 113 of 114 were run end to end from an empty cache (authors' downloads, SHA-256 checked,
+  converted file identical to the published one); one is broken upstream (S2-BNN: the authors' OneDrive link has
+  expired). State per model: `bitino list --converted`. Google Drive can refuse a scripted download (daily quota);
+  `fetch` then prints the link to download by hand. Some recipes need a second reference environment
+  (BHViT's transformers 4.39, tensorpack/TensorFlow, Python 2.7 Theano for BNN-PYNQ), listed in `envs/`.
 * **int8_full** loses accuracy on some networks (see the zoo tables); the exact `neon` / `optimized` stages
   match the source framework. Reproducing an int8 file bit for bit needs the calibration images it was built from
   (training split, not redistributed).

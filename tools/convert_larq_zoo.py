@@ -37,6 +37,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import platform
 import sys
 
@@ -88,9 +89,12 @@ def check_h5_layer_order(model, weights: str) -> dict:
         keras_version = f.attrs.get("keras_version", b"")
     mine = [l.name for l in model.layers if l.weights]
     ok = stored == mine
-    if not ok:
+    # Keras numbers layer names per session (quant_conv2d_63 when the authors had built other models first);
+    # load_weights() matches by order, so the check is on the layer kinds in order.
+    kind = lambda n: re.sub(r"_\d+$", "", n)  # noqa: E731
+    if [kind(n) for n in stored] != [kind(n) for n in mine]:
         raise RuntimeError(f"h5 weighted-layer order differs from the model: {list(zip(stored, mine))[:5]}")
-    return {"n_weighted_layers": len(mine), "names_identical_in_order": ok,
+    return {"n_weighted_layers": len(mine), "names_identical_in_order": ok, "kinds_identical_in_order": True,
             "keras_version": keras_version.decode() if isinstance(keras_version, bytes) else str(keras_version)}
 
 
