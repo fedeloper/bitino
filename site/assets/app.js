@@ -127,3 +127,83 @@ var BitinoZoo = (function () {
   }
   return { init: init };
 })();
+
+/* Accuracy-vs-latency plots (benchmarks page): nearest-point hover with crosshair and a tooltip card, keyboard
+   focus, click (or Enter) jumps to the model's row in the table below. The SVGs come from tools/pareto_plot.py
+   (interactive=True): every point is a <g class="pt"> with data-label/x/y/front/note/extra. */
+var BitinoPareto = (function () {
+  function fmt(v) { return v >= 10 ? v.toFixed(1) : v >= 1 ? v.toFixed(2) : v.toFixed(3); }
+  function setup(svg) {
+    var fig = svg.closest("figure");
+    var pts = Array.prototype.slice.call(svg.querySelectorAll("g.pt"));
+    if (!fig || !pts.length) return;
+    var ml = +svg.dataset.ml, mt = +svg.dataset.mt, pw = +svg.dataset.pw, ph = +svg.dataset.ph;
+    var xh = svg.querySelector("g.xh"), lv = xh.querySelector(".xh-v"), lh = xh.querySelector(".xh-h");
+    var tx = xh.querySelector(".xh-tx"), ty = xh.querySelector(".xh-ty");
+    var tip = document.createElement("div");
+    tip.className = "ptip"; tip.setAttribute("role", "status"); tip.hidden = true;
+    fig.appendChild(tip);
+    var dots = pts.map(function (g) {
+      var c = g.querySelector("circle.hit");
+      return { g: g, x: +c.getAttribute("cx"), y: +c.getAttribute("cy") };
+    });
+    var cur = null;
+    function show(d) {
+      if (cur === d) return;
+      if (cur) cur.g.classList.remove("on");
+      cur = d;
+      if (!d) { tip.hidden = true; xh.setAttribute("visibility", "hidden"); return; }
+      d.g.classList.add("on");
+      d.g.parentNode.appendChild(d.g);   // on top of its neighbours
+      var s = d.g.dataset;
+      lv.setAttribute("x1", d.x); lv.setAttribute("x2", d.x); lv.setAttribute("y1", d.y); lv.setAttribute("y2", mt + ph);
+      lh.setAttribute("x1", ml); lh.setAttribute("x2", d.x); lh.setAttribute("y1", d.y); lh.setAttribute("y2", d.y);
+      tx.setAttribute("x", d.x); tx.setAttribute("y", mt + ph + 30); tx.textContent = fmt(+s.x) + " ms";
+      ty.setAttribute("x", ml + 4); ty.setAttribute("y", d.y - 5); ty.textContent = (+s.y).toFixed(1) + " %";
+      xh.setAttribute("visibility", "visible");
+      tip.innerHTML = "";
+      var h = document.createElement("strong"); h.textContent = s.label; tip.appendChild(h);
+      var m = document.createElement("div"); m.className = "ptip-m";
+      m.textContent = (+s.y).toFixed(1) + " % top-1 · " + fmt(+s.x) + " ms"; tip.appendChild(m);
+      [s.note, s.extra].forEach(function (t, i) {
+        if (!t) return;
+        var e = document.createElement("div"); e.className = i ? "ptip-x" : (s.front === "1" ? "ptip-f" : "ptip-x");
+        e.textContent = t; tip.appendChild(e);
+      });
+      var row = document.getElementById("row-" + s.id);
+      if (row) { var k = document.createElement("div"); k.className = "ptip-x"; k.textContent = "click: show in table"; tip.appendChild(k); }
+      tip.hidden = false;
+      // place the card next to the dot, inside the figure
+      var r = svg.getBoundingClientRect(), fr = fig.getBoundingClientRect(), sc = r.width / svg.viewBox.baseVal.width;
+      var px = r.left - fr.left + d.x * sc, py = r.top - fr.top + d.y * sc;
+      var w = tip.offsetWidth, hh = tip.offsetHeight;
+      var left = px + 14 + w > fr.width ? px - 14 - w : px + 14;
+      tip.style.left = Math.max(0, left) + "px";
+      tip.style.top = Math.max(0, Math.min(py - hh / 2, r.bottom - fr.top - hh)) + "px";
+    }
+    function nearest(ev) {
+      var p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY;
+      var q = p.matrixTransform(svg.getScreenCTM().inverse()), best = null, bd = 28 * 28;
+      dots.forEach(function (d) {
+        var dd = (d.x - q.x) * (d.x - q.x) + (d.y - q.y) * (d.y - q.y);
+        if (dd < bd) { bd = dd; best = d; }
+      });
+      return best;
+    }
+    function go(d) {
+      var row = d && document.getElementById("row-" + d.g.dataset.id);
+      if (!row) return;
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+      row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
+    }
+    svg.addEventListener("pointermove", function (ev) { show(nearest(ev)); });
+    svg.addEventListener("pointerleave", function () { show(null); });
+    svg.addEventListener("click", function (ev) { var d = nearest(ev); show(d); go(d); });
+    dots.forEach(function (d) {
+      d.g.addEventListener("focus", function () { show(d); });
+      d.g.addEventListener("blur", function () { show(null); });
+      d.g.addEventListener("keydown", function (ev) { if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(d); } });
+    });
+  }
+  return { init: function () { Array.prototype.forEach.call(document.querySelectorAll("svg.pareto-svg"), setup); } };
+})();

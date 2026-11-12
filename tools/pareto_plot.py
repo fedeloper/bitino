@@ -57,9 +57,18 @@ def _fmt(v: float) -> str:
     return f"{v:g}" if v >= 1 else f"{v:.2g}"
 
 
+def dominator(p: dict, front: list[dict]) -> dict | None:
+    """The slowest frontier point that is at least as fast and at least as accurate as p (its closest better model)."""
+    c = [q for q in front if q["id"] != p["id"] and q["x"] <= p["x"] and q["y"] >= p["y"]]
+    return max(c, key=lambda q: q["x"]) if c else None
+
+
 def pareto_svg(points: list[dict], title: str, subtitle: str, xlabel: str, ylabel: str,
-               width: int = 760, height: int = 460) -> str:
-    """points: [{"id", "label", "x" (ms > 0), "y" (accuracy %)}]. Returns the SVG text."""
+               width: int = 760, height: int = 460, interactive: bool = False) -> str:
+    """points: [{"id", "label", "x" (ms > 0), "y" (accuracy %), optional "extra" (tooltip line)}]. Returns the SVG
+    text. interactive=True (website): no embedded <style> (the page's stylesheet colours it, light and dark theme
+    toggle included), no native tooltips, and data-* attributes on every point for assets/app.js (BitinoPareto):
+    nearest-point hover with crosshair and tooltip card, click to jump to the model's table row."""
     pts = [p for p in points if p.get("x") and p["x"] > 0 and p.get("y") is not None]
     front = frontier(pts)
     fids = {p["id"] for p in front}
@@ -76,8 +85,14 @@ def pareto_svg(points: list[dict], title: str, subtitle: str, xlabel: str, ylabe
     def Y(v):
         return mt + (yhi - v) / (yhi - ylo) * ph
 
-    o = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" '
-         f'height="{height}" role="img" aria-label="{escape(title)}"><style>{STYLE}</style>',
+    head = (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}" ')
+    if interactive:
+        head += (f'class="pareto-svg" data-ml="{ml}" data-mt="{mt}" data-pw="{pw}" data-ph="{ph}" '
+                 f'data-ylo="{ylo}" data-yhi="{yhi}" data-xlo="{xlo:.6g}" data-xhi="{xhi:.6g}" '
+                 f'role="group" aria-label="{escape(title)}">')
+    else:
+        head += f'role="img" aria-label="{escape(title)}"><style>{STYLE}</style>'
+    o = [head,
          f'<title>{escape(title)}</title>',
          f'<rect class="bg" x="0" y="0" width="{width}" height="{height}" rx="8"/>',
          f'<text class="title" x="{ml}" y="24">{escape(title)}</text>',
@@ -99,12 +114,25 @@ def pareto_svg(points: list[dict], title: str, subtitle: str, xlabel: str, ylabe
             d += f" H{X(b['x']):.1f} V{Y(b['y']):.1f}"
         d += f" H{ml + pw:.1f}"
         o.append(f'<path class="front" d="{d}"/>')
+    if interactive:   # crosshair (shown by the page script), beneath the dots
+        o.append('<g class="xh" visibility="hidden"><line class="xh-l xh-v"/><line class="xh-l xh-h"/>'
+                 '<text class="xh-t xh-tx" text-anchor="middle"/><text class="xh-t xh-ty" text-anchor="start"/></g>')
     # dots: dominated first (beneath), then the frontier; each with a larger invisible hit target and a tooltip
     for p in sorted(pts, key=lambda p: p["id"] in fids):
         cls = "dot-f" if p["id"] in fids else "dot-o"
-        tip = f"{p['label']}: {p['y']:.1f} % top-1, {_fmt(p['x'])} ms" + (" (Pareto-optimal)" if p["id"] in fids else "")
-        o.append(f'<g><title>{escape(tip)}</title><circle class="hit" cx="{X(p["x"]):.1f}" cy="{Y(p["y"]):.1f}" r="12"/>'
-                 f'<circle class="{cls}" cx="{X(p["x"]):.1f}" cy="{Y(p["y"]):.1f}" r="{5 if cls == "dot-f" else 4}"/></g>')
+        cx, cy = X(p["x"]), Y(p["y"])
+        dot = f'<circle class="{cls}" cx="{cx:.1f}" cy="{cy:.1f}" r="{5 if cls == "dot-f" else 4}"/>'
+        if interactive:
+            dom = None if p["id"] in fids else dominator(p, front)
+            note = ("Pareto-optimal: nothing is both faster and more accurate" if p["id"] in fids else
+                    f"beaten by {dom['label']}: {_fmt(dom['x'])} ms, {dom['y']:.1f} %" if dom else "")
+            o.append(f'<g class="pt" tabindex="0" data-id="{escape(p["id"])}" data-label="{escape(p["label"])}" '
+                     f'data-x="{p["x"]:.4g}" data-y="{p["y"]:.2f}" data-front="{1 if p["id"] in fids else 0}" '
+                     f'data-note="{escape(note)}" data-extra="{escape(p.get("extra") or "")}">'
+                     f'<circle class="hit" cx="{cx:.1f}" cy="{cy:.1f}" r="12"/>{dot}</g>')
+        else:
+            tip = f"{p['label']}: {p['y']:.1f} % top-1, {_fmt(p['x'])} ms" + (" (Pareto-optimal)" if p["id"] in fids else "")
+            o.append(f'<g><title>{escape(tip)}</title><circle class="hit" cx="{cx:.1f}" cy="{cy:.1f}" r="12"/>{dot}</g>')
     # direct labels on the frontier only: the first candidate position that overlaps no dot, no label and stays
     # inside the plot (fewest overlaps otherwise), with a leader line when the label sits away from its dot
     dots = [(X(p["x"]), Y(p["y"])) for p in pts]

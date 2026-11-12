@@ -308,7 +308,8 @@ def pareto_data(d: dict, dataset: str, int8: bool = False) -> tuple[str | None, 
             continue
         if not int8:
             if p.get("t1"):
-                pts.append({"id": m["id"], "label": short_label(m["id"]), "x": p["t1"]["ms"], "y": a["top1"]})
+                pts.append({"id": m["id"], "label": short_label(m["id"]), "x": p["t1"]["ms"], "y": a["top1"],
+                            "extra": "published full test-set top-1"})
             continue
         i8 = m["int8"]
         t = (p.get("t1_int8_full_files") or {}).get(os.path.basename((i8 or {}).get("file") or ""))
@@ -317,11 +318,12 @@ def pareto_data(d: dict, dataset: str, int8: bool = False) -> tuple[str | None, 
         if i8["delta"] < -INT8_BROKEN_PT:
             dropped.append(m["id"])
             continue
-        pts.append({"id": m["id"], "label": short_label(m["id"]), "x": t["ms"], "y": round(a["top1"] + i8["delta"], 2)})
+        pts.append({"id": m["id"], "label": short_label(m["id"]), "x": t["ms"], "y": round(a["top1"] + i8["delta"], 2),
+                    "extra": f"published {a['top1']:.1f} % {i8['delta']:+.2f} pt int8_full Δ ({i8.get('set') or '?'}, n={i8.get('n')})"})
     return pid, pts, dropped
 
 
-def pareto_figure(d: dict, dataset: str, title: str, int8: bool = False) -> str | None:
+def pareto_figure(d: dict, dataset: str, title: str, int8: bool = False, interactive: bool = False) -> str | None:
     pid, pts, dropped = pareto_data(d, dataset, int8)
     if not pid or len(pts) < 3:
         return None
@@ -336,14 +338,14 @@ def pareto_figure(d: dict, dataset: str, title: str, int8: bool = False) -> str 
                "float32 elsewhere); published full test-set top-1")
     return PP.pareto_svg(pts, f"{title}{' int8_full' if int8 else ''}: accuracy vs latency ({len(pts)} models)", sub,
                          f"latency per image, ms (log scale), {dev.get('short') or pid} 1 thread",
-                         f"{title} top-1 (%)" + (" (estimate)" if int8 else ""))
+                         f"{title} top-1 (%)" + (" (estimate)" if int8 else ""), interactive=interactive)
 
 
-def pareto_files(d: dict, key: str, title: str) -> list[tuple[str, str]]:
+def pareto_files(d: dict, key: str, title: str, interactive: bool = False) -> list[tuple[str, str]]:
     """[(file name under docs/img, svg)] of the plots of one group: float file, then int8_full."""
     out = []
     for int8, suffix in ((False, ""), (True, "_int8_full")):
-        svg = pareto_figure(d, key, title, int8) if any(k == key for k, _ in PARETO) else None
+        svg = pareto_figure(d, key, title, int8, interactive) if any(k == key for k, _ in PARETO) else None
         if svg:
             out.append((f"pareto_{key}{suffix}.svg", svg))
     return out
@@ -743,14 +745,14 @@ def site_benchmarks(d: dict) -> str:
                       "paired difference of the full-integer file against the exact stage. Fastest first.</p>")
         for key, title, ms_ in groups:
             task_col = key == "others"
-            trs = "".join(f"<tr><td><code>{esc(m['id'])}</code></td>" + (f"<td>{esc(task_label(m))}</td>" if task_col else "") +
+            trs = "".join(f"<tr id=\"row-{esc(m['id'])}\"><td><code>{esc(m['id'])}</code></td>" + (f"<td>{esc(task_label(m))}</td>" if task_col else "") +
                           f"<td>{esc(fmt_acc(m['reference'], m['metric']))} → {esc(fmt_acc(m['runtime'], m['metric']))}</td>"
                           f"<td class=num>{esc(int8_delta(m))}</td>"
                           + "".join(cell((m['phones'].get(gpid) or {}).get(k)) for k in ("t1", "t4", "t1_int8"))
                           + "".join(cell((m['phones'].get(o) or {}).get('t1')) for o in gothers) + "</tr>" for m in ms_)
-            figs = [svg for _, svg in pareto_files(d, key, title)]
+            figs = [svg for _, svg in pareto_files(d, key, title, interactive=True)]
             group_html += f"""<h2 id="speed-{key}">{esc(title)} ({len(ms_)} models)</h2>
-  {''.join('<figure class="pareto">' + fig + '<figcaption class=small>Pareto-optimal: no other model is both faster and at least as accurate. Hover a dot for its numbers.</figcaption></figure>' for fig in figs)}
+  {''.join('<figure class="pareto">' + fig + '<figcaption class=small>Pareto-optimal: no other model is both faster and at least as accurate. Point at a dot for its numbers; click it to jump to its row.</figcaption></figure>' for fig in figs)}
   <div class="table-wrap"><table class="bench">
   <thead><tr><th>Model</th>{'<th>Task</th>' if task_col else ''}<th>Accuracy (reference → Bitino)</th><th class=num>int8_full Δ</th><th class=num>{ps} 1T</th><th class=num>{ps} 4T</th><th class=num>{ps} int8 1T</th>{oth}</tr></thead>
   <tbody>{trs}</tbody></table></div>"""
@@ -796,7 +798,7 @@ def site_benchmarks(d: dict) -> str:
   <tbody>{''.join(hrows)}</tbody></table></div>
 </section>
 """
-    return page("Bitino · Benchmarks", "benchmarks.html", body)
+    return page("Bitino · Benchmarks", "benchmarks.html", body, scripts='<script>BitinoPareto.init()</script>')
 
 
 def md_to_html(md: str) -> str:
