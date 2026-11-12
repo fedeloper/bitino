@@ -1,0 +1,353 @@
+{
+ "model_id": "larq-zoo-binary-alexnet",
+ "h5": {
+  "file": ".cache/checkpoints/larq-zoo-binary-alexnet/binary_alexnet_weights.h5",
+  "sha256": "7fc065c47c5c1d92389e0bb988ce6df6a4fa09d803b866e2ba648069d6652d63",
+  "expected_sha256": "7fc065c47c5c1d92389e0bb988ce6df6a4fa09d803b866e2ba648069d6652d63",
+  "n_weighted_layers": 16,
+  "n_tensors": 32,
+  "names_identical_in_order": true,
+  "layer_types_identical_in_order": true,
+  "keras_version_in_file": "2.5.0"
+ },
+ "env": {
+  "tensorflow": "2.16.1",
+  "tf_keras": "",
+  "larq": "0.14.0",
+  "larq_compute_engine": "0.16.0",
+  "python": "3.11.18"
+ },
+ "keras_params": 61859192,
+ "keras_vs_reference": {
+  "logits": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "probs": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  }
+ },
+ "lce_default_conversion": {
+  "bytes": 7881764,
+  "ops": {
+   "ADD": 3,
+   "CONV_2D": 1,
+   "LceBconv2d": 7,
+   "LceQuantize": 5,
+   "MAX_POOL_2D": 3,
+   "MUL": 3,
+   "RESHAPE": 2,
+   "SOFTMAX": 1
+  },
+  "binary_quantconv2d_layers": 7
+ },
+ "tflite_fp32_default_conversion": {
+  "bytes": 247402152,
+  "ops": {
+   "ADD": 12,
+   "CONV_2D": 8,
+   "MAX_POOL_2D": 3,
+   "MUL": 4,
+   "PACK": 1,
+   "RESHAPE": 2,
+   "SHAPE": 1,
+   "SIGN": 16,
+   "SOFTMAX": 1,
+   "STRIDED_SLICE": 1,
+   "TRANSPOSE": 1
+  },
+  "layers_with_input_quantizer": 7
+ },
+ "weights_prequantized": {
+  "reason": "default TFLite fp32 conversion has 16 SIGN for 7 binarized inputs and a TRANSPOSE (weight quantizer not constant-folded)",
+  "layers": [
+   {
+    "layer": "quant_conv2d",
+    "shape": [
+     11,
+     11,
+     3,
+     64
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_1",
+    "shape": [
+     5,
+     5,
+     64,
+     192
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_2",
+    "shape": [
+     3,
+     3,
+     192,
+     384
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_3",
+    "shape": [
+     3,
+     3,
+     384,
+     384
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_4",
+    "shape": [
+     3,
+     3,
+     384,
+     256
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_5",
+    "shape": [
+     1,
+     1,
+     9216,
+     4096
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_6",
+    "shape": [
+     1,
+     1,
+     4096,
+     4096
+    ],
+    "binary_per_out_channel": true
+   },
+   {
+    "layer": "quant_conv2d_7",
+    "shape": [
+     1,
+     1,
+     4096,
+     1000
+    ],
+    "binary_per_out_channel": true
+   }
+  ],
+  "keras_vs_reference_probs": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  }
+ },
+ "int8_mode": "supported_ops=TFLITE_BUILTINS_INT8",
+ "int8_calibration": {
+  "set": ".cache/data/dev1000_imagenet100train_larq (ImageNet-100 TRAIN images, larq_zoo preprocessing, disjoint from eval128)",
+  "n": 128
+ },
+ "files": {
+  "lce": {
+   "file": "lce.tflite",
+   "bytes": 7881764,
+   "sha256_converter": "5001176e9a94682485b8b738f3d76dfeb063cea8ae1c0fbe3c3c013783bcbb36",
+   "convert_s": 8.1,
+   "ops": {
+    "ADD": 3,
+    "CONV_2D": 1,
+    "LceBconv2d": 7,
+    "LceQuantize": 5,
+    "MAX_POOL_2D": 3,
+    "MUL": 3,
+    "RESHAPE": 2,
+    "SOFTMAX": 1
+   },
+   "sha256": "fcbc607c45bd7cc99c72f66c06f9fd90a72bd4ed7ab5eda4ae4dfa5e741a670b",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_fp32": {
+   "file": "tflite_fp32.tflite",
+   "bytes": 247368256,
+   "sha256_converter": "1c10c67f1a45a5ec7a1143287ee0f55abb55a410a87b267d920a3fdfede141e2",
+   "convert_s": 7.7,
+   "ops": {
+    "ADD": 10,
+    "CONV_2D": 8,
+    "MAX_POOL_2D": 3,
+    "MUL": 3,
+    "PACK": 1,
+    "RESHAPE": 2,
+    "SHAPE": 1,
+    "SIGN": 14,
+    "SOFTMAX": 1,
+    "STRIDED_SLICE": 1
+   },
+   "sha256": "79576294ddf9cac64aab8a7c60c47d6d4d4b27b3e077e399b7a62122ab802c2b",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_int8": {
+   "file": "tflite_int8.tflite",
+   "bytes": 62139328,
+   "sha256_converter": "51c059f9fb432f9e8da04bec48fd7e8e7084156ec3818e960330414d11121415",
+   "convert_s": 17.7,
+   "ops": {
+    "ADD": 10,
+    "CONV_2D": 8,
+    "DEQUANTIZE": 14,
+    "MAX_POOL_2D": 3,
+    "MUL": 3,
+    "PACK": 1,
+    "QUANTIZE": 14,
+    "RESHAPE": 2,
+    "SHAPE": 1,
+    "SIGN": 14,
+    "SOFTMAX": 1,
+    "STRIDED_SLICE": 1
+   },
+   "sha256": "3130c05121940ddb3ba1db2c55fc4bbcc44bf4e1aa4dfa98e85b598d8163d850",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ],
+   "op_types": {
+    "ADD:INT8": 10,
+    "CONV_2D:INT8": 8,
+    "DEQUANTIZE:INT8": 14,
+    "MAX_POOL_2D:INT8": 3,
+    "MUL:INT8": 3,
+    "PACK:INT32": 1,
+    "QUANTIZE:FLOAT32": 14,
+    "RESHAPE:INT8": 2,
+    "SHAPE:INT8": 1,
+    "SIGN:FLOAT32": 14,
+    "SOFTMAX:INT8": 1,
+    "STRIDED_SLICE:INT32": 1
+   }
+  },
+  "bitino": {
+   "file": "artifacts/larq-zoo-binary-alexnet/model.bitino",
+   "bytes": 7912384,
+   "sha256": "a9128862c0016910b465451f3dbe1a373703f548d08b58b4d35a132a73888a60"
+  }
+ },
+ "int8_float_ops": {
+  "SIGN:FLOAT32": 14
+ },
+ "host_agreement_vs_reference_probs": {
+  "keras": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "lce": {
+   "n": 128,
+   "max_abs": 1.2516975402832031e-06,
+   "mean_abs": 1.1331536509118224e-09,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.006012704223394394,
+   "mean_abs": 1.0540051699365338e-06,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.7248198613524437,
+   "mean_abs": 0.0007479786620337632,
+   "top1_agreement": 0.5390625,
+   "n_top1_disagreements": 59,
+   "top5_overlap": 0.571875,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.3125
+  }
+ },
+ "host_agreement_vs_keras_probs": {
+  "lce": {
+   "n": 128,
+   "max_abs": 1.2516975402832031e-06,
+   "mean_abs": 1.1331536509118224e-09,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.006012704223394394,
+   "mean_abs": 1.0540051699365338e-06,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.2890625
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.7248198613524437,
+   "mean_abs": 0.0007479786620337632,
+   "top1_agreement": 0.5390625,
+   "n_top1_disagreements": 59,
+   "top5_overlap": 0.571875,
+   "top1_acc_ref": 0.2890625,
+   "top1_acc_out": 0.3125
+  }
+ },
+ "int8_io": {
+  "input_scale": 0.02717430144548416,
+  "input_zero_point": -19,
+  "output_scale": 0.00390625,
+  "output_zero_point": -128
+ }
+}

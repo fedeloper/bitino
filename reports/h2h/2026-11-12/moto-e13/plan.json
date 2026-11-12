@@ -1,0 +1,243 @@
+{
+ "tag": "moto-e13",
+ "serial": "ZY22HWKBP4",
+ "device": {
+  "model": "moto e13",
+  "android": "13",
+  "sdk": "33",
+  "soc": "T606",
+  "platform": "ums9230",
+  "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+  "build": "motorola/sabahl_ge/sabahl:13/TLA33.105-257/105-257:user/release-keys",
+  "kernel": "Linux localhost 5.4.210-android12-9-g060e70f91dbd-ab654 #1 SMP PREEMPT Fri Sep 8 20:20:07 CST 2023 aarch64 Toybox",
+  "cpus": {
+   "0": "1612000 1612000 schedutil",
+   "1": "1612000 1612000 schedutil",
+   "2": "1612000 1612000 schedutil",
+   "3": "1612000 1612000 schedutil",
+   "4": "1612000 1612000 schedutil",
+   "5": "1612000 1612000 schedutil",
+   "6": "1612000 1612000 schedutil",
+   "7": "1612000 1612000 schedutil"
+  },
+  "cpu_parts": {
+   "0": "0xd05",
+   "1": "0xd05",
+   "2": "0xd05",
+   "3": "0xd05",
+   "4": "0xd05",
+   "5": "0xd05",
+   "6": "0xd0a",
+   "7": "0xd0a"
+  },
+  "pinned_cpu": "7",
+  "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  level: 100\n  temperature: 306",
+  "wakefulness": "mWakefulness=Dozing",
+  "core_ctl_cpu": ""
+ },
+ "binaries": {
+  "bitino": {
+   "local": "build/android-arm64/bitino_bench",
+   "sha256": "ac7f249a832abab1003db6ee865c00e13a80699f21ad67b274e91f5e022b0ce6"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_arm64",
+   "sha256": "add86a6dc0e2825ec80209fff6a61725ea6bd399e6f5a6b50cc9c4c701a27dbb"
+  },
+  "lce": {
+   "local": "<tmp>",
+   "sha256": "4068e0c40b3ef51d167be1ab2677304c3bf3fcb8ff2651ef81f8295e025d1c90"
+  },
+  "tflite": {
+   "local": "<tmp>",
+   "sha256": "5d45116eb86e3a23ea03318e93bfc8efb4dd0149d4692c127e7b0343faba1374"
+  }
+ },
+ "models": [
+  "larq-zoo-quicknet-small",
+  "larq-zoo-quicknet",
+  "larq-zoo-quicknet-large",
+  "larq-zoo-birealnet",
+  "larq-zoo-binary-resnet-e18",
+  "larq-zoo-xnornet",
+  "larq-zoo-binary-densenet28",
+  "larq-zoo-binary-densenet37",
+  "larq-zoo-binary-alexnet",
+  "larq-zoo-binary-densenet37-dilated",
+  "larq-zoo-binary-densenet45"
+ ],
+ "runtimes": [
+  "bitino_all",
+  "bitino_neon",
+  "lce",
+  "tflite_fp32",
+  "tflite_int8"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 3,
+ "cpu": "7",
+ "abi": "arm64",
+ "throttle_gate": {
+  "max_wait_s": 120.0,
+  "reference_caps_khz_from_earlier_invocations": {
+   "0": 1612000,
+   "6": 1612000
+  }
+ },
+ "started_utc": "2026-11-12T17:30:10Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    1612000,
+    1612000
+   ],
+   "6": [
+    1612000,
+    1612000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": null
+ },
+ "invocations": [
+  {
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18"
+   ],
+   "repeats": 5,
+   "started_utc": "2026-11-12T14:54:52Z",
+   "finished_utc": "2026-11-12T15:21:28Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  },
+  {
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37"
+   ],
+   "repeats": 3,
+   "started_utc": "2026-11-12T15:21:38Z",
+   "finished_utc": "2026-11-12T15:39:50Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  },
+  {
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37",
+    "larq-zoo-binary-alexnet",
+    "larq-zoo-binary-densenet37-dilated",
+    "larq-zoo-binary-densenet45"
+   ],
+   "repeats": 3,
+   "started_utc": "2026-11-12T15:40:04Z",
+   "finished_utc": null,
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": null
+  }
+ ],
+ "finished_utc": "2026-11-12T17:52:34Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    1612000,
+    1612000
+   ],
+   "6": [
+    1612000,
+    1612000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": null
+ }
+}

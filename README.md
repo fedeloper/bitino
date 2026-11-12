@@ -263,6 +263,12 @@ Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-de
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host
 runs (older runtime, labelled): `results/speed_x86.json`. Method: [docs/benchmarking.md](docs/benchmarking.md).
 
+**Against Larq Compute Engine and TensorFlow Lite** (same Larq Zoo weights, 1 thread, batch 1, every runtime pinned
+to the same core by one launcher): Bitino is 1.29× faster than LCE 0.16 on a Cortex-X3 (all 11 models, 1.09–1.71×),
+1.11× faster on a 32-bit Cortex-A53, and on par on a Cortex-A75, where LCE is 3 % faster on average. TFLite fp32 is
+4.7–13× slower than Bitino; TFLite int8 is 1.4–4.8× slower and agrees with the float model on only 45–66 % of top-1
+classes. Tables, method, setup differences and raw data: [docs/comparison-lce-tflite.md](docs/comparison-lce-tflite.md).
+
 ## Model zoo
 
 Selected models (full table with all converted models: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md); searchable version on

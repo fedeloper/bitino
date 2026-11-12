@@ -1,0 +1,121 @@
+{
+ "tag": "redmi9a",
+ "serial": "75AUS4CUDYN75LEQ",
+ "device": {
+  "model": "M2006C3LG",
+  "android": "11",
+  "sdk": "30",
+  "soc": "",
+  "platform": "mt6765",
+  "abilist": "armeabi-v7a,armeabi",
+  "build": "Redmi/dandelion_eea/dandelion:11/RP1A.200720.011/V12.5.5.0.RCDEUXM:user/release-keys",
+  "kernel": "Linux localhost 4.19.127-perf-g7288046673d5 #1 SMP PREEMPT Fri Jul 8 20:22:55 CST 2022 armv8l",
+  "cpus": {
+   "0": "2001000 2001000",
+   "1": "2001000 2001000",
+   "2": "2001000 2001000",
+   "3": "2001000 2001000",
+   "4": "1500000 1500000",
+   "5": "1500000 1500000",
+   "6": "1500000 1500000",
+   "7": "1500000 1500000"
+  },
+  "cpu_parts": {
+   "0": "0xd03",
+   "1": "0xd03",
+   "2": "0xd03",
+   "3": "0xd03",
+   "4": "0xd03",
+   "5": "0xd03",
+   "6": "0xd03",
+   "7": "0xd03"
+  },
+  "pinned_cpu": "0",
+  "battery": "AC powered: true\n  USB powered: true\n  Wireless powered: false\n  level: 100\n  temperature: 300",
+  "wakefulness": "mWakefulness=Asleep",
+  "core_ctl_cpu": ""
+ },
+ "binaries": {
+  "bitino": {
+   "local": "build/android-armv7/bitino_bench",
+   "sha256": "be7e87a15f3513ace8120e22d155d7da13420326b987c8f83e1c9e73e22a605b"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_armv7",
+   "sha256": "14f9ee81b1b0e4431c28ca725e2a89ea93d9c61511b380751f7389fd39326251"
+  },
+  "lce": {
+   "local": "<tmp>",
+   "sha256": "8670b8a96b9a8617c635f1e47b24b54734e802b925f7e167fdba25d557158877"
+  },
+  "tflite": {
+   "local": "<tmp>",
+   "sha256": "3f3c0ed3436d1e506d78bf11ed5342c93acf64cff3145f1237ebd8a9047de068"
+  },
+  "glibc": {
+   "ld-linux-armhf.so.3": "8e92cb32a82f67783403bf4c5d9704e201fe1c15476f082655760a00205eee80",
+   "libc.so.6": "7d97c5eb5044fadc67102c007ae6c119d3cbce8cf4931b41cc69cd81e0b590a6",
+   "libgcc_s.so.1": "0b5985126b49e377ded6cfa10c3c155c9c53705dd9b5797a780317bc3e274f04",
+   "libm.so.6": "8d3c58814c1a273671a7bdb1f384a4510683c191bd7809064e5aadc64d46a9eb",
+   "libstdc++.so.6": "a4b02cd5ce72734b3c29eea13a339239dcf1e4203fbdc9bdc86d4adf73ce731f"
+  }
+ },
+ "models": [
+  "larq-zoo-quicknet-small",
+  "larq-zoo-quicknet",
+  "larq-zoo-quicknet-large",
+  "larq-zoo-birealnet",
+  "larq-zoo-binary-resnet-e18"
+ ],
+ "runtimes": [
+  "bitino_all",
+  "bitino_neon",
+  "lce",
+  "tflite_fp32",
+  "tflite_int8"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 3,
+ "cpu": "0",
+ "abi": "armv7",
+ "started_utc": "2026-11-12T18:22:58Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    2001000,
+    2001000
+   ],
+   "4": [
+    1500000,
+    1500000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": 29.0
+ },
+ "reference_cap_khz": 2001000,
+ "throttle_gate": {
+  "max_wait_s": 300.0,
+  "poll_s": 2.0,
+  "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+  "reference_cap_khz": 2001000
+ },
+ "finished_utc": "2026-11-12T19:10:23Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    2001000,
+    2001000
+   ],
+   "4": [
+    1500000,
+    1500000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": 29.0
+ }
+}

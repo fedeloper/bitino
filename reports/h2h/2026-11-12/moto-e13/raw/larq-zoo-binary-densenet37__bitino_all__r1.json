@@ -1,0 +1,293 @@
+{
+ "model": "larq-zoo-binary-densenet37",
+ "runtime": "bitino_all",
+ "repeat": 1,
+ "order_in_round": 2,
+ "cmd": "/data/local/tmp/h2h/bin/h2h_run --cpus 7 -- /data/local/tmp/h2h/bin/bitino_bench --model /data/local/tmp/h2h/m/larq-zoo-binary-densenet37/model.bitino --stage all --threads 1 --warmup 9 --iterations 50 --inputs /data/local/tmp/h2h/m/larq-zoo-binary-densenet37/input0.f32 --outputs /data/local/tmp/h2h/out/larq-zoo-binary-densenet37__bitino_all.out --json /data/local/tmp/h2h/out/larq-zoo-binary-densenet37__bitino_all__r1.json --label larq-zoo-binary-densenet37__bitino_all__r1",
+ "exit": 0,
+ "wall_s_host": 9.64,
+ "utc": "2026-11-12T15:32:55Z",
+ "launcher": {
+  "cpus_requested": "7",
+  "exit": 0,
+  "wall_s": 9.608,
+  "maxrss_kb": 30248,
+  "utime_s": 9.337,
+  "stime_s": 0.179,
+  "nvcsw": 80,
+  "nivcsw": 139,
+  "minflt": 15407,
+  "majflt": 0,
+  "cpus_allowed_list": "7",
+  "allowed_samples": 366,
+  "allowed_mismatch_samples": 0,
+  "max_threads": 1,
+  "cpu_samples": 366,
+  "cpu_hist": {
+   "7": 366
+  }
+ },
+ "pin_wait": {
+  "tries": 0,
+  "wait_s": 0.0
+ },
+ "timing": {
+  "n": 50,
+  "mean_ms": 153.362921,
+  "median_ms": 153.062173,
+  "min_ms": 151.032077,
+  "max_ms": 156.350885,
+  "std_ms": 1.30807747,
+  "load_ms": 80.778346,
+  "prepare_ms": 19.8135
+ },
+ "bitino": {
+  "kernels": {
+   "activation.float_opt": 3,
+   "avgpool2d.float_opt": 1,
+   "bconv2d.neon_opt": 32,
+   "channel_affine.float_opt": 35,
+   "concat.float_opt": 32,
+   "conv2d.float_opt": 4,
+   "dense.float_opt": 1,
+   "fused_elementwise.float_opt": 1,
+   "maxpool2d.float_opt": 4,
+   "reshape.reference": 1,
+   "softmax.float_fast": 1
+  },
+  "memory": {
+   "activation_bytes": 12652352,
+   "model_mapped": true,
+   "prepacked_bytes": 5568672,
+   "released_constant_bytes": 5124096,
+   "rss_after_load_kb": 9524,
+   "rss_after_run_kb": 25432,
+   "rss_after_session_kb": 25244,
+   "rss_start_kb": 3268,
+   "vm_hwm_kb": 30248
+  },
+  "config": {
+   "affinity": "",
+   "affinity_errors": 0,
+   "bit_outputs": true,
+   "fuse": true,
+   "host_epilogues": true,
+   "iterations": 50,
+   "nodes": 115,
+   "parallel_for_per_run": 146,
+   "plan_rewrites": {
+    "absorbed_nodes": 2,
+    "aliased_reshapes": 1,
+    "bit_outputs": 0,
+    "folded_thresholds": 0,
+    "fused_nodes": 1,
+    "hosted_epilogues": 0,
+    "shared_binarizations": 0
+   },
+   "pool_dispatches_per_run": 0,
+   "pool_threads": 1,
+   "profile": false,
+   "reuse_memory": true,
+   "spin_run": true,
+   "spin_us": 0,
+   "stage": "all",
+   "threads": 1,
+   "unpinned_threads_after": 0,
+   "warmup": 9
+  },
+  "cpu_freq_before": [
+   {
+    "cpu": 0,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 1,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 2,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 3,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 4,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 5,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 6,
+    "cur_khz": 1228800,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 7,
+    "cur_khz": 1228800,
+    "max_khz": 1612000
+   }
+  ],
+  "cpu_freq_after": [
+   {
+    "cpu": 0,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 1,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 2,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 3,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 4,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 5,
+    "cur_khz": 614400,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 6,
+    "cur_khz": 1040000,
+    "max_khz": 1612000
+   },
+   {
+    "cpu": 7,
+    "cur_khz": 1040000,
+    "max_khz": 1612000
+   }
+  ],
+  "version": "0.1.0",
+  "build": {
+   "compiler": "Android (12470979, +pgo, +bolt, +lto, +mlgo, based on r522817c) Clang 18.0.3 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+   "flags": "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -DNDEBUG  -Wall -Wextra -Wno-unused-parameter -ffp-contract=off -march=armv8.2-a+dotprod",
+   "type": "Release"
+  }
+ },
+ "stdout_tail": [
+  "model=/data/local/tmp/h2h/m/larq-zoo-binary-densenet37/model.bitino stage=all threads=1 median=153.062ms mean=153.363ms min=151.032ms (n=50, warmup=9) prepare=19.8ms",
+  "H2H_PIN_WAIT {\"tries\": 0, \"wait_s\": 0.000}",
+  "ran 1 samples",
+  "H2H_RUN {\"cpus_requested\": \"7\", \"exit\": 0, \"wall_s\": 9.608, \"maxrss_kb\": 30248, \"utime_s\": 9.337, \"stime_s\": 0.179, \"nvcsw\": 80, \"nivcsw\": 139, \"minflt\": 15407, \"majflt\": 0, \"cpus_allowed_list\": \"7\", \"allowed_samples\": 366, \"allowed_mismatch_samples\": 0, \"max_threads\": 1, \"cpu_samples\": 366, \"cpu_hist\": {\"7\": 366}}"
+ ],
+ "ok": true,
+ "placement_ok": true,
+ "attempts": [
+  {
+   "exit": 0,
+   "launcher": {
+    "cpus_requested": "7",
+    "exit": 0,
+    "wall_s": 9.608,
+    "maxrss_kb": 30248,
+    "utime_s": 9.337,
+    "stime_s": 0.179,
+    "nvcsw": 80,
+    "nivcsw": 139,
+    "minflt": 15407,
+    "majflt": 0,
+    "cpus_allowed_list": "7",
+    "allowed_samples": 366,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 366,
+    "cpu_hist": {
+     "7": 366
+    }
+   },
+   "pin_wait": {
+    "tries": 0,
+    "wait_s": 0.0
+   },
+   "placement_ok": true
+  }
+ ],
+ "round": {
+  "lock_wait_s": 0.7,
+  "gate": {
+   "waited_s": 0.1,
+   "before": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "timeout": false,
+   "mode": "throttle",
+   "reference_caps_khz": {
+    "0": 1612000,
+    "6": 1612000
+   },
+   "throttled_before": false
+  },
+  "caps_before": {
+   "policies": {
+    "0": [
+     1612000,
+     1612000
+    ],
+    "6": [
+     1612000,
+     1612000
+    ]
+   },
+   "capped": false,
+   "thermal_status": 0,
+   "skin_c": null
+  },
+  "caps_after": {
+   "policies": {
+    "0": [
+     1612000,
+     1612000
+    ],
+    "6": [
+     1612000,
+     1612000
+    ]
+   },
+   "capped": false,
+   "thermal_status": 0,
+   "skin_c": null
+  },
+  "throttled": false,
+  "order": [
+   "tflite_fp32",
+   "tflite_int8",
+   "bitino_all",
+   "bitino_neon",
+   "lce"
+  ]
+ }
+}
