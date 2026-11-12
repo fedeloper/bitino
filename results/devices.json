@@ -1,6 +1,6 @@
 {
  "schema": "bitino.results.v1.devices",
- "generated": "2026-11-11",
+ "generated": "2026-11-12",
  "devices": {
   "s22": {
    "kind": "phone",
@@ -52,10 +52,11 @@
    "runs": 209,
    "verified": {
     "models": 114,
-    "stages": 342,
-    "stages_passed": 342,
+    "stages": 381,
+    "stages_passed": 381,
     "dates": [
-     "2026-11-02"
+     "2026-11-02",
+     "2026-11-12"
     ]
    }
   },
@@ -110,7 +111,7 @@
    "notes": [
     "Stock settings, screen off: the vendor power policy holds the clock ceilings below the maximum with no thermal event (Android thermal status 0): X3 2.23 of 3.19 GHz, A715/A710 1.79 of 2.80 GHz. Runs are labelled vendor-policy and the ceilings are recorded per run. With the screen on the ceilings move (3.19, then 2.48 and 2.23 GHz under load), so they are not a steadier condition."
    ],
-   "runs": 456,
+   "runs": 563,
    "verified": {
     "models": 114,
     "stages": 449,
@@ -157,12 +158,14 @@
    "notes": [
     "Entry-level phone (2 GB RAM). The A55 cluster's frequency ceiling (policy0 scaling_max_freq) is not readable without root, so only the A75 cluster's ceiling is checked."
    ],
-   "runs": 0,
+   "runs": 47,
    "verified": {
-    "models": 0,
-    "stages": 0,
-    "stages_passed": 0,
-    "dates": []
+    "models": 4,
+    "stages": 20,
+    "stages_passed": 20,
+    "dates": [
+     "2026-11-12"
+    ]
    }
   },
   "redmi-9a": {
@@ -203,7 +206,7 @@
    "notes": [
     "32-bit Android: runs the armeabi-v7a build, which has no NEON kernels yet (portable C++ fallback). Its numbers show that the runtime works there, not what the ARM kernels can do."
    ],
-   "runs": 0,
+   "runs": 27,
    "verified": {
     "models": 10,
     "stages": 20,

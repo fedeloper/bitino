@@ -170,6 +170,39 @@
    {
     "model_id": "larq-zoo-quicknet-large",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 16.400885,
+    "median_range_ms": [
+     16.3251825,
+     16.406536
+    ],
+    "p90_ms": 16.434442999999998,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 17156,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:05Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa7936890fabe5874fc17f5da6a7b2d6ab29398b77c2d4f8e6aac674996fb0f1",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-large",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -298,6 +331,132 @@
     "kernels": "neon",
     "model_data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
     "runtime": "development runtime as of 2026-11-11"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "larq-zoo-quicknet-large",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 74.8542505,
+    "median_range_ms": [
+     74.8278465,
+     74.8806545
+    ],
+    "p90_ms": 75.0505223,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 20060,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:15:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-large",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 27.76324075,
+    "median_range_ms": [
+     27.622712,
+     27.9037695
+    ],
+    "p90_ms": 28.2187776,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 29032,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:16:02Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-large",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t8_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 8,
+    "affinity": "unpinned",
+    "median_ms": 18.427605749999998,
+    "median_range_ms": [
+     18.233423,
+     18.6217885
+    ],
+    "p90_ms": 19.9217689,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 35116,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:16:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-large",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 71.69806700000001,
+    "median_range_ms": [
+     71.6285955,
+     71.7675385
+    ],
+    "p90_ms": 71.8960537,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 19280,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:16:36Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

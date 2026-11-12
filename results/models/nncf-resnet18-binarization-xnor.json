@@ -198,6 +198,72 @@
    {
     "model_id": "nncf-resnet18-binarization-xnor",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.94888,
+    "median_range_ms": [
+     8.941901,
+     8.96112
+    ],
+    "p90_ms": 8.9894166,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 13668,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "84fd7d14882acee082f0ec7b869e2fb20d7f72eaf9a9c84a7a34386198690de8",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "nncf-resnet18-binarization-xnor",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.4894275,
+    "median_range_ms": [
+     8.4747135,
+     8.5247135
+    ],
+    "p90_ms": 8.5351407,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 13320,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:35Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "fa092d351a8dd5c4c9e0c3002ca63d1a1c0c27ae26aa745bddcc20fc79e98d4b",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "nncf-resnet18-binarization-xnor",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

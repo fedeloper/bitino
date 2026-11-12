@@ -141,6 +141,39 @@
    {
     "model_id": "siman-resnet20-cifar10",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.558307,
+    "median_range_ms": [
+     1.535078,
+     1.596927
+    ],
+    "p90_ms": 2.4328700000000016,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 6848,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T02:00:10Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c2b6095d479a6cccfe6ce833066863d4e783fe51d58b12b0f66a5c6708bbbb38",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "siman-resnet20-cifar10",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

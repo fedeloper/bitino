@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 460" width="760" height="460" role="img" aria-label="CIFAR-10 int8_full: accuracy vs latency (21 models)"><style>svg{font-family:system-ui,-apple-system,'Segoe UI',sans-serif} .tick{font-size:11px;font-variant-numeric:tabular-nums} .title{font-size:14px;font-weight:600} .sub,.alabel,.lab{font-size:11px} .hit{fill:#000;fill-opacity:0} .bg{fill:#fcfcfb} .grid{stroke:#e1e0d9;stroke-width:1} .axis{stroke:#c3c2b7;stroke-width:1} .tick{fill:#898781} .title{fill:#0b0b0b} .sub,.alabel{fill:#52514e} .lab{fill:#0b0b0b} .front{fill:none;stroke:#2a78d6;stroke-width:2;stroke-linejoin:round} .dot-f{fill:#2a78d6;stroke:#fcfcfb;stroke-width:2} .dot-o{fill:#b5b3ab;stroke:#fcfcfb;stroke-width:2} .hit:hover + .dot-o,.hit:hover + .dot-f{stroke:#0b0b0b} @media (prefers-color-scheme: dark){.bg{fill:#1a1a19} .grid{stroke:#2c2c2a;stroke-width:1} .axis{stroke:#383835;stroke-width:1} .tick{fill:#898781} .title{fill:#f0efec} .sub,.alabel{fill:#c3c2b7} .lab{fill:#f0efec} .front{fill:none;stroke:#3987e5;stroke-width:2;stroke-linejoin:round} .dot-f{fill:#3987e5;stroke:#1a1a19;stroke-width:2} .dot-o{fill:#6b6a65;stroke:#1a1a19;stroke-width:2} .hit:hover + .dot-o,.hit:hover + .dot-f{stroke:#f0efec}}</style>
+<title>CIFAR-10 int8_full: accuracy vs latency (21 models)</title>
+<rect class="bg" x="0" y="0" width="760" height="460" rx="8"/>
+<text class="title" x="56" y="24">CIFAR-10 int8_full: accuracy vs latency (21 models)</text>
+<text class="sub" x="56" y="42">OnePlus Open, 1 thread on the Cortex-X3, int8_full file; top-1 = published + measured Δ (estimate)</text>
+<line class="grid" x1="56" x2="736" y1="414.0" y2="414.0"/><text class="tick" x="48" y="418.0" text-anchor="end">75</text>
+<line class="grid" x1="56" x2="736" y1="325.0" y2="325.0"/><text class="tick" x="48" y="329.0" text-anchor="end">80</text>
+<line class="grid" x1="56" x2="736" y1="236.0" y2="236.0"/><text class="tick" x="48" y="240.0" text-anchor="end">85</text>
+<line class="grid" x1="56" x2="736" y1="147.0" y2="147.0"/><text class="tick" x="48" y="151.0" text-anchor="end">90</text>
+<line class="grid" x1="56" x2="736" y1="58.0" y2="58.0"/><text class="tick" x="48" y="62.0" text-anchor="end">95</text>
+<line class="grid" x1="65.0" x2="65.0" y1="58" y2="414"/><text class="tick" x="65.0" y="430" text-anchor="middle">0.5</text>
+<line class="grid" x1="223.6" x2="223.6" y1="58" y2="414"/><text class="tick" x="223.6" y="430" text-anchor="middle">1</text>
+<line class="grid" x1="382.2" x2="382.2" y1="58" y2="414"/><text class="tick" x="382.2" y="430" text-anchor="middle">2</text>
+<line class="grid" x1="591.8" x2="591.8" y1="58" y2="414"/><text class="tick" x="591.8" y="430" text-anchor="middle">5</text>
+<line class="axis" x1="56" x2="736" y1="414" y2="414"/>
+<text class="alabel" x="396.0" y="450" text-anchor="middle">latency per image, ms (log scale), OnePlus Open 1 thread</text>
+<text class="alabel" transform="translate(14 236.0) rotate(-90)" text-anchor="middle">CIFAR-10 top-1 (%) (estimate)</text>
+<path class="front" d="M107.1,325.7 H248.7 V263.6 H264.3 V248.5 H282.2 V217.1 H285.0 V192.2 H343.9 V165.9 H389.4 V121.9 H409.4 V111.4 H414.5 V111.2 H455.6 V105.2 H736.0"/>
+<g><title>biper-resnet18: 91.8 % top-1, 2.322 ms</title><circle class="hit" cx="416.3" cy="114.8" r="12"/><circle class="dot-o" cx="416.3" cy="114.8" r="4"/></g>
+<g><title>biper-resnet20: 86.3 % top-1, 1.495 ms</title><circle class="hit" cx="315.6" cy="212.0" r="12"/><circle class="dot-o" cx="315.6" cy="212.0" r="4"/></g>
+<g><title>biper-vgg-small: 91.1 % top-1, 2.074 ms</title><circle class="hit" cx="390.5" cy="128.1" r="12"/><circle class="dot-o" cx="390.5" cy="128.1" r="4"/></g>
+<g><title>bnas-a: 92.3 % top-1, 7.511 ms</title><circle class="hit" cx="684.9" cy="106.4" r="12"/><circle class="dot-o" cx="684.9" cy="106.4" r="4"/></g>
+<g><title>Brevitas cnv-1w1a: 83.5 % top-1, 1.198 ms</title><circle class="hit" cx="264.9" cy="263.6" r="12"/><circle class="dot-o" cx="264.9" cy="263.6" r="4"/></g>
+<g><title>rbnn-resnet18: 91.5 % top-1, 2.749 ms</title><circle class="hit" cx="455.0" cy="121.2" r="12"/><circle class="dot-o" cx="455.0" cy="121.2" r="4"/></g>
+<g><title>rbnn-resnet20-bireal: 86.7 % top-1, 1.489 ms</title><circle class="hit" cx="314.7" cy="206.3" r="12"/><circle class="dot-o" cx="314.7" cy="206.3" r="4"/></g>
+<g><title>rbnn-resnet20: 85.5 % top-1, 1.394 ms</title><circle class="hit" cx="299.6" cy="227.3" r="12"/><circle class="dot-o" cx="299.6" cy="227.3" r="4"/></g>
+<g><title>rbnn-vgg-small: 90.8 % top-1, 2.274 ms</title><circle class="hit" cx="411.5" cy="132.8" r="12"/><circle class="dot-o" cx="411.5" cy="132.8" r="4"/></g>
+<g><title>shuaiz-bireal20: 82.6 % top-1, 1.575 ms</title><circle class="hit" cx="327.5" cy="278.4" r="12"/><circle class="dot-o" cx="327.5" cy="278.4" r="4"/></g>
+<g><title>siman-resnet20: 85.1 % top-1, 1.558 ms</title><circle class="hit" cx="325.0" cy="234.6" r="12"/><circle class="dot-o" cx="325.0" cy="234.6" r="4"/></g>
+<g><title>AB-BNN reactnet18: 92.0 % top-1, 2.253 ms (Pareto-optimal)</title><circle class="hit" cx="409.4" cy="111.4" r="12"/><circle class="dot-f" cx="409.4" cy="111.4" r="5"/></g>
+<g><title>AB-BNN reactneta: 88.9 % top-1, 1.692 ms (Pareto-optimal)</title><circle class="hit" cx="343.9" cy="165.9" r="12"/><circle class="dot-f" cx="343.9" cy="165.9" r="5"/></g>
+<g><title>adabin-resnet20: 87.5 % top-1, 1.308 ms (Pareto-optimal)</title><circle class="hit" cx="285.0" cy="192.2" r="12"/><circle class="dot-f" cx="285.0" cy="192.2" r="5"/></g>
+<g><title>aliasgharshinwari-finn-cnv-w1a1: 84.3 % top-1, 1.195 ms (Pareto-optimal)</title><circle class="hit" cx="264.3" cy="248.5" r="12"/><circle class="dot-f" cx="264.3" cy="248.5" r="5"/></g>
+<g><title>bnn-pynq-cnv-w1a1: 80.0 % top-1, 0.6 ms (Pareto-optimal)</title><circle class="hit" cx="107.1" cy="325.7" r="12"/><circle class="dot-f" cx="107.1" cy="325.7" r="5"/></g>
+<g><title>fda-bnn-resnet20-mindspore: 86.1 % top-1, 1.292 ms (Pareto-optimal)</title><circle class="hit" cx="282.2" cy="217.1" r="12"/><circle class="dot-f" cx="282.2" cy="217.1" r="5"/></g>
+<g><title>finn-examples-bnn-pynq-cnv-w1a1: 83.5 % top-1, 1.116 ms (Pareto-optimal)</title><circle class="hit" cx="248.7" cy="263.6" r="12"/><circle class="dot-f" cx="248.7" cy="263.6" r="5"/></g>
+<g><title>recu-vgg-small: 91.4 % top-1, 2.064 ms (Pareto-optimal)</title><circle class="hit" cx="389.4" cy="121.9" r="12"/><circle class="dot-f" cx="389.4" cy="121.9" r="5"/></g>
+<g><title>siman-resnet18: 92.3 % top-1, 2.757 ms (Pareto-optimal)</title><circle class="hit" cx="455.6" cy="105.2" r="12"/><circle class="dot-f" cx="455.6" cy="105.2" r="5"/></g>
+<g><title>siman-vgg-small: 92.0 % top-1, 2.304 ms (Pareto-optimal)</title><circle class="hit" cx="414.5" cy="111.2" r="12"/><circle class="dot-f" cx="414.5" cy="111.2" r="5"/></g>
+<line class="axis" x1="107.1" y1="325.7" x2="116.1" y2="318.7"/>
+<text class="lab" x="116.1" y="315.7">bnn-pynq-cnv-w1a1</text>
+<line class="axis" x1="248.7" y1="263.6" x2="257.7" y2="295.6"/>
+<text class="lab" x="257.7" y="305.6">finn-examples-bnn-pynq-cnv-w1a1</text>
+<line class="axis" x1="264.3" y1="248.5" x2="255.3" y2="241.5"/>
+<text class="lab" x="66.2" y="238.5">aliasgharshinwari-finn-cnv-w1a1</text>
+<line class="axis" x1="282.2" y1="217.1" x2="273.2" y2="210.1"/>
+<text class="lab" x="114.6" y="207.1">fda-bnn-resnet20-mindspore</text>
+<line class="axis" x1="285.0" y1="192.2" x2="276.0" y2="185.2"/>
+<text class="lab" x="184.5" y="182.2">adabin-resnet20</text>
+<line class="axis" x1="343.9" y1="165.9" x2="352.9" y2="158.9"/>
+<text class="lab" x="352.9" y="155.9">AB-BNN reactneta</text>
+<line class="axis" x1="389.4" y1="121.9" x2="380.4" y2="114.9"/>
+<text class="lab" x="295.0" y="111.9">recu-vgg-small</text>
+<line class="axis" x1="409.4" y1="111.4" x2="400.4" y2="90.4"/>
+<text class="lab" x="296.7" y="87.4">AB-BNN reactnet18</text>
+<line class="axis" x1="414.5" y1="111.2" x2="423.5" y2="129.2"/>
+<text class="lab" x="423.5" y="139.2">siman-vgg-small</text>
+<line class="axis" x1="455.6" y1="105.2" x2="464.6" y2="98.2"/>
+<text class="lab" x="464.6" y="95.2">siman-resnet18</text>
+<circle class="dot-f" cx="516" cy="20" r="5"/><text class="sub" x="526" y="24">Pareto-optimal</text><circle class="dot-o" cx="634" cy="20" r="4"/><text class="sub" x="644" y="24">other models</text>
+</svg>

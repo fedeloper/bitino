@@ -107,6 +107,8 @@ def classify_repeat(th) -> dict:
     pol = next((s.get("policies") for s in (th.get("after"), th.get("before")) if isinstance(s, dict) and s.get("policies")), None)
     if not capped:
         v = "clean"
+    elif th.get("mode") == "throttle" and th.get("throttled"):
+        v = "thermal-throttled"   # throttle gate: a limit fell below the highest seen in the plan, or status > 0
     elif status and max(status) == 0:
         v = "vendor-policy"
     else:

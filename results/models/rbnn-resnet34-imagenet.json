@@ -198,6 +198,72 @@
    {
     "model_id": "rbnn-resnet34-imagenet",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 17.5535675,
+    "median_range_ms": [
+     17.5323435,
+     17.590573
+    ],
+    "p90_ms": 17.612515600000002,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 17348,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:59:17Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "6033a7c9436caba4d1ed7bb0c8868f78b956fd1a1873e9697e29a448ff51caea",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "rbnn-resnet34-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 17.055573,
+    "median_range_ms": [
+     17.0545055,
+     17.0719275
+    ],
+    "p90_ms": 17.092520800000003,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 17528,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:59:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "34b59a14cec6448490189fb9e1d747c3f98e11b9c5de93c0e127240ecb9f6c3d",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "rbnn-resnet34-imagenet",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

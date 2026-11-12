@@ -194,6 +194,72 @@
    {
     "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 9.1753905,
+    "median_range_ms": [
+     9.1654685,
+     9.194896
+    ],
+    "p90_ms": 9.216042,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 14676,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:45Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "05393f387b78faf69d7bcb0a881ff6271b87ff9bba07c6e26bb942d4f8c86451",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.7152345,
+    "median_range_ms": [
+     8.714948,
+     8.74112
+    ],
+    "p90_ms": 8.749443,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 14344,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "8914e0702d23e34ffcb3359456e3b1d7e19bdc2b3c77f57af89de0c83a70f750",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

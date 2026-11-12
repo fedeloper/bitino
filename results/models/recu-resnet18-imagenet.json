@@ -175,6 +175,39 @@
    {
     "model_id": "recu-resnet18-imagenet",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.949687,
+    "median_range_ms": [
+     8.9420575,
+     9.313021
+    ],
+    "p90_ms": 9.3315472,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 14048,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:59:39Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "01f2c9f11f678af8e27c8a70d23981395c353d352db314dac31938fb9cf4bd8b",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "recu-resnet18-imagenet",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -303,6 +336,101 @@
     "kernels": "neon",
     "model_data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
     "runtime": "development runtime as of 2026-11-11"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "recu-resnet18-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 70.69637475,
+    "median_range_ms": [
+     70.55525,
+     70.8374995
+    ],
+    "p90_ms": 71.1485118,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 21564,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:25:20Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "recu-resnet18-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 26.906904,
+    "median_range_ms": [
+     26.6048465,
+     27.2089615
+    ],
+    "p90_ms": 28.118365500000003,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 26208,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:25:21Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "recu-resnet18-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 51.448730749999996,
+    "median_range_ms": [
+     51.3396155,
+     51.557846
+    ],
+    "p90_ms": 52.075757,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 22024,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:25:24Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

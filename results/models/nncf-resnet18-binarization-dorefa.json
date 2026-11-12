@@ -141,6 +141,39 @@
    {
     "model_id": "nncf-resnet18-binarization-dorefa",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.9146875,
+    "median_range_ms": [
+     8.8994535,
+     8.9179685
+    ],
+    "p90_ms": 8.952760099999999,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 13712,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:58:30Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b1595db298342345ac905da370182757e98c61e02122ed0ec26df1ca112af090",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "nncf-resnet18-binarization-dorefa",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

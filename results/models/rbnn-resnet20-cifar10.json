@@ -141,6 +141,39 @@
    {
     "model_id": "rbnn-resnet20-cifar10",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.393958,
+    "median_range_ms": [
+     1.3528385,
+     1.4110935
+    ],
+    "p90_ms": 2.0586298000000003,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 6792,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:59:13Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "4e661063baf67e82c4e6841f844024ec510f6c9fb7d978ca361552a5a96aa155",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "rbnn-resnet20-cifar10",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -269,6 +302,101 @@
     "kernels": "neon",
     "model_data_sha256": "cfea54ade6f5608305c57d605fd7d2dc964ab3b2afed032a9ff0566c7ce803e4",
     "runtime": "development runtime as of 2026-11-11"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "rbnn-resnet20-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.862644255,
+    "median_range_ms": [
+     2.858077,
+     2.86721151
+    ],
+    "p90_ms": 2.919792499,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 6184,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:22:57Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cfea54ade6f5608305c57d605fd7d2dc964ab3b2afed032a9ff0566c7ce803e4",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "rbnn-resnet20-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 2.134336745,
+    "median_range_ms": [
+     2.11963499,
+     2.1490385
+    ],
+    "p90_ms": 2.3618619,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 6904,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:22:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cfea54ade6f5608305c57d605fd7d2dc964ab3b2afed032a9ff0566c7ce803e4",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "rbnn-resnet20-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.7990865,
+    "median_range_ms": [
+     2.798346,
+     2.799827
+    ],
+    "p90_ms": 2.83068809,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 6216,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:22:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cfea54ade6f5608305c57d605fd7d2dc964ab3b2afed032a9ff0566c7ce803e4",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

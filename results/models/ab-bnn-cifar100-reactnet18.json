@@ -109,9 +109,9 @@
  },
  "device_verification": {
   "s22": {
-   "suite": "20261102_1059",
-   "date": "2026-11-02",
-   "runtime_commit": null,
+   "suite": "20261112_1204",
+   "date": "2026-11-12",
+   "runtime_commit": "6ed17b7",
    "stages": {
     "neon": {
      "pass": true,
@@ -127,6 +127,16 @@
      "pass": true,
      "identical_to_emulated": true,
      "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "int8_full_log2": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   },
@@ -176,6 +186,38 @@
      "pass": true,
      "identical_to_emulated": null,
      "exact_vs_numpy": false
+    }
+   }
+  },
+  "moto-e13": {
+   "suite": "20261112_1219",
+   "date": "2026-11-12",
+   "runtime_commit": "d42d5fe",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "int8_full_log2": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   }
@@ -322,6 +364,72 @@
    }
   ],
   "oneplus-open": [
+   {
+    "model_id": "ab-bnn-cifar100-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.773177,
+    "median_range_ms": [
+     2.7728125,
+     2.774349
+    ],
+    "p90_ms": 2.789338,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 11644,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:44:59Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cd1551db0434be272fc559d16009faf4cd4519f4cbf1fc116e1f78055a7843f1",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ab-bnn-cifar100-reactnet18",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.2979945,
+    "median_range_ms": [
+     2.296797,
+     2.3115105
+    ],
+    "p90_ms": 2.3688224,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 10268,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:45:03Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "6b9ab37621a36427f8b8b10290e70d298e37af8f050f692f3c14fce6c8ff6cd5",
+    "runtime": "development runtime as of 2026-11-12"
+   },
    {
     "model_id": "ab-bnn-cifar100-reactnet18",
     "device": "oneplus-open",

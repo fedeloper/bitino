@@ -141,6 +141,39 @@
    {
     "model_id": "bnext-small",
     "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 57.077474,
+    "median_range_ms": [
+     57.0690625,
+     57.542526
+    ],
+    "p90_ms": 57.7207604,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 49836,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:56:04Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c2e44667f79428113c5f2e6f9ebd286e4b6a7893c1b3b6423f76412b0a918b7b",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bnext-small",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -269,6 +302,101 @@
     "kernels": "neon",
     "model_data_sha256": "2a5230ee787493bc86f69db0c0de907e2d554c95717e1367f88d41fb685db079",
     "runtime": "development runtime as of 2026-11-11"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "bnext-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 276.29098999999997,
+    "median_range_ms": [
+     275.953999,
+     276.627981
+    ],
+    "p90_ms": 278.87060740000004,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 78424,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:24:39Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2a5230ee787493bc86f69db0c0de907e2d554c95717e1367f88d41fb685db079",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bnext-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 121.750365,
+    "median_range_ms": [
+     121.591115,
+     121.909615
+    ],
+    "p90_ms": 123.4247463,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 85504,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:24:44Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2a5230ee787493bc86f69db0c0de907e2d554c95717e1367f88d41fb685db079",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bnext-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1204_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 270.868481,
+    "median_range_ms": [
+     270.140462,
+     271.5965
+    ],
+    "p90_ms": 272.96954930000004,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 66828,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T10:24:53Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2a5230ee787493bc86f69db0c0de907e2d554c95717e1367f88d41fb685db079",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

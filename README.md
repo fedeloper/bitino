@@ -80,138 +80,142 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 ![CIFAR-10: accuracy vs latency, Pareto frontier](docs/img/pareto_cifar10.svg)
 
-| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread |
-|---|---|---:|---:|---:|---:|---:|
-| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.701 ◇ | 0.253 ◇ | 0.696 ◇ | – |
-| `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.712 ◇ | 0.235 ◇ | 0.698 ◇ | – |
-| `finn-examples-bnn-pynq-cnv-w1a1` | 85.9% → 85.9% | -0.77 pt | 0.73 ◇ | 0.237 ◇ | 0.695 ◇ | – |
-| `aliasgharshinwari-finn-cnv-w1a1-cifar10` | 89.8% → 89.8% | +0.06 pt | 0.731 ◇ | 0.216 ◇ | 0.695 ◇ | 0.57 ⚠ |
-| `rbnn-resnet20-bireal-cifar10` | 89.8% → 89.8% | -1.13 pt | 0.858 ◇ | 0.715 ◇ | 0.867 ◇ | – |
-| `rbnn-resnet20-cifar10` | 88.3% → 88.3% | -1.01 pt | 0.86 ◇ | 0.635 ◇ | 0.878 ◇ | – |
-| `siman-resnet20-cifar10` | 87.5% → 87.5% | -2.32 pt | 0.868 ◇ | 0.769 ◇ | 0.877 ◇ | – |
-| `shuaiz-bireal20-cifar10` | 84.4% → 84.4% | -0.55 pt | 1.11 ◇ | 0.59 ◇ | 1.09 ◇ | – |
-| `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.67 pt | 1.2 ◇ | 0.646 ◇ | 1.18 ◇ | – |
-| `biper-resnet20-cifar10` | 86.7% → 86.7% | -0.63 pt | 1.22 ◇ | 0.631 ◇ | 1.15 ◇ | – |
-| `fda-bnn-resnet20-cifar10-mindspore` | 89.8% → 89.8% | -0.55 pt | 1.23 ◇ | 0.501 ◇ | 1.21 ◇ | – |
-| `adabin-resnet20-cifar10` | 91.4% → 91.4% | -0.64 pt | 1.58 ◇ | 1.27 ◇ | 1.71 ◇ | 1.22 ⚠ |
-| `ab-bnn-cifar10-reactneta` | 91.4% → 91.4% | -0.50 pt | 1.61 ◇ | 0.992 ◇ | 1.59 ◇ | 2.6 ⚠ |
-| `biper-resnet18-cifar10` | 94.5% → 94.5% | -1.94 pt | 2.01 ◇ | 1.14 ◇ | 1.99 ◇ | – |
-| `recu-resnet18-cifar10` | 93.8% → 93.8% | -1.32 pt | 2.05 ◇ | 1.17 ◇ | 2 ◇ | – |
-| `biper-vgg-small-cifar10` | 96.1% → 96.1% | -1.40 pt | 2.08 ◇ | 1.08 ◇ | 1.99 ◇ | – |
-| `recu-vgg-small-cifar10` | 96.1% → 96.1% | -0.84 pt | 2.09 ◇ | 1.06 ◇ | 2.01 ◇ | – |
-| `ab-bnn-cifar10-reactnet18` | 93.8% → 93.8% | +0.06 pt | 2.32 ◇ | 1.28 ◇ | 2.15 ◇ | 3.72 ⚠ |
-| `rbnn-vgg-small-cifar10` | 91.4% → 91.4% | -0.50 pt | 2.39 ◇ | 1.37 ◇ | 2.29 ◇ | – |
-| `siman-vgg-small-cifar10` | 95.3% → 95.3% | -0.49 pt | 2.4 ◇ | 1.39 ◇ | 2.32 ◇ | – |
-| `siman-resnet18-cifar10` | 95.3% → 95.3% | -0.15 pt | 2.75 ◇ | 1.86 ◇ | 2.72 ◇ | – |
-| `rbnn-resnet18-cifar10` | 94.5% → 94.5% | -0.75 pt | 2.77 ◇ | 1.86 ◇ | 2.71 ◇ | – |
-| `bnas-a-cifar10` | 93.8% → 93.8% | -0.42 pt | 8.74 ◇ | 5.28 ◇ | 5.67 ◇ | – |
+![CIFAR-10 int8_full: accuracy vs latency, Pareto frontier](docs/img/pareto_cifar10_int8_full.svg)
+
+| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit fallback) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.701 ◇ | 0.253 ◇ | 1.2 ◇ | – | 1.49 | 8.79 |
+| `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.712 ◇ | 0.235 ◇ | 0.601 ◇ | – | – | – |
+| `finn-examples-bnn-pynq-cnv-w1a1` | 85.9% → 85.9% | -0.77 pt | 0.73 ◇ | 0.237 ◇ | 1.12 ◇ | – | – | – |
+| `aliasgharshinwari-finn-cnv-w1a1-cifar10` | 89.8% → 89.8% | +0.06 pt | 0.731 ◇ | 0.216 ◇ | 1.2 ◇ | 0.57 ⚠ | – | – |
+| `rbnn-resnet20-bireal-cifar10` | 89.8% → 89.8% | -1.13 pt | 0.858 ◇ | 0.715 ◇ | 1.49 ◇ | – | – | – |
+| `rbnn-resnet20-cifar10` | 88.3% → 88.3% | -1.01 pt | 0.86 ◇ | 0.635 ◇ | 1.39 ◇ | – | 2.86 | – |
+| `siman-resnet20-cifar10` | 87.5% → 87.5% | -2.32 pt | 0.868 ◇ | 0.769 ◇ | 1.56 ◇ | – | – | – |
+| `shuaiz-bireal20-cifar10` | 84.4% → 84.4% | -0.55 pt | 1.11 ◇ | 0.59 ◇ | 1.57 ◇ | – | – | – |
+| `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.67 pt | 1.2 ◇ | 0.646 ◇ | 1.41 ◇ | – | – | – |
+| `biper-resnet20-cifar10` | 86.7% → 86.7% | -0.63 pt | 1.22 ◇ | 0.631 ◇ | 1.5 ◇ | – | – | – |
+| `fda-bnn-resnet20-cifar10-mindspore` | 89.8% → 89.8% | -0.55 pt | 1.23 ◇ | 0.501 ◇ | 1.29 ◇ | – | – | – |
+| `adabin-resnet20-cifar10` | 91.4% → 91.4% | -0.64 pt | 1.58 ◇ | 1.27 ◇ | 1.31 ◇ | 1.22 ⚠ | – | – |
+| `ab-bnn-cifar10-reactneta` | 91.4% → 91.4% | -0.50 pt | 1.61 ◇ | 0.992 ◇ | 2.1 ◇ | 2.6 ⚠ | – | – |
+| `biper-resnet18-cifar10` | 94.5% → 94.5% | -1.94 pt | 2.01 ◇ | 1.14 ◇ | 2.32 ◇ | – | – | – |
+| `recu-resnet18-cifar10` | 93.8% → 93.8% | -1.32 pt | 2.05 ◇ | 1.17 ◇ | 2.34 ◇ | – | – | – |
+| `biper-vgg-small-cifar10` | 96.1% → 96.1% | -1.40 pt | 2.08 ◇ | 1.08 ◇ | 2.07 ◇ | – | – | – |
+| `recu-vgg-small-cifar10` | 96.1% → 96.1% | -0.84 pt | 2.09 ◇ | 1.06 ◇ | 2.06 ◇ | – | – | – |
+| `ab-bnn-cifar10-reactnet18` | 93.8% → 93.8% | +0.06 pt | 2.32 ◇ | 1.28 ◇ | 2.77 ◇ | 3.72 ⚠ | 12.5 | 92.3 |
+| `rbnn-vgg-small-cifar10` | 91.4% → 91.4% | -0.50 pt | 2.39 ◇ | 1.37 ◇ | 2.27 ◇ | – | – | – |
+| `siman-vgg-small-cifar10` | 95.3% → 95.3% | -0.49 pt | 2.4 ◇ | 1.39 ◇ | 2.3 ◇ | – | – | – |
+| `siman-resnet18-cifar10` | 95.3% → 95.3% | -0.15 pt | 2.75 ◇ | 1.86 ◇ | 2.76 ◇ | – | – | – |
+| `rbnn-resnet18-cifar10` | 94.5% → 94.5% | -0.75 pt | 2.77 ◇ | 1.86 ◇ | 2.75 ◇ | – | – | – |
+| `bnas-a-cifar10` | 93.8% → 93.8% | -0.42 pt | 8.74 ◇ | 5.28 ◇ | 7.51 ◇ | – | – | – |
 
 ### ImageNet (55 models)
 
 ![ImageNet: accuracy vs latency, Pareto frontier](docs/img/pareto_imagenet.svg)
 
-| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread |
-|---|---|---:|---:|---:|---:|---:|
-| `larq-zoo-quicknet-small` | 59.4% → 58.6% | -1.96 pt | 5.05 ◇ | 2.7 ◇ | 4.77 ◇ | 9.26 † |
-| `larq-zoo-binary-alexnet` | 28.9% → 28.9% | +0.30 pt | 5.48 ◇ | 2.73 ◇ | 3.69 ◇ | – |
-| `larq-zoo-quicknet` | 66.4% → 66.4% | -0.72 pt | 7.83 ◇ | 4.16 ◇ | 7.28 ◇ | – |
-| `larq-zoo-xnornet` | 34.4% → 34.4% | -0.36 pt | 7.85 ◇ | 4.29 ◇ | 4.7 ◇ | – |
-| `dabnn-bireal18-stem` | 58.6% → 58.6% | -0.42 pt | 8.36 ◇ | 4.5 ◇ | 7.45 ◇ | – |
-| `larq-zoo-birealnet` | 57.8% → – | -0.20 pt | 10.7 ◇ | 5.78 ◇ | 7.57 ◇ | – |
-| `dabnn-bireal18` | 58.6% → 58.6% | +0.16 pt | 10.8 ◇ | 5.79 ◇ | 7.46 ◇ | – |
-| `larq-zoo-binary-resnet-e18` | 55.5% → 55.5% | -0.92 pt | 10.8 ◇ | 5.84 ◇ | 7.57 ◇ | – |
-| `bitorch-resnete18-imagenet` | 64.8% → 62.5% | -0.84 pt | 10.8 ◇ | 5.8 ◇ | 7.54 ◇ | – |
-| `nncf-resnet18-binarization-dorefa` | 62.5% → 62.5% | +0.14 pt | 10.9 ◇ | 5.8 ◇ | 7.72 ◇ | – |
-| `nncf-resnet18-binarization-xnor` | 61.7% → 61.7% | -0.12 pt | 10.9 ◇ | 5.8 ◇ | 7.73 ◇ | – |
-| `omz-resnet18-xnor-binary-onnx-0001` | 59.4% → 59.4% | -1.20 pt | 11.0 ◇ | 5.84 ◇ | 7.8 ◇ | – |
-| `omz-resnet18-xnor-binary-onnx-0001-fp16` | 64.1% → 64.1% | +0.00 pt | 11.1 ◇ | 5.85 ◇ | 7.8 ◇ | – |
-| `rbonn-reactnet-resnet18-imagenet` | 65.6% → 65.6% | -0.56 pt | 11.1 ◇ | 5.87 ◇ | 7.81 ◇ | – |
-| `snn-subbit-reactnet18-w1a1-imagenet` | 64.8% → 64.8% | -0.20 pt | 11.1 ◇ | 5.87 ◇ | 7.81 ◇ | – |
-| `snn-subbit-reactnet18-w0.67a1-imagenet` | 64.1% → 64.8% | -0.68 pt | 11.1 ◇ | 5.85 ◇ | 7.82 ◇ | – |
-| `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 11.1 ◇ | 5.86 ◇ | 7.81 ◇ | 16.9 ⚠ |
-| `recu-resnet18-imagenet` | 59.4% → 59.4% | -1.74 pt | 11.2 ◇ | 6.01 ◇ | 7.94 ◇ | – |
-| `biper-resnet18-imagenet` | 59.4% → 59.4% | -1.86 pt | 11.2 ◇ | 6.01 ◇ | 7.9 ◇ | – |
-| `tensorpack-dorefa-alexnet-w1a1-g32` | 46.1% → 46.1% | -0.32 pt | 11.4 ◇ | 5.82 ◇ | 7.68 ◇ | – |
-| `sa-bnn-resnet18-imagenet` | 61.7% → 62.5% | -0.78 pt | 11.9 ◇ | 6.12 ◇ | 8.43 ◇ | – |
-| `larq-zoo-real-to-binary-net` | 64.8% → 64.8% | -1.12 pt | 12.7 ◇ | 6.72 ◇ | 9.03 ◇ | – |
-| `siman-resnet18-imagenet` | 54.7% → 54.7% | -4.58 pt | 12.8 ◇ | 7.68 ◇ | 9.49 ◇ | – |
-| `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.90 pt | 13.1 ◇ | 7.86 ◇ | 9.8 ◇ | – |
-| `larq-zoo-quicknet-xl-legacy` | 64.1% → 64.8% | -0.92 pt | 13.7 ◇ | 7.7 ◇ | 13.1 ◇ | – |
-| `larq-zoo-quicknet-large` | 71.1% → 70.3% | -1.96 pt | 14.0 ◇ | 7.63 ◇ | 13.4 ◇ | – |
-| `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 16.8 ◇ | 10.1 ◇ | 16.0 ◇ | 42.1 ⚠ |
-| `biper-resnet34-imagenet` | 66.4% → 66.4% | -1.26 pt | 17.5 ◇ | 9.37 ◇ | 14.2 ◇ | – |
-| `recu-resnet34-imagenet` | 68.8% → 68.8% | -4.56 pt | 17.6 ◇ | 9.37 ◇ | 14.2 ◇ | – |
-| `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.7 ◇ | 9.36 ◇ | 14.3 ◇ | 27.0 ⚠ |
-| `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 20.2 ◇ | 10.5 ◇ | 19.8 ◇ | 19.6 ⚠ |
-| `siman-resnet34-imagenet` | 59.4% → 60.9% | -14.10 pt | 20.5 ◇ | 12.4 ◇ | 17.2 ◇ | – |
-| `rbnn-resnet34-imagenet` | 64.1% → 63.3% | -0.52 pt | 20.9 ◇ | 12.6 ◇ | 17.5 ◇ | – |
-| `larq-zoo-binary-densenet28` | 60.9% → 60.9% | -0.66 pt | 22.8 ◇ | 12.1 ◇ | 17.8 ◇ | – |
-| `bitorch-densenet28-imagenet` | 59.4% → 59.4% | -0.76 pt | 22.8 ◇ | 12.1 ◇ | 17.8 ◇ | – |
-| `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.1 ◇ | 12.1 ◇ | 19.3 ◇ | – |
-| `bnext-tiny` | 69.5% → 68.0% | -3.84 pt | 25.6 ◇ | 13.3 ◇ | 25.1 ◇ | – |
-| `larq-zoo-binary-densenet37` | 66.4% → 65.6% | -41.28 pt | 26.4 ◇ | 14.2 ◇ | 21.4 ◇ | – |
-| `bnas-d-imagenet` | 60.2% → 60.2% | -54.94 pt | 26.4 ◇ | 15.4 ◇ | 15.9 ◇ | – |
-| `larq-zoo-meliusnet22` | 65.6% → 66.4% | -57.38 pt | 26.6 ◇ | 14.0 ◇ | 24.6 ◇ | – |
-| `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | -61.52 pt | 26.9 ◇ | 14.3 ◇ | 22.3 ◇ | – |
-| `bnas-e-imagenet` | 56.2% → 56.2% | -0.92 pt | 32.7 ◇ | 19.1 ◇ | 21.3 ◇ | – |
-| `bhvit-tiny-binary` | 64.1% → 62.5% | -0.74 pt | 32.8 ◇ | 16.3 ◇ | 32.1 ◇ | 46.6 ⚠ |
-| `omz-resnet50-binary-0001-fp16` | 71.9% → 73.4% | +0.26 pt | 34.4 ◇ | 18.0 ◇ | 21.5 ◇ | – |
-| `omz-resnet50-binary-0001` | 72.7% → 73.4% | -0.04 pt | 34.4 ◇ | 18.0 ◇ | 21.6 ◇ | – |
-| `bhvit-tiny-somefp` | 65.6% → 65.6% | -6.20 pt | 35.1 ◇ | 17.5 ◇ | 32.4 ◇ | 58.8 ⚠ |
-| `larq-zoo-binary-densenet45` | 60.9% → 61.7% | -43.86 pt | 35.8 ◇ | 19.0 ◇ | 29.4 ◇ | – |
-| `bi-vit-deit-small` | 11.7% → 10.9% | -0.88 pt | 41.9 ◇ | 23.8 ◇ | 40.1 ◇ | 113.1 ⚠ |
-| `larq-zoo-binary-densenet37-dilated` | 65.6% → 65.6% | -59.00 pt | 47.6 ◇ | 24.7 ◇ | 36.5 ◇ | – |
-| `bhvit-small-binary` | 68.8% → 65.6% | – | 50.0 ◇ | 24.7 ◇ | 49.6 ◇ | 85.8 ⚠ |
-| `bnext-small` | 76.6% → 75.0% | -2.70 pt | 51.9 ◇ | 25.8 ◇ | 51.0 ◇ | – |
-| `bhvit-small-somefp` | 72.7% → 76.6% | -1.90 pt | 52.3 ◇ | 26.0 ◇ | 49.8 ◇ | 106.9 ⚠ |
-| `bnext-middle` | 78.9% → 78.9% | -1.34 pt | 86.4 ◇ | 43.3 ◇ | 85.5 ◇ | – |
-| `bnas-h-imagenet` | 60.2% → 60.2% | +0.08 pt | 106.6 ◇ | 56.2 ◇ | 65.6 ◇ | – |
-| `bnext-large` | 79.7% → 80.5% | -0.88 pt | 191.3 ◇ | 94.8 ◇ | 188.1 ◇ | – |
+![ImageNet int8_full: accuracy vs latency, Pareto frontier](docs/img/pareto_imagenet_int8_full.svg)
+
+| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit fallback) |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `larq-zoo-quicknet-small` | 59.4% → 58.6% | -1.96 pt | 5.05 ◇ | 2.7 ◇ | 6.34 ◇ | 9.26 † | 27.0 | 135.3 |
+| `larq-zoo-binary-alexnet` | 28.9% → 28.9% | +0.30 pt | 5.48 ◇ | 2.73 ◇ | 3.08 ◇ | – | – | – |
+| `larq-zoo-quicknet` | 66.4% → 66.4% | -0.72 pt | 7.83 ◇ | 4.16 ◇ | 9.23 ◇ | – | 43.5 | 220.2 |
+| `larq-zoo-xnornet` | 34.4% → 34.4% | -0.36 pt | 7.85 ◇ | 4.29 ◇ | 4.19 ◇ | – | – | – |
+| `dabnn-bireal18-stem` | 58.6% → 58.6% | -0.42 pt | 8.36 ◇ | 4.5 ◇ | 8.84 ◇ | – | – | – |
+| `larq-zoo-birealnet` | 57.8% → – | -0.20 pt | 10.7 ◇ | 5.78 ◇ | 10.0 ◇ | – | 68.5 | 359.9 |
+| `dabnn-bireal18` | 58.6% → 58.6% | +0.16 pt | 10.8 ◇ | 5.79 ◇ | 9.97 ◇ | – | – | – |
+| `larq-zoo-binary-resnet-e18` | 55.5% → 55.5% | -0.92 pt | 10.8 ◇ | 5.84 ◇ | 9.89 ◇ | – | – | – |
+| `bitorch-resnete18-imagenet` | 64.8% → 62.5% | -0.84 pt | 10.8 ◇ | 5.8 ◇ | 8.77 ◇ | – | – | – |
+| `nncf-resnet18-binarization-dorefa` | 62.5% → 62.5% | +0.14 pt | 10.9 ◇ | 5.8 ◇ | 8.91 ◇ | – | – | – |
+| `nncf-resnet18-binarization-xnor` | 61.7% → 61.7% | -0.12 pt | 10.9 ◇ | 5.8 ◇ | 8.95 ◇ | – | – | – |
+| `omz-resnet18-xnor-binary-onnx-0001` | 59.4% → 59.4% | -1.20 pt | 11.0 ◇ | 5.84 ◇ | 9.2 ◇ | – | 68.3 | 358.7 |
+| `omz-resnet18-xnor-binary-onnx-0001-fp16` | 64.1% → 64.1% | +0.00 pt | 11.1 ◇ | 5.85 ◇ | 9.18 ◇ | – | – | – |
+| `rbonn-reactnet-resnet18-imagenet` | 65.6% → 65.6% | -0.56 pt | 11.1 ◇ | 5.87 ◇ | 10.3 ◇ | – | – | – |
+| `snn-subbit-reactnet18-w1a1-imagenet` | 64.8% → 64.8% | -0.20 pt | 11.1 ◇ | 5.87 ◇ | 10.3 ◇ | – | – | – |
+| `snn-subbit-reactnet18-w0.67a1-imagenet` | 64.1% → 64.8% | -0.68 pt | 11.1 ◇ | 5.85 ◇ | 10.3 ◇ | – | – | – |
+| `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 11.1 ◇ | 5.86 ◇ | 10.2 ◇ | 16.9 ⚠ | 70.6 | 377.4 |
+| `recu-resnet18-imagenet` | 59.4% → 59.4% | -1.74 pt | 11.2 ◇ | 6.01 ◇ | 8.95 ◇ | – | 70.7 | – |
+| `biper-resnet18-imagenet` | 59.4% → 59.4% | -1.86 pt | 11.2 ◇ | 6.01 ◇ | 8.95 ◇ | – | – | – |
+| `tensorpack-dorefa-alexnet-w1a1-g32` | 46.1% → 46.1% | -0.32 pt | 11.4 ◇ | 5.82 ◇ | 7.72 ◇ | – | – | – |
+| `sa-bnn-resnet18-imagenet` | 61.7% → 62.5% | -0.78 pt | 11.9 ◇ | 6.12 ◇ | 9.91 ◇ | – | – | – |
+| `larq-zoo-real-to-binary-net` | 64.8% → 64.8% | -1.12 pt | 12.7 ◇ | 6.72 ◇ | 11.4 ◇ | – | – | – |
+| `siman-resnet18-imagenet` | 54.7% → 54.7% | -4.58 pt | 12.8 ◇ | 7.68 ◇ | 9.65 ◇ | – | – | – |
+| `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.90 pt | 13.1 ◇ | 7.86 ◇ | 9.62 ◇ | – | – | – |
+| `larq-zoo-quicknet-xl-legacy` | 64.1% → 64.8% | -0.92 pt | 13.7 ◇ | 7.7 ◇ | 16.8 ◇ | – | – | – |
+| `larq-zoo-quicknet-large` | 71.1% → 70.3% | -1.96 pt | 14.0 ◇ | 7.63 ◇ | 16.4 ◇ | – | 74.9 | – |
+| `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 16.8 ◇ | 10.1 ◇ | 16.5 ◇ | 42.1 ⚠ | – | – |
+| `biper-resnet34-imagenet` | 66.4% → 66.4% | -1.26 pt | 17.5 ◇ | 9.37 ◇ | 16.2 ◇ | – | – | – |
+| `recu-resnet34-imagenet` | 68.8% → 68.8% | -4.56 pt | 17.6 ◇ | 9.37 ◇ | 16.2 ◇ | – | – | – |
+| `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.7 ◇ | 9.36 ◇ | 17.9 ◇ | 27.0 ⚠ | – | – |
+| `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 20.2 ◇ | 10.5 ◇ | 24.4 ◇ | 19.6 ⚠ | – | 684.9 |
+| `siman-resnet34-imagenet` | 59.4% → 60.9% | -14.10 pt | 20.5 ◇ | 12.4 ◇ | 17.9 ◇ | – | – | – |
+| `rbnn-resnet34-imagenet` | 64.1% → 63.3% | -0.52 pt | 20.9 ◇ | 12.6 ◇ | 17.6 ◇ | – | – | – |
+| `larq-zoo-binary-densenet28` | 60.9% → 60.9% | -0.66 pt | 22.8 ◇ | 12.1 ◇ | 17.8 ◇ | – | – | – |
+| `bitorch-densenet28-imagenet` | 59.4% → 59.4% | -0.76 pt | 22.8 ◇ | 12.1 ◇ | 17.7 ◇ | – | – | – |
+| `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.1 ◇ | 12.1 ◇ | 19.9 ◇ | – | – | – |
+| `bnext-tiny` | 69.5% → 68.0% | -3.84 pt | 25.6 ◇ | 13.3 ◇ | 30.4 ◇ | – | 139.1 | – |
+| `larq-zoo-binary-densenet37` | 66.4% → 65.6% | -41.28 pt | 26.4 ◇ | 14.2 ◇ | 24.1 ◇ | – | – | – |
+| `bnas-d-imagenet` | 60.2% → 60.2% | -54.94 pt | 26.4 ◇ | 15.4 ◇ | 16.3 ◇ | – | – | – |
+| `larq-zoo-meliusnet22` | 65.6% → 66.4% | -57.38 pt | 26.6 ◇ | 14.0 ◇ | 28.4 ◇ | – | – | – |
+| `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | -61.52 pt | 26.9 ◇ | 14.3 ◇ | 23.5 ◇ | – | – | – |
+| `bnas-e-imagenet` | 56.2% → 56.2% | -0.92 pt | 32.7 ◇ | 19.1 ◇ | 23.1 ◇ | – | – | – |
+| `bhvit-tiny-binary` | 64.1% → 62.5% | -0.74 pt | 32.8 ◇ | 16.3 ◇ | 45.1 ◇ | 46.6 ⚠ | 165.0 | 1871.3 |
+| `omz-resnet50-binary-0001-fp16` | 71.9% → 73.4% | +0.26 pt | 34.4 ◇ | 18.0 ◇ | 27.0 ◇ | – | – | – |
+| `omz-resnet50-binary-0001` | 72.7% → 73.4% | -0.04 pt | 34.4 ◇ | 18.0 ◇ | 27.0 ◇ | – | – | – |
+| `bhvit-tiny-somefp` | 65.6% → 65.6% | -6.20 pt | 35.1 ◇ | 17.5 ◇ | 44.3 ◇ | 58.8 ⚠ | – | – |
+| `larq-zoo-binary-densenet45` | 60.9% → 61.7% | -43.86 pt | 35.8 ◇ | 19.0 ◇ | 33.9 ◇ | – | – | – |
+| `bi-vit-deit-small` | 11.7% → 10.9% | -0.88 pt | 41.9 ◇ | 23.8 ◇ | 42.0 ◇ | 113.1 ⚠ | – | – |
+| `larq-zoo-binary-densenet37-dilated` | 65.6% → 65.6% | -59.00 pt | 47.6 ◇ | 24.7 ◇ | 41.0 ◇ | – | – | – |
+| `bhvit-small-binary` | 68.8% → 65.6% | – | 50.0 ◇ | 24.7 ◇ | 70.0 ◇ | 85.8 ⚠ | – | – |
+| `bnext-small` | 76.6% → 75.0% | -2.70 pt | 51.9 ◇ | 25.8 ◇ | 57.1 ◇ | – | 276.3 | – |
+| `bhvit-small-somefp` | 72.7% → 76.6% | -1.90 pt | 52.3 ◇ | 26.0 ◇ | 69.3 ◇ | 106.9 ⚠ | – | – |
+| `bnext-middle` | 78.9% → 78.9% | -1.34 pt | 86.4 ◇ | 43.3 ◇ | 98.8 ◇ | – | – | – |
+| `bnas-h-imagenet` | 60.2% → 60.2% | +0.08 pt | 106.6 ◇ | 56.2 ◇ | 71.6 ◇ | – | – | – |
+| `bnext-large` | 79.7% → 80.5% | -0.88 pt | 191.3 ◇ | 94.8 ◇ | 213.4 ◇ | – | – | – |
 
 ### Other tasks (36 models)
 
-| model | task | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread |
-|---|---|---|---:|---:|---:|---:|---:|
-| `finn-examples-bnn-pynq-tfc-w1a1` | mnist | 96.9% → 96.9% | – | 0.016 ◇ | 0.012 ◇ | 0.019 ◇ | – |
-| `brevitas-bnn-pynq-tfc-1w1a` | mnist | 96.9% → 96.9% | – | 0.017 ◇ | 0.013 ◇ | 0.019 ◇ | – |
-| `brevitas-bnn-pynq-sfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.03 ◇ | 0.025 ◇ | 0.033 ◇ | – |
-| `brevitas-bnn-pynq-lfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.054 ◇ | 0.053 ◇ | 0.054 ◇ | – |
-| `bnn-pynq-lfc-w1a1-mnist` | mnist | 100.0% → 100.0% | – | 0.055 ◇ | 0.053 ◇ | 0.054 ◇ | – |
-| `finn-examples-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.701 ◇ | 0.241 ◇ | 0.696 ◇ | – |
-| `bnn-pynq-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.731 ◇ | 0.241 ◇ | 0.698 ◇ | – |
-| `brillsson-quicknet` | non-semantic speech representation | 90.7% → 90.7% | – | 1.02 ◇ | 0.72 ◇ | 0.926 ◇ | – |
-| `ab-bnn-cifar100-reactneta` | cifar100 | 71.9% → 71.9% | -0.31 pt | 1.62 ◇ | 0.997 ◇ | 1.6 ◇ | 2.63 ⚠ |
-| `larqface-quicknet-msceleb` | face-recognition | 99.0% → 99.0% | – | 1.92 ◇ | 1.25 ◇ | 1.75 ◇ | – |
-| `ab-bnn-cifar100-reactnet18` | cifar100 | 69.5% → 69.5% | -0.56 pt | 2.32 ◇ | 1.31 ◇ | 2.13 ◇ | 3.72 ⚠ |
-| `brillsson-binarydensenet28` | non-semantic speech representation | 90.5% → 90.5% | – | 2.52 ◇ | 1.65 ◇ | 2.13 ◇ | – |
-| `brillsson-meliusnet22` | non-semantic speech representation | 91.9% → 91.9% | – | 3.4 ◇ | 2.32 ◇ | 3.1 ◇ | – |
-| `larqface-binarydensenet28-msceleb` | face-recognition | 99.2% → 99.2% | – | 5.58 ◇ | 3.38 ◇ | 4.29 ◇ | – |
-| `larqface-binarydensenet37-msceleb` | face-recognition | 99.2% → 99.2% | – | 6.5 ◇ | 4.04 ◇ | 5.19 ◇ | – |
-| `larqface-binarydensenet45-msceleb` | face-recognition | 99.2% → 99.2% | – | 9.11 ◇ | 5.5 ◇ | 7.13 ◇ | – |
-| `bimatting-bimobilenet-backbone` | imagenet | 55.5% → 55.5% | -22.86 pt | 9.91 ◇ | 5.54 ◇ | 9.62 ◇ | – |
-| `ida-det-bires18-imagenet-backbone` | imagenet | 65.6% → 65.6% | -0.64 pt | 11.1 ◇ | 5.87 ◇ | 7.81 ◇ | – |
-| `larqface-binaryfacenet-msceleb` | face-recognition | 95.1% → 95.1% | – | 16.2 ◇ | 8.63 ◇ | 16.1 ◇ | – |
-| `bbcu-sr-m-x4` | single-image-super-resolution-x4 | 27.22 dB → 27.22 dB | – | 18.5 ◇ | 8.48 ◇ | 17.7 ◇ | 24.4 ⚠ |
-| `bbcu-sr-m-x2` | single-image-super-resolution-x2 | 31.89 dB → 31.89 dB | – | 18.7 ◇ | 9.61 ◇ | 18.0 ◇ | 25.6 ⚠ |
-| `s2bnn-reacta-distill-only` | imagenet self-supervised representation learning | – → 0.96370 | – | 20.6 ◇ | 10.6 ◇ | 20.5 ◇ | – |
-| `burn-reacta-stage2` | imagenet self-supervised representation learning | – → 0.99615 | – | 20.8 ◇ | 10.8 ◇ | 20.5 ◇ | – |
-| `bsrc2023-binary-sr-x2-v0` | single-image-super-resolution-x2 | 31.88 dB → 31.88 dB | – | 28.2 ◇ | 14.9 ◇ | 16.8 ◇ | – |
-| `bbcu-deblocking` | jpeg-artifact-reduction | 31.33 dB → 31.33 dB | – | 28.9 ◇ | 13.8 ◇ | 28.2 ◇ | 33.1 ⚠ |
-| `bbcu-denoise` | color-image-denoising | 29.74 dB → 29.74 dB | – | 29.2 ◇ | 14.0 ◇ | 28.2 ◇ | 34.0 ⚠ |
-| `bibert-bert-base-sst2` | glue-sst2 | 89.8% → 89.8% | -0.34 pt | 32.1 ◇ | 15.8 ◇ | 32.2 ◇ | – |
-| `bbcu-sr-l-x2` | single-image-super-resolution-x2 | 32.03 dB → 32.03 dB | – | 37.8 ◇ | 19.3 ◇ | 20.4 ◇ | 36.6 ⚠ |
-| `bbcu-sr-l-x4` | single-image-super-resolution-x4 | 27.36 dB → 27.36 dB | – | 56.9 ◇ | 25.7 ◇ | 21.6 ◇ | 53.5 ⚠ |
-| `bibert-bert-base-mrpc` | glue-mrpc | 76.6% → 76.6% | +0.98 pt | 60.6 ◇ | 27.6 ◇ | 60.5 ◇ | 148.9 ⚠ |
-| `bsrc2023-binary-sr-x4-v0` | single-image-super-resolution-x4 | 27.22 dB → 27.22 dB | – | 62.2 ◇ | 28.1 ◇ | 28.0 ◇ | – |
-| `bibert-bert-base-mnli` | glue-mnli | 61.7% → 61.7% | +0.54 pt | 62.6 ◇ | 28.7 ◇ | 62.7 ◇ | 124.7 ⚠ |
-| `bibert-bert-base-qqp` | glue-qqp | 83.6% → 83.6% | -0.59 pt | 68.2 ◇ | 31.5 ◇ | 68.3 ◇ | 160.7 ⚠ |
-| `bsrc2023-binary-sr-x4-v1` | single-image-super-resolution-x4 | 27.32 dB → 27.32 dB | – | 76.0 ◇ | 34.0 ◇ | 40.1 ◇ | – |
-| `gsb-deit-s-cifar100-stage2` | cifar100 | 70.3% → 69.5% | -1.99 pt | 106.0 ◇ | 51.4 ◇ | 104.0 ◇ | – |
-| `bsrc2023-binary-sr-x2-v1` | single-image-super-resolution-x2 | 32.22 dB → 32.22 dB | – | 139.6 ◇ | 64.6 ◇ | 108.3 ◇ | – |
+| model | task | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit fallback) |
+|---|---|---|---:|---:|---:|---:|---:|---:|---:|
+| `finn-examples-bnn-pynq-tfc-w1a1` | mnist | 96.9% → 96.9% | – | 0.016 ◇ | 0.012 ◇ | 0.019 ◇ | – | – | – |
+| `brevitas-bnn-pynq-tfc-1w1a` | mnist | 96.9% → 96.9% | – | 0.017 ◇ | 0.013 ◇ | 0.019 ◇ | – | – | – |
+| `brevitas-bnn-pynq-sfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.03 ◇ | 0.025 ◇ | 0.033 ◇ | – | – | – |
+| `brevitas-bnn-pynq-lfc-1w1a` | mnist | 100.0% → 100.0% | – | 0.054 ◇ | 0.053 ◇ | 0.054 ◇ | – | – | – |
+| `bnn-pynq-lfc-w1a1-mnist` | mnist | 100.0% → 100.0% | – | 0.055 ◇ | 0.053 ◇ | 0.054 ◇ | – | – | – |
+| `finn-examples-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.701 ◇ | 0.241 ◇ | 0.696 ◇ | – | – | – |
+| `bnn-pynq-cnv-w1a1-gtsrb` | gtsrb | 93.8% → 93.8% | – | 0.731 ◇ | 0.241 ◇ | 0.698 ◇ | – | – | – |
+| `brillsson-quicknet` | non-semantic speech representation | 90.7% → 90.7% | – | 1.02 ◇ | 0.72 ◇ | 0.926 ◇ | – | – | – |
+| `ab-bnn-cifar100-reactneta` | cifar100 | 71.9% → 71.9% | -0.31 pt | 1.62 ◇ | 0.997 ◇ | 2.09 ◇ | 2.63 ⚠ | – | – |
+| `larqface-quicknet-msceleb` | face-recognition | 99.0% → 99.0% | – | 1.92 ◇ | 1.25 ◇ | 1.75 ◇ | – | – | – |
+| `ab-bnn-cifar100-reactnet18` | cifar100 | 69.5% → 69.5% | -0.56 pt | 2.32 ◇ | 1.31 ◇ | 2.77 ◇ | 3.72 ⚠ | – | – |
+| `brillsson-binarydensenet28` | non-semantic speech representation | 90.5% → 90.5% | – | 2.52 ◇ | 1.65 ◇ | 2.13 ◇ | – | – | – |
+| `brillsson-meliusnet22` | non-semantic speech representation | 91.9% → 91.9% | – | 3.4 ◇ | 2.32 ◇ | 3.1 ◇ | – | – | – |
+| `larqface-binarydensenet28-msceleb` | face-recognition | 99.2% → 99.2% | – | 5.58 ◇ | 3.38 ◇ | 4.29 ◇ | – | – | – |
+| `larqface-binarydensenet37-msceleb` | face-recognition | 99.2% → 99.2% | – | 6.5 ◇ | 4.04 ◇ | 5.19 ◇ | – | – | – |
+| `larqface-binarydensenet45-msceleb` | face-recognition | 99.2% → 99.2% | – | 9.11 ◇ | 5.5 ◇ | 7.13 ◇ | – | – | – |
+| `bimatting-bimobilenet-backbone` | imagenet | 55.5% → 55.5% | -22.86 pt | 9.91 ◇ | 5.54 ◇ | 12.6 ◇ | – | – | – |
+| `ida-det-bires18-imagenet-backbone` | imagenet | 65.6% → 65.6% | -0.64 pt | 11.1 ◇ | 5.87 ◇ | 10.4 ◇ | – | – | – |
+| `larqface-binaryfacenet-msceleb` | face-recognition | 95.1% → 95.1% | – | 16.2 ◇ | 8.63 ◇ | 16.1 ◇ | – | – | – |
+| `bbcu-sr-m-x4` | single-image-super-resolution-x4 | 27.22 dB → 27.22 dB | – | 18.5 ◇ | 8.48 ◇ | 17.7 ◇ | 24.4 ⚠ | – | – |
+| `bbcu-sr-m-x2` | single-image-super-resolution-x2 | 31.89 dB → 31.89 dB | – | 18.7 ◇ | 9.61 ◇ | 18.0 ◇ | 25.6 ⚠ | – | – |
+| `s2bnn-reacta-distill-only` | imagenet self-supervised representation learning | – → 0.96370 | – | 20.6 ◇ | 10.6 ◇ | 20.5 ◇ | – | – | – |
+| `burn-reacta-stage2` | imagenet self-supervised representation learning | – → 0.99615 | – | 20.8 ◇ | 10.8 ◇ | 20.5 ◇ | – | – | – |
+| `bsrc2023-binary-sr-x2-v0` | single-image-super-resolution-x2 | 31.88 dB → 31.88 dB | – | 28.2 ◇ | 14.9 ◇ | 16.8 ◇ | – | – | – |
+| `bbcu-deblocking` | jpeg-artifact-reduction | 31.33 dB → 31.33 dB | – | 28.9 ◇ | 13.8 ◇ | 28.2 ◇ | 33.1 ⚠ | – | – |
+| `bbcu-denoise` | color-image-denoising | 29.74 dB → 29.74 dB | – | 29.2 ◇ | 14.0 ◇ | 28.2 ◇ | 34.0 ⚠ | – | – |
+| `bibert-bert-base-sst2` | glue-sst2 | 89.8% → 89.8% | -0.34 pt | 32.1 ◇ | 15.8 ◇ | 36.7 ◇ | – | 179.7 | – |
+| `bbcu-sr-l-x2` | single-image-super-resolution-x2 | 32.03 dB → 32.03 dB | – | 37.8 ◇ | 19.3 ◇ | 20.4 ◇ | 36.6 ⚠ | – | – |
+| `bbcu-sr-l-x4` | single-image-super-resolution-x4 | 27.36 dB → 27.36 dB | – | 56.9 ◇ | 25.7 ◇ | 21.6 ◇ | 53.5 ⚠ | – | – |
+| `bibert-bert-base-mrpc` | glue-mrpc | 76.6% → 76.6% | +0.98 pt | 60.6 ◇ | 27.6 ◇ | 70.2 ◇ | 148.9 ⚠ | – | – |
+| `bsrc2023-binary-sr-x4-v0` | single-image-super-resolution-x4 | 27.22 dB → 27.22 dB | – | 62.2 ◇ | 28.1 ◇ | 28.0 ◇ | – | – | – |
+| `bibert-bert-base-mnli` | glue-mnli | 61.7% → 61.7% | +0.54 pt | 62.6 ◇ | 28.7 ◇ | 73.5 ◇ | 124.7 ⚠ | – | – |
+| `bibert-bert-base-qqp` | glue-qqp | 83.6% → 83.6% | -0.59 pt | 68.2 ◇ | 31.5 ◇ | 76.8 ◇ | 160.7 ⚠ | – | – |
+| `bsrc2023-binary-sr-x4-v1` | single-image-super-resolution-x4 | 27.32 dB → 27.32 dB | – | 76.0 ◇ | 34.0 ◇ | 40.1 ◇ | – | – | – |
+| `gsb-deit-s-cifar100-stage2` | cifar100 | 70.3% → 69.5% | -1.99 pt | 106.0 ◇ | 51.4 ◇ | 86.4 ◇ | – | – | – |
+| `bsrc2023-binary-sr-x2-v1` | single-image-super-resolution-x2 | 32.22 dB → 32.22 dB | – | 139.6 ◇ | 64.6 ◇ | 108.3 ◇ | – | – | – |
 
-Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 456 vendor-policy. 
+Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 563 vendor-policy; moto e13: 47 clean; Redmi 9A: 27 clean. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 342/342 correctness checks passed on 114 models, 2026-11-02 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 18/20 correctness checks passed on 10 models, 2026-11-11 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); OnePlus Open: 449/449 correctness checks passed on 114 models, 2026-11-11 (outputs byte-identical to the emulated-ARM run of the same code); moto e13: 20/20 correctness checks passed on 4 models, 2026-11-12 (outputs byte-identical to the emulated-ARM run of the same code); Redmi 9A: 18/20 correctness checks passed on 10 models, 2026-11-11 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host

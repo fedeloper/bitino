@@ -77,9 +77,9 @@
  },
  "device_verification": {
   "s22": {
-   "suite": "20261102_1142",
-   "date": "2026-11-02",
-   "runtime_commit": null,
+   "suite": "20261112_1204",
+   "date": "2026-11-12",
+   "runtime_commit": "6ed17b7",
    "stages": {
     "neon": {
      "pass": true,
@@ -95,6 +95,11 @@
      "pass": true,
      "identical_to_emulated": true,
      "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   },
@@ -267,6 +272,39 @@
    }
   ],
   "oneplus-open": [
+   {
+    "model_id": "bibert-bert-base-qqp",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "int8full_20261112_1204_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 76.8093225,
+    "median_range_ms": [
+     76.4689585,
+     79.4435155
+    ],
+    "p90_ms": 79.5025002,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 59968,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T01:50:43Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "c5f6d73450455da167eaf05b11b705db32ef4eb474a4d96b1ae34a236de19e12",
+    "runtime": "development runtime as of 2026-11-12"
+   },
    {
     "model_id": "bibert-bert-base-qqp",
     "device": "oneplus-open",

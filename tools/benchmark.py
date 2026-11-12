@@ -6,7 +6,14 @@ is repeated --repeats times (round-robin over configurations, so slow drift and 
 effects spread evenly). All raw bitino_bench JSON reports are pulled to --out;
 tools/report_benchmarks.py aggregates them.
 
-Cool-down on the device (--cooldown-mode adaptive, the default): before every run the script waits until the
+Pauses on the device (--cooldown-mode throttle, the default since 2026-11-12): no fixed or temperature wait; before
+every run the script reads the cpufreq limits and the Android thermal status and pauses only while the phone is
+throttling: thermal status > 0, or a policy's scaling_max_freq below the highest value seen in this plan (vendor
+power-policy caps that never change, e.g. the OnePlus Open with the screen off, are not throttling). It polls every
+2 s for at most --throttle-max s; after a timeout the next runs wait at most 10 s until a run starts unthrottled again
+(a phone that cannot cool under load is recorded, not waited on forever). Each raw JSON's "throttle" block records it.
+
+--cooldown-mode adaptive: before every run the script waits until the
 hottest CPU thermal zone (cpu-*, cpuss-*) is back within --cool-margin degrees C of the idle baseline (at least
 --cool-min s, at most --cool-max s; a timeout is recorded, not fatal). The idle baseline is measured once (the
 phone idles until the CPU temperature stops falling) and cached in .cache/bench_idle_baseline.json for
@@ -154,6 +161,34 @@ def freq_caps() -> dict:
             "thermal_status": int(status.group(1)) if status else None, "skin_c": float(skin.group(1)) if skin else None}
 
 
+class ThrottleGate:
+    """--cooldown-mode throttle: pause only while the phone is throttling (see the module docstring)."""
+
+    def __init__(self, max_s: float):
+        self.max_s, self.ref, self.gave_up = max_s, {}, False
+
+    def seen(self, st: dict) -> None:
+        for p, (cur, _) in st["policies"].items():
+            self.ref[p] = max(self.ref.get(p, 0), cur)
+
+    def throttled(self, st: dict | None) -> bool:
+        if not st:
+            return False
+        self.seen(st)
+        return (st.get("thermal_status") or 0) > 0 or any(cur < self.ref[p] for p, (cur, _) in st["policies"].items())
+
+    def wait(self) -> dict:
+        t0, limit = time.time(), (10.0 if self.gave_up else self.max_s)
+        st = freq_caps()
+        while self.throttled(st) and time.time() - t0 < limit:
+            time.sleep(2.0)
+            st = freq_caps()
+        hot = self.throttled(st)
+        self.gave_up = hot
+        return {"waited_s": round(time.time() - t0, 1), "before": st, "timeout": hot, "mode": "throttle",
+                "reference_caps_khz": dict(self.ref), "throttled_before": hot}
+
+
 def wait_uncapped(max_s: float) -> dict:
     t0 = time.time()
     st = freq_caps()
@@ -188,10 +223,14 @@ def stage_plan(model_dir: str) -> list[dict]:
 def quick_plan(model_dir: str, stage: str) -> list[dict]:
     """Final configuration only (for models outside the fully benchmarked priority set)."""
     m = f"{model_dir}/model.bitino"
-    return [dict(name="t1_x2", binary="rel", model=m, stage=stage, threads=1, affinity="7"),
-            dict(name="t4_unpinned", binary="rel", model=m, stage=stage, threads=4, affinity=""),
-            dict(name="t8_unpinned", binary="rel", model=m, stage=stage, threads=8, affinity=""),
-            dict(name="t1_x2_int8", binary="rel", model=m, stage="optimized_int8", threads=1, affinity="7")]
+    c = [dict(name="t1_x2", binary="rel", model=m, stage=stage, threads=1, affinity="7"),
+         dict(name="t4_unpinned", binary="rel", model=m, stage=stage, threads=4, affinity=""),
+         dict(name="t8_unpinned", binary="rel", model=m, stage=stage, threads=8, affinity=""),
+         dict(name="t1_x2_int8", binary="rel", model=m, stage="optimized_int8", threads=1, affinity="7")]
+    # 8 threads (adds the little cores; faster than 4 for about half the models on the OnePlus Open) is not
+    # published (README/site show 1 and 4 threads) and costs a quarter of the runs and their cool-downs, so it is
+    # opt-in since 2026-11-12: BITINO_QUICK_T8=1 keeps it.
+    return c if os.environ.get("BITINO_QUICK_T8") == "1" else [x for x in c if x["name"] != "t8_unpinned"]
 
 
 # ------------------------------------------------------------------ host mode
@@ -357,8 +396,10 @@ def main() -> int:
     ap.add_argument("--iterations", type=int, default=50)
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--cooldown", type=float, help="fixed mode: seconds between runs (default: 20 device, 2 host)")
-    ap.add_argument("--cooldown-mode", choices=["adaptive", "fixed"], default="adaptive",
-                    help="device: adaptive = wait for the CPU temperature to return to the idle baseline (default)")
+    ap.add_argument("--cooldown-mode", choices=["throttle", "adaptive", "fixed"], default="throttle",
+                    help="device: throttle = pause only while throttling is detected (default); adaptive = wait for the "
+                         "CPU temperature to return to the idle baseline; fixed = --cooldown s after each run")
+    ap.add_argument("--throttle-max", type=float, default=120.0, help="throttle: maximum pause before a run (s)")
     ap.add_argument("--cool-margin", type=float, default=2.0, help="adaptive: degrees C above the idle baseline")
     ap.add_argument("--cool-min", type=float, default=3.0, help="adaptive: minimum wait before each run (s)")
     ap.add_argument("--cool-max", type=float, default=90.0, help="adaptive: maximum wait before each run (s)")
@@ -427,6 +468,7 @@ def main() -> int:
     cfgs = [c for c in cfgs if c["binary"] in pushed]
 
     adaptive = a.cooldown_mode == "adaptive"
+    tgate = ThrottleGate(a.throttle_max) if a.cooldown_mode == "throttle" else None
     plan = {"plan": a.plan, "model_dir": a.model_dir, "warmup": a.warmup, "iterations": a.iterations,
             "repeats": a.repeats, "cooldown_mode": a.cooldown_mode, "configs": cfgs,
             "binaries": {k: v for k, v in binaries.items() if k in pushed}}
@@ -443,6 +485,9 @@ def main() -> int:
         target = base["temp_c"] + a.cool_margin
         plan["cooldown"] = {"idle_baseline": base, "margin_c": a.cool_margin, "target_c": target,
                             "min_s": a.cool_min, "max_s": a.cool_max}
+    elif tgate:
+        plan["throttle_gate"] = {"max_wait_s": a.throttle_max, "poll_s": 2.0,
+                                 "rule": "thermal status > 0 or scaling_max_freq below the highest seen in this plan"}
     else:
         plan["cooldown_s"] = a.cooldown
     plan["freq_cap_gate"] = {"max_wait_s": a.cap_max, "at_plan_start": freq_caps()}
@@ -454,14 +499,14 @@ def main() -> int:
             # is repeated once the cap lifts.
             for attempt in range(3):
                 try:
-                    gate = wait_uncapped(a.cap_max)
+                    gate = tgate.wait() if tgate else wait_uncapped(a.cap_max)
                     cool = wait_cool(target, a.cool_min, a.cool_max) if adaptive else None
                 except RuntimeError:  # temperature or limits unreadable: device gone
                     if not wait_device():
                         print("device lost for 30 min; stopping", file=sys.stderr)
                         return 2
                     continue
-                res = run_one(a, c, tag, pushed, cool, gate)
+                res = run_one(a, c, tag, pushed, cool, gate, tgate)
                 if res == "ok" or (res == "throttled" and (gate["timeout"] or attempt == 2)):
                     break
                 if res == "throttled":
@@ -471,12 +516,12 @@ def main() -> int:
                 if not wait_device():
                     print("device lost for 30 min; stopping", file=sys.stderr)
                     return 2
-            if not adaptive:
+            if not adaptive and not tgate:
                 time.sleep(a.cooldown)
     return 0
 
 
-def run_one(a, c, tag, pushed, cool, gate) -> str:
+def run_one(a, c, tag, pushed, cool, gate, tgate=None) -> str:
     """One device run: "ok", "throttled" (a frequency cap was active before or after it) or "failed" (the caller
     checks whether the device is still there)."""
     dev_json = f"{DEV}/out/{tag}.json"
@@ -499,7 +544,10 @@ def run_one(a, c, tag, pushed, cool, gate) -> str:
     if adb("pull", dev_json, local, check=False).returncode != 0:
         print(f"[{tag}] FAILED: pull", file=sys.stderr)
         return "failed"
-    throttled = gate["before"]["capped"] or bool(after and after["capped"])
+    if tgate:   # relative to the highest limits seen, not to cpuinfo_max_freq (vendor policy caps are not throttling)
+        throttled = gate["throttled_before"] or tgate.throttled(after)
+    else:
+        throttled = gate["before"]["capped"] or bool(after and after["capped"])
     rep_json = json.load(open(local))
     if cool:
         rep_json["cooldown"] = cool
