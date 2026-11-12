@@ -10,7 +10,7 @@ runtime with NEON (ARMv8.2 dotprod, i8mm) and AVX2 / AVX-VNNI kernels, converter
 public weights.
 
 <!-- generated:stats -->
-**326** binary networks investigated, **206** with verified public weights, **114** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 4 verified end to end, 110 reconstructed from the conversion records.
+**343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 4 verified end to end, 128 reconstructed from the conversion records.
 <!-- /generated:stats -->
 
 *Un bitino* is Italian for “a little bit”, which is all a binary network needs per weight.
@@ -214,7 +214,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `bnas-h-imagenet` | 60.2% → 60.2% | +0.08 pt | 107.5 ◇ | 56.6 ◇ | 71.6 ◇ | – | – | – |
 | `bnext-large` | 79.7% → 80.5% | -0.88 pt | 188.7 ◇ | 93.4 ◇ | 213.4 ◇ | – | – | – |
 
-### Other tasks (36 models)
+### Other tasks (39 models)
 
 | model | task | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|
@@ -240,10 +240,12 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `s2bnn-reacta-distill-only` | imagenet self-supervised representation learning | – → 0.96370 | – | 20.3 ◇ | 10.4 ◇ | 20.2 ◇ | – | – | – |
 | `burn-reacta-stage2` | imagenet self-supervised representation learning | – → 0.99615 | – | 20.6 ◇ | 10.6 ◇ | 20.4 ◇ | – | – | – |
 | `bsrc2023-binary-sr-x2-v0` | single-image-super-resolution-x2 | 31.88 dB → 31.88 dB | – | 28.2 ◇ | 14.9 ◇ | 16.7 ◇ | – | – | – |
+| `ftl-deepfake-bnext-t-cocofake-unfrozen` | deepfake-image-detection | – → – | – | 28.4 ◇ | – | – | – | 147.9 | – |
 | `bbcu-deblocking` | jpeg-artifact-reduction | 31.33 dB → 31.33 dB | – | 28.8 ◇ | 13.8 ◇ | 28.0 ◇ | 33.1 ⚠ | – | – |
 | `bbcu-denoise` | color-image-denoising | 29.74 dB → 29.74 dB | – | 29.2 ◇ | 14.0 ◇ | 28.3 ◇ | 34.0 ⚠ | – | – |
 | `bibert-bert-base-sst2` | glue-sst2 | 89.8% → 89.8% | -0.34 pt | 30.5 ◇ | 14.9 ◇ | 36.7 ◇ | – | 169.1 | 351.3 |
 | `bbcu-sr-l-x2` | single-image-super-resolution-x2 | 32.03 dB → 32.03 dB | – | 37.9 ◇ | 19.3 ◇ | 20.5 ◇ | 36.6 ⚠ | – | – |
+| `ftl-deepfake-bnext-s-cocofake-unfrozen` | deepfake-image-detection | – → – | – | 53.6 ◇ | – | – | – | 281.5 | – |
 | `bbcu-sr-l-x4` | single-image-super-resolution-x4 | 27.36 dB → 27.36 dB | – | 57.1 ◇ | 25.7 ◇ | 21.7 ◇ | 53.5 ⚠ | – | – |
 | `bibert-bert-base-mrpc` | glue-mrpc | 76.6% → 76.6% | +0.98 pt | 57.5 ◇ | 26.3 ◇ | 70.2 ◇ | 148.9 ⚠ | – | – |
 | `bibert-bert-base-mnli` | glue-mnli | 61.7% → 61.7% | +0.54 pt | 59.5 ◇ | 27.3 ◇ | 73.5 ◇ | 124.7 ⚠ | – | – |
@@ -251,13 +253,14 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `bibert-bert-base-qqp` | glue-qqp | 83.6% → 83.6% | -0.59 pt | 65.1 ◇ | 30.1 ◇ | 76.8 ◇ | 160.7 ⚠ | – | – |
 | `bsrc2023-binary-sr-x4-v1` | single-image-super-resolution-x4 | 27.32 dB → 27.32 dB | – | 75.9 ◇ | 33.9 ◇ | 39.9 ◇ | – | – | – |
 | `gsb-deit-s-cifar100-stage2` | cifar100 | 70.3% → 69.5% | -1.99 pt | 87.3 ◇ | 43.6 ◇ | 86.4 ◇ | – | – | – |
+| `ftl-deepfake-bnext-m-cocofake-unfrozen` | deepfake-image-detection | – → – | – | 88.2 ◇ | – | – | – | 470.1 | – |
 | `bsrc2023-binary-sr-x2-v1` | single-image-super-resolution-x2 | 32.22 dB → 32.22 dB | – | 139.3 ◇ | 64.1 ◇ | 107.3 ◇ | – | – | – |
 | `brevitas-bnn-pynq-tfc-1w1a` | mnist | 96.9% → 96.9% | – | – | 0.007 ◇ | – | – | – | – |
 | `finn-examples-bnn-pynq-tfc-w1a1` | mnist | 96.9% → 96.9% | – | – | 0.007 ◇ | – | – | – | – |
 
-Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 880 vendor-policy; moto e13: 98 clean; Redmi 9A: 42 clean. 
+Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 898 vendor-policy; moto e13: 116 clean; Redmi 9A: 42 clean. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 425/425 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 190/228 correctness checks passed on 114 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 425/425 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 449/449 correctness checks passed on 114 models, 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 192/228 correctness checks passed on 114 models, 2026-11-12 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host

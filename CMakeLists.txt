@@ -96,6 +96,9 @@ set(BITINO_SOURCES
   runtime/kernels/int8_full/int8_full_neon.cc
   runtime/kernels/int8_full/int8_full_gemm_i8mm.cc
   runtime/kernels/int8_full/int8_full_portable.cc
+  runtime/ops/op_defs_image_features.cc
+  runtime/kernels/reference/image_features_reference.cc
+  runtime/kernels/image_features_opt.cc
 )
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
   # binary_avx2 tier: only the SIMD TU gets AVX2 code generation; it is called
@@ -165,6 +168,10 @@ add_executable(bitino_bench runtime/tools/bitino_bench.cc)
 target_link_libraries(bitino_bench PRIVATE bitino)
 target_include_directories(bitino_bench PRIVATE runtime)
 
+add_executable(bitino_deepfake runtime/tools/bitino_deepfake.cc)
+target_link_libraries(bitino_deepfake PRIVATE bitino)
+target_include_directories(bitino_deepfake PRIVATE runtime)
+
 add_executable(bitino_microbench runtime/tools/bitino_microbench.cc)
 target_link_libraries(bitino_microbench PRIVATE bitino)
 target_include_directories(bitino_microbench PRIVATE runtime)
@@ -192,6 +199,7 @@ if(BITINO_BUILD_TESTS)
   target_sources(bitino_tests PRIVATE tests/cpp/test_transformer_opt.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_bit_outputs.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_neon_a32.cc)
+  target_sources(bitino_tests PRIVATE tests/cpp/test_image_features.cc)
   target_link_libraries(bitino_tests PRIVATE bitino)
   target_include_directories(bitino_tests PRIVATE runtime tests/cpp)
   add_test(NAME bitino_tests COMMAND bitino_tests)

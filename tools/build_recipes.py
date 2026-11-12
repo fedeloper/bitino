@@ -56,6 +56,7 @@ EVAL_OF = [
     ("s2bnn-reacta-distill-only", "eval128", "torchvision_imagenet", "--output-kind embedding --embedding-cos 0.99999"),
     ("shuaiz-bireal20-cifar10", "eval128_cifar10_norm", "cifar10_bireal_norm", "--num-classes 10"),
     ("bnext-*", "eval128_timm_bicubic_crop095", "timm_bicubic_crop095", ""),
+    ("ftl-deepfake-*", "eval128_cifake_ftl", "ftl_rgb01", "--num-classes 2"),
     ("bhvit-*", "eval128_bhvit", "bhvit", ""),
     ("bibert-bert-base-mrpc", "glue/mrpc/eval128", "bibert", "--numpy-logits numpy_logits.f32 --num-classes 2"),
     ("bibert-bert-base-mnli", "glue/mnli/eval128", "bibert", "--numpy-logits numpy_logits.f32 --num-classes 3"),
@@ -110,6 +111,7 @@ TOOL_ENV = {
     "tools/convert_dabnn.py": "qonnx", "tools/convert_bnn_pynq_npz.py": "base",
 }
 
+BNEXT_COMMIT = "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28"   # hpi-xnor/BNext, the commit every BNext conversion used
 GH = re.compile(r"https://(github\.com|gitee\.com)/([^/\s]+)/([^/\s(]+)")
 
 
@@ -236,6 +238,16 @@ def build_recipe(mid, st, reg, man, adir, int8_args):
         args += ["--repo", "{repo}", "--weights", "{weights}"]
         if short == "convert_bsrc.py":
             notes.append("BSRC-2023 code is not a git checkout in the records (source files are hashed in the manifest)")
+    elif short == "convert_ftl_deepfake.py":
+        # Faster Than Lies: the authors' model.py + the BNext definition; BNext4DFR.__init__ loads the ImageNet BNext
+        # checkpoint of the same size (then overwritten by the detector checkpoint)
+        size = {"t": "tiny", "s": "small", "m": "middle", "l": "large"}[mid.split("-")[3]]
+        bn = reg.get(f"bnext-{size}", {}).get("checkpoint", {})
+        downloads.append(weights_download(bn, "bnext_weights"))
+        sources.append({"name": "bnext", **archive_source("https://github.com/hpi-xnor/BNext", BNEXT_COMMIT)})
+        args += ["--repo", "{repo}", "--bnext-repo", "{bnext}", "--bnext-weights", "{download:bnext_weights}", "--weights", "{weights}"]
+        notes.append("the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the "
+                     "synthetic eval set the conversion checks run on random inputs")
     elif short == "convert_sabnn.py":
         args += ["--repo", "{downloads}", "--weights", "{weights}"]
         notes.append("the model definition birealnet.py.txt is part of the same Google Drive release as the weights")

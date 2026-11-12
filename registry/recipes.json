@@ -58,7 +58,7 @@
   }
  },
  "counts": {
-  "reconstructed": 110,
+  "reconstructed": 128,
   "verified": 4
  },
  "recipes": {
@@ -13295,6 +13295,1860 @@
    "licence": {
     "code": "Apache-2.0 (tensorpack)",
     "weights": "no explicit weights licence (inherits repo licence? unverified)"
+   }
+  },
+  "ftl-deepfake-bnext-m-cifake": {
+   "model_id": "ftl-deepfake-bnext-m-cifake",
+   "registry_model_id": "ftl-deepfake-bnext-m-cifake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1XjEDzZgLj7zi6GqS1Win5Enu73XMXLsy/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "7fdfdeb1b2d54437197d92998e9ebfb541e77085e31e1a909537ec549c34edd5",
+     "file": "cifake_M.ckpt",
+     "size_bytes": 532710358,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "23b557728242f1eaedeabd9723ab0a2e047879efca376c91d459041c0c53636b",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969024
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-m-cifake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1cArYmqGzbjE9miyWeddDoR9gboLym73O/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "6de488fb9df5f5ead56092f28dc9bc110451b30edc62ce40d10e636b28b4657b",
+     "file": "cifake_M_unfrozen.ckpt",
+     "size_bytes": 1596745360,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "6e2c4c317fec66e4375f6cbfd3919aa78da4320b3408628b51d6e826fb5a00d9",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969024
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-m-cocofake": {
+   "model_id": "ftl-deepfake-bnext-m-cocofake",
+   "registry_model_id": "ftl-deepfake-bnext-m-cocofake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/18Aj4ncsk6SC6oh5GwCkvAUNhjho_ruTA/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "91cb6b482f31a9508301d45a03392f06e181dcec808f9d58c3f47f807a2e76cb",
+     "file": "coco_fake_M.ckpt",
+     "size_bytes": 532710358,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "976338c4581687e4a64662bb0902f192c58ad87aa0289d611de1cd0119eba6b6",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969024
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-m-cocofake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1ZdYkeBGdY_FendCVWqkH5sov8ymuvmQ5/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "f8578c400e86a67e09248c62d7a70d1524464da53c0e25765e23bb900de85fe2",
+     "file": "coco_fake_M_unfrozen.ckpt",
+     "size_bytes": 1596745360,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "20a636fc4023bc1b864f353aed71ad46b177042e1514ca44f967d2e1bf1bd93f",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969088
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-m-dffd": {
+   "model_id": "ftl-deepfake-bnext-m-dffd",
+   "registry_model_id": "ftl-deepfake-bnext-m-dffd",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1hlPJKkvLwIiyzMiykPAA6vUpZOyiuwOx/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "d32c89fcf72a84d761521f8da1b89eaa17484e20dd17ea9c1fa2bcaa9f46115b",
+     "file": "dffd_M.ckpt",
+     "size_bytes": 532710294,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "d6983b0bd73f32bc9f64eced72c581c0bd9704339b355288cb36abf93be6f4c1",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969024
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-m-dffd-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-m-dffd-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-m-dffd-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/16c5xIDvwN3DUD6JbO_cl7aj_xrijezWs/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "cb1bfc4f01cf1dd386d8597963887cb611432ba455db941498b817bb85e76663",
+     "file": "dffd_M_unfrozen.ckpt",
+     "size_bytes": 1596745360,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1xyKnA6SsG4ZpguNQQrB6Yz-J5dzXYfKE/view?usp=sharing",
+     "sha256": "6ac2bb982e33cae628c39baeacdab95505f869708fd4c145cbf21196f61cdf3c",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 538819080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "c23352cd0436ec0dad371644c2f5ba798fa337fc2216c17e43d9e14e8f54c113",
+     "graph_sha256": "98ea5878cdc813f59df969c2735650b21c80ded631dfbf9b7311e7ce54683dde",
+     "bytes": 42969088
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-cifake": {
+   "model_id": "ftl-deepfake-bnext-s-cifake",
+   "registry_model_id": "ftl-deepfake-bnext-s-cifake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1fsIt34bZaSxenduMmgtitoOMdNkwjeqj/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "902ae878bd16bee7fd096ebebaee08bd89f3c4440da0462d82701fb7bd1b354b",
+     "file": "cifake_S.ckpt",
+     "size_bytes": 268769450,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "7ab1f2f2ab9680689cea63496a01dd8ef593692cf214b50344f743f5e74713b0",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-cifake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-s-cifake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-s-cifake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1SIxqLw24ECCwYBCe7yUnwKPRZ37bwFUI/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "a22f92d85fd2d49796e4296b09f0cd0998ad7be189b88d4a261a891f299dba14",
+     "file": "cifake_S_unfrozen.ckpt",
+     "size_bytes": 805446956,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "d24d70f3281463710c312f90ea0b7fc2da1755eb5f668ff899892b345bd284eb",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-cocofake": {
+   "model_id": "ftl-deepfake-bnext-s-cocofake",
+   "registry_model_id": "ftl-deepfake-bnext-s-cocofake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/17G9SgTTnjB_sJk5o1rxFB5Futr8QS4Q1/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "878b2327e6f91d0491ca5366fc2db4f24b71ba71277c596ab7f2603ef78fbb9a",
+     "file": "coco_fake_S.ckpt",
+     "size_bytes": 268769450,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "1e4d8f783a4cfd2e8981a3984608d4ae248c6b53c170ef407d96ee2d53c22f4e",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-cocofake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1ysBVOE2doPveeTF-E-xYQzwEfKqRUVHE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "64b4fd63cc67267c94d45de318e20c326a4e9799a368e326dbf6fa606bb0c210",
+     "file": "coco_fake_S_unfrozen.ckpt",
+     "size_bytes": 805446956,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-dffd": {
+   "model_id": "ftl-deepfake-bnext-s-dffd",
+   "registry_model_id": "ftl-deepfake-bnext-s-dffd",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1RxhpckkLr5Q6YJGQuvk3sXAktZSiNZFE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "7581fe90c1bf666846bfdff89334751b1769cc3df6fb023274a093e03de10d35",
+     "file": "dffd_S.ckpt",
+     "size_bytes": 268769450,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "dd9b97d5fc029ff55f16486f9fba9b16fadc493f4cb4b283c607582b3be09b2c",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-s-dffd-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-s-dffd-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1CrJr7uwhD-qWr8ozVfhI8MBbeE0R2vdl/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "ffef0532e874fa38da0a12dd58ee96d8275bd714353c8fade5f8003ba54e1a40",
+     "file": "dffd_S_unfrozen.ckpt",
+     "size_bytes": 805446892,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1NcVM5Qb1K9Oq_sjEA1lGtp7kVbsfTLsa/view?usp=sharing",
+     "sha256": "6965668883375e0e984cec6271b46402dfeef2ee6c29d4c01e8b75e7a006ef6e",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 274881848,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "420665c6b1dafcc4e020e515da8e1ff43ffea3409eab7d9d1c9223d9cdc91599",
+     "graph_sha256": "01bf2c59a760353b1cbcef89c144f7f9a6df6c8cd6d658d84a415b05994bf0a8",
+     "bytes": 22087808
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-cifake": {
+   "model_id": "ftl-deepfake-bnext-t-cifake",
+   "registry_model_id": "ftl-deepfake-bnext-t-cifake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1IFK56RlbF5A9blinzbs3-3kvoJYj6oF-/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "1e85aec0ecbf71b25ebf974ad71fe3f29f7bfb6f3d32cc4d32533f56c6b4991b",
+     "file": "cifake_T.ckpt",
+     "size_bytes": 119794538,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "7f35e922255857fd350ecc1793eb544d906d46096aecd0405e171de2d5b478c6",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048256
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-cifake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-t-cifake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1rZSYjaCSEh_6quIdXK-0DaImsilmljoJ/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "ddb3172027e1511d8b110f6946082d3add6dda1028dae2f8406fbd03563c6b89",
+     "file": "cifake_T_unfrozen.ckpt",
+     "size_bytes": 358745196,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "15c595f61096e5e93868326b184c9a1a6c47710f3e9fba928e920e3faaee456c",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048320
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-cocofake": {
+   "model_id": "ftl-deepfake-bnext-t-cocofake",
+   "registry_model_id": "ftl-deepfake-bnext-t-cocofake",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1AYMi3DE4J0haBJzm8dutThGpUCC3lqfN/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "1f7de096598c32d841bce54ecbc53fc77d8a864d820e800b8c7bd77f41ce077f",
+     "file": "coco_fake_T.ckpt",
+     "size_bytes": 119794538,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "bdea01230a7ad373911d74db39b8e0684fea7f756f1b0e8e2bf6edc13cd0d481",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048320
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-cocofake-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1uH_Px3jm2uqyCUFxcEPmBugiVlcpSXTE/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "872279a7ffde9ca5a1a9ff6e6cf545fbe836f80df76087fec27528b18ba72ac1",
+     "file": "coco_fake_T_unfrozen.ckpt",
+     "size_bytes": 358745196,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "b8da254f08b042a97a72cadbfd55c72d4a8e692d51245798a85c25deafe5486f",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048320
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-dffd": {
+   "model_id": "ftl-deepfake-bnext-t-dffd",
+   "registry_model_id": "ftl-deepfake-bnext-t-dffd",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/1FIWYPqBeHCqGpJWI2dQmRWlPD58uVR5y/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "0db557174d808bf80d121096d2432a816540c34a42ae89b0932d90ea41048680",
+     "file": "dffd_T.ckpt",
+     "size_bytes": 119794538,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "398e030d7b0ff7281cfa8dd9f3223d737902a508256f664a6341c9e679b69acc",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048320
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
+   }
+  },
+  "ftl-deepfake-bnext-t-dffd-unfrozen": {
+   "model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
+   "registry_model_id": "ftl-deepfake-bnext-t-dffd-unfrozen",
+   "state": "reconstructed",
+   "framework": "pytorch",
+   "adapter": "bitino.adapters.torch_ftl_deepfake",
+   "converter": "tools/convert_ftl_deepfake.py",
+   "env": "torch",
+   "downloads": [
+    {
+     "name": "weights",
+     "url": "https://drive.google.com/file/d/194TP5vsWMKN8Pz_L7I_CQM1gseg2BRNI/view (folder https://drive.google.com/drive/folders/1rYtfozcq5eXK1a8tP8ouXrBFZs1e72dV)",
+     "sha256": "263f5e286c995ad0f75f19bcb15c9cc11cc7cd74dd39b54baefe2a60bd5e31df",
+     "file": "dffd_T_unfrozen.ckpt",
+     "size_bytes": 358745196,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    },
+    {
+     "name": "bnext_weights",
+     "url": "https://drive.google.com/file/d/1CJ0XOEhoHuNe-tDYJaAOd1j4YyNXuyas/view?usp=sharing",
+     "sha256": "243cc5a4ad79f83dd8e36d8229f1f0eecd8c1c3e3ff3d8d2dd3b0b5409e7a369",
+     "file": "checkpoint.pth.tar",
+     "size_bytes": 123865080,
+     "manual": "Google Drive: download in a browser if the scripted download is refused, then pass --file weights=PATH"
+    }
+   ],
+   "sources": [
+    {
+     "name": "repo",
+     "kind": "github-archive",
+     "url": "https://github.com/fedeloper/binary_deepfake_detection/archive/668db9a63671d19eb5914c7ad2ca8d31a11ed52a.tar.gz",
+     "repo": "https://github.com/fedeloper/binary_deepfake_detection",
+     "commit": "668db9a63671d19eb5914c7ad2ca8d31a11ed52a",
+     "subdir": ""
+    },
+    {
+     "name": "bnext",
+     "kind": "github-archive",
+     "url": "https://github.com/hpi-xnor/BNext/archive/dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28.tar.gz",
+     "repo": "https://github.com/hpi-xnor/BNext",
+     "commit": "dfcf347a30e3bc08606b8cad2c8d4a329d5a5b28",
+     "subdir": ""
+    }
+   ],
+   "steps": [
+    {
+     "env": "torch",
+     "tool": "tools/convert_ftl_deepfake.py",
+     "args": [
+      "--model-id",
+      "{model_id}",
+      "--repo",
+      "{repo}",
+      "--bnext-repo",
+      "{bnext}",
+      "--bnext-weights",
+      "{download:bnext_weights}",
+      "--weights",
+      "{weights}",
+      "--eval-dir",
+      "{eval_dir}",
+      "--out-dir",
+      "{out_dir}",
+      "--jobs",
+      "{threads}",
+      "--torch-threads",
+      "{threads}"
+     ]
+    }
+   ],
+   "eval": {
+    "dir": "eval128_cifake_ftl",
+    "preprocess": "ftl_rgb01",
+    "validate_args": [
+     "--num-classes",
+     "2"
+    ],
+    "input_shape": [
+     1,
+     224,
+     224,
+     3
+    ],
+    "synthetic_ok": true
+   },
+   "expected": {
+    "model.bitino": {
+     "data_sha256": "5db6d41605e6656715d990bc09bbc184b45656b0abe10ca80f69b159a1cf57ac",
+     "graph_sha256": "00868b1019477df5ea04f83799928e4c640f7d3134128420717b89e9baebc4a8",
+     "bytes": 10048320
+    }
+   },
+   "int8": [],
+   "notes": [
+    "the eval set (CIFAKE test subset, tools/eval_sets/ftl_deepfake.py) is not redistributed; with the synthetic eval set the conversion checks run on random inputs",
+    "weights have no licence: fetch-and-convert only, the converted file is never redistributed",
+    "the reference needs, besides torch: opencv-python, scikit-image, timm (0.6.x), einops, torchinfo (imports of model.py / bnext.py); lightning, fvcore and torchmetrics are not needed (stubbed)"
+   ],
+   "licence": {
+    "code": "none: the repository has no LICENSE file (all rights reserved by default; the author may add one)",
+    "weights": "no explicit weights licence (no LICENSE file in the repository; Google Drive folder linked from the README)"
    }
   }
  }

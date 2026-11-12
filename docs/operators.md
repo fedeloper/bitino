@@ -301,6 +301,16 @@ mapping of every BHViT construct onto IR operators: see `docs/operators_bhvit.md
 The squeeze-and-excitation gate reuses `ChannelGate`, and the info-recoupling mix reuses `ChannelAffine` + `Add`. The
 mapping of every BNext / RBONN construct onto IR operators is in `docs/operators_torch_cnn.md`.
 
+## Image-feature operators
+
+`ImageGrayU8` (OpenCV fixed-point gray of `trunc(x·255)`), `FftLogMagnitude` (`mul·log(|fftshift(FFT2)| + eps)/div`)
+and `LocalBinaryPattern` (scikit-image LBP, `default` / `uniform`) compute hand-crafted input channels inside the
+model, so preprocessing runs in the runtime (the "Faster Than Lies" deepfake detectors). They are defined by a fixed
+double-precision algorithm (mixed-radix Stockham FFT, polynomial twiddles and log, no libm) that the reference
+kernels, the optimized kernels (tier `neon` on AArch64, `binary_scalar` elsewhere) and the numpy executor share bit for
+bit: `docs/operators_image_features.md`. `concat.small_channels` (same tiers, priority 45) concatenates last-axis inputs
+of at most 8 channels each in one pass over the pixels.
+
 ## Brevitas / FINN BNN-PYNQ
 
 No new operator. The Q1.7 8-bit input of Brevitas CNV uses the generic `FakeQuant` above (scale 1/128,

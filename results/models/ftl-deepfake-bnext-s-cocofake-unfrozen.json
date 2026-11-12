@@ -1,0 +1,422 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+ "registry_model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+ "name": "Faster Than Lies BNext-S deepfake detector (COCOFake, RGB + FFT + LBP)",
+ "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+ "task": "deepfake-image-detection (binary real / fake classification)",
+ "dataset": "COCOFake (COCO 2014 + Stable Diffusion generations)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_ftl_deepfake",
+ "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+ "files": {},
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifake-test-subset-128",
+   "n": 128,
+   "metric": "top-1",
+   "reference": null,
+   "reference_kind": "source framework, float32",
+   "reference_fp32": null,
+   "reference_fp64": null,
+   "runtime": null,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  }
+ },
+ "device_verification": null,
+ "instructions_M": null,
+ "speed": {
+  "s22": [],
+  "oneplus-open": [
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_full_all",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 53.6139065,
+    "median_range_ms": [
+     53.233828,
+     53.819037
+    ],
+    "p90_ms": 54.244130500000004,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 69920,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:07:40Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_features_all",
+    "model_file": "model_features.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.076302,
+    "median_range_ms": [
+     1.074922,
+     1.076563
+    ],
+    "p90_ms": 1.1114330000000001,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 100,
+    "peak_rss_kb": 10488,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:07:55Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_network_all",
+    "model_file": "model_network.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 52.1330465,
+    "median_range_ms": [
+     52.050573,
+     53.3211455
+    ],
+    "p90_ms": 53.5791405,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 67764,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:08:09Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_full_neon",
+    "model_file": "model.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 236.327527,
+    "median_range_ms": [
+     236.284896,
+     236.383385
+    ],
+    "p90_ms": 236.9340774,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 65476,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:08:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_features_neon",
+    "model_file": "model_features.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.0740625,
+    "median_range_ms": [
+     1.0735415,
+     1.0751825
+    ],
+    "p90_ms": 1.1182760999999999,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 100,
+    "peak_rss_kb": 10516,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:08:55Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1718_oneplus-open",
+    "config": "t1_c7_network_neon",
+    "model_file": "model_network.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 235.172786,
+    "median_range_ms": [
+     234.833359,
+     235.348594
+    ],
+    "p90_ms": 235.82220230000001,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 63196,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T07:09:16Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_full_all",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 281.47198,
+    "median_range_ms": [
+     279.942327,
+     281.677347
+    ],
+    "p90_ms": 282.9900043,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 69320,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:00:42Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_features_all",
+    "model_file": "model_features.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 6.083923,
+    "median_range_ms": [
+     5.934577,
+     6.12148049
+    ],
+    "p90_ms": 6.3312149,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 100,
+    "peak_rss_kb": 9768,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:00:51Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_network_all",
+    "model_file": "model_network.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 275.651769,
+    "median_range_ms": [
+     275.467077,
+     275.971134
+    ],
+    "p90_ms": 277.2425154,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 67320,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:01:13Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_full_neon",
+    "model_file": "model.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 670.270634,
+    "median_range_ms": [
+     666.561769,
+     671.251615
+    ],
+    "p90_ms": 672.9488911,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 64696,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:01:51Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_features_neon",
+    "model_file": "model_features.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 6.072423,
+    "median_range_ms": [
+     6.0023655,
+     6.12036599
+    ],
+    "p90_ms": 6.248161691,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 100,
+    "peak_rss_kb": 9892,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:02:03Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "ftl_20261112_1719_moto-e13",
+    "config": "t1_c7_network_neon",
+    "model_file": "model_network.bitino",
+    "stage": "neon",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 665.798076,
+    "median_range_ms": [
+     664.056134,
+     666.465539
+    ],
+    "p90_ms": 667.8689072,
+    "repeats": 3,
+    "iterations": 30,
+    "warmup": 10,
+    "peak_rss_kb": 62624,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T17:02:40Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b88bcd4698e771b314691102fb72ae9a604bd6fe12cc912939894be119abc57a",
+    "runtime": "development runtime as of 2026-11-12"
+   }
+  ],
+  "x86": []
+ }
+}

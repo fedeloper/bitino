@@ -4690,10 +4690,19 @@
   "reason_source": "the research notes (not published)"
  },
  "ftl-deepfake-bnext-t-cifake": {
-  "conversion_status": "deferred",
-  "triage_slice": "S13",
-  "reason": "BNeXt-T backbone (existing ops) but host-side FFT/LBP input channels and the CIFAKE dataset (download); low priority",
-  "reason_source": "the research notes (not published)"
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 6.1e-10. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.875,
+   "accuracy_reference_fp64": 0.8515625,
+   "accuracy_bitino_numpy_fused": 0.84375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
  },
  "monodiffuse-cifar10-w1a1-core-seed0": {
   "conversion_status": "deferred",
@@ -4979,5 +4988,734 @@
    },
    "source": "reports/speed_all/summary.json (merge 472cf00; qemu instruction counts, phone median ms throttled)"
   }
+ },
+ "ftl-deepfake-bnext-t-cocofake": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 4.7e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.625,
+   "accuracy_reference_fp64": 0.578125,
+   "accuracy_bitino_numpy_fused": 0.578125,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-t-cocofake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 113/128 <= 1e-6, with float64 constants max 1.9e-10. Source fp32 vs fp64: 6/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.4609375,
+   "accuracy_reference_fp64": 0.4609375,
+   "accuracy_bitino_numpy_fused": 0.453125,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "see speed",
+  "release": "no: no licence (fetch recipe only)",
+  "speed_2026_11_12": {
+   "oneplus-open": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 21,
+    "all": {
+     "full": {
+      "median_ms": 28.425,
+      "range_ms": [
+       28.316,
+       29.504
+      ],
+      "p90_ms": 29.64
+     },
+     "features": {
+      "median_ms": 1.075,
+      "range_ms": [
+       1.075,
+       1.075
+      ],
+      "p90_ms": 1.107
+     },
+     "network": {
+      "median_ms": 27.038,
+      "range_ms": [
+       26.934,
+       27.043
+      ],
+      "p90_ms": 27.27
+     },
+     "fps_full": 35.2,
+     "features_share_of_full": 0.038,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 133.329,
+      "range_ms": [
+       133.256,
+       133.414
+      ],
+      "p90_ms": 133.73
+     },
+     "features": {
+      "median_ms": 1.076,
+      "range_ms": [
+       1.076,
+       1.076
+      ],
+      "p90_ms": 1.108
+     },
+     "network": {
+      "median_ms": 132.608,
+      "range_ms": [
+       132.424,
+       132.664
+      ],
+      "p90_ms": 133.091
+     },
+     "fps_full": 7.5,
+     "features_share_of_full": 0.008,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   },
+   "moto-e13": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-t-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:1.61/1.61 cpu6:1.61/1.61"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 0,
+    "all": {
+     "full": {
+      "median_ms": 147.864,
+      "range_ms": [
+       147.82,
+       149.002
+      ],
+      "p90_ms": 150.121
+     },
+     "features": {
+      "median_ms": 6.044,
+      "range_ms": [
+       6.002,
+       6.06
+      ],
+      "p90_ms": 6.251
+     },
+     "network": {
+      "median_ms": 142.546,
+      "range_ms": [
+       141.699,
+       142.952
+      ],
+      "p90_ms": 143.95
+     },
+     "fps_full": 6.8,
+     "features_share_of_full": 0.041,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 399.362,
+      "range_ms": [
+       396.415,
+       399.989
+      ],
+      "p90_ms": 401.653
+     },
+     "features": {
+      "median_ms": 6.101,
+      "range_ms": [
+       6.063,
+       6.125
+      ],
+      "p90_ms": 6.334
+     },
+     "network": {
+      "median_ms": 394.256,
+      "range_ms": [
+       393.078,
+       394.374
+      ],
+      "p90_ms": 395.983
+     },
+     "fps_full": 2.5,
+     "features_share_of_full": 0.015,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   }
+  }
+ },
+ "ftl-deepfake-bnext-s-cocofake": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 49/128 <= 1e-6, with float64 constants max 5.8e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.5625,
+   "accuracy_reference_fp64": 0.578125,
+   "accuracy_bitino_numpy_fused": 0.515625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-s-cocofake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 93/128 <= 1e-6, with float64 constants max 1.1e-09. Source fp32 vs fp64: 4/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.4375,
+   "accuracy_reference_fp64": 0.4375,
+   "accuracy_bitino_numpy_fused": 0.4296875,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "see speed",
+  "release": "no: no licence (fetch recipe only)",
+  "speed_2026_11_12": {
+   "oneplus-open": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1718_oneplus-open",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 18,
+    "all": {
+     "full": {
+      "median_ms": 53.614,
+      "range_ms": [
+       53.234,
+       53.819
+      ],
+      "p90_ms": 54.244
+     },
+     "features": {
+      "median_ms": 1.076,
+      "range_ms": [
+       1.075,
+       1.077
+      ],
+      "p90_ms": 1.111
+     },
+     "network": {
+      "median_ms": 52.133,
+      "range_ms": [
+       52.051,
+       53.321
+      ],
+      "p90_ms": 53.579
+     },
+     "fps_full": 18.7,
+     "features_share_of_full": 0.02,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 236.328,
+      "range_ms": [
+       236.285,
+       236.383
+      ],
+      "p90_ms": 236.934
+     },
+     "features": {
+      "median_ms": 1.074,
+      "range_ms": [
+       1.074,
+       1.075
+      ],
+      "p90_ms": 1.118
+     },
+     "network": {
+      "median_ms": 235.173,
+      "range_ms": [
+       234.833,
+       235.349
+      ],
+      "p90_ms": 235.822
+     },
+     "fps_full": 4.2,
+     "features_share_of_full": 0.005,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   },
+   "moto-e13": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-s-cocofake-unfrozen/ftl_20261112_1719_moto-e13",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:1.61/1.61 cpu6:1.61/1.61"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 0,
+    "all": {
+     "full": {
+      "median_ms": 281.472,
+      "range_ms": [
+       279.942,
+       281.677
+      ],
+      "p90_ms": 282.99
+     },
+     "features": {
+      "median_ms": 6.084,
+      "range_ms": [
+       5.935,
+       6.121
+      ],
+      "p90_ms": 6.331
+     },
+     "network": {
+      "median_ms": 275.652,
+      "range_ms": [
+       275.467,
+       275.971
+      ],
+      "p90_ms": 277.243
+     },
+     "fps_full": 3.6,
+     "features_share_of_full": 0.022,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 670.271,
+      "range_ms": [
+       666.562,
+       671.252
+      ],
+      "p90_ms": 672.949
+     },
+     "features": {
+      "median_ms": 6.072,
+      "range_ms": [
+       6.002,
+       6.12
+      ],
+      "p90_ms": 6.248
+     },
+     "network": {
+      "median_ms": 665.798,
+      "range_ms": [
+       664.056,
+       666.466
+      ],
+      "p90_ms": 667.869
+     },
+     "fps_full": 1.5,
+     "features_share_of_full": 0.009,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   }
+  }
+ },
+ "ftl-deepfake-bnext-m-cocofake": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 5.3e-15. Source fp32 vs fp64: 8/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.515625,
+   "accuracy_reference_fp64": 0.578125,
+   "accuracy_bitino_numpy_fused": 0.53125,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-m-cocofake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed: host x86 reference/neon bit-exact with numpy, stage all PASS (--explain); emulated arm64 neon bit-exact, optimized PASS (--explain); OnePlus Open and Moto e13 outputs (neon, optimized; 128 samples) byte-identical to the emulated references",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 85/128 <= 1e-6, with float64 constants max 1.4e-10. Source fp32 vs fp64: 3/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.53125,
+   "accuracy_reference_fp64": 0.5234375,
+   "accuracy_bitino_numpy_fused": 0.5390625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "see speed",
+  "release": "no: no licence (fetch recipe only)",
+  "speed_2026_11_12": {
+   "oneplus-open": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-m-cocofake-unfrozen/ftl_20261112_1736_oneplus-open",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:2.02/2.02 cpu3:1.79/2.80 cpu7:2.23/3.19"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 18,
+    "all": {
+     "full": {
+      "median_ms": 88.168,
+      "range_ms": [
+       86.822,
+       88.495
+      ],
+      "p90_ms": 88.936
+     },
+     "features": {
+      "median_ms": 1.076,
+      "range_ms": [
+       1.075,
+       1.076
+      ],
+      "p90_ms": 1.11
+     },
+     "network": {
+      "median_ms": 86.94,
+      "range_ms": [
+       86.911,
+       87.038
+      ],
+      "p90_ms": 87.555
+     },
+     "fps_full": 11.3,
+     "features_share_of_full": 0.012,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 365.083,
+      "range_ms": [
+       364.689,
+       365.238
+      ],
+      "p90_ms": 365.987
+     },
+     "features": {
+      "median_ms": 1.078,
+      "range_ms": [
+       1.075,
+       1.08
+      ],
+      "p90_ms": 1.114
+     },
+     "network": {
+      "median_ms": 364.286,
+      "range_ms": [
+       364.248,
+       364.427
+      ],
+      "p90_ms": 365.237
+     },
+     "fps_full": 2.7,
+     "features_share_of_full": 0.003,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   },
+   "moto-e13": {
+    "dir": "reports/benchmarks/ftl-deepfake-bnext-m-cocofake-unfrozen/ftl_20261112_1902_moto-e13",
+    "caps_ghz_seen(scaling_max/cpuinfo_max)": [
+     "cpu0:1.61/1.61 cpu6:1.61/1.61"
+    ],
+    "thermal_status_seen": [
+     0
+    ],
+    "affinity_errors_max": 0,
+    "all": {
+     "full": {
+      "median_ms": 470.05,
+      "range_ms": [
+       468.974,
+       470.633
+      ],
+      "p90_ms": 471.804
+     },
+     "features": {
+      "median_ms": 6.162,
+      "range_ms": [
+       6.023,
+       6.184
+      ],
+      "p90_ms": 6.37
+     },
+     "network": {
+      "median_ms": 463.969,
+      "range_ms": [
+       463.831,
+       466.963
+      ],
+      "p90_ms": 468.013
+     },
+     "fps_full": 2.1,
+     "features_share_of_full": 0.013,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    },
+    "neon": {
+     "full": {
+      "median_ms": 1037.014,
+      "range_ms": [
+       1031.995,
+       1040.333
+      ],
+      "p90_ms": 1041.913
+     },
+     "features": {
+      "median_ms": 6.087,
+      "range_ms": [
+       6.071,
+       6.136
+      ],
+      "p90_ms": 6.348
+     },
+     "network": {
+      "median_ms": 1031.337,
+      "range_ms": [
+       1031.127,
+       1031.621
+      ],
+      "p90_ms": 1033.286
+     },
+     "fps_full": 1.0,
+     "features_share_of_full": 0.006,
+     "kernels_features": {
+      "concat.small_channels": 1,
+      "fft_log_magnitude.opt": 1,
+      "image_gray_u8.neon": 1,
+      "local_binary_pattern.opt": 1
+     }
+    }
+   }
+  }
+ },
+ "ftl-deepfake-bnext-t-dffd": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 56/128 <= 1e-6, with float64 constants max 3.8e-15. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.578125,
+   "accuracy_reference_fp64": 0.59375,
+   "accuracy_bitino_numpy_fused": 0.609375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-t-dffd-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 2.0e-14. Source fp32 vs fp64: 3/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.515625,
+   "accuracy_reference_fp64": 0.53125,
+   "accuracy_bitino_numpy_fused": 0.515625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-s-dffd": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 4.2e-15. Source fp32 vs fp64: 9/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.609375,
+   "accuracy_reference_fp64": 0.625,
+   "accuracy_bitino_numpy_fused": 0.5625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-s-dffd-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 42/128 <= 1e-6, with float64 constants max 2.5e-14. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.453125,
+   "accuracy_reference_fp64": 0.46875,
+   "accuracy_bitino_numpy_fused": 0.484375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-m-dffd": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 51/128 <= 1e-6, with float64 constants max 6.2e-15. Source fp32 vs fp64: 4/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.46875,
+   "accuracy_reference_fp64": 0.5,
+   "accuracy_bitino_numpy_fused": 0.484375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-m-dffd-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 3 of 3211264 values differ (max 9.5e-15). fp64 IR vs fp64 source (unfused): 47/128 <= 1e-6, with float64 constants max 1.4e-14. Source fp32 vs fp64: 7/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.625,
+   "accuracy_reference_fp64": 0.578125,
+   "accuracy_bitino_numpy_fused": 0.5625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-t-cifake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 111/128 <= 1e-6, with float64 constants max 3.0e-11. Source fp32 vs fp64: 2/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.984375,
+   "accuracy_reference_fp64": 0.96875,
+   "accuracy_bitino_numpy_fused": 0.984375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-s-cifake": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 1.9e-10. Source fp32 vs fp64: 8/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.8515625,
+   "accuracy_reference_fp64": 0.8203125,
+   "accuracy_bitino_numpy_fused": 0.84375,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-s-cifake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 101/128 <= 1e-6, with float64 constants max 1.3e-10. Source fp32 vs fp64: 1/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.9765625,
+   "accuracy_reference_fp64": 0.96875,
+   "accuracy_bitino_numpy_fused": 0.9765625,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-m-cifake": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 2.4e-10. Source fp32 vs fp64: 8/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.8046875,
+   "accuracy_reference_fp64": 0.8203125,
+   "accuracy_bitino_numpy_fused": 0.8046875,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
+ },
+ "ftl-deepfake-bnext-m-cifake-unfrozen": {
+  "conversion_status": "converted",
+  "adapter": "bitino.adapters.torch_ftl_deepfake (tools/convert_ftl_deepfake.py), fedeloper/binary_deepfake_detection @668db9a + hpi-xnor/BNext @dfcf347",
+  "numerical_verification": "passed (Level 3, numpy executor)",
+  "verification_details": "Eval cifake-test-subset-128. Features vs the authors' cv2 / numpy.fft / scikit-image channels: gray 0 and LBP 0 mismatches, FFT 5 of 6422528 values differ (max 2.5e-06). fp64 IR vs fp64 source (unfused): 98/128 <= 1e-6, with float64 constants max 1.5e-09. Source fp32 vs fp64: 1/128 decision changes (BNext is fp32-chaotic).",
+  "reproduced_metrics": {
+   "eval_set": "cifake-test-subset-128",
+   "accuracy_reference_fp32": 0.96875,
+   "accuracy_reference_fp64": 0.9765625,
+   "accuracy_bitino_numpy_fused": 0.96875,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  },
+  "device_benchmark": "not run (same network as the measured model of the same size)",
+  "release": "no: no licence (fetch recipe only)"
  }
 }

@@ -9,6 +9,8 @@ Model zoo:
                              [--threads N] [--top K] [--labels FILE]
   bitino bench MODEL_ID|FILE [--stage S] [--threads N] [--iterations I] [--warmup W] [--affinity C] [--json P]
   bitino validate MODEL_ID [--eval-dir D] [--stage S]
+  bitino deepfake MODEL_ID|FILE IMAGE|DIR... [--stage S] [--threads N] [--affinity C] [--repeat R]
+                          ("Faster Than Lies" detectors: real/fake score and per-frame time, via bitino_deepfake)
 
 Registry / device (research tooling):
   bitino registry list [--family F] [--task T] [--precision P] [--license L] [--status S] [--strict] [--json]
@@ -323,6 +325,63 @@ def cmd_bench(a) -> int:
     return 0
 
 
+IMAGE_EXT = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
+
+
+def deepfake_tensor(paths: list[str]) -> tuple["object", list[str]]:
+    """The authors' test-loader preprocessing (tools/eval_sets/ftl_deepfake.py): RGB -> Resize(252, bilinear,
+    antialias) -> CenterCrop(224) -> u8 * fl32(1/255); torchvision when importable, else PIL (same steps)."""
+    import numpy as np
+    from PIL import Image
+    try:
+        import torch
+        import torchvision.transforms.v2 as T
+        tf = T.Compose([T.Resize(252, interpolation=T.InterpolationMode.BILINEAR), T.CenterCrop(224), T.ToImage(),
+                        T.ToDtype(torch.float32, scale=True)])
+        conv = lambda im: tf(im).permute(1, 2, 0).contiguous().numpy()  # noqa: E731
+    except ImportError:
+        def conv(im):
+            w, h = im.size
+            s = 252 / min(w, h)
+            im = im.resize((252 if w <= h else int(w * s), 252 if h < w else int(h * s)), Image.BILINEAR)
+            w, h = im.size
+            l, t = int(round((w - 224) / 2.0)), int(round((h - 224) / 2.0))
+            return np.asarray(im.crop((l, t, l + 224, t + 224)), np.uint8).astype(np.float32) * np.float32(1 / 255)
+    xs = [conv(Image.open(p).convert("RGB"))[None] for p in paths]
+    return np.ascontiguousarray(np.concatenate(xs), np.float32), [os.path.basename(p) for p in paths]
+
+
+def cmd_deepfake(a) -> int:
+    model = zoo.resolve_model_file(a.model)
+    tool = a.tool or zoo.find_bench(None)
+    tool = os.path.join(os.path.dirname(tool), "bitino_deepfake") if tool else None
+    if not tool or not os.path.isfile(tool):
+        print("bitino_deepfake not found (build it with cmake --build build/host, or pass --tool)", file=sys.stderr)
+        return 3
+    images, passthrough = [], []
+    for p in a.inputs:
+        if os.path.isdir(p):
+            names = sorted(os.listdir(p))
+            images += [os.path.join(p, n) for n in names if n.lower().endswith(IMAGE_EXT)]
+            if any(n.lower().endswith(".ppm") for n in names):
+                passthrough.append(p)
+        elif p.lower().endswith(IMAGE_EXT):
+            images.append(p)
+        else:
+            passthrough.append(p)   # .ppm / .f32: read by bitino_deepfake
+    with tempfile.TemporaryDirectory(prefix="bitino-deepfake-") as td:
+        args = list(passthrough)
+        if images:
+            x, names = deepfake_tensor(images)
+            f = os.path.join(td, "images.f32")
+            x.tofile(f)
+            print("images.f32[i]: " + ", ".join(f"{i}={n}" for i, n in enumerate(names)), flush=True)
+            args.append(f)
+        argv = [tool, "--model", model, "--stage", a.stage, "--threads", str(a.threads), "--repeat", str(a.repeat)]
+        argv += (["--affinity", a.affinity] if a.affinity else []) + args
+        return subprocess.run(argv).returncode
+
+
 def cmd_validate(a) -> int:
     rec = zoo.recipes().get(a.model_id)
     if not rec:
@@ -479,6 +538,16 @@ def main(argv=None) -> int:
             q.add_argument("--affinity")
             q.add_argument("--json")
         q.set_defaults(fn=fn)
+
+    dfk = sub.add_parser("deepfake", help="run a 'Faster Than Lies' deepfake detector on images / frames (score + time per frame)")
+    dfk.add_argument("model", help="model id (fetched) or model file")
+    dfk.add_argument("inputs", nargs="+", help="JPEG/PNG files, .ppm frames, directories of them, or .f32 tensors")
+    dfk.add_argument("--stage", default="all")
+    dfk.add_argument("--threads", type=int, default=1)
+    dfk.add_argument("--affinity")
+    dfk.add_argument("--repeat", type=int, default=1)
+    dfk.add_argument("--tool", help="path to bitino_deepfake (default: next to the bitino_bench found)")
+    dfk.set_defaults(fn=cmd_deepfake)
 
     va = sub.add_parser("validate", help="check the runtime against the numpy executor and the source references")
     va.add_argument("model_id")

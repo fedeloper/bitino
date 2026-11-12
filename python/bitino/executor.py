@@ -12,7 +12,7 @@ import math
 
 import numpy as np
 
-from . import int8_ops
+from . import image_ops, int8_ops
 from .ir import Graph, unpack_bits
 
 # libm (glibc) erf / tanh in double, element-wise: the C++ reference kernels
@@ -403,6 +403,14 @@ def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = F
             y = _fake_quant(ins[0], ins[1], ins[2], a, ft)
         elif op == "Mul":  # docs/operators_torch_cnn.md: same shapes, one fp32 product
             y = (ins[0] * ins[1]).astype(ft)
+        elif op == "ImageGrayU8":  # docs/operators_image_features.md (python/bitino/image_ops.py)
+            y = image_ops.image_gray_u8(np.asarray(ins[0], np.float32), a).astype(ft)
+        elif op == "FftLogMagnitude":
+            for d in ins[0].shape[1:3]:
+                assert max(image_ops.fft_factors(int(d)) or [1]) <= 7, f"FftLogMagnitude: length {d} has a prime factor > 7"
+            y = image_ops.fft_log_magnitude(np.asarray(ins[0], np.float32), a).astype(ft)
+        elif op == "LocalBinaryPattern":
+            y = image_ops.local_binary_pattern(np.asarray(ins[0], np.float32), a).astype(ft)
         elif op == "Pad":
             p = a["pads"]
             y = np.pad(ins[0], [(p[2 * d], p[2 * d + 1]) for d in range(ins[0].ndim)], constant_values=a.get("value", 0.0))

@@ -1,0 +1,34 @@
+{
+ "schema": "bitino.results.v1",
+ "model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
+ "registry_model_id": "ftl-deepfake-bnext-m-cifake-unfrozen",
+ "name": "Faster Than Lies BNext-M deepfake detector (CIFAKE, RGB + FFT + LBP)",
+ "family": "Faster Than Lies (binary deepfake detection, BNext backbone)",
+ "task": "deepfake-image-detection (binary real / fake classification)",
+ "dataset": "CIFAKE (CIFAR-10 real + Stable Diffusion 1.4 fakes, 32x32 upscaled to 224)",
+ "precision": [
+  "W1A1+FP"
+ ],
+ "adapter": "bitino.adapters.torch_ftl_deepfake",
+ "numerical_verification": "passed (Level 3, numpy executor)",
+ "files": {},
+ "accuracy": {
+  "headline": {
+   "eval_set": "cifake-test-subset-128",
+   "n": 128,
+   "metric": "top-1",
+   "reference": null,
+   "reference_kind": "source framework, float32",
+   "reference_fp32": null,
+   "reference_fp64": null,
+   "runtime": null,
+   "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
+  }
+ },
+ "device_verification": null,
+ "instructions_M": null,
+ "speed": {
+  "s22": [],
+  "x86": []
+ }
+}

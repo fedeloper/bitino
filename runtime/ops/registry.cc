@@ -68,6 +68,9 @@ void register_builtin_ops(OpRegistry& reg) {
   register_int8_full_reference_kernels(reg);
   register_int8_full_neon_kernels(reg);
   register_int8_full_portable_kernels(reg);
+  register_image_feature_ops(reg);
+  register_image_feature_reference_kernels(reg);
+  register_image_feature_opt_kernels(reg);
 }
 
 }  // namespace bitino

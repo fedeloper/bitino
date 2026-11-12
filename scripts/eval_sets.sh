@@ -18,6 +18,7 @@ eval_of() {
     burn-reacta-stage2|s2bnn-reacta-distill-only) echo ".cache/data/eval128 torchvision_imagenet --output-kind embedding --embedding-cos 0.99999" ;;   # S11: self-supervised backbones, no head (1024-d features)
     shuaiz-bireal20-cifar10) echo ".cache/data/eval128_cifar10_norm cifar10_bireal_norm --num-classes 10" ;;
     bnext-*)  echo ".cache/data/eval128_timm_bicubic_crop095 timm_bicubic_crop095" ;;
+    ftl-deepfake-*) echo ".cache/data/eval128_cifake_ftl ftl_rgb01 --num-classes 2" ;;   # Faster Than Lies detectors: CIFAKE test subset, RGB in [0, 1] (tools/eval_sets/ftl_deepfake.py)
     bhvit-*)  echo ".cache/data/eval128_bhvit bhvit" ;;
     bibert-bert-base-mrpc) echo ".cache/data/glue/mrpc/eval128 bibert --numpy-logits numpy_logits.f32 --num-classes 2" ;;
     bibert-bert-base-mnli) echo ".cache/data/glue/mnli/eval128 bibert --numpy-logits numpy_logits.f32 --num-classes 3" ;;

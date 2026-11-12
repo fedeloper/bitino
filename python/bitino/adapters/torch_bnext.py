@@ -78,14 +78,21 @@ def _vec(t) -> np.ndarray:
 
 
 def convert(model, model_id: str = "", input_name: str = "input", input_hw: tuple[int, int] = (224, 224),
-            binarize: str = "sign_zero") -> tuple[Graph, dict]:
+            binarize: str = "sign_zero", *, graph: Graph | None = None, input_tensor: str | None = None,
+            head=None, zero_logit: bool = False) -> tuple[Graph, dict]:
     """Returns (graph, info). Node names are the PyTorch module paths (e.g. feature.3.Attention.move),
-    so tools can map IR tensors back to module outputs."""
+    so tools can map IR tensors back to module outputs.
+
+    Embedding the backbone in a larger model (adapters/torch_ftl_deepfake.py): ``graph`` / ``input_tensor``
+    continue an existing graph from the NHWC tensor ``input_tensor`` instead of creating the input; when the
+    backbone's ``fc`` is ``nn.Identity`` (replaced by the caller), ``head`` is the nn.Linear applied to the pooled
+    features (node name "fc"); ``zero_logit`` prepends an output row with zero weights and bias (a constant 0
+    logit, so a single binary logit becomes the two-class logits [0, l] whose argmax is l > 0)."""
     if binarize not in BINARIZE_MODES:
         raise ValueError(f"binarize must be one of {BINARIZE_MODES}")
     _expect(_cls(model) == "BNext", f"unsupported top-level model class {_cls(model)} (expected BNext)")
     _expect(not model.training, "model must be in eval mode")
-    g = Graph()
+    g = graph if graph is not None else Graph()
     precision: list[dict] = []
     diag: list[dict] = []
     unused: list[str] = []
@@ -215,7 +222,7 @@ def convert(model, model_id: str = "", input_name: str = "input", input_hw: tupl
                 unused.append(f"{p}.norm2 (BatchNorm2d unused in {cls}.forward without info-recoupling)")
         return g.add_node("Add", [t, residual], name=f"{p}.add")
 
-    x = g.add_input(input_name, [1, input_hw[0], input_hw[1], 3])
+    x = input_tensor if input_tensor is not None else g.add_input(input_name, [1, input_hw[0], input_hw[1], 3])
 
     # ---------------------------------------------------------------- stem
     feats = model.feature
@@ -257,10 +264,19 @@ def convert(model, model_id: str = "", input_name: str = "input", input_hw: tupl
     _expect(_cls(model.pool1) == "AdaptiveAvgPool2d" and _pair(model.pool1.output_size) == (1, 1), "pool1: expected AdaptiveAvgPool2d(1)")
     x = g.add_node("GlobalAvgPool", [x], {"keepdims": 0}, name="pool1")
     fc = model.fc
+    if _cls(fc) == "Identity":
+        _expect(head is not None, "fc is nn.Identity: pass the replacing nn.Linear as head")
+        fc = head
+    else:
+        _expect(head is None, "head given but the backbone has its own fc")
     _expect(_cls(fc) == "Linear" and fc.bias is not None and fc.in_features == c, f"fc: unexpected {_cls(fc)}")
     mark("fc")
-    x = g.add_node("Dense", [x, g.add_constant("fc/kernel", fc.weight.detach().cpu().numpy().astype(np.float32)),
-                             g.add_constant("fc/bias", fc.bias.detach().cpu().numpy().astype(np.float32))],
+    fw = fc.weight.detach().cpu().numpy().astype(np.float32)
+    fb = fc.bias.detach().cpu().numpy().astype(np.float32)
+    if zero_logit:
+        fw = np.concatenate([np.zeros((1, fw.shape[1]), np.float32), fw])
+        fb = np.concatenate([np.zeros(1, np.float32), fb])
+    x = g.add_node("Dense", [x, g.add_constant("fc/kernel", fw), g.add_constant("fc/bias", fb)],
                    {"activation": "none"}, name="fc")
     precision.append({"layer": "fc", "op": "Dense", "source": "Linear", "weights": "fp32", "activations": "fp32"})
     g.set_outputs(x)
@@ -269,7 +285,7 @@ def convert(model, model_id: str = "", input_name: str = "input", input_hw: tupl
     # module or be listed as unused in forward.
     known = {"BNext", "ModuleList", "Sequential", "firstconv3x3", *BLOCK_CLASSES, *UNIT_CLASSES, "Conv2d", "BatchNorm2d",
              "PReLU", "LearnableBias", "HardSign", "HardBinaryConv", "AvgPool2d", "SqueezeAndExpand", "AdaptiveAvgPool2d",
-             "ReLU", "Sigmoid", "Linear"}
+             "ReLU", "Sigmoid", "Linear", *(("Identity",) if head is not None else ())}
     for n, m in model.named_modules():
         _expect(_cls(m) in known, f"module {n or '<root>'}: unsupported type {_cls(m)}")
     unused_roots = [u.split(" ")[0] for u in unused]

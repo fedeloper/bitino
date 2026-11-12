@@ -588,6 +588,25 @@
      "definition": "tensorpack 0.11 DoReFa-Net eval path, OpenCV 4.8.1: cv2.imread BGR -> ResizeShortestEdge(256, INTER_CUBIC, int(scale*side + 0.5)) on uint8 -> CenterCrop 224 (int((H-224)*0.5)) -> float32 (x - [0.406,0.456,0.485]*255) * fl32(1 / ([0.225,0.224,0.229]*255)) (BGR order; = the TF graph division after grappler rewrite), NHWC"
     }
    }
+  },
+  "eval128_cifake_ftl": {
+   "name": "cifake-test-subset-128",
+   "source": "CIFAKE test split (Bird & Lotfi, IEEE Access 2024; real = CIFAR-10 test, fake = Stable Diffusion 1.4), Hugging Face mirror batgre/CIFAKE@f7c10159fb15f0deb2a4e302c7916a0f9cae4a4d (original file names; the mirror has 10000 REAL / 9996 FAKE test files); images not redistributed",
+   "limitations": "Smoke/regression subset: 128 of 20000 CIFAKE test images (32x32 upscaled to 224 as in the source); accuracy on it is NOT an estimate of the full test accuracy.",
+   "n_classes_covered": 2,
+   "preprocessing": {
+    "ftl_rgb01": {
+     "shape": [
+      128,
+      224,
+      224,
+      3
+     ],
+     "dtype": "float32",
+     "layout": "NHWC",
+     "definition": "torchvision 0.24.0+cu128 / PIL 11.3.0 / torch 2.9.0+cu128: PIL.Image.open(f).convert('RGB') -> v2.Resize(252, BILINEAR, antialias=True) -> v2.CenterCrop(224) -> v2.ToImage() -> v2.ToDtype(float32, scale=True); CHW -> HWC; RGB in [0, 1], no normalisation (inside the model). Re-implements read_image() of fedeloper/binary_deepfake_detection {coco_fake,dffd,cifake}_dataset.py (non-train split)"
+    }
+   }
   }
  }
 }

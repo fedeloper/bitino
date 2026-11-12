@@ -32,6 +32,11 @@ void register_bhvit_reference_kernels(OpRegistry& reg);
 void register_torch_cnn_ops(OpRegistry& reg);      // op_defs_torch_cnn.cc
 void register_torch_cnn_kernels(OpRegistry& reg);  // kernels/reference/torch_cnn_reference.cc
 
+// Image-feature operators (runtime/ops/op_defs_image_features.cc, docs/operators_image_features.md).
+void register_image_feature_ops(OpRegistry& reg);               // op_defs_image_features.cc
+void register_image_feature_reference_kernels(OpRegistry& reg);  // kernels/reference/image_features_reference.cc
+void register_image_feature_opt_kernels(OpRegistry& reg);        // kernels/image_features_opt.cc (neon / binary_scalar)
+
 // Internal FusedElementwise operator (created by the session's plan-time rewrite,
 // src/graph_rewrite.h): OpDef, reference kernel, float_opt kernels.
 void register_fused_ops(OpRegistry& reg);                  // op_defs_fused.cc
