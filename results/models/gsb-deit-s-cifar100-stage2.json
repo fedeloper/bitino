@@ -103,9 +103,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261112_1609",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -116,8 +116,8 @@
     "optimized": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": false
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "optimized_int8": {
      "pass": true,
@@ -134,9 +134,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261112_1648",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -176,7 +176,7 @@
      "exact_vs_numpy": true
     },
     "all": {
-     "pass": false,
+     "pass": true,
      "pending": false,
      "identical_to_emulated": null,
      "exact_vs_numpy": false
@@ -228,6 +228,39 @@
     "kernels": "neon",
     "model_data_sha256": "11fcec876548a950414588251c1d239ab70cc02193939e36badc085aadae5b90",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0034_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 73.8573435,
+    "median_range_ms": [
+     73.8278905,
+     74.2952345
+    ],
+    "p90_ms": 74.5391927,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 115612,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T14:25:37Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "11fcec876548a950414588251c1d239ab70cc02193939e36badc085aadae5b90",
+    "runtime": "development runtime as of 2026-11-13"
    },
    {
     "model_id": "gsb-deit-s-cifar100-stage2",
@@ -454,6 +487,105 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T05:13:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 75.80763,
+    "median_range_ms": [
+     75.654583,
+     75.97776
+    ],
+    "p90_ms": 76.2919533,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 60768,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:47:21Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 38.2447655,
+    "median_range_ms": [
+     38.18224,
+     38.284453
+    ],
+    "p90_ms": 40.0304745,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 60984,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:47:26Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 74.319037,
+    "median_range_ms": [
+     74.01987,
+     74.487969
+    ],
+    "p90_ms": 74.75248429999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 60068,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:47:33Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

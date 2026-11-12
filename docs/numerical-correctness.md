@@ -317,9 +317,21 @@ the AArch32 builds of the NEON kernels do about it:
   code 0): I8Quantize (`x / s` by IEEE VFP division, or an exact power-of-two reciprocal), I8LayerNorm (`u * r` with an
   integer `|u| >= 1` cannot be denormal; `v * G` denormal only for `|G| < 2^-100`, and then `w + B` equals the IEEE sum
   whenever its rounding can be nonzero), I8Softmax, the int8 outputs of the binary layers. fp32 graph outputs
-  (`output: f32` of I8BDense / I8BConv2D / I8BMatMul / I8Softmax) and I8BConv2DRes (fp32 residual sums and bit
-  compares) stay on the IEEE portable / reference kernels on armeabi-v7a, so int8_full outputs are byte-identical to the
-  AArch64 ones (checked under qemu-arm and on the Redmi 9A).
+  (`output: f32` of I8BDense / I8BConv2D / I8BMatMul / I8Softmax) stay on the IEEE portable / reference kernels on
+  armeabi-v7a, so int8_full outputs are byte-identical to the AArch64 ones (checked under qemu-arm and on the Redmi 9A).
+* AArch32 int8 kernels (2026-11-12, later): the VMULL.S8 GEMM tiles are integer (exact for weights in [-127, 127];
+  I8MatMul repacks b codes of -128 as -127 and restores the products). I8Quantize and the int8_neon quantizer use one
+  NEON multiply by `1/s` and the IEEE division (VFP) for groups holding a value within 2^-12 of a half-integer (the
+  multiply is within 3 ulp of `fl(x / s)`, below 2^-13 for the reachable range) or a denormal input (flushed by the
+  multiply). The int8_neon fp32 epilogue `float(acc) * (sx * sw[o]) + bias[o]` runs in NEON only when every
+  `sx * sw[o]` is 0 or at least 2^-100 and every bias is 0 or normal (then no operand or result is a denormal; checked
+  per run), else in scalar VFP; max |x| is taken on the bit patterns. I8BConv2DRes runs the NEON epilogue when every
+  value of its chain (`fp32(acc) * post_mul + post_add`, pre stage, `+ R(res)`, PReLU, `+ out_bias`) is a multiple of
+  2^G with G >= -126 (least-significant-bit exponents of the constants added along products, minimised along sums;
+  IEEE rounding keeps the grid), so every nonzero intermediate is normal; bit thresholds that are denormal
+  (`nextafter(0, +inf)` of a `gt` compare with 0) are replaced by the grid values giving the same compares
+  (`2^-126` resp. 0). Otherwise the IEEE portable kernel. qemu-arm does not flush NEON arithmetic (it did flush the
+  compare in the one failing test case), so these properties were checked on the Redmi 9A.
 
 ## Binarization semantics that must be preserved
 

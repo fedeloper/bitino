@@ -165,9 +165,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261112_1609",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -178,8 +178,8 @@
     "optimized": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": false
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "int8_full": {
      "pass": true,
@@ -190,9 +190,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261112_1648",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -232,7 +232,7 @@
      "exact_vs_numpy": true
     },
     "all": {
-     "pass": false,
+     "pass": true,
      "pending": false,
      "identical_to_emulated": null,
      "exact_vs_numpy": false
@@ -284,6 +284,39 @@
     "kernels": "neon",
     "model_data_sha256": "b301ee720b36d1bd4aad2d3c3c99af1c535185474866307516f979f25bac0611",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0034_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 27.011354,
+    "median_range_ms": [
+     26.993516,
+     27.0241145
+    ],
+    "p90_ms": 27.1029577,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 18756,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T14:27:39Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b301ee720b36d1bd4aad2d3c3c99af1c535185474866307516f979f25bac0611",
+    "runtime": "development runtime as of 2026-11-13"
    },
    {
     "model_id": "larq-zoo-meliusnet22",
@@ -510,6 +543,105 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T05:16:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 24.9473435,
+    "median_range_ms": [
+     24.925729,
+     24.9767185
+    ],
+    "p90_ms": 25.2192344,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 29992,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:51:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 13.1035675,
+    "median_range_ms": [
+     13.0846355,
+     13.1146875
+    ],
+    "p90_ms": 13.219176599999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 39528,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:52:01Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 23.036068,
+    "median_range_ms": [
+     22.972995,
+     23.041302
+    ],
+    "p90_ms": 23.2451252,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 29320,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:52:04Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

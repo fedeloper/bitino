@@ -30,10 +30,156 @@
    "note": "128-image smoke test; a CIFAKE subset is out of domain for the COCOFake / DFFD models"
   }
  },
- "device_verification": null,
+ "device_verification": {
+  "oneplus-open": {
+   "suite": "20261112_2233",
+   "date": "2026-11-12",
+   "runtime_commit": "a62969e",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
+    }
+   }
+  },
+  "moto-e13": {
+   "suite": "20261112_2233",
+   "date": "2026-11-12",
+   "runtime_commit": "a62969e",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "optimized": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "optimized_int8": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
+  }
+ },
  "instructions_M": null,
  "speed": {
   "s22": [],
+  "oneplus-open": [
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 49.564271,
+    "median_range_ms": [
+     49.5615885,
+     49.7679425
+    ],
+    "p90_ms": 50.3665575,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 71024,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:40:40Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1e4d8f783a4cfd2e8981a3984608d4ae248c6b53c170ef407d96ee2d53c22f4e",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 24.8161455,
+    "median_range_ms": [
+     24.7345835,
+     25.338386
+    ],
+    "p90_ms": 25.4878176,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 77792,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:40:44Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1e4d8f783a4cfd2e8981a3984608d4ae248c6b53c170ef407d96ee2d53c22f4e",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-cocofake",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 49.785365,
+    "median_range_ms": [
+     49.785365,
+     50.226849
+    ],
+    "p90_ms": 50.6542709,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 66756,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:40:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1e4d8f783a4cfd2e8981a3984608d4ae248c6b53c170ef407d96ee2d53c22f4e",
+    "runtime": "development runtime as of 2026-11-12"
+   }
+  ],
   "x86": []
  }
 }

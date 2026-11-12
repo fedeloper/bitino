@@ -1,6 +1,6 @@
 {
  "schema": "bitino.results.v1.plausibility",
- "generated": "2026-11-12",
+ "generated": "2026-11-13",
  "rules": [
   "1 thread, latest run per (file, stage): a mode meant to be faster must not be more than 5 % slower than the mode it replaces: int8_full (best of its files) vs the float stage 'all'; optimized_int8 vs 'all'"
  ],
@@ -9,341 +9,451 @@
    "device": "oneplus-open",
    "model_id": "ab-bnn-cifar10-reactneta",
    "check": "int8_full slower than float (all)",
-   "ms": 1.692,
-   "float_ms": 1.585,
-   "ratio": 1.068,
+   "ms": 1.68,
+   "float_ms": 1.591,
+   "ratio": 1.056,
    "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
-   "model_id": "ab-bnn-cifar100-reactneta",
+   "model_id": "adabin-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 1.677,
-   "float_ms": 1.586,
-   "ratio": 1.057,
-   "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "ms": 1.022,
+   "float_ms": 0.89,
+   "ratio": 1.149,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "adabin-resnet20-cifar10",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 0.988,
+   "float_ms": 0.89,
+   "ratio": 1.11,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "bbcu-sr-m-x4",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 15.581,
+   "float_ms": 14.572,
+   "ratio": 1.069,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-small-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 70.04,
-   "float_ms": 44.98,
-   "ratio": 1.557,
+   "ms": 59.612,
+   "float_ms": 44.55,
+   "ratio": 1.338,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-small-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 69.327,
-   "float_ms": 47.457,
-   "ratio": 1.461,
+   "ms": 59.019,
+   "float_ms": 46.626,
+   "ratio": 1.266,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-tiny-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 45.109,
-   "float_ms": 29.198,
-   "ratio": 1.545,
+   "ms": 38.542,
+   "float_ms": 29.011,
+   "ratio": 1.329,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-tiny-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 44.269,
-   "float_ms": 31.744,
-   "ratio": 1.395,
+   "ms": 37.935,
+   "float_ms": 31.32,
+   "ratio": 1.211,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bi-vit-deit-small",
    "check": "int8_full slower than float (all)",
-   "ms": 42.01,
-   "float_ms": 35.273,
-   "ratio": 1.191,
+   "ms": 39.715,
+   "float_ms": 35.14,
+   "ratio": 1.13,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bi-vit-deit-tiny",
    "check": "int8_full slower than float (all)",
-   "ms": 16.548,
+   "ms": 15.335,
    "float_ms": 13.575,
-   "ratio": 1.219,
+   "ratio": 1.13,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-mnli",
    "check": "int8_full slower than float (all)",
-   "ms": 73.536,
-   "float_ms": 59.461,
-   "ratio": 1.237,
+   "ms": 69.52,
+   "float_ms": 59.439,
+   "ratio": 1.17,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-mrpc",
    "check": "int8_full slower than float (all)",
-   "ms": 70.176,
-   "float_ms": 57.471,
-   "ratio": 1.221,
+   "ms": 68.962,
+   "float_ms": 57.501,
+   "ratio": 1.199,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-qqp",
    "check": "int8_full slower than float (all)",
-   "ms": 76.809,
-   "float_ms": 65.136,
-   "ratio": 1.179,
+   "ms": 75.015,
+   "float_ms": 65.102,
+   "ratio": 1.152,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-sst2",
    "check": "int8_full slower than float (all)",
-   "ms": 36.676,
-   "float_ms": 30.504,
-   "ratio": 1.202,
+   "ms": 34.899,
+   "float_ms": 30.554,
+   "ratio": 1.142,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bimatting-bimobilenet-backbone",
    "check": "int8_full slower than float (all)",
-   "ms": 12.633,
-   "float_ms": 9.173,
-   "ratio": 1.377,
+   "ms": 10.67,
+   "float_ms": 8.831,
+   "ratio": 1.208,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "biper-resnet18-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.322,
-   "float_ms": 2.021,
-   "ratio": 1.149,
+   "ms": 2.179,
+   "float_ms": 2.006,
+   "ratio": 1.086,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "biper-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 0.571,
+   "float_ms": 0.468,
+   "ratio": 1.22,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bnext-large",
    "check": "int8_full slower than float (all)",
-   "ms": 213.421,
-   "float_ms": 188.705,
-   "ratio": 1.131,
+   "ms": 201.514,
+   "float_ms": 188.469,
+   "ratio": 1.069,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bnext-middle",
    "check": "int8_full slower than float (all)",
-   "ms": 98.816,
-   "float_ms": 85.21,
-   "ratio": 1.16,
+   "ms": 90.439,
+   "float_ms": 82.842,
+   "ratio": 1.092,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bnext-small",
    "check": "int8_full slower than float (all)",
-   "ms": 57.077,
-   "float_ms": 50.73,
-   "ratio": 1.125,
+   "ms": 52.139,
+   "float_ms": 47.986,
+   "ratio": 1.087,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bnext-tiny",
    "check": "int8_full slower than float (all)",
-   "ms": 30.379,
-   "float_ms": 25.472,
-   "ratio": 1.193,
+   "ms": 27.729,
+   "float_ms": 24.963,
+   "ratio": 1.111,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "bnn-pynq-cnv-w1a1-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 0.398,
+   "float_ms": 0.295,
+   "ratio": 1.35,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
    "check": "int8_full slower than float (all)",
    "ms": 0.431,
-   "float_ms": 0.337,
-   "ratio": 1.278,
+   "float_ms": 0.293,
+   "ratio": 1.47,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261112_1601_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 0.353,
+   "float_ms": 0.293,
+   "ratio": 1.205,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "brevitas-bnn-pynq-tfc-1w1a",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 0.006,
+   "float_ms": 0.002,
+   "ratio": 2.987,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "check": "int8_full slower than float (all)",
+   "ms": 0.532,
+   "float_ms": 0.466,
+   "ratio": 1.141,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0057_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "finn-examples-bnn-pynq-cnv-w1a1",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 0.487,
+   "float_ms": 0.293,
+   "ratio": 1.664,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 83.803,
+   "float_ms": 1.076,
+   "ratio": 77.907,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 50.018,
+   "float_ms": 1.076,
+   "ratio": 46.472,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 27.306,
+   "float_ms": 1.075,
+   "ratio": 25.405,
+   "file": "model.bitino",
+   "plan": "quick_20261112_2324_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "larq-zoo-meliusnet22",
    "check": "int8_full slower than float (all)",
-   "ms": 28.355,
-   "float_ms": 26.577,
-   "ratio": 1.067,
+   "ms": 27.011,
+   "float_ms": 24.947,
+   "ratio": 1.083,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "larq-zoo-quicknet",
    "check": "int8_full slower than float (all)",
-   "ms": 9.229,
-   "float_ms": 7.629,
-   "ratio": 1.21,
+   "ms": 8.146,
+   "float_ms": 7.65,
+   "ratio": 1.065,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "larq-zoo-quicknet-large",
    "check": "int8_full slower than float (all)",
-   "ms": 16.401,
-   "float_ms": 13.575,
-   "ratio": 1.208,
+   "ms": 15.083,
+   "float_ms": 13.59,
+   "ratio": 1.11,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "larq-zoo-quicknet-small",
    "check": "int8_full slower than float (all)",
-   "ms": 6.336,
-   "float_ms": 4.901,
-   "ratio": 1.293,
+   "ms": 5.844,
+   "float_ms": 4.911,
+   "ratio": 1.19,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "larq-zoo-quicknet-xl-legacy",
    "check": "int8_full slower than float (all)",
-   "ms": 15.476,
-   "float_ms": 13.375,
-   "ratio": 1.157,
+   "ms": 15.47,
+   "float_ms": 13.379,
+   "ratio": 1.156,
    "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "rbnn-resnet18-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.749,
-   "float_ms": 2.193,
-   "ratio": 1.254,
+   "ms": 2.731,
+   "float_ms": 2.217,
+   "ratio": 1.232,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "rbnn-resnet20-bireal-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.736,
-   "float_ms": 0.661,
-   "ratio": 1.113,
+   "ms": 0.73,
+   "float_ms": 0.537,
+   "ratio": 1.359,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1601_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "rbnn-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 0.673,
+   "float_ms": 0.541,
+   "ratio": 1.244,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "rbnn-vgg-small-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.274,
-   "float_ms": 2.138,
-   "ratio": 1.063,
+   "ms": 2.293,
+   "float_ms": 2.163,
+   "ratio": 1.06,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "recu-resnet18-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.339,
-   "float_ms": 2.035,
-   "ratio": 1.15,
+   "ms": 2.185,
+   "float_ms": 2.043,
+   "ratio": 1.07,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "recu-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.658,
-   "float_ms": 0.539,
-   "ratio": 1.219,
+   "ms": 0.583,
+   "float_ms": 0.471,
+   "ratio": 1.239,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1601_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "shuaiz-bireal20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.694,
+   "ms": 0.617,
    "float_ms": 0.425,
-   "ratio": 1.635,
+   "ratio": 1.451,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1601_cph2551"
-  },
-  {
-   "device": "oneplus-open",
-   "model_id": "shuaiz-bireal20-cifar10",
-   "check": "optimized_int8 slower than float (all)",
-   "ms": 0.52,
-   "float_ms": 0.425,
-   "ratio": 1.225,
-   "file": "model.bitino",
-   "plan": "quick_20261112_1550_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "siman-resnet18-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.757,
-   "float_ms": 2.195,
-   "ratio": 1.256,
+   "ms": 2.745,
+   "float_ms": 2.197,
+   "ratio": 1.249,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "siman-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.758,
-   "float_ms": 0.657,
-   "ratio": 1.152,
+   "ms": 0.728,
+   "float_ms": 0.515,
+   "ratio": 1.414,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1601_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "siman-vgg-small-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.304,
-   "float_ms": 2.143,
-   "ratio": 1.075,
+   "ms": 2.29,
+   "float_ms": 2.152,
+   "ratio": 1.064,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1204_cph2551"
+   "plan": "int8full_20261113_0034_cph2551"
   },
   {
    "device": "s22",

@@ -623,3 +623,259 @@ BF_TEST(int8_full_layernorm_bit_exact) {
     }
   }
 }
+
+// AArch32 int8 GEMM tiles (a32gemm::tile4x2: VMULL.S8 / VMLAL.S8 / VPADAL.S16, kernels/int8_neon/int8_gemm_a32.h)
+// behind i8conv2d / i8dense / i8conv2dn.neon_a32_mull, bit-exact with the reference: row counts that leave 1..7 rows
+// in the last 8-row tile (partial quads), odd channel counts (a zero column in the last pair), K with and without a
+// 16-byte tail, in-place 1x1 rows, padding taps with pad_q != x_zero, groups (kic 2 and 24), extreme codes and
+// weights +-127, i8 (negative / positive shifts, clamps), f32, l8 and bit outputs, Dense with 1..13 rows, twin
+// convolutions (I8Conv2DN, two outputs). Weights containing -128 must fall back to the SMLAL kernel (neon_a32), also
+// exact. On AArch32 the expected kernel must be selected; elsewhere the cases run on that target's kernels.
+namespace {
+void expect_a32_kernel(const bftest::ModelBuilder& mb, const std::vector<std::vector<uint8_t>>& in, const std::string& kernel,
+                       const std::string& what) {
+#if defined(__arm__) && defined(__ARM_NEON) && !defined(__aarch64__)
+  RunInfo info;
+  run_all(mb, kFull, 1, true, in, &info);
+  bool found = false;
+  for (const auto& kv : info.kernels) found = found || kv.second == kernel;
+  if (!found) throw bftest::Failure{"expected kernel " + kernel + " for " + what};
+#else
+  (void)mb, (void)in, (void)kernel, (void)what;
+#endif
+}
+std::vector<uint8_t> weights_127(Rng& r, int64_t n, bool extremes) {
+  auto w = r.i8(n);
+  for (size_t i = 0; i < w.size(); ++i) {
+    int v = static_cast<int8_t>(w[i]);
+    if (v == -128) v = -127;
+    if (extremes && i % 5 == 0) v = i % 2 ? 127 : -127;
+    w[i] = static_cast<uint8_t>(v);
+  }
+  return w;
+}
+}  // namespace
+
+BF_TEST(int8_full_gemm_a32_mull_bit_exact) {
+  Rng r(3232);
+  struct C {
+    int64_t n, h, w, ic, oc, k, s, pad, groups;
+    const char* out;
+  };
+  int idx = 0;
+  for (C c : std::vector<C>{{1, 13, 11, 3, 32, 7, 2, 3, 1, "i8"},    // stem: K 147 (tail), 7x6 = 42 rows (2 in the last tile)
+                            {1, 9, 7, 16, 21, 3, 1, 1, 1, "i8"},     // odd channels, K 144
+                            {2, 5, 5, 64, 35, 1, 1, 0, 1, "i8"},     // 1x1 in place, 50 rows
+                            {1, 6, 5, 24, 16, 1, 2, 0, 1, "i8"},     // 1x1 stride 2, K 24 (tail), 9 rows
+                            {1, 7, 6, 8, 32, 3, 1, 1, 4, "i8"},      // groups 4 (kic 2, ocg 8)
+                            {1, 5, 7, 48, 18, 3, 2, 1, 2, "i8"},     // groups 2 (kic 24, ocg 9: a zero column per group)
+                            {1, 11, 9, 32, 37, 3, 1, 1, 1, "f32"},   // f32 output
+                            {1, 9, 10, 40, 64, 3, 2, 1, 1, "l8"},    // l8 output
+                            {1, 3, 1, 16, 7, 1, 1, 0, 1, "i8"},      // 3 rows: one partial quad only
+                            {1, 4, 5, 128, 70, 3, 1, 1, 1, "i8"}}) { // K 1152 (> 1032: the int32 bound check)
+    for (int variant = 0; variant < 2; ++variant) {
+      ++idx;
+      const int64_t kic = c.ic / c.groups;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {c.n, c.h, c.w, c.ic});
+      auto wv = weights_127(r, c.oc * c.k * c.k * kic, variant == 1);
+      mb.constant("w", DType::kI8, {c.oc, c.k, c.k, kic}, wv.data());
+      const int xz = variant ? (idx % 2 ? -128 : 127) : r.i(-128, 127);
+      Json at = Json::Object{{"strides", zeros_json({c.s, c.s})}, {"pads", zeros_json({c.pad, c.pad, c.pad, c.pad})}, {"groups", c.groups},
+                             {"x_zero", xz}, {"pad_q", variant ? r.i(-128, 127) : xz}};
+      std::vector<std::string> ins = {"x", "w", "b"};
+      const std::string out = c.out;
+      if (out == "i8") {
+        std::vector<int32_t> bq(static_cast<size_t>(c.oc)), m(static_cast<size_t>(c.oc)), sh(static_cast<size_t>(c.oc));
+        for (int64_t o = 0; o < c.oc; ++o) {
+          bq[o] = r.i(-200000, 200000);
+          auto ms = (o + idx) % 5 == 0 ? r.mult(1.5, 6.0) : r.mult(1e-6, 1e-3);
+          m[o] = ms.first;
+          sh[o] = ms.second;
+        }
+        mb.constant("b", DType::kI32, {c.oc}, bq.data());
+        mb.constant("m", DType::kI32, {c.oc}, m.data());
+        mb.constant("sh", DType::kI32, {c.oc}, sh.data());
+        ins.insert(ins.end(), {"m", "sh"});
+        at["y_zero"] = r.i(-100, 100);
+        if (variant) {
+          at["qmin"] = r.i(-128, -30);
+          at["qmax"] = r.i(20, 127);
+        }
+      } else {
+        std::vector<float> sc(static_cast<size_t>(c.oc)), bi(static_cast<size_t>(c.oc));
+        for (int64_t o = 0; o < c.oc; ++o) {
+          sc[o] = std::ldexp(r.f(0.5f, 1.f), r.i(-22, -10));
+          bi[o] = r.f(-1.f, 1.f) * std::ldexp(1.f, r.i(-8, 2));
+        }
+        mb.constant("b", DType::kF32, {c.oc}, bi.data());
+        mb.constant("s", DType::kF32, {c.oc}, sc.data());
+        ins.push_back("s");
+        at["output"] = out;
+        if (out == "l8") at["y_exp"] = 0;
+      }
+      std::vector<std::string> outs = {"y"};
+      if (out == "i8" && variant == 1) {  // + bit output (thresholds on acc)
+        std::vector<int32_t> bt(static_cast<size_t>(c.oc));
+        for (auto& v : bt) v = r.i(-3000, 3000);
+        mb.constant("bt", DType::kI32, {c.oc}, bt.data());
+        ins.push_back("bt");
+        outs.push_back("yb");
+      }
+      mb.node("I8Conv2D", ins, outs, at);
+      for (const auto& o : outs) mb.output(o);
+      const auto x = r.i8(c.n * c.h * c.w * c.ic);
+      compare(mb, {x}, "a32 conv case " + std::to_string(idx));
+      expect_a32_kernel(mb, {x}, "i8conv2d.neon_a32_mull", "a32 conv case " + std::to_string(idx));
+    }
+  }
+  // Dense: 1..13 rows, K with / without tails, 1..37 outputs, i8 and f32 outputs
+  for (int64_t rows : {1, 2, 3, 5, 8, 9, 13}) {
+    for (int64_t k : {16, 100, 1040}) {
+      for (int64_t o : {1, 2, 37}) {
+        ++idx;
+        const bool f32 = idx % 3 == 0;
+        bftest::ModelBuilder mb;
+        mb.input("x", DType::kI8, {rows, k});
+        auto wv = weights_127(r, o * k, idx % 2 == 0);
+        mb.constant("w", DType::kI8, {o, k}, wv.data());
+        Json at = Json::Object{{"x_zero", r.i(-128, 127)}};
+        std::vector<std::string> ins = {"x", "w", "b", "m"};
+        if (f32) {
+          std::vector<float> b(static_cast<size_t>(o)), sc(static_cast<size_t>(o));
+          for (int64_t j = 0; j < o; ++j) b[j] = r.f(-1.f, 1.f), sc[j] = r.f(1e-4f, 1e-2f);
+          mb.constant("b", DType::kF32, {o}, b.data());
+          mb.constant("m", DType::kF32, {o}, sc.data());
+          at["output"] = "f32";
+        } else {
+          std::vector<int32_t> b(static_cast<size_t>(o)), m(static_cast<size_t>(o)), sh(static_cast<size_t>(o));
+          for (int64_t j = 0; j < o; ++j) {
+            b[j] = r.i(-1000000, 1000000);
+            auto mm = r.mult(1e-6, 1e-3);
+            m[j] = mm.first;
+            sh[j] = mm.second;
+          }
+          mb.constant("b", DType::kI32, {o}, b.data());
+          mb.constant("m", DType::kI32, {o}, m.data());
+          mb.constant("s", DType::kI32, {o}, sh.data());
+          ins.push_back("s");
+          at["y_zero"] = r.i(-128, 127);
+        }
+        mb.node("I8Dense", ins, {"y"}, at);
+        mb.output("y");
+        const auto x = r.i8(rows * k);
+        compare(mb, {x}, "a32 dense case " + std::to_string(idx));
+        expect_a32_kernel(mb, {x}, "i8dense.neon_a32_mull", "a32 dense case " + std::to_string(idx));
+      }
+    }
+  }
+  // twin convolutions (merge_twins -> I8Conv2DN, two outputs) and the -128 fallback
+  for (int fallback = 0; fallback < 2; ++fallback) {
+    for (int64_t oc : {32, 19}) {
+      ++idx;
+      const int64_t h = 15, w = 13, ic = 3, kk = 7;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {1, h, w, ic});
+      auto wv = weights_127(r, oc * kk * kk * ic, true);
+      if (fallback) wv[static_cast<size_t>(idx) % wv.size()] = 0x80;  // one weight -128
+      mb.constant("w", DType::kI8, {oc, kk, kk, ic}, wv.data());
+      mb.constant("w2", DType::kI8, {oc, kk, kk, ic}, wv.data());
+      std::vector<int32_t> bv(static_cast<size_t>(oc));
+      for (auto& v : bv) v = r.i(-100000, 100000);
+      mb.constant("b", DType::kI32, {oc}, bv.data());
+      const int xz = r.i(-128, 127);
+      for (int j = 0; j < 2; ++j) {
+        std::vector<int32_t> mv(static_cast<size_t>(oc)), sv(static_cast<size_t>(oc));
+        for (int64_t o = 0; o < oc; ++o) {
+          auto m = (j + o) % 4 == 0 ? r.mult(1.5, 4.0) : r.mult(1e-6, 1e-3);
+          mv[o] = m.first;
+          sv[o] = m.second;
+        }
+        const std::string js = std::to_string(j);
+        mb.constant("m" + js, DType::kI32, {oc}, mv.data());
+        mb.constant("s" + js, DType::kI32, {oc}, sv.data());
+        Json at = Json::Object{{"x_zero", xz}, {"pad_q", xz}, {"pads", zeros_json({3, 3, 3, 3})}, {"strides", zeros_json({2, 2})},
+                               {"y_zero", r.i(-128, 127)}};
+        if (j == 1) at["qmin"] = r.i(-128, -20);
+        mb.node("I8Conv2D", {"x", j ? "w2" : "w", "b", "m" + js, "s" + js}, {"y" + js}, at);
+        mb.output("y" + js);
+      }
+      const auto x = r.i8(h * w * ic);
+      compare(mb, {x}, "a32 conv twins case " + std::to_string(idx), "", 1);
+      expect_a32_kernel(mb, {x}, fallback ? "i8conv2dn.neon_a32" : "i8conv2dn.neon_a32_mull", "a32 conv twins case " + std::to_string(idx));
+    }
+  }
+}
+
+// I8Quantize on AArch32 (QuantizeNeon::run_a32: multiply by the reciprocal, IEEE division near half-integers and for
+// denormal inputs): exact .5 ties of x / s and their float neighbours over the whole int8 range and beyond, values
+// that clamp, +-0, denormals, zero points -256..256 (and one beyond: the generic loop), every tail length.
+BF_TEST(int8_full_quantize_reciprocal_bit_exact) {
+  Rng r(4321);
+  int k = 0;
+  for (float s : {0.0137f, 1.f, 3.25f, 0.5f, 7.3e-3f, 1e-30f, 0x1p-126f}) {
+    for (int z : {0, -20, 117, -256, 256, 300}) {
+      ++k;
+      std::vector<float> x;
+      for (int j = -420; j <= 420; ++j) {
+        const float tie = (static_cast<float>(j) + 0.5f) * s;
+        x.push_back(tie);
+        x.push_back(std::nextafter(tie, 1e30f));
+        x.push_back(std::nextafter(tie, -1e30f));
+        x.push_back(static_cast<float>(j) * s);
+      }
+      for (float v : {0.f, -0.f, 1e-45f, -2e-41f, 9e-39f, 1e20f, -1e20f, 600.f * s, -1000.f * s}) x.push_back(v);
+      for (int i = 0; i < 500; ++i) x.push_back(r.f(-300.f, 300.f) * s);
+      for (int64_t n : {int64_t(1), int64_t(15), int64_t(16), int64_t(17), static_cast<int64_t>(x.size())}) {
+        bftest::ModelBuilder mb;
+        mb.input("x", DType::kF32, {n});
+        mb.node("I8Quantize", {"x"}, {"y"}, Json::Object{{"scale", static_cast<double>(s)}, {"zero", z}});
+        mb.output("y");
+        std::vector<uint8_t> xb(static_cast<size_t>(n) * 4);
+        std::memcpy(xb.data(), x.data(), xb.size());
+        compare(mb, {xb}, "quantize case " + std::to_string(k) + " n " + std::to_string(n), "i8quantize.neon");
+      }
+    }
+  }
+}
+
+// I8MatMul on AArch32 (MatMulA32: VMULL.S8 tiles, -128 codes of b packed as -127 and restored): operands dense in
+// -128 (every pair a*b = (-128)(-128) appears), row counts with partial quads, odd column counts, K with and without
+// 16-byte tails up to the 1024 bound, transposed and plain b, zero points beyond 256 (scalar epilogue), f32 output.
+BF_TEST(int8_full_matmul_a32_bit_exact) {
+  Rng r(5150);
+  int k = 0;
+  struct S {
+    int64_t bt, m, kk, n;
+  };
+  for (S sh : std::vector<S>{{3, 7, 49, 49}, {2, 13, 64, 17}, {1, 5, 1024, 3}, {4, 1, 30, 1}, {2, 33, 100, 40}}) {
+    for (int tb = 0; tb < 2; ++tb) {
+      for (int variant = 0; variant < 3; ++variant) {  // 0 i8, 1 i8 with |z| > 256, 2 f32
+        ++k;
+        bftest::ModelBuilder mb;
+        mb.input("a", DType::kI8, {sh.bt, sh.m, sh.kk});
+        mb.input("b", DType::kI8, tb ? Shape{sh.bt, sh.n, sh.kk} : Shape{sh.bt, sh.kk, sh.n});
+        Json at = Json::Object{{"a_zero", variant == 1 ? 300 : r.i(-128, 127)}, {"b_zero", variant == 1 ? -290 : r.i(-128, 127)},
+                               {"transpose_b", tb}};
+        if (variant == 2) {
+          at["output"] = "f32";
+          at["scale"] = 0.0007;
+        } else {
+          auto mm = r.mult(1e-6, 1e-3);
+          at["mult"] = mm.first;
+          at["shift"] = mm.second;
+          at["y_zero"] = r.i(-100, 100);
+          if (k % 2) at["qmin"] = -20;
+        }
+        mb.node("I8MatMul", {"a", "b"}, {"y"}, at);
+        mb.output("y");
+        auto a = r.i8(sh.bt * sh.m * sh.kk), b = r.i8(sh.bt * sh.kk * sh.n);
+        for (size_t i = 0; i < a.size(); i += 2) a[i] = 0x80;
+        for (size_t i = 0; i < b.size(); ++i)
+          if (r.i(0, 1)) b[i] = 0x80;
+        compare(mb, {a, b}, "a32 matmul case " + std::to_string(k));
+        expect_a32_kernel(mb, {a, b}, "i8matmul.neon_a32", "a32 matmul case " + std::to_string(k));
+      }
+    }
+  }
+}

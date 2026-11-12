@@ -164,6 +164,8 @@ std::vector<SimdKernel> simd_kernels(const std::string& prefix) {
           {prefix + ".int8_neon_i8mm", cpu.has(kFeatNeon | kFeatDotProd | kFeatI8mm)}};
 #elif defined(__x86_64__)
   return {{prefix + ".int8_avx2", cpu.has(kFeatAvx2)}, {prefix + ".int8_avx2_vnni", cpu.has(kFeatAvx2 | kFeatAvxVnni)}};
+#elif defined(__arm__) && defined(__ARM_NEON)
+  return {{prefix + ".int8_neon_a32", cpu.has(kFeatNeon)}};  // AArch32: VMULL.S8 tiles (int8_neon_a32.cc)
 #else
   (void)cpu;
   return {};
@@ -497,6 +499,13 @@ Expectation expected_for(uint32_t features) {
     e.conv_a = e.conv_b = std::string("conv2d.") + best;
     e.dense_a = e.dense_b = std::string("dense.") + best;
   }
+#elif defined(__arm__) && defined(__ARM_NEON)
+  CpuInfo cpu;
+  cpu.features = features;
+  if (cpu.has(kFeatNeon)) {
+    e.conv_a = e.conv_b = "conv2d.int8_neon_a32";
+    e.dense_a = e.dense_b = "dense.int8_neon_a32";
+  }
 #else
   (void)features;
 #endif
@@ -550,6 +559,9 @@ BF_TEST(int8_feature_masking_selects_fallbacks) {
 #if defined(__x86_64__)
   // avxvnni masked -> the VPMADDWD kernels; avx2 masked -> no int8_avx2 kernel.
   const std::vector<Mask> masks = {Mask{"avxvnni", kFeatAvxVnni}, Mask{"avx2", kFeatAvx2}};
+#elif defined(__arm__) && defined(__ARM_NEON)
+  // 32-bit ARM: neon masked -> no int8_neon kernel (the AArch32 kernels need only NEON).
+  const std::vector<Mask> masks = {Mask{"neon", kFeatNeon}};
 #else
   const std::vector<Mask> masks = {Mask{"i8mm", kFeatI8mm}, Mask{"dotprod", kFeatDotProd}};
 #endif
@@ -564,7 +576,8 @@ BF_TEST(int8_feature_masking_selects_fallbacks) {
 #if defined(__x86_64__)
     if (std::string(mk.name) == "avxvnni" && (have & kFeatAvx2)) EXPECT_EQ(e.conv_a, std::string("conv2d.int8_avx2"));
 #endif
-    if (std::string(mk.name) == "dotprod" || std::string(mk.name) == "avx2") EXPECT_EQ(e.conv_b, std::string("conv2d.reference"));
+    if (std::string(mk.name) == "dotprod" || std::string(mk.name) == "avx2" || std::string(mk.name) == "neon")
+      EXPECT_EQ(e.conv_b, std::string("conv2d.reference"));
     std::vector<std::string> env = {"BITINO_DISABLE_FEATURES=" + base + mk.name, "BF_INT8_CHILD=1", "BF_INT8_MASKED=" + std::string(mk.name),
                                     "BF_INT8_EXPECT=" + e.conv_a + "," + e.dense_a + "," + e.conv_b + "," + e.dense_b};
     int rc = run_child(env);
@@ -583,6 +596,7 @@ BF_TEST(int8_gating_child) {
   if (masked == "dotprod") EXPECT_TRUE(!cpu_info().has(kFeatDotProd));
   if (masked == "avxvnni") EXPECT_TRUE(!cpu_info().has(kFeatAvxVnni));
   if (masked == "avx2") EXPECT_TRUE(!cpu_info().has(kFeatAvx2));
+  if (masked == "neon") EXPECT_TRUE(!cpu_info().has(kFeatNeon));
   std::vector<std::string> parts;
   std::string s = expect;
   size_t b = 0;
@@ -776,4 +790,52 @@ BF_TEST(int8_avx2_quantizer_bit_exact_vs_scalar) {
   }
   std::printf("    avx2 quantizer: %d elements bit-exact with int8_quantize\n", checked);
 #endif
+}
+
+// ------------------------------------------------ 32-bit ARM quantizer
+// int8_neon_a32 quantizes with one NEON multiply by 1/scale and falls back to the IEEE division near half-integers,
+// for denormal inputs and for scales without a normal reciprocal (int8_neon_a32.cc, quantize_fast). Through a Dense
+// of one input feature and weight 1 (y = float(127 q) * scale / 127: distinct codes give distinct outputs) its codes
+// must equal int8_reference's for adversarial inputs: exact .5 ties of both parities at the scale of the run, their
+// float neighbours, +-max, +-0, denormals next to a normal max (scale 2^-126: a power-of-two scale whose reciprocal
+// multiply would flush them), tensors of tiny values (denormal scale), and every tail length.
+BF_TEST(int8_neon_a32_quantizer_bit_exact_vs_reference) {
+  std::mt19937 rng(17);
+  std::normal_distribution<float> nd(0.f, 1.f);
+  int checked = 0;
+  for (float m : {127.f, 1.74f, 412.75f, 127.f * 0x1p-126f, 3e-38f, 1e-40f}) {
+    const float s = int8_scale(m);
+    std::vector<float> x = {m, -m, 0.f, -0.f};
+    for (int k = -127; k <= 126; ++k) {
+      const float tie = (static_cast<float>(k) + 0.5f) * s;
+      if (std::fabs(tie) > m) continue;
+      x.push_back(tie);
+      x.push_back(std::nextafter(tie, 1e30f));
+      x.push_back(std::nextafter(tie, -1e30f));
+      x.push_back(static_cast<float>(k) * s);
+    }
+    for (float d : {1e-45f, -3e-42f, 7e-39f, -1.1e-38f}) x.push_back(std::fabs(d) <= m ? d : 0.f);
+    for (int i = 0; i < 3000; ++i) x.push_back(std::max(-m, std::min(m, nd(rng) * 0.4f * m)));
+    for (size_t n : {size_t(1), size_t(5), size_t(15), size_t(16), size_t(17), size_t(33), x.size()}) {
+      std::vector<float> xn(x.begin(), x.begin() + static_cast<std::ptrdiff_t>(n));
+      xn[0] = m;  // the max stays in every prefix
+      const float w = 1.f;
+      bftest::ModelBuilder mb;
+      mb.constant("w", DType::kF32, {1, 1}, &w);
+      mb.input("x", DType::kF32, {static_cast<int64_t>(n), 1});
+      mb.node("Dense", {"x", "w", ""}, {"y"}, Json(Json::Object{{"activation", "none"}}));
+      mb.output("y");
+      auto model = mb.build();
+      RunResult ref = run_model(model, forced("Dense", "dense.int8_reference"), 1, xn);
+      for (const auto& k : simd_kernels("dense")) {
+        if (!k.required) continue;
+        RunResult r = run_model(model, forced("Dense", k.name), 1, xn);
+        if (!same_bits(ref.y, r.y))
+          throw bftest::Failure{k.name + " quantizer differs from int8_reference (max " + std::to_string(m) + ", n " + std::to_string(n) +
+                                ") at " + first_diff(ref.y, r.y)};
+        checked += static_cast<int>(n);
+      }
+    }
+  }
+  std::printf("    simd quantizer (via Dense): %d elements bit-exact with int8_reference\n", checked);
 }

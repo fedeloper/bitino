@@ -1,6 +1,6 @@
 {
  "schema": "bitino.results.v1.devices",
- "generated": "2026-11-12",
+ "generated": "2026-11-13",
  "devices": {
   "s22": {
    "kind": "phone",
@@ -112,11 +112,11 @@
    "notes": [
     "Stock settings, screen off: the vendor power policy holds the clock ceilings below the maximum with no thermal event (Android thermal status 0): X3 2.23 of 3.19 GHz, A715/A710 1.79 of 2.80 GHz. Runs are labelled vendor-policy and the ceilings are recorded per run. With the screen on the ceilings move (3.19, then 2.48 and 2.23 GHz under load), so they are not a steadier condition."
    ],
-   "runs": 898,
+   "runs": 1405,
    "verified": {
-    "models": 114,
-    "stages": 425,
-    "stages_passed": 425,
+    "models": 132,
+    "stages": 460,
+    "stages_passed": 460,
     "stages_pending": 0,
     "dates": [
      "2026-11-12"
@@ -162,9 +162,9 @@
    ],
    "runs": 116,
    "verified": {
-    "models": 114,
-    "stages": 449,
-    "stages_passed": 449,
+    "models": 132,
+    "stages": 503,
+    "stages_passed": 503,
     "stages_pending": 0,
     "dates": [
      "2026-11-12"
@@ -207,16 +207,17 @@
     "redmi-9a"
    ],
    "notes": [
-    "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). int8 SDOT/I8MM and int8_full NEON kernels are arm64-only, so the int8 stages run portable code here. The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
+    "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). The int8 stages use AArch32 NEON kernels too (since 2026-11-12: int8_full_neon through neon_a32.h, VMULL.S8 GEMM tiles instead of SDOT/I8MM for int8_full and optimized_int8; the development log (not published)). The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
    ],
    "runs": 42,
    "verified": {
     "models": 114,
     "stages": 228,
-    "stages_passed": 193,
+    "stages_passed": 228,
     "stages_pending": 0,
     "dates": [
-     "2026-11-12"
+     "2026-11-12",
+     "2026-11-13"
     ]
    }
   }

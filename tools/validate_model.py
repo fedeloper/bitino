@@ -267,9 +267,22 @@ def main() -> int:
     n_cls = args.num_classes or (per if args.output_kind == "embedding" else 1000 if per in (1000, 2000) else per)
     logits = out[:, :n_cls]
 
-    ref32 = np.fromfile(os.path.join(args.artifacts, "reference_logits.f32"), np.float32).reshape(n, -1)
-    ref64 = np.fromfile(os.path.join(args.artifacts, "reference_logits_f64.f64"), np.float64).reshape(n, -1)
+    n_eval = n   # samples in the inputs file (record size of the --explain traces)
+    ref32 = np.fromfile(os.path.join(args.artifacts, "reference_logits.f32"), np.float32)
+    ref64 = np.fromfile(os.path.join(args.artifacts, "reference_logits_f64.f64"), np.float64)
+    n_ref = ref64.size // n_cls
+    sel = None
+    if n_ref < n and n_ref * n_cls == ref64.size and ref32.size == ref64.size:
+        # the conversion computed references for a subset only (e.g. 64 of 128 samples for a large model; its
+        # conversion_report.json lists them as sample_indices, else the first n_ref): validate on that subset
+        crp = os.path.join(args.artifacts, "conversion_report.json")
+        idx = json.load(open(crp)).get("sample_indices") if os.path.exists(crp) else None
+        sel = np.array(idx if idx is not None and len(idx) == n_ref else range(n_ref))
+        n, logits, labels = n_ref, logits[sel], labels[sel]
+    ref32, ref64 = ref32.reshape(n, -1), ref64.reshape(n, -1)
     report = {"label": args.label or f"host:{args.stage}:t{args.threads}", "model": model_path, "n_samples": int(n),
+              **({"n_samples_eval_set": int(n_eval), "sample_indices": [int(i) for i in sel],
+                  "note": f"references cover {n} of {n_eval} samples (sample_indices)"} if sel is not None else {}),
               "eval_set": em["name"], "eval_limitations": em["limitations"],
               "vs_reference_f64": compare_outputs(ref64, logits, labels),
               "vs_reference_f32": compare_outputs(ref32, logits, labels),
@@ -320,7 +333,9 @@ def main() -> int:
         assert args.bench, "--explain needs --bench (host)"
         dis = (np.where(logits.argmax(1) != ref64.argmax(1))[0].tolist() if args.output_kind == "logits"
                else [int(i) for i in report["embedding"]["samples_below_threshold"]])
-        traces, all_ok = trace_samples(args, dis, model_path, os.path.join(args.eval_dir, pre["file"]), n)
+        if sel is not None:   # positions in the subset -> sample numbers in the inputs file
+            dis = [int(sel[i]) for i in dis]
+        traces, all_ok = trace_samples(args, dis, model_path, os.path.join(args.eval_dir, pre["file"]), n_eval)
         report["explain"] = {"rule": rule_text(args), "traces": traces, "all_explained": bool(all_ok)}
         report["acceptance"]["passed"] = bool(all_ok)
         report["acceptance"]["criterion"] = ("every top-1 disagreement vs fp64" if args.output_kind == "logits" else

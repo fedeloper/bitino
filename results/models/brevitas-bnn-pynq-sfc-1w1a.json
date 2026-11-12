@@ -78,9 +78,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261112_1609",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -103,9 +103,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261112_1648",
+   "suite": "20261112_2233",
    "date": "2026-11-12",
-   "runtime_commit": "7b11402",
+   "runtime_commit": "a62969e",
    "stages": {
     "neon": {
      "pass": true,
@@ -383,6 +383,72 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T05:43:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.003229498865,
+    "median_range_ms": [
+     0.00312499702,
+     0.00333400071
+    ],
+    "p90_ms": 0.00338499993,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6284,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:22:12Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-sfc-1w1a",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_2324_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.0177600011,
+    "median_range_ms": [
+     0.00609400123,
+     0.0178129971
+    ],
+    "p90_ms": 0.0178650022,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6344,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T13:22:12Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

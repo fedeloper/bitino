@@ -101,6 +101,10 @@ set(BITINO_SOURCES
   runtime/kernels/reference/image_features_reference.cc
   runtime/kernels/image_features_opt.cc
 )
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^arm" AND NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+  # 32-bit ARM (armeabi-v7a): int8_neon tier kernels on the AArch32 VMULL.S8 tiles (runtime/kernels/int8_neon/int8_gemm_a32.h)
+  list(APPEND BITINO_SOURCES runtime/kernels/int8_neon/int8_neon_a32.cc)
+endif()
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
   # binary_avx2 tier: only the SIMD TU gets AVX2 code generation; it is called
   # only when cpu_info() reports avx2 + popcnt (runtime/kernels/binary_avx2/binary_avx2.h).

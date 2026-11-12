@@ -563,7 +563,8 @@ only kernels of the I8 operators and exact for them).
 | `int8_full_opt` | portable wrappers of the binary operators around the best float-path binary kernel of the CPU (x86-64 hosts: AVX2) |
 
 Since 2026-11-12 the `int8_full_neon` kernels also build for 32-bit ARM (armeabi-v7a, `kernels/neon_a32.h`) except the
-SDOT / SMMLA GEMMs, which have an AArch32 SMLAL GEMM instead; see "int8_full latency" at the end of this section.
+SDOT / SMMLA GEMMs, which have AArch32 VMULL.S8 tiles instead (`*.neon_a32_mull`, `i8matmul.neon_a32`; the SMLAL GEMM
+`*.neon_a32` for weights holding -128); see "int8_full latency" and "AArch32 int8 kernels" at the end of this section.
 
 Stage `int8_full` = `optimized` + these three tiers; `int8_full_reference` = reference only. Every NEON and
 portable kernel is bit-identical to the reference (`int8_full_neon_bit_exact_vs_reference`: random shapes and

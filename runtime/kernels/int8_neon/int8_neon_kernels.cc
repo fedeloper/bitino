@@ -371,6 +371,12 @@ void register_int8_neon_kernels(OpRegistry& reg) {
   reg.add_kernel({"Dense", "dense.int8_neon_i8mm", "int8_neon", 150, i8mm, dense_supported, make_kernel<Int8DenseNeon<8>>});
 }
 
+#elif defined(__ARM_NEON) && defined(__arm__)
+
+// 32-bit ARM: the AArch32 kernels of int8_neon_a32.cc (VMULL.S8 tiles, no dot products).
+void register_int8_neon_a32_kernels(OpRegistry& reg);
+void register_int8_neon_kernels(OpRegistry& reg) { register_int8_neon_a32_kernels(reg); }
+
 #else
 
 void register_int8_neon_kernels(OpRegistry&) {}

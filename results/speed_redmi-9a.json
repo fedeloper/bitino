@@ -37,10 +37,10 @@
    "redmi-9a"
   ],
   "notes": [
-   "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). int8 SDOT/I8MM and int8_full NEON kernels are arm64-only, so the int8 stages run portable code here. The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
+   "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). The int8 stages use AArch32 NEON kernels too (since 2026-11-12: int8_full_neon through neon_a32.h, VMULL.S8 GEMM tiles instead of SDOT/I8MM for int8_full and optimized_int8; the development log (not published)). The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
   ]
  },
- "generated": "2026-11-12",
+ "generated": "2026-11-13",
  "method": {
   "tool": "bitino_bench (tools/benchmark.py on the device over adb)",
   "statistic": "median latency of one inference (batch 1) per repeat; median of repeats",

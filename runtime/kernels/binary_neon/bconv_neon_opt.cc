@@ -562,6 +562,15 @@ struct I8Res {
     // u > t <=> u >= nextafter(t, +inf) for finite t (also t = -0 / +0): one compare form in the vector code
     if (bits && gt)
       for (int64_t i = 0; i < oc; ++i) bthr[i] = std::nextafter(bthr[i], std::numeric_limits<float>::infinity());
+#if BF_NEON_A32
+    // AArch32 NEON compares flush a denormal threshold to 0 (nextafter(0, +inf) for gt, or a denormal bit_thr). The
+    // int8_full wrapper takes this kernel there only when every value the bits compare is a multiple of 2^-126
+    // (int8_full_neon.cc, a32_res_exact), so a threshold t with 0 < |t| < 2^-126 is replaced by the grid value that gives
+    // the same compares: s >= t <=> s >= 2^-126 for t > 0, s >= 0 for t < 0 (s = -0 included, as in IEEE).
+    if (bits)
+      for (int64_t i = 0; i < oc; ++i)
+        if (std::fpclassify(bthr[i]) == FP_SUBNORMAL) bthr[i] = bthr[i] > 0.f ? std::numeric_limits<float>::min() : 0.f;
+#endif
   }
   // the pre stage of one value (scalar; tails), sample b
   float pre1(float v, int64_t b, int64_t o) const {

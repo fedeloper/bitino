@@ -210,8 +210,12 @@ whose Android is 32-bit only on 64-bit Cortex-A53 cores): the NDK's armeabi-v7a 
 tiers (`runtime/kernels/neon_a32.h` provides the AArch64-only intrinsics they use; the 16 accumulators of the
 4x4 popcount tile are two 2x4 asm passes, the float GEMM tile 4x8). `kFeatNeon` comes from `AT_HWCAP`
 (`HWCAP_NEON`); VFPv4 FMA (`fma` in the CPU string, used by the float_opt transcendental leaves) and the
-integer divide are runtime checks, so the binary runs on any NEON armeabi-v7a phone. int8 SDOT / I8MM and
-int8_full kernels stay AArch64 only (the portable kernels run). The C++ tests build for armeabi-v7a too
+integer divide are runtime checks, so the binary runs on any NEON armeabi-v7a phone. The int8 stages have AArch32
+kernels as well: the int8_full NEON kernels, and VMULL.S8 GEMM tiles (`runtime/kernels/int8_neon/int8_gemm_a32.h`)
+in place of SDOT / I8MM for int8_full (`*.neon_a32_mull`, `i8matmul.neon_a32`) and optimized_int8
+(`conv2d / dense.int8_neon_a32`). AArch32 traps unaligned accesses carrying alignment hints (lane loads / stores
+through `uint32_t*` on byte buffers): such code uses `memcpy` there; qemu-arm does not trap them, so run
+`bitino_tests` on the phone. The C++ tests build for armeabi-v7a too
 (push and run `bitino_tests` as on arm64). Numerics: see "32-bit ARM (armeabi-v7a)" in
 `docs/numerical-correctness.md`.
 

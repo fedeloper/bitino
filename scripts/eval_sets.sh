@@ -6,6 +6,9 @@ eval_of() {
     ab-bnn-cifar100-*) echo ".cache/data/eval128_cifar100_norm cifar100_imagenet_norm --num-classes 100" ;;
     ab-bnn-*) echo ".cache/data/eval128 torchvision_imagenet" ;;
     bitorch-*) echo ".cache/data/eval128_bitorch bitorch_imagenet --flip-rule feed" ;;
+    # raw-pixel float stem (activations ~1e3 before BN): a first flip within the feeding tensor's float deviation is a
+    # rounding flip (sample 112, quant_conv2d_1: |pre| 1.37e-4 vs deviation 3.05e-4, identical on arm64 and AArch32)
+    larq-zoo-binary-densenet37-dilated) echo ".cache/data/eval128 larq_zoo --flip-rule feed" ;;
     rbonn-*)  echo ".cache/data/eval128 torchvision_imagenet" ;;
     sa-bnn-resnet18-imagenet|ida-det-bires18-imagenet-backbone) echo ".cache/data/eval128 torchvision_imagenet" ;;
     recu-*-imagenet|rbnn-*-imagenet|siman-*-imagenet|biper-*-imagenet|snn-subbit-*-imagenet) echo ".cache/data/eval128 torchvision_imagenet" ;;
