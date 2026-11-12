@@ -90,7 +90,12 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   (`BConv2D`) or 6 (`BDense`) fixed inputs). `bconv2d.avx2` / `bconv2d.neon_opt` run it on each pixel tile right
   after computing it, `bdense.neon` on each row tile (~32 KB of output, computed and packed by one task),
   `bdense.avx2` on each row tile (when channels are split across threads, after the tasks), `binary_scalar` /
-  `reference` after the whole product; the layer output is never written back separately. `packed_naive`, the
+  `reference` after the whole product; the layer output is never written back separately. When the program is a
+  chain on the layer's value (affine, prelu, RPReLU, adds of row or tile operands; e.g. ReActNet's + shortcut ->
+  RPReLU, QuickNet's BN + shortcut, BNext's PReLU, BHViT's MLP chain) and the channel count is a multiple of 16,
+  `bconv2d.neon_opt` (two-phase path) and `bdense.neon` (`tile2`) evaluate it on each 16-channel unit in registers,
+  right after converting the unit's dot products (`EltwiseProgram::store_unit16`): no store and reload of the
+  tile, per-channel constants loaded once per unit, the same float operations in program order (bit-identical). `packed_naive`, the
   old `bconv2d.neon` and the ternary (`sign_zero`) BDense kernels reject such nodes; hosting in an op is off when
   a kernel is forced for it (`SessionOptions::host_epilogues`, `bitino_bench --no-epilogues` keeps such trees
   as separate fused nodes).
@@ -126,6 +131,14 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   `bconv2d.neon_opt` tile at compile time (f32 store / integer-threshold bits / float-compare bits), which removes
   the output-mode branch from the f32 path: −1.9% to −2.7% on QuickNet-Small, ReActNet-18, BNext-Tiny, Bi-Real-18
   (no bit outputs there), −1.2% on BHViT-Tiny; Bi-ViT and BiBERT unchanged (±0.01%).
+* **Shared binarizations.** With bit outputs on: an f32 tensor that two or more `BDense` nodes binarize identically
+  (input 0, same `ge` / `gt` mode and threshold input, no `w_zero`) is packed once by an internal `PackBits` node
+  (`runtime/ops/op_defs_fused.cc`; kernels `pack_bits.reference` = `pack_row_f32`, `pack_bits.float_opt` = the NEON
+  packing of `bdense.neon` on AArch64) placed before the first of them; they read its bits, without threshold.
+  Exact: each consumer reads the bits it would have packed. The tensor stays materialized for other uses. Bi-ViT's
+  `norm1` output feeds the q / k / v `BDense` of every head with `ge` and no threshold: one packing instead of 9
+  (DeiT-Tiny) / 18 (DeiT-Small) per block (`config.plan_rewrites.shared_binarizations` = 12). Off when a `BDense`
+  kernel is forced.
 
 Counts on the stage-`optimized` plans: BHViT-Tiny 1,166 nodes absorbed into 92 fused nodes + 51 epilogues
 (44 of them in `BDense`; 192 Gathers and 31 Concats among the absorbed nodes), 268 remaining Reshapes aliased;

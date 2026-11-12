@@ -7,6 +7,10 @@
 //   ReduceMean  double, vectorized across outputs            (bit-exact)
 //   FakeQuant   the reference's float operations             (bit-exact)
 //   MatMul      float GEMM (float_opt micro-kernels, B packed per run)  (inexact)
+//   *.float_fast LayerNorm / ReduceMean (last axis) / Softmax / GELU in float32 on the
+//               Simd4 backend (transformer_fast.h; inexact, bounds in tests and
+//               docs/numerical-correctness.md); preferred over the exact
+//               float_opt kernels above (priority 45), never by stage `neon`
 //   AddBroadcast, Transpose, Concat, Gather (f32 table)      (bit-exact data movement / adds)
 //
 // The arithmetic is in transformer_leaf.h (vector policy, shared by every
@@ -18,10 +22,12 @@
 #include <cstring>
 #include <vector>
 
+#include "kernels/bitpack.h"
 #include "kernels/float_opt/float_opt.h"
 #include "kernels/float_opt/float_opt_args.h"
 #include "kernels/float_opt/float_opt_leaf.h"
 #include "kernels/float_opt/float_simd.h"
+#include "kernels/float_opt/transformer_fast.h"
 #include "kernels/float_opt/transformer_leaf.h"
 #include "ops/op_defs.h"
 #include "ops/ops_common.h"
@@ -29,6 +35,9 @@
 
 #if defined(__x86_64__)
 #include "kernels/float_opt/float_opt_avx2.h"
+#endif
+#if defined(__aarch64__)
+#include "kernels/binary_neon/bitpack_neon.h"
 #endif
 
 namespace bitino {
@@ -279,11 +288,65 @@ struct F64Neon {
   }
 };
 using F64Simd4 = F64Neon;
+#elif BF_FLOAT_OPT_NEON32
+// 32-bit ARM (no float64 vectors): four rows (or columns) at a time as independent scalar chains, which the VFP
+// unit pipelines; each sum still in index order with one rounding per op, so results equal F64Scalar's.
+struct F64Rows4 {
+  static constexpr int R = 4;
+  static constexpr bool kLayerNormRows = false;
+  static void rowsum(const float* x, int64_t stride, int64_t len, double* out) {
+    const float *x0 = x, *x1 = x + stride, *x2 = x + 2 * stride, *x3 = x + 3 * stride;
+    double s0 = 0.0, s1 = 0.0, s2 = 0.0, s3 = 0.0;
+    for (int64_t i = 0; i < len; ++i) {
+      s0 += static_cast<double>(x0[i]);
+      s1 += static_cast<double>(x1[i]);
+      s2 += static_cast<double>(x2[i]);
+      s3 += static_cast<double>(x3[i]);
+    }
+    out[0] = s0, out[1] = s1, out[2] = s2, out[3] = s3;
+  }
+  static void rowsqdev(const float* x, int64_t stride, int64_t len, const double* mean, double* out) {
+    const float *x0 = x, *x1 = x + stride, *x2 = x + 2 * stride, *x3 = x + 3 * stride;
+    double v0 = 0.0, v1 = 0.0, v2 = 0.0, v3 = 0.0;
+    for (int64_t i = 0; i < len; ++i) {
+      const double t0 = static_cast<double>(x0[i]) - mean[0], t1 = static_cast<double>(x1[i]) - mean[1];
+      const double t2 = static_cast<double>(x2[i]) - mean[2], t3 = static_cast<double>(x3[i]) - mean[3];
+      v0 += t0 * t0;
+      v1 += t1 * t1;
+      v2 += t2 * t2;
+      v3 += t3 * t3;
+    }
+    out[0] = v0, out[1] = v1, out[2] = v2, out[3] = v3;
+  }
+  static void layernorm_row(const float* x, const float* g, const float* b, double mean, double sd, float* y, int64_t len) {
+    F64Scalar::layernorm_row(x, g, b, mean, sd, y, len);
+  }
+  // four adjacent outputs per pass: contiguous loads, four chains
+  static void colmean(const float* x, int64_t len, int64_t inner, double cnt, float* y, int64_t i0, int64_t i1) {
+    int64_t i = i0;
+    for (; i + 4 <= i1; i += 4) {
+      double a0 = 0.0, a1 = 0.0, a2 = 0.0, a3 = 0.0;
+      for (int64_t k = 0; k < len; ++k) {
+        const float* p = x + k * inner + i;
+        a0 += static_cast<double>(p[0]);
+        a1 += static_cast<double>(p[1]);
+        a2 += static_cast<double>(p[2]);
+        a3 += static_cast<double>(p[3]);
+      }
+      y[i] = static_cast<float>(a0 / cnt);
+      y[i + 1] = static_cast<float>(a1 / cnt);
+      y[i + 2] = static_cast<float>(a2 / cnt);
+      y[i + 3] = static_cast<float>(a3 / cnt);
+    }
+    F64Scalar::colmean(x, len, inner, cnt, y, i, i1);
+  }
+};
+using F64Simd4 = F64Rows4;
 #else
 using F64Simd4 = F64Scalar;
 #endif
 
-#if BF_FLOAT_OPT_NEON
+#if BF_FLOAT_OPT_NEON || BF_FLOAT_OPT_NEON32
 // ----------------------------------------------------------------- GELU (NEON)
 // Same lane results as leaf_unary<Simd4>(kUnGelu) (vgelu is a lane-wise pure
 // function), with less work:
@@ -388,12 +451,69 @@ void gelu_neon(const float* x, float* y, int64_t n) {
 }
 #endif
 
+#if BF_FLOAT_OPT_NEON32
+// AArch32 NEON flushes denormals, so gelu(x) = x * Phi(x) for |x| < 2^-125 would be 0; the reference value there is
+// x / 2 rounded to nearest even (Phi(x) = 1/2 + O(x)), a denormal or 2^-126, which this sets on the bit patterns
+// (xs: the inputs, y: the vector results). Keeps sign(gelu) equal to the reference's for tiny inputs as well.
+void gelu_tiny_fix(const float* xs, float* y, int64_t n) {
+  int64_t j = 0;
+  for (; j + 4 <= n; j += 4) {
+    const uint32x4_t u = vreinterpretq_u32_f32(vld1q_f32(xs + j));
+    const uint32x4_t mag = vandq_u32(u, vdupq_n_u32(0x7fffffffu)), q = vshrq_n_u32(mag, 1);
+    const uint32x4_t h = vaddq_u32(q, vandq_u32(vandq_u32(q, mag), vdupq_n_u32(1u)));
+    const uint32x4_t r = vorrq_u32(h, vandq_u32(u, vdupq_n_u32(0x80000000u)));
+    const uint32x4_t tiny = vcltq_u32(mag, vdupq_n_u32(0x01000000u));
+    vst1q_f32(y + j, vreinterpretq_f32_u32(vbslq_u32(tiny, r, vreinterpretq_u32_f32(vld1q_f32(y + j)))));
+  }
+  for (; j < n; ++j) {
+    uint32_t u;
+    std::memcpy(&u, xs + j, 4);
+    const uint32_t mag = u & 0x7fffffffu, q = mag >> 1;
+    if (mag < 0x01000000u) {
+      const uint32_t r = (q + (q & mag & 1u)) | (u & 0x80000000u);
+      std::memcpy(y + j, &r, 4);
+    }
+  }
+}
+
+// hardswish(x) = x * min(max(x + 3, 0), 6) / 6 is a denormal for |x| < 2^-125: lanes with |x| < 2^-124 are
+// recomputed with the reference's scalar float operations (IEEE on the VFP unit).
+void hardswish_tiny_fix(const float* xs, float* y, int64_t n) {
+  BF_A32_IEEE_LOOP
+  for (int64_t j = 0; j < n; ++j) {
+    uint32_t u;
+    std::memcpy(&u, xs + j, 4);
+    if ((u & 0x7fffffffu) < 0x01800000u) {
+      const float v = xs[j];
+      y[j] = v * std::min(std::max(v + 3.f, 0.f), 6.f) / 6.f;
+    }
+  }
+}
+
+// GELU and hardswish on 32-bit ARM: the vector code (gelu: gelu_neon, or the plain per-vector vgelu) on
+// 256-element copies of x (y may alias x), then the tiny-input fix.
+void unary_a32(int32_t op, const float* x, float* y, int64_t n, bool fast) {
+  constexpr int64_t kBlk = 256;
+  alignas(16) float xs[kBlk];
+  for (int64_t i = 0; i < n; i += kBlk) {
+    const int64_t m = std::min(kBlk, n - i);
+    std::memcpy(xs, x + i, static_cast<size_t>(m) * sizeof(float));
+    if (op == kUnGelu && fast) gelu_neon(xs, y + i, m);
+    else leaf_unary<Simd4>(op, xs, y + i, 0, m);
+    if (op == kUnGelu) gelu_tiny_fix(xs, y + i, m);
+    else hardswish_tiny_fix(xs, y + i, m);
+  }
+}
+#endif
+
 // --------------------------------------------------------------- backends
 struct TrSimd4 {
   using F64 = F64Simd4;
   static void unary(int32_t op, const float* x, float* y, int64_t i0, int64_t i1) {
 #if BF_FLOAT_OPT_NEON
     if (op == kUnGelu) return gelu_neon(x + i0, y + i0, i1 - i0);
+#elif BF_FLOAT_OPT_NEON32
+    if (op == kUnGelu || op == kUnHardswish) return unary_a32(op, x + i0, y + i0, i1 - i0, true);
 #endif
     leaf_unary<Simd4>(op, x, y, i0, i1);
   }
@@ -922,6 +1042,106 @@ bool matmul_supported(const KernelContext& ctx) {
   return ctx.in(0).dtype() == DType::kF32 && ctx.in(1).dtype() == DType::kF32 && ctx.in(0).dim(-1) > 0;
 }
 
+// ------------------------------------------------- float32 fast kernels
+// LayerNorm / ReduceMean / Softmax / GELU for the fused stages (transformer_fast.h, Simd4 backend only).
+class LayerNormFast : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override { eps_ = ctx.attrs().get_number("eps", 1e-5); }
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t d = x.dim(-1), rows = x.size() / d;
+    const float* g = opt_f32(ctx, 1);
+    const float* b = opt_f32(ctx, 2);
+    const float* xp = x.data<float>();
+    float* y = ctx.out(0).data<float>();
+    const double eps = eps_;
+    parallel_rows(ctx.pool, rows, d * 4, [&](int64_t r0, int64_t r1) { fast_layernorm_rows<Simd4>(xp, g, b, d, eps, y, r0, r1); });
+  }
+
+ private:
+  double eps_ = 1e-5;
+};
+
+class SoftmaxFast : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), rows = x.size() / c;
+    const float* xp = x.data<float>();
+    float* y = ctx.out(0).data<float>();
+    parallel_rows(ctx.pool, rows, c * 8, [&](int64_t r0, int64_t r1) { fast_softmax_rows<Simd4>(xp, y, c, r0, r1); });
+  }
+};
+
+// Reductions over the last (contiguous) axis only; other axes keep reduce_mean.float_opt.
+class ReduceMeanFast : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override { sp_ = split_axis(ctx.in(0).shape(), ctx.attrs().get_int("axis", -1)); }
+  void run(const KernelContext& ctx) override {
+    const AxisSplit sp = sp_;
+    const float* x = ctx.in(0).data<float>();
+    float* y = ctx.out(0).data<float>();
+    parallel_rows(ctx.pool, sp.outer, sp.len, [&](int64_t o0, int64_t o1) { fast_reduce_mean_rows<Simd4>(x, sp.len, y, o0, o1); });
+  }
+
+ private:
+  AxisSplit sp_;
+};
+
+// GELU only (the other activations keep activation_ext.float_opt).
+class GeluFast : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const float* x = ctx.in(0).data<float>();
+    float* y = ctx.out(0).data<float>();
+    const int64_t n = ctx.in(0).size(), grain = kElemGrain / 8;
+    ctx.pool->parallel_for((n + grain - 1) / grain, 1,
+                           [&](int64_t b0, int64_t b1) { fast_gelu<Simd4>(x, y, b0 * grain, std::min(n, b1 * grain)); });
+  }
+};
+
+bool gelu_fast_supported(const KernelContext& ctx) { return ctx.attrs().get_string("type", "") == "gelu"; }
+
+bool reduce_mean_fast_supported(const KernelContext& ctx) {
+  return split_axis(ctx.in(0).shape(), ctx.attrs().get_int("axis", -1)).inner == 1 && ctx.in(0).size() > 0;
+}
+
+// PackBits (shared binarization of a tensor read by several binary layers): the packing of the binary kernels'
+// inputs, NEON on AArch64 (bdense.neon pack_rows: whole words when C % 32 == 0 and no threshold), else
+// pack_row_f32. Bit-identical to what each consumer would pack.
+class PackBitsOpt : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), rows = c > 0 ? x.size() / c : 0, words = bit_words(c);
+    const float* thr = opt_f32(ctx, 1);
+    const BinarizeMode mode = parse_binarize(ctx.attrs());
+    const float* xp = x.data<float>();
+    uint32_t* y = ctx.out(0).data<uint32_t>();
+#if defined(__aarch64__)
+    if (c % 32 == 0 && !thr) {
+      const int64_t total = rows * words;
+      parallel_rows(ctx.pool, (total + 63) / 64, 64 * 32, [&](int64_t b0, int64_t b1) {
+        const int64_t w0 = b0 * 64, w1 = std::min(total, b1 * 64);
+        pack_words_f32_neon(xp + w0 * 32, w1 - w0, y + w0, mode, nullptr);
+      });
+      return;
+    }
+#endif
+    parallel_rows(ctx.pool, rows, c, [&](int64_t r0, int64_t r1) {
+      for (int64_t r = r0; r < r1; ++r) {
+#if defined(__aarch64__)
+        pack_row_f32_neon(xp + r * c, c, y + r * words, mode, thr);
+#else
+        pack_row_f32(xp + r * c, c, y + r * words, mode, thr);
+#endif
+      }
+    });
+  }
+};
+
+constexpr int kFloatFastPriority = 45;  // over the exact float_opt kernels (40), under the x86-64 AVX2 ones (50)
+
 template <class B>
 void register_backend(OpRegistry& reg, const char* suffix, int priority, uint32_t features) {
   auto add = [&](const char* op, const char* base, bool (*supports)(const KernelContext&), std::unique_ptr<Kernel> (*create)()) {
@@ -939,12 +1159,26 @@ void register_backend(OpRegistry& reg, const char* suffix, int priority, uint32_
 }  // namespace
 
 void float_opt_gelu_simd4(const float* x, float* y, int64_t n, bool fast) {
+#if BF_FLOAT_OPT_NEON32
+  if (!fast) return unary_a32(kUnGelu, x, y, n, false);  // the plain vgelu with the same tiny-input fix as the kernel
+#endif
   if (fast) TrSimd4::unary(kUnGelu, x, y, 0, n);
   else leaf_unary<Simd4>(kUnGelu, x, y, 0, n);
 }
 
 void register_float_opt_transformer_kernels(OpRegistry& reg) {
   register_backend<TrSimd4>(reg, "", 40, kFloatOptFeatures);
+  reg.add_kernel({"LayerNorm", "layernorm.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, nullptr, make_kernel<LayerNormFast>});
+  reg.add_kernel({"Softmax", "softmax.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, nullptr, make_kernel<SoftmaxFast>});
+  reg.add_kernel({"PackBits", "pack_bits.float_opt", "float_opt", 40, kFloatOptFeatures, nullptr, make_kernel<PackBitsOpt>});
+#if !BF_FLOAT_OPT_NEON32
+  // Not on 32-bit ARM: AArch32 NEON flushes denormals, so GELU's tiny negative results (x << 0) become +-0 and the
+  // output sign (which BiBERT binarizes) would differ from the reference; the float_opt GELU stays in use there.
+  reg.add_kernel({"Activation", "activation_gelu.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, gelu_fast_supported,
+                  make_kernel<GeluFast>});
+#endif
+  reg.add_kernel({"ReduceMean", "reduce_mean.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, reduce_mean_fast_supported,
+                  make_kernel<ReduceMeanFast>});
   reg.add_kernel({"Transpose", "transpose.float_opt", "float_opt", 40, kFloatOptFeatures, transpose_supported, make_kernel<TransposeOpt>});
   reg.add_kernel({"Concat", "concat.float_opt", "float_opt", 40, kFloatOptFeatures, nullptr, make_kernel<ConcatOpt>});
   reg.add_kernel({"Gather", "gather.float_opt", "float_opt", 40, kFloatOptFeatures, gather_supported, make_kernel<GatherOpt>});

@@ -74,7 +74,7 @@ behind the defaults: `docs/threads.md`.
 | `neon` | AArch64 NEON binary kernels | 5 |
 | `binary_avx2` | x86-64 AVX2 binary kernels (VPSHUFB popcount; `bconv2d.avx2`, `bdense.avx2`, `bdense.ternary_avx2`, `qbconv2d.avx2`, `qbdense.avx2`) | 5 (stage `neon` allows it, so stage names match across targets) |
 | `int8_reference`, `int8_neon`, `int8_avx2` | dynamic-range INT8 for float Conv2D/Dense (SDOT / I8MM; x86-64 VPMADDWD / AVX-VNNI) | 6–7 |
-| `float_opt` | optimized fp32 kernels for full-precision layers: 4-lane NEON / portable kernels, plus AVX2+FMA kernels (`*.float_opt_avx2`) on x86-64 | 8 |
+| `float_opt` | optimized fp32 kernels for full-precision layers: 4-lane NEON / portable kernels, plus AVX2+FMA kernels (`*.float_opt_avx2`) on x86-64; also the inexact float32 `*.float_fast` LayerNorm / Softmax / ReduceMean / GELU kernels (priority 45 over the exact double ones, `docs/numerical-correctness.md`), so only stages that allow `float_opt` use them | 8 |
 
 Stages are tier sets (`bitino_bench --stage`), so every stage runs the same binary and the
 same model file. The platform-SIMD stages are named after the phone (`neon`, `int8_neon`) and

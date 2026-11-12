@@ -3,7 +3,7 @@
 #include <cstdlib>
 #include <string>
 
-#if defined(__aarch64__) && defined(__linux__)
+#if (defined(__aarch64__) || defined(__arm__)) && defined(__linux__)
 #include <asm/hwcap.h>
 #include <sys/auxv.h>
 #endif
@@ -35,6 +35,22 @@ CpuInfo detect() {
   if (hw2 & HWCAP2_BF16) info.features |= kFeatBf16;
 #endif
   (void)hw2;
+#endif
+#elif defined(__arm__)
+  // 32-bit ARM (armeabi-v7a; also AArch32 on ARMv8 cores): the NEON kernels' AArch32 builds (kernels/neon_a32.h)
+  // need Advanced SIMD, which the kernel reports in AT_HWCAP.
+  info.arch = "arm";
+#if defined(__linux__) && defined(HWCAP_NEON)
+  const unsigned long hw = getauxval(AT_HWCAP);
+  if (hw & HWCAP_NEON) info.features |= kFeatNeon;
+#ifdef HWCAP_VFPv4
+  if (hw & HWCAP_VFPv4) info.features |= kFeatFma;  // VFMA (float_opt fma_ on 32-bit ARM)
+#endif
+#elif defined(__ARM_NEON)
+  info.features |= kFeatNeon;
+#endif
+#if defined(__ARM_FEATURE_FMA)
+  info.features |= kFeatFma;
 #endif
 #elif defined(__x86_64__)
   info.arch = "x86_64";

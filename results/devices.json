@@ -160,9 +160,9 @@
    ],
    "runs": 47,
    "verified": {
-    "models": 4,
-    "stages": 20,
-    "stages_passed": 20,
+    "models": 114,
+    "stages": 449,
+    "stages_passed": 449,
     "dates": [
      "2026-11-12"
     ]
@@ -175,7 +175,7 @@
    "soc": "MediaTek Helio G35 (MT6765)",
    "android": "11",
    "abi": "armeabi-v7a",
-   "kernels": "portable-fallback",
+   "kernels": "neon-aarch32",
    "isa": "ARMv8-A CPU running 32-bit Android (armeabi-v7a): NEON only",
    "cores": [
     {
@@ -204,15 +204,15 @@
     "redmi-9a"
    ],
    "notes": [
-    "32-bit Android: runs the armeabi-v7a build, which has no NEON kernels yet (portable C++ fallback). Its numbers show that the runtime works there, not what the ARM kernels can do."
+    "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). int8 SDOT/I8MM and int8_full NEON kernels are arm64-only, so the int8 stages run portable code here. The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
    ],
-   "runs": 27,
+   "runs": 42,
    "verified": {
-    "models": 10,
-    "stages": 20,
-    "stages_passed": 18,
+    "models": 16,
+    "stages": 32,
+    "stages_passed": 29,
     "dates": [
-     "2026-11-11"
+     "2026-11-12"
     ]
    }
   }

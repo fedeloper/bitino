@@ -131,8 +131,8 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261111_1739",
-   "date": "2026-11-11",
+   "suite": "20261112_1359",
+   "date": "2026-11-12",
    "runtime_commit": null,
    "stages": {
     "neon": {
@@ -144,6 +144,33 @@
      "pass": true,
      "identical_to_emulated": null,
      "exact_vs_numpy": true
+    }
+   }
+  },
+  "moto-e13": {
+   "suite": "20261112_1219",
+   "date": "2026-11-12",
+   "runtime_commit": "d42d5fe",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   }

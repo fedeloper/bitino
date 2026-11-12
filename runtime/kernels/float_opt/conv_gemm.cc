@@ -149,6 +149,71 @@ inline void micro_kernel(const float* a, int64_t lda, int mvalid, int64_t kc, co
     acc[6][0] = c60, acc[6][1] = c61, acc[7][0] = c70, acc[7][1] = c71;
     k = kc & ~int64_t(3);
   }
+#elif BF_FLOAT_OPT_NEON32
+  {
+    // AArch32 (16 q registers): the same multiplies by lane (VMLA: rounded product, then add, as madd()), in the
+    // same order per output, as two passes of 4 rows x 8 columns over the K block; the B slice (<= 8 KB) stays
+    // in L1. Inline asm (compiled intrinsics hoist the B loads and spill): A rows q0-q3 (a by-scalar operand must
+    // be in d0-d15), B for two k in q4-q7, accumulators q8-q15 loaded from / stored to acc[h..h+3]. On the A53
+    // NEON loads do not dual-issue with arithmetic: per 4 k 24 VLDR + 32 VMLA, B reloaded two groups after its
+    // last use (measured 68 cycles, VLD1 with writeback 72). The last kc % 4 k: one k per iteration, A as lanes.
+    static_assert(MR == 8, "two 4-row passes");
+#define BF_FM32(BL, BH, L0, L1, L2, L3)                                                                  \
+  "vmla.f32 q8, " BL ", " L0 "\n vmla.f32 q9, " BH ", " L0 "\n vmla.f32 q10, " BL ", " L1 "\n"             \
+  "vmla.f32 q11, " BH ", " L1 "\n vmla.f32 q12, " BL ", " L2 "\n vmla.f32 q13, " BH ", " L2 "\n"          \
+  "vmla.f32 q14, " BL ", " L3 "\n vmla.f32 q15, " BH ", " L3 "\n"
+#define BF_VL4(D0, D1, D2, D3, O0, O1, O2, O3)                                                           \
+  "vldr " D0 ", [%[b], #" O0 "]\n vldr " D1 ", [%[b], #" O1 "]\n vldr " D2 ", [%[b], #" O2 "]\n"           \
+  "vldr " D3 ", [%[b], #" O3 "]\n"
+    for (int h = 0; h < MR; h += 4) {
+      const float *a0 = ar[h], *a1 = ar[h + 1], *a2 = ar[h + 2], *a3 = ar[h + 3];
+      const float* b = bp;
+      float* cp = reinterpret_cast<float*>(&acc[h][0]);
+      int n4 = static_cast<int>(kc >> 2), n1 = static_cast<int>(kc & 3);
+      asm volatile(
+          "vld1.32 {d16-d19}, [%[c]]!\n vld1.32 {d20-d23}, [%[c]]!\n"
+          "vld1.32 {d24-d27}, [%[c]]!\n vld1.32 {d28-d31}, [%[c]]\n"
+          "cmp %[n], #0\n"
+          "beq 2f\n"
+          "1:\n"
+          "vldr d0, [%[a0]]\n vldr d1, [%[a0], #8]\n vldr d2, [%[a1]]\n vldr d3, [%[a1], #8]\n"
+          "vldr d4, [%[a2]]\n vldr d5, [%[a2], #8]\n vldr d6, [%[a3]]\n vldr d7, [%[a3], #8]\n"
+          BF_VL4("d8", "d9", "d10", "d11", "0", "8", "16", "24")
+          BF_VL4("d12", "d13", "d14", "d15", "32", "40", "48", "56")
+          "add %[a0], %[a0], #16\n add %[a1], %[a1], #16\n add %[a2], %[a2], #16\n add %[a3], %[a3], #16\n"
+          BF_FM32("q4", "q5", "d0[0]", "d2[0]", "d4[0]", "d6[0]")
+          BF_FM32("q6", "q7", "d0[1]", "d2[1]", "d4[1]", "d6[1]")
+          BF_VL4("d8", "d9", "d10", "d11", "64", "72", "80", "88")
+          BF_VL4("d12", "d13", "d14", "d15", "96", "104", "112", "120")
+          BF_FM32("q4", "q5", "d1[0]", "d3[0]", "d5[0]", "d7[0]")
+          "add %[b], %[b], #128\n"
+          BF_FM32("q6", "q7", "d1[1]", "d3[1]", "d5[1]", "d7[1]")
+          "subs %[n], %[n], #1\n"
+          "bne 1b\n"
+          "2:\n"
+          "cmp %[r], #0\n"
+          "beq 4f\n"
+          "3:\n"
+          "vld1.32 {d0[0]}, [%[a0]]!\n vld1.32 {d0[1]}, [%[a1]]!\n vld1.32 {d1[0]}, [%[a2]]!\n vld1.32 {d1[1]}, [%[a3]]!\n"
+          BF_VL4("d8", "d9", "d10", "d11", "0", "8", "16", "24")
+          "add %[b], %[b], #32\n"
+          BF_FM32("q4", "q5", "d0[0]", "d0[1]", "d1[0]", "d1[1]")
+          "subs %[r], %[r], #1\n"
+          "bne 3b\n"
+          "4:\n"
+          "sub %[c], %[c], #96\n"
+          "vst1.32 {d16-d19}, [%[c]]!\n vst1.32 {d20-d23}, [%[c]]!\n"
+          "vst1.32 {d24-d27}, [%[c]]!\n vst1.32 {d28-d31}, [%[c]]\n"
+          : [a0] "+r"(a0), [a1] "+r"(a1), [a2] "+r"(a2), [a3] "+r"(a3), [b] "+r"(b), [n] "+r"(n4), [r] "+r"(n1), [c] "+r"(cp)
+          :
+          : "cc", "memory", "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14",
+            "d15", "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30",
+            "d31");
+    }
+#undef BF_FM32
+#undef BF_VL4
+    k = kc;
+  }
 #endif
   for (; k + 4 <= kc; k += 4) {
     f32x4 av[MR];
@@ -249,7 +314,9 @@ void gemm_block_simd4(const GemmBlockArgs& g) {
 
 // ------------------------------------------------------------- backends
 struct Simd4Gemm {
-  static constexpr int64_t kMB = 64;    // pixels per work item (multiple of kMR)
+  // pixels per work item (multiple of kMR); 32-bit ARM: 32, so that an im2col block of a 7x7x3 stem (147 floats a
+  // row) stays in the A53's 32 KB L1 while it is read once per panel
+  static constexpr int64_t kMB = BF_FLOAT_OPT_NEON32 ? 32 : 64;
   static constexpr int64_t kRowStep = 8;  // row tile
   static int64_t nr_for(int64_t) { return kNR; }
   static void block(const GemmBlockArgs& g) { gemm_block_simd4(g); }

@@ -10,7 +10,9 @@
 // 16 / 32-entry TBL tables indexed by k & 7, k & 15, k >> 3 (index 0xFF for c == 0 gives 0), the sign bit is c's.
 #pragma once
 
-#if defined(__aarch64__)
+#include "kernels/neon_a32.h"
+
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 
 #include <cstdint>

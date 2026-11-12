@@ -16,6 +16,8 @@ namespace {
 inline void cpu_relax() {
 #if defined(__aarch64__)
   __asm__ __volatile__("yield");
+#elif defined(__arm__) && (__ARM_ARCH >= 7)
+  __asm__ __volatile__("yield");
 #elif defined(__x86_64__)
   __builtin_ia32_pause();
 #endif

@@ -7,6 +7,7 @@
 #include <cmath>
 #include <vector>
 
+#include "kernels/bitpack.h"
 #include "ops/fused_elementwise.h"
 #include "ops/op_defs.h"
 #include "ops/ops_common.h"
@@ -80,10 +81,24 @@ class FusedElementwiseRef : public Kernel {
   std::vector<std::vector<float>> gate_;
 };
 
+// PackBits: pack_row_f32 per row (the binary reference kernels' input packing).
+class PackBitsRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), rows = c > 0 ? x.size() / c : 0, words = bit_words(c);
+    const float* thr = ctx.has_in(1) ? ctx.in(1).data<float>() : nullptr;
+    const BinarizeMode mode = parse_binarize(ctx.attrs());
+    uint32_t* y = ctx.out(0).data<uint32_t>();
+    for (int64_t r = 0; r < rows; ++r) pack_row_f32(x.data<float>() + r * c, c, y + r * words, mode, thr);
+  }
+};
+
 }  // namespace
 
 void register_fused_reference_kernels(OpRegistry& reg) {
   reg.add_kernel({"FusedElementwise", "fused_elementwise.reference", "reference", 0, 0, nullptr, make_kernel<FusedElementwiseRef>});
+  reg.add_kernel({"PackBits", "pack_bits.reference", "reference", 0, 0, nullptr, make_kernel<PackBitsRef>});
 }
 
 }  // namespace bitino

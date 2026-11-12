@@ -69,6 +69,7 @@ class BDenseTernaryBitplane : public Kernel {
       for (int64_t q = 0; q < w64_; ++q) {
         uint64_t nz = 0, neg = 0;
         int64_t lim = k_ - q * 64 < 64 ? k_ - q * 64 : 64;
+        BF_A32_IEEE_LOOP
         for (int64_t b = 0; b < lim; ++b) {
           int64_t c = q * 64 + b;
           float t = thr ? thr[c] : 0.f;

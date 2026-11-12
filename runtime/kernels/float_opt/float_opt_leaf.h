@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "kernels/float_opt/float_opt_args.h"
+#include "kernels/neon_a32.h"
 
 namespace bitino {
 namespace fopt {
@@ -364,9 +365,18 @@ struct FeChunk {
     if (A == kFeAtRow) {
       load(rp + so, d);
     } else if (A == kFeAtTile) {
+#if BF_NEON_A32  // 0 <= ch < c, 0 < m.w: 32-bit division (int64 division is a library call on AArch32)
+      const uint32_t q32 = bf_a32_udiv(static_cast<uint32_t>(ch), static_cast<uint32_t>(m.w));
+      load(rp + (ch - static_cast<int64_t>(q32) * m.w), d);
+#else
       load(rp + ch % m.w, d);
+#endif
     } else {
+#if BF_NEON_A32
+      const int64_t q = bf_a32_udiv(static_cast<uint32_t>(ch), static_cast<uint32_t>(m.w));
+#else
       const int64_t q = ch / m.w;
+#endif
       const int32_t id = rid[q];
       if (id < 0 || id >= m.v) {
         each_v([&](int v) __attribute__((always_inline)) { d[v] = V::dup(0.f); }, std::make_integer_sequence<int, NV>{});

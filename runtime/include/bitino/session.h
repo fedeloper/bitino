@@ -105,6 +105,7 @@ class Session {
   int folded_thresholds() const { return folded_thresholds_; }
   int hosted_epilogues() const { return hosted_epilogues_; }
   int bit_outputs() const { return bit_outputs_; }
+  int shared_binarizations() const { return shared_binarizations_; }  // PackBits nodes (one packing, several BDense)
   int aliased_reshapes() const { return aliased_reshapes_; }
   size_t prepacked_bytes() const;
   // Bytes of model constants whose pages were dropped after prepacking (SessionOptions::release_constants).
@@ -134,6 +135,7 @@ class Session {
   size_t released_bytes_ = 0;
   int absorbed_luts_ = 0;
   int fused_nodes_ = 0, absorbed_nodes_ = 0, folded_thresholds_ = 0, aliased_reshapes_ = 0, hosted_epilogues_ = 0, bit_outputs_ = 0;
+  int shared_binarizations_ = 0;
 };
 
 }  // namespace bitino

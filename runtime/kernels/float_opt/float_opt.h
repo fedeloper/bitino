@@ -8,9 +8,11 @@
 
 namespace bitino {
 
-// The NEON build only uses baseline AArch64 ASIMD; the portable build needs
-// nothing.
+// The NEON build only uses baseline AArch64 ASIMD (32-bit ARM: NEON, see
+// float_simd.h); the portable build needs nothing.
 #if defined(__aarch64__)
+constexpr uint32_t kFloatOptFeatures = kFeatNeon;
+#elif defined(__ARM_NEON) && defined(__arm__)
 constexpr uint32_t kFloatOptFeatures = kFeatNeon;
 #else
 constexpr uint32_t kFloatOptFeatures = 0;

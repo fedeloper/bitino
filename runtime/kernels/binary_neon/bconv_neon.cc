@@ -7,15 +7,16 @@
 // (524,160 bits) cannot overflow; supports() enforces this bound.
 #include "kernels/bconv_plan.h"
 #include "kernels/float_opt/eltwise_program.h"
+#include "kernels/neon_a32.h"
 #include "ops/op_defs.h"
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 #endif
 
 namespace bitino {
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 namespace {
 
 const float* opt_f32(const KernelContext& ctx, size_t i) { return ctx.has_in(i) ? ctx.in(i).data<float>() : nullptr; }

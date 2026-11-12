@@ -16,6 +16,8 @@
 #include <cmath>
 #include <cstring>
 #include <functional>
+#include <string>
+#include <tuple>
 #include <vector>
 
 #include "kernels/float_opt/eltwise_program.h"
@@ -37,7 +39,8 @@ using namespace fopt;
 constexpr int64_t kElemGrain = 16384;   // elements per parallel work item
 
 struct FeSimd4 {
-  static constexpr int kChunk = 32, kVec = 4;  // chunk of 8 vectors: stack top + operand in 16 q registers
+  // chunk of 8 vectors: stack top + operand in 16 q registers (AArch32, 16 q registers in all: 4 vectors)
+  static constexpr int kChunk = BF_FLOAT_OPT_NEON32 ? 16 : 32, kVec = 4;
   static void rows(const FeEvalArgs& e, float* y, int64_t r0, int64_t r1, void* scratch) {
     if (e.chunk == kChunk) leaf_fe_rows<Simd4, kChunk / 4>(e, y, r0, r1, scratch);
     else leaf_fe_rows<Simd4, kChunk / 8>(e, y, r0, r1, scratch);
@@ -87,6 +90,161 @@ void gate_factors(const float* g, int64_t n, bool sigmoid, float* out) {
   for (int64_t i = 0; i < n; ++i) out[i] = sigmoid ? static_cast<float>(1.0 / (1.0 + std::exp(-static_cast<double>(g[i])))) : g[i];
 }
 
+// ------------------------------------------------------- fused unit stores
+// EltwiseProgram::store_unit16 (eltwise_program.h): the two-phase binary kernels' 16-channel unit (int16 dot
+// products of np rows) converted, activated and run through the epilogue program row by row in registers,
+// for programs that are a chain of steps on the producer's value (push of the evaluated buffer, then the
+// micro-ops below). Each step performs exactly the float operations of the FeChunk handler of its micro-op,
+// in program order, so the result is bit-identical to storing the unit and then applying the program. Per
+// channel parameters are loaded once per unit. Simd4 policy: NEON on AArch64, portable elsewhere.
+using Unit16Fn = void (*)(const FeMicro* ops, const int16_t* db, int64_t np, const float* mul, const float* add, float* y, int64_t ys,
+                          int64_t row0, int64_t ch0, int64_t c);
+
+struct U16 {
+  using V = Simd4;
+  using T = Simd4::T;
+  // int16 dots of one row -> 4 float vectors
+  static inline void dots(const int16_t* d, T v[4]) {
+#if defined(__aarch64__) || BF_FLOAT_OPT_NEON32   // vmovl_high_s16: kernels/neon_a32.h on 32-bit ARM
+    const int16x8_t d0 = vld1q_s16(d), d1 = vld1q_s16(d + 8);
+    v[0] = vcvtq_f32_s32(vmovl_s16(vget_low_s16(d0)));
+    v[1] = vcvtq_f32_s32(vmovl_high_s16(d0));
+    v[2] = vcvtq_f32_s32(vmovl_s16(vget_low_s16(d1)));
+    v[3] = vcvtq_f32_s32(vmovl_high_s16(d1));
+#else
+    for (int k = 0; k < 4; ++k)
+      for (int j = 0; j < 4; ++j) v[k].v[j] = static_cast<float>(d[4 * k + j]);
+#endif
+  }
+  // the binary kernels' fused activation (bconv_neon_opt.cc activate(): v > 0 ? v : 0; min(max(v, 0), 6) as selects)
+  template <int A>
+  static inline T act(T v) {
+    if (A == kActRelu) return V::select_gt(v, V::dup(0.f), v, V::dup(0.f));
+    if (A == kActRelu6) {
+      const T m = V::select_lt(v, V::dup(0.f), V::dup(0.f), v);
+      return V::select_lt(V::dup(6.f), m, V::dup(6.f), m);
+    }
+    return v;
+  }
+};
+
+// Row / tile source of a step: p + row * stride + off (+ 4k), off = ch0 (row source) or ch0 % w (tile).
+struct U16Src {
+  const float* base = nullptr;
+  int64_t stride = 0;
+  void init(const FeMicro& m, int64_t ch0, int64_t c) {
+    const bool tile = m.src != kFeSrcRow;
+    base = m.p + (tile ? ch0 % m.w : ch0);
+    stride = tile ? m.w : c;
+  }
+  inline void load(int64_t row, U16::T s[4]) const {
+    for (int k = 0; k < 4; ++k) s[k] = U16::V::load(base + row * stride + 4 * k);
+  }
+};
+
+struct U16AffSB {  // kFeAffineSB
+  static constexpr int kOps = 1;
+  U16::T p[4], q[4];
+  void init(const FeMicro* m, int64_t ch0, int64_t) {
+    for (int k = 0; k < 4; ++k) {
+      p[k] = U16::V::load(m->p + ch0 + 4 * k);
+      q[k] = U16::V::load(m->q + ch0 + 4 * k);
+    }
+  }
+  inline void apply(U16::T v[4], int64_t) const {
+    for (int k = 0; k < 4; ++k) v[k] = U16::V::add(U16::V::mul(v[k], p[k]), q[k]);
+  }
+};
+struct U16AddSrc {  // kFeAddSrc: top + source
+  static constexpr int kOps = 1;
+  U16Src s;
+  void init(const FeMicro* m, int64_t ch0, int64_t c) { s.init(*m, ch0, c); }
+  inline void apply(U16::T v[4], int64_t row) const {
+    U16::T o[4];
+    s.load(row, o);
+    for (int k = 0; k < 4; ++k) v[k] = U16::V::add(v[k], o[k]);
+  }
+};
+struct U16OpndAdd {  // kFeOpnd (source) + kFeAdd: act(top + opnd)
+  static constexpr int kOps = 2;
+  U16Src s;
+  int32_t act = kActNone;
+  void init(const FeMicro* m, int64_t ch0, int64_t c) {
+    s.init(*m, ch0, c);
+    act = m[1].act;
+  }
+  inline void apply(U16::T v[4], int64_t row) const {
+    U16::T o[4];
+    s.load(row, o);
+    for (int k = 0; k < 4; ++k) v[k] = leaf_activate<U16::V>(act, U16::V::add(v[k], o[k]));
+  }
+};
+struct U16Prelu {  // kFePrelu
+  static constexpr int kOps = 1;
+  U16::T p[4];
+  void init(const FeMicro* m, int64_t ch0, int64_t) {
+    for (int k = 0; k < 4; ++k) p[k] = U16::V::load(m->p + ch0 + 4 * k);
+  }
+  inline void apply(U16::T v[4], int64_t) const {
+    for (int k = 0; k < 4; ++k) v[k] = U16::V::select_ge0(v[k], U16::V::mul(v[k], p[k]));
+  }
+};
+struct U16RPrelu {  // kFeRPrelu: bias q -> prelu p -> bias r
+  static constexpr int kOps = 1;
+  U16::T p[4], q[4], r[4];
+  void init(const FeMicro* m, int64_t ch0, int64_t) {
+    for (int k = 0; k < 4; ++k) {
+      p[k] = U16::V::load(m->p + ch0 + 4 * k);
+      q[k] = U16::V::load(m->q + ch0 + 4 * k);
+      r[k] = U16::V::load(m->r + ch0 + 4 * k);
+    }
+  }
+  inline void apply(U16::T v[4], int64_t) const {
+    for (int k = 0; k < 4; ++k) {
+      const U16::T t = U16::V::add(v[k], q[k]);
+      v[k] = U16::V::add(U16::V::select_ge0(t, U16::V::mul(t, p[k])), r[k]);
+    }
+  }
+};
+
+template <class S>
+inline void u16_init(S& s, const FeMicro*& m, int64_t ch0, int64_t c) {
+  s.init(m, ch0, c);
+  m += S::kOps;
+}
+
+template <int A, class... S>
+void unit16_t(const FeMicro* ops, const int16_t* db, int64_t np, const float* mul, const float* add, float* y, int64_t ys, int64_t row0,
+              int64_t ch0, int64_t c) {
+  using V = Simd4;
+  typename U16::T mv[4], av[4];
+  for (int k = 0; k < 4; ++k) {
+    mv[k] = V::load(mul + 4 * k);
+    av[k] = V::load(add + 4 * k);
+  }
+  std::tuple<S...> st;
+  const FeMicro* m = ops + 1;  // ops[0]: push of the evaluated buffer
+  std::apply([&](auto&... s) { (u16_init(s, m, ch0, c), ...); }, st);
+  for (int64_t i = 0; i < np; ++i) {
+    typename U16::T v[4];
+    U16::dots(db + i * 16, v);
+    for (int k = 0; k < 4; ++k) v[k] = U16::act<A>(V::add(V::mul(v[k], mv[k]), av[k]));
+    const int64_t row = row0 + i;
+    std::apply([&](const auto&... s) { (s.apply(v, row), ...); }, st);
+    float* yr = y + row * ys + ch0;
+    for (int k = 0; k < 4; ++k) V::store(yr + 4 * k, v[k]);
+  }
+}
+
+template <class... S>
+struct U16Pattern {
+  static Unit16Fn fn(int act) {
+    if (act == kActRelu) return unit16_t<kActRelu, S...>;
+    if (act == kActRelu6) return unit16_t<kActRelu6, S...>;
+    return unit16_t<kActNone, S...>;
+  }
+};
+
 // ------------------------------------------------------- FusedElementwise
 // The program compiler / evaluator shared by the FusedElementwise kernels and
 // by the epilogues of binary kernels (EltwiseProgram, eltwise_program.h).
@@ -106,6 +264,8 @@ class FeCoreBase {
   int64_t c_ = 0, rows_ = 0, rows_per_batch_ = 1;
   FeEvalArgs args_{};
   ScratchSlots scratch_;
+  // store_unit16 evaluators by kernel activation (kActNone / kActRelu / kActRelu6); null: not a supported chain
+  Unit16Fn unit16_[3] = {nullptr, nullptr, nullptr};
 
   // chunk / vec: the backend's chunk and vector widths in floats (they decide
   // which tile / gather loads can read their source rows in place).
@@ -276,6 +436,54 @@ class FeCoreBase {
     args_.rows_per_batch = rows_per_batch_;
     const size_t ptr_floats = (2 * ops_.size() * sizeof(void*) + sizeof(float) - 1) / sizeof(float);
     scratch_.init(ctx.pool->num_threads(), ptr_floats + static_cast<size_t>(slots * c_));
+    match_unit16();
+  }
+  // Chains for store_unit16: push of the evaluated buffer, then one of the step sequences below (row / tile
+  // sources of other inputs; tile widths a multiple of 16, so that a 16-channel unit reads within one piece).
+  void match_unit16() {
+    for (auto& f : unit16_) f = nullptr;
+    const int32_t n = static_cast<int32_t>(ops_.size()) - 1;  // without the end sentinel
+    if (n < 2 || c_ % 16 != 0 || ops_[0].op != kFePush + kFeAtRow || from_[0] < 0 ||
+        prog_[static_cast<size_t>(from_[0])].a != kEltwiseInPlace)
+      return;
+    std::string sig;  // one letter per step
+    for (int32_t k = 1; k < n; ++k) {
+      const FeMicro& m = ops_[static_cast<size_t>(k)];
+      const bool src_op = m.op < kFeSpill;
+      if (src_op) {
+        if (m.src != kFeSrcRow && m.src != kFeSrcTile && m.src != kFeSrcTileRow) return;
+        if (m.src != kFeSrcRow && m.w % 16 != 0) return;
+        const int32_t f = from_[static_cast<size_t>(k)];
+        if (f < 0 || prog_[static_cast<size_t>(f)].a == kEltwiseInPlace) return;
+      }
+      const int32_t base = src_op ? m.op - m.op % 3 : m.op;
+      if (base == kFeAddSrc) {
+        sig += 'a';
+      } else if (base == kFeOpnd && k + 1 < n && ops_[static_cast<size_t>(k + 1)].op == kFeAdd) {
+        sig += 'o';
+        ++k;
+      } else if (m.op == kFeAffineSB) {
+        sig += 's';
+      } else if (m.op == kFePrelu) {
+        sig += 'p';
+      } else if (m.op == kFeRPrelu) {
+        sig += 'r';
+      } else {
+        return;
+      }
+    }
+    Unit16Fn (*make)(int) = nullptr;
+    if (sig == "p") make = U16Pattern<U16Prelu>::fn;
+    else if (sig == "r") make = U16Pattern<U16RPrelu>::fn;
+    else if (sig == "s") make = U16Pattern<U16AffSB>::fn;
+    else if (sig == "a") make = U16Pattern<U16AddSrc>::fn;
+    else if (sig == "ar") make = U16Pattern<U16AddSrc, U16RPrelu>::fn;
+    else if (sig == "sa") make = U16Pattern<U16AffSB, U16AddSrc>::fn;
+    else if (sig == "so") make = U16Pattern<U16AffSB, U16OpndAdd>::fn;
+    else if (sig == "sar") make = U16Pattern<U16AffSB, U16AddSrc, U16RPrelu>::fn;
+    else if (sig == "sarsa") make = U16Pattern<U16AffSB, U16AddSrc, U16RPrelu, U16AffSB, U16AddSrc>::fn;
+    if (!make) return;
+    for (int a = 0; a < 3; ++a) unit16_[a] = make(a);
   }
   // Per run, single-threaded: operand pointers and ChannelGate factors.
   void begin(const KernelContext& ctx) {
@@ -431,6 +639,13 @@ void EltwiseProgram::prepare(const std::vector<FeInstr>& prog, const KernelConte
 }
 
 void EltwiseProgram::begin(const KernelContext& ctx) { core_->begin(ctx); }
+
+bool EltwiseProgram::unit16() const { return core_ && core_->unit16_[0] != nullptr; }
+
+void EltwiseProgram::store_unit16(const int16_t* db, int64_t np, const float* mul, const float* add, int act, float* y, int64_t ys,
+                                  int64_t row0, int64_t ch0) const {
+  core_->unit16_[act](core_->ops_.data(), db, np, mul, add, y, ys, row0, ch0, core_->c_);
+}
 
 void EltwiseProgram::apply(float* y, int64_t r0, int64_t r1) { core_->apply(y, r0, r1); }
 

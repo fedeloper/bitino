@@ -29,9 +29,10 @@
 
 #include "kernels/bconv_plan.h"
 #include "kernels/float_opt/eltwise_program.h"
+#include "kernels/neon_a32.h"
 #include "ops/op_defs.h"
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 
 #include <cmath>
@@ -47,7 +48,7 @@
 
 namespace bitino {
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 namespace {
 
 const float* opt_f32(const KernelContext& ctx, size_t i) { return ctx.has_in(i) ? ctx.in(i).data<float>() : nullptr; }
@@ -84,6 +85,7 @@ inline uint32x4_t reduce4_n(uint8x16_t c0, uint8x16_t c1, uint8x16_t c2, uint8x1
 // step (one step per iteration: 55). Accumulators live in v0-v15 (v16-v31
 // are clobbered: rows v16-v23, weights v24-v27, temporaries v28-v31).
 // kAnd: vcnt(a_i AND w_j) instead (QBConv2D / QBDense bit-planes).
+#if defined(__aarch64__)
 #define BF_ROW4(OP, X, C0, C1, C2, C3)                                                                \
   OP " v28.16b, " X ".16b, v24.16b\n " OP " v29.16b, " X ".16b, v25.16b\n"                              \
   OP " v30.16b, " X ".16b, v26.16b\n " OP " v31.16b, " X ".16b, v27.16b\n"                              \
@@ -102,11 +104,13 @@ inline uint32x4_t reduce4_n(uint8x16_t c0, uint8x16_t c1, uint8x16_t c2, uint8x1
 #define BF_CLOBBERS                                                                                       \
   "cc", "memory", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", \
   "v29", "v30", "v31"
+#endif
 
 struct Acc4x4 {
   uint8x16_t c[4][4];
 };
 
+#if defined(__aarch64__)
 #define BF_RUN_4X4(OP)                                                                                    \
   asm volatile(                                                                                           \
       "ld1 {v24.16b, v25.16b, v26.16b, v27.16b}, [%[b]], #64\n"                                           \
@@ -166,6 +170,71 @@ inline __attribute__((always_inline)) void run_4x4(const uint8_t*& a0, const uin
 #undef BF_SET4
 #undef BF_ACC_OPERANDS
 #undef BF_CLOBBERS
+#else
+// AArch32: 16 q registers cannot hold the 16 accumulators of the 4x4 tile, so a 4x4 run is two runs of a 2x4 tile
+// (rows 0-1, then rows 2-3, each over the same weights; the weight block of a run is 64 n bytes, L1 resident).
+// Inline asm (compiled intrinsics spill and shuffle accumulators): accumulators q0-q3 (row 0, channels 0-3) and
+// q4-q7 (row 1), rows q8 / q9, two weight registers q10 / q11 reloaded per channel pair, temporaries q12-q15;
+// the first step sets the accumulators. 3 + 1 loads, 24 EOR/CNT/ADD and the loop per step and row pair. The
+// 8 accumulators are stored to out[0..7] = row 0 channels 0-3, row 1 channels 0-3 (Acc4x4 row order).
+#define BF_A32_SET2(OP)                                                                                   \
+  OP " q0, q8, q10\n " OP " q4, q9, q10\n " OP " q1, q8, q11\n " OP " q5, q9, q11\n"                     \
+  "vld1.8 {d20-d23}, [%[b]]!\n"                                                                          \
+  "vcnt.8 q0, q0\n vcnt.8 q4, q4\n vcnt.8 q1, q1\n vcnt.8 q5, q5\n"                                      \
+  OP " q2, q8, q10\n " OP " q6, q9, q10\n " OP " q3, q8, q11\n " OP " q7, q9, q11\n"                     \
+  "vcnt.8 q2, q2\n vcnt.8 q6, q6\n vcnt.8 q3, q3\n vcnt.8 q7, q7\n"
+#define BF_A32_ROW2(OP)                                                                                   \
+  OP " q12, q8, q10\n " OP " q13, q9, q10\n " OP " q14, q8, q11\n " OP " q15, q9, q11\n"                 \
+  "vld1.8 {d20-d23}, [%[b]]!\n"                                                                          \
+  "vcnt.8 q12, q12\n vcnt.8 q13, q13\n vcnt.8 q14, q14\n vcnt.8 q15, q15\n"                              \
+  "vadd.i8 q0, q0, q12\n vadd.i8 q4, q4, q13\n vadd.i8 q1, q1, q14\n vadd.i8 q5, q5, q15\n"              \
+  OP " q12, q8, q10\n " OP " q13, q9, q10\n " OP " q14, q8, q11\n " OP " q15, q9, q11\n"                 \
+  "vcnt.8 q12, q12\n vcnt.8 q13, q13\n vcnt.8 q14, q14\n vcnt.8 q15, q15\n"                              \
+  "vadd.i8 q2, q2, q12\n vadd.i8 q6, q6, q13\n vadd.i8 q3, q3, q14\n vadd.i8 q7, q7, q15\n"
+#define BF_A32_LOAD2 "vld1.8 {d16-d17}, [%[a0]]!\n vld1.8 {d18-d19}, [%[a1]]!\n vld1.8 {d20-d23}, [%[b]]!\n"
+#define BF_A32_STORE8 "vst1.8 {d0-d3}, [%[o]]!\n vst1.8 {d4-d7}, [%[o]]!\n vst1.8 {d8-d11}, [%[o]]!\n vst1.8 {d12-d15}, [%[o]]!\n"
+#define BF_A32_CLOBBERS                                                                                   \
+  "cc", "memory", "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10", "d11", "d12", "d13", "d14", \
+  "d15", "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23", "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31"
+#define BF_A32_RUN2(OP)                                                                                   \
+  asm volatile(BF_A32_LOAD2 BF_A32_SET2(OP)                                                               \
+               "subs %[n], %[n], #1\n"                                                                   \
+               "beq 2f\n"                                                                                \
+               "1:\n" BF_A32_LOAD2 BF_A32_ROW2(OP)                                                        \
+               "subs %[n], %[n], #1\n"                                                                   \
+               "bne 1b\n"                                                                                \
+               "2:\n" BF_A32_STORE8                                                                       \
+               : [a0] "+r"(a0), [a1] "+r"(a1), [b] "+r"(b), [n] "+r"(n), [o] "+r"(o)                      \
+               :                                                                                          \
+               : BF_A32_CLOBBERS)
+
+template <bool kAnd>
+inline __attribute__((always_inline)) void run_2x4_a32(const uint8_t* a0, const uint8_t* a1, const uint8_t* b, int n, uint8x16_t* out) {
+  uint8_t* o = reinterpret_cast<uint8_t*>(out);
+  if constexpr (kAnd) {
+    BF_A32_RUN2("vand");
+  } else {
+    BF_A32_RUN2("veor");
+  }
+}
+#undef BF_A32_SET2
+#undef BF_A32_ROW2
+#undef BF_A32_LOAD2
+#undef BF_A32_RUN2
+
+// One run of n >= 1 steps (n <= kU8Steps); advances the pointers by n steps.
+template <bool kAnd = false>
+inline __attribute__((always_inline)) void run_4x4(const uint8_t*& a0, const uint8_t*& a1, const uint8_t*& a2, const uint8_t*& a3,
+                                                   const uint8_t*& b, int64_t n, Acc4x4& acc) {
+  run_2x4_a32<kAnd>(a0, a1, b, static_cast<int>(n), &acc.c[0][0]);
+  run_2x4_a32<kAnd>(a2, a3, b, static_cast<int>(n), &acc.c[2][0]);
+  a0 += 16 * n;
+  a1 += 16 * n;
+  a2 += 16 * n;
+  a3 += 16 * n;
+  b += 64 * n;
+}
+#endif
 
 // popcount(a_i XOR w_j) (kAnd: a_i AND w_j) for 4 rows a_i and one
 // interleaved 4-row weight block b ([step][4][16 bytes]); out[i] lane j.
@@ -718,6 +787,8 @@ class BConv2DNeonOpt : public Kernel {
     BF_CHECK(!res_.pre || res2_, "bconv2d.neon_opt: residual pre stage needs the two-phase epilogue (K <= 32767)");
     // Plain int8 / fp32 output in two phases as well (compute_dot2; BITINO_BCONV_DOT2=0 keeps compute_tile_a).
     dot2_ = !res_.on && g_.groups == 1 && k_bits_ <= 32767 && (i8_out_.on || !direct_bits_) && !opts_dot2_off();
+    // fp32 output with a chain epilogue: the epilogue runs on each 16-channel unit in registers (EltwiseProgram::store_unit16)
+    unit16_ = dot2_ && !i8_out_.on && epi_.active() && g_.oc % 16 == 0 && epi_.unit16();
     if (res2_ || dot2_) dots_ = aligned_alloc_shared(static_cast<size_t>(n_tasks_ * mt_ * 16 * 2));
   }
   size_t prepacked_bytes() const override { return static_cast<size_t>(oc_pad_ * steps_ * 16 + tap_sum_.size() * 4); }
@@ -765,11 +836,11 @@ class BConv2DNeonOpt : public Kernel {
       for (int64_t t = t0; t < t1; ++t) run_task(ctx, xb, t);
     });
     // Fused epilogue (and bit output after it): per pixel tile inside the tasks with one channel chunk, else after them.
-    if (epi_.active() && chunks_.size() > 1) {
+    if (epi_.active() && chunks_.size() > 1 && (!unit16_ || bit_out_)) {
       float* y = float_out(ctx);
       ctx.pool->parallel_for(n_ptiles_, 1, [&](int64_t b0, int64_t b1) {
         const int64_t q0 = b0 * mt_, q1 = std::min(pixels_, b1 * mt_);
-        epi_.apply(y, q0, q1);
+        if (!unit16_) epi_.apply(y, q0, q1);
         if (bit_out_) pack_float_rows(ctx, q0, q1);
       });
     }
@@ -988,7 +1059,7 @@ class BConv2DNeonOpt : public Kernel {
         }
       }
       if (nch == 1 && epi_.active()) {  // rows still in cache
-        epi_.apply(float_out(ctx), p0, p1);
+        if (!unit16_) epi_.apply(float_out(ctx), p0, p1);
         if (bit_out_) pack_float_rows(ctx, p0, p1);
       }
     }
@@ -1147,6 +1218,8 @@ class BConv2DNeonOpt : public Kernel {
   template <int kOut, Activation A>
   void dot2_epilogue(const KernelContext& ctx, int64_t p0, int64_t np, int64_t u, const int16_t* db) const {
     const int64_t oc = g_.oc;
+    if (kOut == kOutF32 && unit16_)
+      return epi_.store_unit16(db, np, mul_.data() + u, add_.data() + u, static_cast<int>(A), float_out(ctx), oc, p0, u);
     dot2_store16<kOut == kOutI8, A>(db, np, mul_.data() + u, add_.data() + u, i8_out_.lo, i8_out_.hi,
                                      kOut == kOutI8 ? ctx.out(0).data<int8_t>() + p0 * oc + u : nullptr,
                                      kOut == kOutF32 ? float_out(ctx) + p0 * oc + u : nullptr, oc);
@@ -1637,7 +1710,7 @@ class BConv2DNeonOpt : public Kernel {
   std::vector<Chunk> chunks_;
   std::shared_ptr<void> wbuf_, xbits_, patches_;
   std::shared_ptr<void> dots_;  // compute_res2: per task, mt_ x 16 int16 dot products
-  bool res2_ = false, dot2_ = false;
+  bool res2_ = false, dot2_ = false, unit16_ = false;
   std::shared_ptr<void> yf_;  // [pixels][oc] float output before binarization (bit output + epilogue)
   std::vector<int32_t> tap_sum_;
   std::vector<uint64_t> masks_;
@@ -1704,6 +1777,8 @@ class BDenseNeon : public Kernel {
     BF_CHECK(!i8_out_.on || (!bout_.active && !epi_.active()), "bdense.neon: int8 output without bit output / epilogue only");
     // tile2 (two phases); BITINO_BCONV_DOT2=0 keeps tile_t
     two_ = tiled_ && rt_ <= 256 && k_ <= 32767 && on_ >= 16 && !opts_dot2_off();
+    // fp32 output with a chain epilogue: run on each 16-channel unit in registers (EltwiseProgram::store_unit16)
+    unit16_ = two_ && !i8_out_.on && epi_.active() && on_ % 16 == 0 && epi_.unit16();
   }
   size_t prepacked_bytes() const override { return static_cast<size_t>(on_pad_ * steps_ * 16); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
@@ -1743,7 +1818,7 @@ class BDenseNeon : public Kernel {
             tile_rows<false>(r0, r1, 0, on_pad_ / 4, y);
           }
           if constexpr (std::is_same<T, float>::value) {
-            if (epi_.active()) epi_.apply(y, r0, r1);  // rows still in cache
+            if (epi_.active() && !unit16_) epi_.apply(y, r0, r1);  // rows still in cache
             if (bout_.active) pack_output_rows_neon(ctx, y, r0, r1);
           }
         }
@@ -1868,10 +1943,12 @@ class BDenseNeon : public Kernel {
     uint32_t tmp[kMaxPairWords];
     tmp[kwp_ - 1] = 0;  // odd words_: padding half of the last 64-bit chunk
     for (int64_t r = r0; r < r1; ++r) {
+      const uint32_t* src = tmp;
       if (f32) pack_row_f32_neon(x + r * k_, k_, tmp, mode_, thr);
+      else if (words_ == kwp_) src = xw + r * words_;  // bit input, no padding word: interleaved straight from the row
       else std::copy_n(xw + r * words_, words_, tmp);
       uint32_t* pr = xb + (r >> 1) * 2 * kwp_ + (r & 1) * 2;
-      for (int64_t h = 0; h < steps_; ++h) vst1_u32(pr + 4 * h, vld1_u32(tmp + 2 * h));
+      for (int64_t h = 0; h < steps_; ++h) vst1_u32(pr + 4 * h, vld1_u32(src + 2 * h));
     }
   }
 
@@ -1897,8 +1974,14 @@ class BDenseNeon : public Kernel {
       dots_unit_rows<kPair>(wts, base, steps_, static_cast<int32_t>(k_), np, u, 16, db);
       int8_t* y8 = nullptr;
       float* yf = nullptr;
-      if constexpr (kI8) y8 = y + r0 * on_ + u;
-      else yf = y + r0 * on_ + u;
+      if constexpr (kI8) {
+        y8 = y + r0 * on_ + u;
+      } else if (unit16_) {
+        epi_.store_unit16(db, np, mul_.data() + u, add_.data() + u, static_cast<int>(A), y, on_, r0, u);
+        continue;
+      } else {
+        yf = y + r0 * on_ + u;
+      }
       dot2_store16<kI8, A>(db, np, mul_.data() + u, add_.data() + u, i8_out_.lo, i8_out_.hi, y8, yf, on_);
     }
     if (on16 < on_pad_) tile_rows<kPair>(r0, r1, on16 / 4, on_pad_ / 4, y);
@@ -2010,7 +2093,7 @@ class BDenseNeon : public Kernel {
 
   Activation act_ = Activation::kNone;
   BinarizeMode mode_ = BinarizeMode::kGe;
-  bool tiled_ = false, pair_ = false, two_ = false;
+  bool tiled_ = false, pair_ = false, two_ = false, unit16_ = false;
   int64_t k_ = 0, on_ = 0, words_ = 0, kwp_ = 0, steps_ = 0, rows_ = 0, on_pad_ = 0, rt_ = 8, n_rt_ = 0;
   std::shared_ptr<void> wbuf_, xbuf_;
   std::shared_ptr<void> yf_;  // [rows][on] float output before binarization (bit output)
@@ -2071,6 +2154,7 @@ inline void ternary_rows4(const uint8_t* const* xn, const uint8_t* const* xs, co
 // first step sets the accumulators; 1 LD1 + 8 LDR + 64 EOR/AND/CNT/ADD + 2
 // loop = 75 instructions per step). Accumulators v0-v15, nz rows v16-v19,
 // neg rows v20-v23, weights v24-v27, temporaries v28-v31.
+#if defined(__aarch64__)
 #define BF_TSET4(N, G, C0, C1, C2, C3)                                                                    \
   "eor %[" C0 "].16b, " G ".16b, v24.16b\n eor %[" C1 "].16b, " G ".16b, v25.16b\n"                      \
   "eor %[" C2 "].16b, " G ".16b, v26.16b\n eor %[" C3 "].16b, " G ".16b, v27.16b\n"                      \
@@ -2129,6 +2213,60 @@ inline __attribute__((always_inline)) void ternary_run_4x4(const uint8_t*& n0, c
 #undef BF_TROW4
 #undef BF_TLOAD
 #undef BF_TPTRS
+#else
+// AArch32: two 2x4 runs as run_4x4. Accumulators q0-q3 / q4-q7, nz rows q8 / q9, neg rows q10 / q11, weights
+// alternating in q12 / q15 (loaded one channel ahead), temporaries q13 / q14.
+#define BF_A32_TSET(W, C0, C1)                                                                            \
+  "veor " C0 ", q10, " W "\n veor " C1 ", q11, " W "\n vand " C0 ", " C0 ", q8\n vand " C1 ", " C1 ", q9\n"  \
+  "vcnt.8 " C0 ", " C0 "\n vcnt.8 " C1 ", " C1 "\n"
+#define BF_A32_TROW(W, C0, C1)                                                                            \
+  "veor q13, q10, " W "\n veor q14, q11, " W "\n vand q13, q13, q8\n vand q14, q14, q9\n"                 \
+  "vcnt.8 q13, q13\n vcnt.8 q14, q14\n vadd.i8 " C0 ", " C0 ", q13\n vadd.i8 " C1 ", " C1 ", q14\n"
+#define BF_A32_TLOAD                                                                                      \
+  "vld1.8 {d16-d17}, [%[n0]]!\n vld1.8 {d18-d19}, [%[n1]]!\n vld1.8 {d20-d21}, [%[g0]]!\n"                \
+  "vld1.8 {d22-d23}, [%[g1]]!\n vld1.8 {d24-d25}, [%[w]]!\n vld1.8 {d30-d31}, [%[w]]!\n"
+#define BF_A32_TSTEP(OP)                                                                                  \
+  BF_A32_TLOAD OP("q12", "q0", "q4") "vld1.8 {d24-d25}, [%[w]]!\n" OP("q15", "q1", "q5")                   \
+  "vld1.8 {d30-d31}, [%[w]]!\n" OP("q12", "q2", "q6") OP("q15", "q3", "q7")
+
+inline __attribute__((always_inline)) void ternary_run_2x4_a32(const uint8_t* n0, const uint8_t* n1, const uint8_t* g0,
+                                                               const uint8_t* g1, const uint8_t* w, int n, uint8x16_t* out) {
+  uint8_t* o = reinterpret_cast<uint8_t*>(out);
+  asm volatile(BF_A32_TSTEP(BF_A32_TSET)
+               "subs %[n], %[n], #1\n"
+               "beq 2f\n"
+               "1:\n" BF_A32_TSTEP(BF_A32_TROW)
+               "subs %[n], %[n], #1\n"
+               "bne 1b\n"
+               "2:\n" BF_A32_STORE8
+               : [n0] "+r"(n0), [n1] "+r"(n1), [g0] "+r"(g0), [g1] "+r"(g1), [w] "+r"(w), [n] "+r"(n), [o] "+r"(o)
+               :
+               : BF_A32_CLOBBERS);
+}
+#undef BF_A32_TSET
+#undef BF_A32_TROW
+#undef BF_A32_TLOAD
+#undef BF_A32_TSTEP
+#undef BF_A32_STORE8
+#undef BF_A32_CLOBBERS
+
+inline __attribute__((always_inline)) void ternary_run_4x4(const uint8_t*& n0, const uint8_t*& n1, const uint8_t*& n2,
+                                                           const uint8_t*& n3, const uint8_t*& g0, const uint8_t*& g1,
+                                                           const uint8_t*& g2, const uint8_t*& g3, const uint8_t*& w, int64_t n,
+                                                           Acc4x4& acc) {
+  ternary_run_2x4_a32(n0, n1, g0, g1, w, static_cast<int>(n), &acc.c[0][0]);
+  ternary_run_2x4_a32(n2, n3, g2, g3, w, static_cast<int>(n), &acc.c[2][0]);
+  n0 += 16 * n;
+  n1 += 16 * n;
+  n2 += 16 * n;
+  n3 += 16 * n;
+  g0 += 16 * n;
+  g1 += 16 * n;
+  g2 += 16 * n;
+  g3 += 16 * n;
+  w += 64 * n;
+}
+#endif
 
 // pd[i] lane j = popcount(nz_i AND (neg_i XOR wneg_j)) over `steps` steps.
 inline __attribute__((always_inline)) void ternary_popcount_4x4(const uint8_t* const* xn, const uint8_t* const* xs, const uint8_t* ws,
@@ -2639,6 +2777,6 @@ void register_binary_neon_opt_kernels(OpRegistry& reg) {
 
 void register_binary_neon_opt_kernels(OpRegistry&) {}
 
-#endif
+#endif  // __aarch64__ || BF_NEON_A32
 
 }  // namespace bitino

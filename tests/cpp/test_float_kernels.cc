@@ -192,7 +192,7 @@ std::shared_ptr<Model> conv_model(const ConvCase& c, uint32_t seed) {
 
 }  // namespace
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || (defined(__arm__) && defined(__ARM_NEON))
 BF_TEST(float_conv2d_neon_gemm_tile_order_exact) {
   // conv2d.float_opt on NEON computes every output of its 8-row tiles as one
   // fused multiply-add chain: acc = bias, then acc = fma(a[k], w[k], acc) for
@@ -201,6 +201,8 @@ BF_TEST(float_conv2d_neon_gemm_tile_order_exact) {
   // reproduces that chain bit for bit (M a multiple of 8 so no row takes the
   // GEMV path; K = 45 with a scalar k tail, K = 360 with two K blocks, 1x1
   // reading the input in place, N tails of the 8-wide panels).
+  // 32-bit ARM (two 4-row passes of VMLA in inline asm): the same chain with
+  // acc = acc + a[k] * w[k] rounded after the multiply and after the add.
   struct Case {
     int64_t n, h, w, ic, oc, k, pad;
     std::string act;
@@ -233,7 +235,11 @@ BF_TEST(float_conv2d_neon_gemm_tile_order_exact) {
                 for (int64_t ci = 0; ci < c.ic; ++ci) {
                   const int64_t iy = oy - c.pad + ky, ix = ox - c.pad + kx;
                   const float a = iy < 0 || iy >= c.h || ix < 0 || ix >= c.w ? 0.f : x[((n * c.h + iy) * c.w + ix) * c.ic + ci];
+#if defined(__aarch64__)
                   acc = std::fmaf(a, w[((o * c.k + ky) * c.k + kx) * c.ic + ci], acc);
+#else
+                  acc = acc + a * w[((o * c.k + ky) * c.k + kx) * c.ic + ci];  // -ffp-contract=off: two roundings
+#endif
                 }
             if (c.act == "relu") acc = acc > 0.f ? acc : 0.f;
             if (std::memcmp(&acc, &opt.out[i], 4) != 0)

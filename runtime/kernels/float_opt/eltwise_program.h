@@ -43,6 +43,18 @@ class EltwiseProgram {
   void begin(const KernelContext& ctx);
   void apply(float* y, int64_t r0, int64_t r1);
 
+  // Fused store of a 16-channel unit of the two-phase binary kernels (bconv2d.neon_opt compute_dot2, bdense.neon
+  // tile2): for rows i in [0, np) and channels j < 16,
+  //   y[(row0 + i) * ys + ch0 + j] = program(act(float(db[i * 16 + j]) * mul[j] + add[j]))
+  // (act: 0 none, 1 relu (v > 0 ? v : 0), 2 relu6), bit-identical to storing the activated values and then
+  // apply()ing the program, without the store / reload and with the per-channel constants in registers.
+  // Available (unit16()) for programs that are a chain of affine / prelu / RPReLU steps and adds of row or
+  // tile sources (fused_elementwise.cc match_unit16) on rows of c % 16 == 0 floats; ch0 % 16 == 0, and begin()
+  // must have been called for the run. Thread safe.
+  bool unit16() const;
+  void store_unit16(const int16_t* db, int64_t np, const float* mul, const float* add, int act, float* y, int64_t ys, int64_t row0,
+                    int64_t ch0) const;
+
  private:
   std::unique_ptr<FeCoreBase> core_;
 };

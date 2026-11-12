@@ -128,6 +128,33 @@
      "exact_vs_numpy": null
     }
    }
+  },
+  "moto-e13": {
+   "suite": "20261112_1219",
+   "date": "2026-11-12",
+   "runtime_commit": "d42d5fe",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
   }
  },
  "instructions_M": {
@@ -1305,28 +1332,28 @@
     "model_id": "bhvit-tiny-binary",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:45:03Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:23:05Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 1871.28658,
+    "median_ms": 636.389077,
     "median_range_ms": [
-     1871.09581,
-     1871.47735
+     635.923769,
+     636.854385
     ],
-    "p90_ms": 1872.142819,
+    "p90_ms": 637.4320006,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 37692,
+    "peak_rss_kb": 36876,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1334,28 +1361,28 @@
     "model_id": "bhvit-tiny-binary",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:45:10Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:23:08Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t4_unpinned",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 4,
     "affinity": "unpinned",
-    "median_ms": 548.8662690000001,
+    "median_ms": 195.68253800000002,
     "median_range_ms": [
-     548.822384,
-     548.910154
+     194.91773,
+     196.447346
     ],
-    "p90_ms": 550.3360232,
+    "p90_ms": 196.7520307,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 38196,
+    "peak_rss_kb": 38880,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1363,28 +1390,28 @@
     "model_id": "bhvit-tiny-binary",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:45:34Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:23:17Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast_int8",
     "model_file": "model.bitino",
     "stage": "optimized_int8",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 1872.94998,
+    "median_ms": 638.3740385000001,
     "median_range_ms": [
-     1872.6445,
-     1873.25546
+     634.478731,
+     642.269346
     ],
-    "p90_ms": 1874.109627,
+    "p90_ms": 642.3930077,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 37692,
+    "peak_rss_kb": 36928,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-12"
    }

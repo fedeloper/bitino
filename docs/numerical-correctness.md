@@ -246,7 +246,70 @@ NEON path on the 8 models checked under qemu).
   float GEMM `≤ 1e-4·(1+|ref|)`.
 * Consequence for BiBERT: its GELUs feed only `sign_zero` binarizations and LayerNorm is exact, so at stage
   `optimized` the encoder is bit-identical to the numpy executor; only the pooler `tanh` and the classifier
-  differ (max |Δlogit| vs numpy 9.5e-7).
+  differ (max |Δlogit| vs numpy 9.5e-7). (Since 2026-11-12 the fused stages select `layernorm.float_fast` on
+  AArch64, see below; the exact kernel can still be forced.)
+
+### Float32 fast kernels of the fused stages (2026-11-12)
+
+`runtime/kernels/float_opt/transformer_fast.h`, tier `float_opt`, priority 45: preferred over the exact
+`float_opt` kernels above (40) by every stage that allows `float_opt` (`optimized`, `optimized_int8`, `int8_full`,
+`all`), never by the bit-exact stage `neon` (reference LayerNorm / Softmax / ReduceMean / Activation). On x86-64
+hosts with AVX2 the `*_avx2` kernels (50) still win, so host outputs are unchanged. Bounds against the double
+reference, measured in `tests/cpp/test_transformer_opt.cc` (host x86-64 portable path / emulated arm64 NEON path):
+
+| kernel | arithmetic | bound (asserted) | measured |
+|---|---|---|---|
+| `layernorm.float_fast` | float sums in 16 lanes, corrected two-pass mean / variance, per-row scalars in float (4 rows per vector), `y = ((x − mh) − ml)·r·g + b` (one FMA) | `|y − ref| ≤ 4·2⁻²³·((|t| + 1)·|g| + |b|)`, t = exact normalized value | 1.56 / 1.51 of 2⁻²³·(…); without γ/β and |t| ≥ 0.25: ≤ 3 ulp (max abs 7.2e-7) |
+| `reduce_mean.float_fast` (last axis) | len 4 / 8: FADDP trees, else 16-lane float sums; × 1/len (exact for powers of two) or one division | `≤ (len/16 + 6)·2⁻²³·mean|x|` | 0.19 of the bound (max abs 1.9e-6 at |x| ~ 50) |
+| `softmax.float_fast` | exp by the shift trick + Cephes polynomial, lower clamp only, y = e·(1/Σ) | `≤ 2e-6·|ref| + 1e-12` | 0.13 / 0.12 of the bound; ≤ 3 ulp where ref > 1e-30 |
+| `activation_gelu.float_fast` | x·Φ(x), Φ from erfc for every lane (no small-|x| branch), cut-offs of the exact kernel | sign-exact; `≤ 1e-6·|ref| + 2⁻⁵²·|x|` | 0.46 of the bound; max relative 4.6e-7 for x > −5.5 (below that the double reference cancels) |
+
+LayerNorm's error is relative to `(|t| + 1)·|g|`, not to |y|: the mean comes from float sums of the deviations
+(absolute error ~2⁻²³·sd), so a value near the mean is only accurate to ~2⁻²³ in normalized units (the
+double kernel is exact there). ReduceMean over other axes keeps `reduce_mean.float_opt` (double).
+The binary kernels' fused chain epilogues (`EltwiseProgram::store_unit16`, `docs/operators.md`) are bit-exact.
+
+End to end (`tools/validate_model.py`, static arm64 build under qemu, 4 threads, 128 samples, 2026-11-12): stage `all`
+passes for Bi-ViT DeiT-Tiny / -Small (top-1 agreement vs fp64 0.953 / 0.938, all disagreements traced to
+rounding-scale first flips by `--explain`; the same counts as before), BHViT-Tiny / -Small (0.813 / 0.836, `--explain`,
+as before), BiBERT SST-2 (1.000, max |Δlogit| vs numpy 1.2e-6), ReActNet-18 (0.984), QuickNet (0.992, final Softmax
+only), BNext-Tiny (0.953) and the Brevitas CNV (exact vs numpy); stage `neon` stays bit-exact with the numpy executor
+(Brevitas CNV, QuickNet, ReActNet-18 re-run) and byte-identical to the previous emulated references for all nine
+models. The emulated references changed only for the models with LayerNorm / Softmax / ReduceMean / GELU at the
+`float_opt` stages (Bi-ViT, BHViT, QuickNet's Softmax); BiBERT's outputs are unchanged (its LayerNorm outputs only
+reach the logits through `sign_zero` binarizations), and the CNNs without them (ReActNet-18, BNext-Tiny, Brevitas)
+are byte-identical, which also checks the in-register chain epilogues end to end.
+
+## 32-bit ARM (armeabi-v7a)
+
+AArch32 Advanced SIMD always uses the "standard FPSCR value": round to nearest, default NaN and
+flush-to-zero, so a vector float op with a denormal operand or result sees / produces +-0 (AArch64 NEON and
+the scalar VFP unit are IEEE). Measured on the Redmi 9A's Cortex-A53 (`a32_neon_flushes_denormals`). What
+the AArch32 builds of the NEON kernels do about it:
+
+* Integer work (popcounts, bit counts, the dot products) is unaffected.
+* Binarization is exact: compares against 0 work on the bit patterns (`vcgezq_f32` etc. in
+  `kernels/neon_a32.h`, e.g. -1e-40 >= 0 is false as in IEEE), compares against thresholds use the float
+  compare only when no threshold is a denormal and no threshold that is +-0 meets a denormal input (a flushed
+  denormal keeps its order against a normal threshold), otherwise the scalar code packs that row.
+* Clang also auto-vectorizes the *scalar* float compare loops into AArch32 NEON (it did so in the old
+  portable armeabi-v7a build: `pack_row_f32`, the ternary packing, `Activation sign` of the portable
+  float_opt), so those loops carry `BF_A32_IEEE_LOOP` (`#pragma clang loop vectorize(disable)` on 32-bit ARM).
+* float_opt selections against 0 (`relu`, `sign`, `sign_zero`, prelu / leaky_relu selects, clamp bounds 0)
+  are exact; GELU and hardswish of |x| < 2^-124 are fixed up to the reference value (x/2 resp. the scalar
+  formula), so `sign(gelu(x))` always equals the reference's.
+* Float arithmetic whose result (or an operand) is a denormal is flushed: a BConv2D epilogue
+  `dot * mul + add` cannot produce one unless `|mul|` or `|add|` is below ~2^-100, but a fused elementwise
+  epilogue reading a denormal activation (e.g. `x * gate`, `0 + r` with a denormal r) gives 0 where numpy gives
+  the denormal. Activations of trained networks are not denormal in practice; the tests that inject 1e-40
+  replace it by a tiny normal value on armeabi-v7a (`with_specials`, test_transformer_opt.cc). The old
+  portable armeabi-v7a build was not exact there either (6 bitino_tests failed on the Redmi with the
+  auto-vectorized compares; all pass with the NEON build).
+* Semantics otherwise follow the portable path, not the AArch64 one: `madd` is VMLA (rounded product, then
+  add), `fma_` is VFMA (VFPv4, runtime check) or `std::fma`, division is exact (VFP, or a multiply by the
+  exact reciprocal of a power-of-two divisor), the GEMM tile accumulates in the same k order
+  (`float_conv2d_neon_gemm_tile_order_exact`). Stage `neon` stays bit-identical to the numpy executor on the
+  device eval sets (validate_model.py `--accept-exact-numpy`); stage `all` is judged by the usual tolerances.
 
 ## Binarization semantics that must be preserved
 

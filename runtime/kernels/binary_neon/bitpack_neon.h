@@ -1,4 +1,4 @@
-// NEON helpers shared by the optimized binary kernels (AArch64 only).
+// NEON helpers shared by the optimized binary kernels (AArch64; AArch32 NEON through kernels/neon_a32.h).
 //
 // f32 -> bit packing: compare 4 floats per instruction, narrow the 32-bit
 // lane masks to bytes, AND with the bit weights 1,2,..,128 and fold with
@@ -6,7 +6,9 @@
 // !(x >= t) resp. !(x > t), so NaN maps to 1 like the scalar code).
 #pragma once
 
-#if defined(__aarch64__)
+#include "kernels/neon_a32.h"
+
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 
 #include "kernels/bitpack.h"
@@ -76,6 +78,10 @@ inline void pack_words_f32_neon(const float* x, int64_t words, uint32_t* out, Bi
 
 // Drop-in replacement for pack_row_f32(): NEON for full words, scalar tail.
 inline void pack_row_f32_neon(const float* x, int64_t c, uint32_t* out, BinarizeMode mode, const float* thr) {
+#if BF_NEON_A32
+  // AArch32 NEON float compares flush denormals: rows whose compares could differ are packed by the scalar code.
+  if (thr && bf_a32_thr_compare_inexact(x, thr, c)) return pack_row_f32(x, c, out, mode, thr);
+#endif
   int64_t full = c / 32;
   pack_words_f32_neon(x, full, out, mode, thr);
   if (c > full * 32) pack_row_f32(x + full * 32, c - full * 32, out + full, mode, thr ? thr + full * 32 : nullptr);
@@ -119,11 +125,28 @@ inline void pack_ternary_words_neon(const float* x, int64_t words, uint32_t* nz,
 }
 
 inline void pack_ternary_row_neon(const float* x, int64_t c, uint32_t* nz, uint32_t* neg, const float* thr) {
+#if BF_NEON_A32
+  if (thr && bf_a32_thr_compare_inexact(x, thr, c)) {  // as pack_row_f32_neon
+    for (int64_t w = 0; w < bit_words(c); ++w) {
+      uint32_t bn = 0, bs = 0;
+      BF_A32_IEEE_LOOP
+      for (int64_t b = 0; b < 32 && 32 * w + b < c; ++b) {
+        const float v = x[32 * w + b], t = thr[32 * w + b];
+        bn |= uint32_t(v > t || v < t) << b;
+        bs |= uint32_t(v < t) << b;
+      }
+      nz[w] = bn;
+      neg[w] = bs;
+    }
+    return;
+  }
+#endif
   const int64_t full = c / 32;
   if (thr) pack_ternary_words_neon<true>(x, full, nz, neg, thr);
   else pack_ternary_words_neon<false>(x, full, nz, neg, nullptr);
   if (c == full * 32) return;
   uint32_t bn = 0, bs = 0;
+  BF_A32_IEEE_LOOP
   for (int64_t b = 0; b < c - full * 32; ++b) {
     const float v = x[full * 32 + b], t = thr ? thr[full * 32 + b] : 0.f;
     bn |= uint32_t(v > t || v < t) << b;
@@ -135,4 +158,4 @@ inline void pack_ternary_row_neon(const float* x, int64_t c, uint32_t* nz, uint3
 
 }  // namespace bitino
 
-#endif  // __aarch64__
+#endif  // __aarch64__ || BF_NEON_A32

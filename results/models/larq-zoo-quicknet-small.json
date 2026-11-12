@@ -219,6 +219,33 @@
      "exact_vs_numpy": null
     }
    }
+  },
+  "moto-e13": {
+   "suite": "20261112_1219",
+   "date": "2026-11-12",
+   "runtime_commit": "d42d5fe",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    }
+   }
   }
  },
  "instructions_M": {
@@ -1407,28 +1434,28 @@
     "model_id": "larq-zoo-quicknet-small",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:39:13Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:21:19Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 135.30809599999998,
+    "median_ms": 58.69584625,
     "median_range_ms": [
-     135.178192,
-     135.438
+     58.6721155,
+     58.719577
     ],
-    "p90_ms": 135.56294580000002,
+    "p90_ms": 58.9494695,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 14612,
+    "peak_rss_kb": 13908,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1436,28 +1463,28 @@
     "model_id": "larq-zoo-quicknet-small",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:39:34Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:21:20Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t4_unpinned",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 4,
     "affinity": "unpinned",
-    "median_ms": 39.8919615,
+    "median_ms": 19.4278465,
     "median_range_ms": [
-     39.811269,
-     39.972654
+     19.3516925,
+     19.5040005
     ],
-    "p90_ms": 40.118823500000005,
+    "p90_ms": 20.3735924,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 14768,
+    "peak_rss_kb": 17680,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1465,28 +1492,28 @@
     "model_id": "larq-zoo-quicknet-small",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:39:57Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:21:22Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast_int8",
     "model_file": "model.bitino",
     "stage": "optimized_int8",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 135.9288655,
+    "median_ms": 58.84501925,
     "median_range_ms": [
-     135.6695,
-     136.188231
+     58.842808,
+     58.8472305
     ],
-    "p90_ms": 136.546116,
+    "p90_ms": 58.9850771,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 14696,
+    "peak_rss_kb": 13952,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
     "runtime": "development runtime as of 2026-11-12"
    }

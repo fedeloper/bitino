@@ -6,6 +6,15 @@
 // runs and is tested on the host. The one semantic difference is madd():
 // fused (one rounding, vfmaq) on NEON, separately rounded on the portable
 // path (-ffp-contract=off keeps the compiler from fusing it).
+//
+// 32-bit ARM with NEON (BF_FLOAT_OPT_NEON32): NEON intrinsics with the portable
+// path's semantics where AArch32 lacks the AArch64 instruction: madd() is VMLA
+// (rounded multiply, then add, as the portable path), div() exact (VFP
+// divisions, or the exact reciprocal of a power of two), fma_() VFMA when the
+// CPU has VFPv4 (kFeatFma; any ARMv8 core) and
+// std::fma otherwise, round_ne() / pow2i() / relu() / max_num() without the
+// ARMv8 FRINTN / FCVTNS / FMAXNM. AArch32 NEON flushes denormals to zero (see
+// kernels/neon_a32.h).
 #pragma once
 
 #include <algorithm>
@@ -18,11 +27,18 @@
 #include "bitino/tensor.h"
 #include "ops/ops_common.h"
 
+#include "kernels/neon_a32.h"
+
 #if defined(__aarch64__)
 #include <arm_neon.h>
 #define BF_FLOAT_OPT_NEON 1
 #else
 #define BF_FLOAT_OPT_NEON 0
+#endif
+#if BF_NEON_A32
+#define BF_FLOAT_OPT_NEON32 1
+#else
+#define BF_FLOAT_OPT_NEON32 0
 #endif
 
 namespace bitino {
@@ -64,6 +80,74 @@ inline f32x4 sign_ge(f32x4 v) { return vbslq_f32(vcgeq_f32(v, vdupq_n_f32(0.f)),
 inline f32x4 sign_zero(f32x4 v) {
   const f32x4 z = vdupq_n_f32(0.f);
   return vbslq_f32(vcgtq_f32(v, z), vdupq_n_f32(1.f), vbslq_f32(vcltq_f32(v, z), vdupq_n_f32(-1.f), z));
+}
+#elif BF_FLOAT_OPT_NEON32
+using f32x4 = float32x4_t;
+// VFPv4 fused multiply-add available (read once at startup; BITINO_DISABLE_FEATURES=fma masks it).
+inline const bool kA32Fma = cpu_info().has(kFeatFma);
+inline f32x4 load(const float* p) { return vld1q_f32(p); }
+inline void store(float* p, f32x4 v) { vst1q_f32(p, v); }
+inline f32x4 dup(float s) { return vdupq_n_f32(s); }
+inline f32x4 add(f32x4 a, f32x4 b) { return vaddq_f32(a, b); }
+inline f32x4 mul(f32x4 a, f32x4 b) { return vmulq_f32(a, b); }
+inline f32x4 div(f32x4 a, f32x4 b) { return vdivq_f32(a, b); }  // neon_a32.h: exact
+inline f32x4 vmax(f32x4 a, f32x4 b) { return vmaxq_f32(a, b); }
+inline f32x4 vmin(f32x4 a, f32x4 b) { return vminq_f32(a, b); }
+// acc + a * b, rounded after the multiply and after the add (VMLA), like the portable path
+inline f32x4 madd(f32x4 acc, f32x4 a, f32x4 b) { return vmlaq_f32(acc, a, b); }
+// acc + b * a[L]
+template <int L>
+inline f32x4 madd_lane(f32x4 acc, f32x4 b, f32x4 a) {
+  return vmlaq_lane_f32(acc, b, L < 2 ? vget_low_f32(a) : vget_high_f32(a), L & 1);
+}
+// Compares against zero use the bit-pattern forms of neon_a32.h (vcgezq_f32 ...), which keep the IEEE result
+// for denormals; a float compare would see -1e-40 >= 0. General compares are exact unless an operand is a
+// denormal: lt() also fixes lanes whose b is +-0 (clamp bounds, the select constants), so of the selections only
+// one between a denormal and a nonzero denormal bound can differ from the reference.
+inline uint32x4_t lt(f32x4 a, f32x4 b) {
+  const uint32x4_t bz = vceqq_u32(vshlq_n_u32(vreinterpretq_u32_f32(b), 1), vdupq_n_u32(0));
+  return vbslq_u32(bz, vcltzq_f32(a), vcltq_f32(a, b));
+}
+inline uint32x4_t gt(f32x4 a, f32x4 b) {
+  const uint32x4_t bz = vceqq_u32(vshlq_n_u32(vreinterpretq_u32_f32(b), 1), vdupq_n_u32(0));
+  return vbslq_u32(bz, vcgtzq_f32(a), vcgtq_f32(a, b));
+}
+inline f32x4 select_ge0(f32x4 v, f32x4 neg) { return vbslq_f32(vcgezq_f32(v), v, neg); }
+// v > 0 ? v : 0 (NaN -> 0)
+inline f32x4 relu(f32x4 v) { return vbslq_f32(vcgtzq_f32(v), v, vdupq_n_f32(0.f)); }
+inline f32x4 sub(f32x4 a, f32x4 b) { return vsubq_f32(a, b); }
+// a*b + c with one rounding
+inline f32x4 fma_(f32x4 a, f32x4 b, f32x4 c) {
+#if defined(__ARM_FEATURE_FMA)
+  return vfmaq_f32(c, a, b);
+#else
+  if (kA32Fma) {
+    asm(".fpu neon-vfpv4\n vfma.f32 %q0, %q1, %q2\n" : "+w"(c) : "w"(a), "w"(b));
+    return c;
+  }
+  float x[4], y[4], z[4];
+  vst1q_f32(x, a);
+  vst1q_f32(y, b);
+  vst1q_f32(z, c);
+  for (int i = 0; i < 4; ++i) z[i] = std::fma(x[i], y[i], z[i]);
+  return vld1q_f32(z);
+#endif
+}
+inline f32x4 round_ne(f32x4 v) { return bf_a32_rndn(v); }
+// n is integer valued: truncating conversion
+inline f32x4 pow2i(f32x4 n) { return vreinterpretq_f32_s32(vshlq_n_s32(vaddq_s32(vcvtq_s32_f32(n), vdupq_n_s32(127)), 23)); }
+inline f32x4 vabs(f32x4 v) { return vabsq_f32(v); }
+inline f32x4 select_lt(f32x4 a, f32x4 b, f32x4 x, f32x4 y) { return vbslq_f32(lt(a, b), x, y); }
+inline f32x4 select_gt(f32x4 a, f32x4 b, f32x4 x, f32x4 y) { return vbslq_f32(gt(a, b), x, y); }
+inline float hsum(f32x4 v) { return vaddvq_f32(v); }  // (v0 + v1) + (v2 + v3)
+inline float hmax(f32x4 v) { return vmaxvq_f32(v); }
+inline f32x4 clamp_std(f32x4 v, f32x4 lo, f32x4 hi) {
+  const f32x4 m = vbslq_f32(lt(v, lo), lo, v);
+  return vbslq_f32(gt(m, hi), hi, m);  // hi < m
+}
+inline f32x4 sign_ge(f32x4 v) { return vbslq_f32(vcgezq_f32(v), vdupq_n_f32(1.f), vdupq_n_f32(-1.f)); }
+inline f32x4 sign_zero(f32x4 v) {
+  return vbslq_f32(vcgtzq_f32(v), vdupq_n_f32(1.f), vbslq_f32(vcltzq_f32(v), vdupq_n_f32(-1.f), vdupq_n_f32(0.f)));
 }
 #else
 struct f32x4 {
@@ -108,6 +192,8 @@ inline f32x4 sign_zero(f32x4 v) { BF_FOPT_LANEWISE(v.v[i] > 0.f ? 1.f : (v.v[i] 
 inline f32x4 max_num(f32x4 m, f32x4 x) {
 #if BF_FLOAT_OPT_NEON
   return vmaxnmq_f32(m, x);
+#elif BF_FLOAT_OPT_NEON32
+  return vbslq_f32(vcltq_f32(m, x), x, m);  // std::max(m, x) = m < x ? x : m (pools: a plain compare)
 #else
   f32x4 r;
   for (int i = 0; i < 4; ++i) r.v[i] = std::max(m.v[i], x.v[i]);

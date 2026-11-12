@@ -66,8 +66,24 @@ void infer_fused_elementwise(const Node& n, const std::vector<const TensorInfo*>
   outs[0]->shape = s;
 }
 
+// PackBits (internal, created by the shared_binarizations rewrite, src/graph_rewrite.h): f32 [..., C]
+// -> bit [..., C], each row of C values packed as the binary layers pack their input (kernels/bitpack.h
+// pack_row_f32: bit 1 = !(x >= t) for "ge", !(x > t) for "gt", t = threshold[c] (input 1) or 0).
+void infer_pack_bits(const Node& node, const std::vector<const TensorInfo*>& ins, std::vector<TensorInfo*>& outs) {
+  BF_CHECK(!ins.empty() && ins[0] && ins[0]->dtype == DType::kF32 && !ins[0]->shape.empty(), "PackBits: f32 input with rank >= 1");
+  const std::string m = node.attrs.get_string("input_binarize", "ge");
+  BF_CHECK(m == "ge" || m == "gt", "PackBits: input_binarize must be ge or gt");
+  if (ins.size() > 1 && ins[1])
+    BF_CHECK(ins[1]->dtype == DType::kF32 && ins[1]->shape == Shape{ins[0]->shape.back()}, "PackBits: threshold must be f32[C]");
+  outs[0]->dtype = DType::kBit;
+  outs[0]->shape = ins[0]->shape;
+}
+
 }  // namespace
 
-void register_fused_ops(OpRegistry& reg) { reg.add_op({"FusedElementwise", infer_fused_elementwise}); }
+void register_fused_ops(OpRegistry& reg) {
+  reg.add_op({"FusedElementwise", infer_fused_elementwise});
+  reg.add_op({"PackBits", infer_pack_bits});
+}
 
 }  // namespace bitino

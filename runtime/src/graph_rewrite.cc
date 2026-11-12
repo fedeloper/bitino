@@ -1,6 +1,8 @@
 #include "src/graph_rewrite.h"
 
 #include <algorithm>
+#include <map>
+#include <tuple>
 #include <string>
 
 #include "bitino/error.h"
@@ -486,6 +488,56 @@ int bit_outputs(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const 
   return count;
 }
 
+// ------------------------------------------------- shared binarizations
+// An f32 tensor binarized identically (same one-bit mode, same threshold input or none, no w_zero) as input 0 of
+// two or more BDense nodes is packed once by a PackBits node placed before the first of them; they read its bits
+// (the tensor itself stays for any other use). Exact: each consumer reads the bits it would have packed.
+int shared_binarizations(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const RewriteOptions& opts) {
+  if (!opts.bit_bdense) return 0;
+  struct Group {
+    std::vector<size_t> users;
+    bool ok = true;
+  };
+  std::map<std::tuple<int, std::string, int>, Group> groups;  // (tensor, mode, threshold input)
+  for (size_t c = 0; c < nodes.size(); ++c) {
+    const Node& cn = nodes[c];
+    if (cn.op != "BDense" || in_at(cn, 0) < 0 || in_at(cn, 5) >= 0) continue;
+    const int t = in_at(cn, 0);
+    const std::string mode = cn.attrs.get_string("input_binarize", "ge");
+    if (infos[t].dtype != DType::kF32 || infos[t].is_constant || !one_bit_mode(mode)) continue;
+    Group& g = groups[{t, mode, in_at(cn, 4)}];
+    for (size_t i = 1; i < cn.inputs.size(); ++i) g.ok &= cn.inputs[i] != t;
+    g.users.push_back(c);
+  }
+  std::vector<std::pair<size_t, Node>> inserts;  // (position, PackBits node)
+  for (auto& [key, g] : groups) {
+    const int t = std::get<0>(key), thr = std::get<2>(key);
+    if (!g.ok || g.users.size() < 2) continue;
+    if (thr >= 0 && (infos[thr].dtype != DType::kF32 || infos[thr].shape != Shape{infos[t].shape.back()})) continue;
+    const int b = static_cast<int>(infos.size());
+    TensorInfo bi;
+    bi.name = infos[t].name + "/bits_" + std::get<1>(key) + (thr >= 0 ? "_" + infos[thr].name : std::string());
+    bi.dtype = DType::kBit;
+    bi.shape = infos[t].shape;
+    infos.push_back(bi);
+    Node pk;
+    pk.name = bi.name + "/pack";
+    pk.op = "PackBits";
+    pk.inputs = {t};
+    if (thr >= 0) pk.inputs.push_back(thr);
+    pk.outputs = {b};
+    pk.attrs = Json(Json::Object{{"input_binarize", std::get<1>(key)}});
+    for (size_t c : g.users) {
+      nodes[c].inputs[0] = b;
+      if (nodes[c].inputs.size() > 4) nodes[c].inputs[4] = -1;
+    }
+    inserts.push_back({g.users.front(), pk});
+  }
+  std::sort(inserts.begin(), inserts.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+  for (auto& [pos, pk] : inserts) nodes.insert(nodes.begin() + static_cast<std::ptrdiff_t>(pos), std::move(pk));
+  return static_cast<int>(inserts.size());
+}
+
 }  // namespace
 
 RewriteStats rewrite_graph(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& graph_outputs,
@@ -499,6 +551,7 @@ RewriteStats rewrite_graph(std::vector<Node>& nodes, std::vector<TensorInfo>& in
     st.hosted_epilogues = f.hosted_epilogues;
   }
   if (opts.bit_outputs) st.bit_outputs = bit_outputs(nodes, infos, graph_outputs, opts);
+  if (opts.bit_outputs) st.shared_binarizations = shared_binarizations(nodes, infos, opts);
   return st;
 }
 

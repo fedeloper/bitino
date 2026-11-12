@@ -19,8 +19,10 @@ inline void pack_row_f32(const float* x, int64_t c, uint32_t* out, BinarizeMode 
     int64_t base = w * 32;
     int64_t lim = c - base < 32 ? c - base : 32;
     if (mode == BinarizeMode::kGt) {
+      BF_A32_IEEE_LOOP
       for (int64_t b = 0; b < lim; ++b) bits |= uint32_t(!(x[base + b] > (thr ? thr[base + b] : 0.f))) << b;
     } else {
+      BF_A32_IEEE_LOOP
       for (int64_t b = 0; b < lim; ++b) bits |= uint32_t(!(x[base + b] >= (thr ? thr[base + b] : 0.f))) << b;
     }
     out[w] = bits;

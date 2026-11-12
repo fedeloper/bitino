@@ -8,7 +8,7 @@
 namespace bitino {
 
 enum CpuFeature : uint32_t {
-  kFeatNeon = 1u << 0,     // AArch64 Advanced SIMD (baseline on arm64-v8a)
+  kFeatNeon = 1u << 0,     // Advanced SIMD (baseline on arm64-v8a; AT_HWCAP NEON on 32-bit ARM)
   kFeatDotProd = 1u << 1,  // SDOT/UDOT (asimddp)
   kFeatI8mm = 1u << 2,     // SMMLA/USMMLA (i8mm)
   kFeatFp16 = 1u << 3,     // FP16 arithmetic (asimdhp)
@@ -16,7 +16,7 @@ enum CpuFeature : uint32_t {
   kFeatSve = 1u << 5,
   kFeatPopcnt = 1u << 6,   // x86 POPCNT (host builds)
   kFeatAvx2 = 1u << 7,     // x86 AVX2 (host builds)
-  kFeatFma = 1u << 8,      // x86 FMA3
+  kFeatFma = 1u << 8,      // x86 FMA3; 32-bit ARM: VFPv4 (VFMA)
   kFeatBmi2 = 1u << 9,     // x86 BMI2
   kFeatAvxVnni = 1u << 10, // x86 AVX-VNNI (VEX-encoded VPDPBUSD, 256-bit; Alder Lake and later)
 };

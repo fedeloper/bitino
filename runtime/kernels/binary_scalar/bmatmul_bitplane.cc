@@ -25,13 +25,14 @@
 #include <vector>
 
 #include "kernels/bitpack.h"
+#include "kernels/neon_a32.h"
 #include "ops/op_defs.h"
 #include "ops/transformer_common.h"
 
 #if defined(__x86_64__)
 #include "kernels/binary_avx2/binary_avx2.h"
 #endif
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 #include <arm_neon.h>
 
 #include "kernels/binary_neon/bitpack_neon.h"
@@ -45,6 +46,7 @@ void pack_row_scalar(BMode mode, const float* x, int64_t k, int64_t w64, uint64_
   for (int64_t w = 0; w < w64; ++w) {
     uint64_t bn = 0, bs = 0;
     const int64_t lim = std::min<int64_t>(64, k - 64 * w);
+    BF_A32_IEEE_LOOP
     for (int64_t b = 0; b < lim; ++b) {
       const int v = bmode_apply(mode, x[64 * w + b]);
       bn |= uint64_t(v != 0) << b;
@@ -80,7 +82,7 @@ struct BmmPortable {
   }
 };
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 // bmatmul.neon: register-blocked bit-plane GEMM on 32-bit words (w32 = ceil(k/32)).
 //
 // Rows of a are {nz[w32], neg[w32]}. Columns of b are packed in blocks of 8: for
@@ -536,7 +538,7 @@ class BMatMulBitplane : public Kernel {
   std::unique_ptr<std::atomic<bool>[]> busy_;
 };
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 // bmatmul.neon driver (tiles in bmmn above). Per batch entry, b is packed into
 // column blocks once (phase 1, parallel over batch entries); then work items of
 // (batch entry, row range) pack their rows of a and run the R x 8 tiles (phase 2),
@@ -756,14 +758,14 @@ bool bmatmul_supported(const KernelContext& ctx) {
 
 }  // namespace
 
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
 // Factory for the int8_full NEON I8BMatMul kernel (kernels/int8_full/int8_full_neon.cc).
 std::unique_ptr<Kernel> make_bmatmul_neon_kernel() { return make_kernel<BMatMulNeon>(); }
 #endif
 
 void register_bmatmul_kernels(OpRegistry& reg) {
   reg.add_kernel({"BMatMul", "bmatmul.bitplane", "binary_scalar", 25, 0, bmatmul_supported, make_kernel<BMatMulBitplane<BmmPortable>>});
-#if defined(__aarch64__)
+#if defined(__aarch64__) || BF_NEON_A32
   reg.add_kernel({"BMatMul", "bmatmul.neon", "neon", 35, kFeatNeon, bmatmul_supported, make_kernel<BMatMulNeon>});
 #endif
 #if defined(__x86_64__)

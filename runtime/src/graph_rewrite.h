@@ -27,6 +27,10 @@
 //    "output_threshold_input"); the consumer reads the bits. Exact: the stored
 //    bit is pack_row_f32() of the float value the consumer would have read
 //    (kernels/bit_output.h). sign_zero consumers need three values: skipped.
+//  * shared_binarizations (with bit_outputs): an f32 tensor that two or more BDense nodes binarize identically
+//    (input 0, same ge / gt mode and threshold input, no w_zero) is packed once by an internal PackBits node
+//    (ops/op_defs_fused.cc) inserted before the first of them, which then read the bits. Exact: the packed bits
+//    are those each consumer would have packed.
 #pragma once
 
 #include <vector>
@@ -56,6 +60,7 @@ struct RewriteStats {
   int absorbed_nodes = 0;     // original nodes replaced by them
   int hosted_epilogues = 0;   // fused trees moved into the BConv2D / BDense producing an operand
   int bit_outputs = 0;        // binary layers writing bit-packed output for the next binary layer
+  int shared_binarizations = 0;  // PackBits nodes inserted (one packing shared by several BDense inputs)
 };
 
 // `nodes` and `infos` are the session's copies with shapes already inferred;

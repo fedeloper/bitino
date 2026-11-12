@@ -202,8 +202,8 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261111_1739",
-   "date": "2026-11-11",
+   "suite": "20261112_1359",
+   "date": "2026-11-12",
    "runtime_commit": null,
    "stages": {
     "neon": {
@@ -215,6 +215,38 @@
      "pass": true,
      "identical_to_emulated": null,
      "exact_vs_numpy": false
+    }
+   }
+  },
+  "moto-e13": {
+   "suite": "20261112_1219",
+   "date": "2026-11-12",
+   "runtime_commit": "d42d5fe",
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": true
+    },
+    "optimized": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "optimized_int8": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": false
+    },
+    "int8_full": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
+    },
+    "int8_full_log2": {
+     "pass": true,
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   }
@@ -1495,28 +1527,28 @@
     "model_id": "ab-bnn-imagenet-reactnet18",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:34:05Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:22:10Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 377.365058,
+    "median_ms": 138.485461,
     "median_range_ms": [
-     377.187154,
-     377.542962
+     138.031076,
+     138.939846
     ],
-    "p90_ms": 377.7930383,
+    "p90_ms": 139.1083998,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 19152,
+    "peak_rss_kb": 17852,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1524,28 +1556,28 @@
     "model_id": "ab-bnn-imagenet-reactnet18",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:34:27Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:22:12Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t4_unpinned",
     "model_file": "model.bitino",
     "stage": "all",
     "threads": 4,
     "affinity": "unpinned",
-    "median_ms": 110.99417349999999,
+    "median_ms": 41.7491345,
     "median_range_ms": [
-     110.958924,
-     111.029423
+     41.602423,
+     41.895846
     ],
-    "p90_ms": 111.1553464,
+    "p90_ms": 41.9174922,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 19284,
+    "peak_rss_kb": 22212,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
     "runtime": "development runtime as of 2026-11-12"
    },
@@ -1553,28 +1585,28 @@
     "model_id": "ab-bnn-imagenet-reactnet18",
     "device": "redmi-9a",
     "date": "2026-11-12",
-    "timestamp_utc": "2026-11-12T10:34:52Z",
-    "plan": "quick_20261112_1205_m2006c3lg",
+    "timestamp_utc": "2026-11-12T12:22:14Z",
+    "plan": "quick_20261112_1354_m2006c3lg",
     "config": "t1_fast_int8",
     "model_file": "model.bitino",
     "stage": "optimized_int8",
     "threads": 1,
     "affinity": "0",
-    "median_ms": 380.469654,
+    "median_ms": 138.4452115,
     "median_range_ms": [
-     380.213808,
-     380.7255
+     138.393961,
+     138.496462
     ],
-    "p90_ms": 380.9013149,
+    "p90_ms": 138.9064301,
     "repeats": 2,
     "iterations": 10,
     "warmup": 2,
-    "peak_rss_kb": 19168,
+    "peak_rss_kb": 17876,
     "validity": "clean",
     "caps_seen": null,
     "notes": null,
     "abi": "armeabi-v7a",
-    "kernels": "portable-fallback",
+    "kernels": "neon-aarch32",
     "model_data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
     "runtime": "development runtime as of 2026-11-12"
    }

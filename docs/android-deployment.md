@@ -12,6 +12,17 @@ scripts/android_run_tests.sh                   # pushes and runs bitino_tests on
 The build baseline is `-march=armv8.2-a+dotprod`. Kernels that need more (e.g. I8MM) live in
 separate translation units and are selected only when `getauxval(AT_HWCAP2)` reports the feature.
 
+32-bit phones (`ANDROID_ABI=armeabi-v7a scripts/build_android.sh build/android-armv7`, e.g. the Redmi 9A,
+whose Android is 32-bit only on 64-bit Cortex-A53 cores): the NDK's armeabi-v7a baseline is ARMv7-A + NEON
+(VFPv3), and the binary, packing and float_opt NEON kernels are built for AArch32 under the same names and
+tiers (`runtime/kernels/neon_a32.h` provides the AArch64-only intrinsics they use; the 16 accumulators of the
+4x4 popcount tile are two 2x4 asm passes, the float GEMM tile 4x8). `kFeatNeon` comes from `AT_HWCAP`
+(`HWCAP_NEON`); VFPv4 FMA (`fma` in the CPU string, used by the float_opt transcendental leaves) and the
+integer divide are runtime checks, so the binary runs on any NEON armeabi-v7a phone. int8 SDOT / I8MM and
+int8_full kernels stay AArch64 only (the portable kernels run). The C++ tests build for armeabi-v7a too
+(push and run `bitino_tests` as on arm64). Numerics: see "32-bit ARM (armeabi-v7a)" in
+`docs/numerical-correctness.md`.
+
 ## Running a model
 
 ```bash

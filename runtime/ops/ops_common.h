@@ -9,6 +9,15 @@
 #include "bitino/error.h"
 #include "bitino/model.h"
 
+// Loops whose float compares must keep IEEE semantics (binarization of denormals) on 32-bit ARM, where clang
+// auto-vectorizes them into AArch32 NEON compares, which flush denormals to zero (-1e-40 >= 0 becomes true).
+// Elsewhere vector compares are IEEE and the macro is empty.
+#if defined(__arm__) && !defined(__aarch64__) && defined(__clang__)
+#define BF_A32_IEEE_LOOP _Pragma("clang loop vectorize(disable)")
+#else
+#define BF_A32_IEEE_LOOP
+#endif
+
 namespace bitino {
 
 enum class Activation { kNone, kRelu, kRelu6 };

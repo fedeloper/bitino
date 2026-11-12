@@ -94,6 +94,7 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     absorbed_nodes_ = st.absorbed_nodes;
     folded_thresholds_ = st.thresholds_folded;
     bit_outputs_ = st.bit_outputs;
+    shared_binarizations_ = st.shared_binarizations;
     for (const Node& node : nodes_) {
       if (node.op != "FusedElementwise" && node.op != "BConv2D" && node.op != "BDense") continue;
       std::vector<const TensorInfo*> ins;
@@ -330,7 +331,8 @@ const Tensor& Session::tensor(const std::string& name) const {
 
 std::vector<std::string> Session::tensor_names() const {
   std::vector<std::string> out;
-  for (const auto& t : infos_) out.push_back(t.name);
+  // the graph's tensors only (plan-time rewrites may add internal ones, e.g. PackBits outputs)
+  for (size_t i = 0; i < model_->graph().tensors.size(); ++i) out.push_back(infos_[i].name);
   return out;
 }
 

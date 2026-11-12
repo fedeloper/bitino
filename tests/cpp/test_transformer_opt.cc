@@ -126,7 +126,15 @@ const std::set<std::string> kOpt = {"reference", "binary_scalar", "neon", "binar
 
 // Values that stress sign / rounding edge cases, mixed into random inputs.
 std::vector<float> with_specials(std::vector<float> v, uint32_t seed) {
+#if defined(__arm__) && defined(__ARM_NEON)
+  // 32-bit ARM: AArch32 NEON arithmetic flushes denormals to zero (kernels/neon_a32.h), so the float_opt tier
+  // (used by the fused epilogues as well) is bit-exact only for inputs whose results stay normal; the denormal
+  // specials are replaced by tiny normal values. Compares and selections of denormals are covered by
+  // a32_neon_denormal_semantics (test_binary_kernels.cc).
+  const float sp[] = {0.f, -0.f, 1.f, -1.f, 0.5f, -0.5f, 1e-30f, -1e-30f, 1e-29f, -1e-29f, 3.f, -3.f};
+#else
   const float sp[] = {0.f, -0.f, 1.f, -1.f, 0.5f, -0.5f, 1e-30f, -1e-30f, 1e-40f, -1e-40f, 3.f, -3.f};
+#endif
   std::mt19937 rng(seed);
   for (size_t i = 0; i < v.size(); i += 7) v[i] = sp[rng() % (sizeof(sp) / sizeof(sp[0]))];
   return v;
@@ -552,6 +560,143 @@ BF_TEST(bdense_hosted_epilogue_bit_exact) {
   }
 }
 
+BF_TEST(unit16_epilogue_chains_bit_exact) {
+  // Hosted epilogues that are chains of steps (EltwiseProgram::store_unit16: on AArch64 bconv2d.neon_opt / bdense.neon
+  // run them per 16-channel unit in registers): every supported step sequence, after a binary layer with each fused
+  // activation, plus chains it does not take (clamp, oc % 16 != 0): bit-identical to the unfused reference graph.
+  // Letters: p prelu, r bias -> prelu -> bias, s ChannelAffine, a + residual, o + residual with relu, c clamp (relu6).
+  uint32_t seed = 4100;
+  for (const char* sig : {"p", "r", "s", "a", "ar", "sa", "so", "sar", "sarsa", "sac", "pc"}) {
+    for (int dense = 0; dense < 2; ++dense) {
+      for (const char* act : {"none", "relu", "relu6"}) {
+        for (int64_t oc : {int64_t(32), int64_t(48), int64_t(40)}) {
+          const int64_t ic = 64, k = dense ? 1 : 3;
+          const Shape xs = dense ? Shape{37, ic} : Shape{1, 7, 9, ic};
+          Shape ys = xs;
+          ys.back() = oc;
+          std::vector<int8_t> w(static_cast<size_t>(oc * k * k * ic));
+          std::mt19937 rng(seed++);
+          for (auto& v : w) v = rng() & 1 ? 1 : -1;
+          auto wb = bftest::pack_pm1(w, oc * k * k, ic);
+          bftest::ModelBuilder mb;
+          mb.constant("w", DType::kBit, dense ? Shape{oc, ic} : Shape{oc, k, k, ic}, wb.data());
+          auto mul = randn(oc, seed++, 0.05f), add = randn(oc, seed++);
+          mb.constant("mul", DType::kF32, {oc}, mul.data());
+          mb.constant("add", DType::kF32, {oc}, add.data());
+          mb.input("x", DType::kF32, xs);
+          mb.input("r", DType::kF32, ys);
+          mb.node("Activation", {"r"}, {"res"}, Json(Json::Object{{"type", "leaky_relu"}, {"alpha", Json(0.1)}}));  // before the producer
+          Json at = Json::Object{{"input_binarize", "ge"}, {"activation", act}};
+          if (!dense) at["pads"] = ints({1, 1, 1, 1});
+          mb.node(dense ? "BDense" : "BConv2D", {"x", "w", "mul", "add"}, {"prod"}, at);
+          std::string cur = "prod";
+          int n = 0;
+          auto cst = [&](float scale) {
+            const std::string nm = "c" + std::to_string(n++);
+            auto v = randn(oc, seed++, scale);
+            mb.constant(nm, DType::kF32, {oc}, v.data());
+            return nm;
+          };
+          auto next = [&] { return "t" + std::to_string(n++); };
+          for (const char* q = sig; *q; ++q) {
+            const std::string out = next();
+            switch (*q) {
+              case 'p': mb.node("Activation", {cur, cst(0.3f)}, {out}, Json(Json::Object{{"type", "prelu"}})); break;
+              case 'r': {
+                const std::string b1 = cst(0.5f), sl = cst(0.3f), b2 = cst(0.5f), m1 = next(), m2 = next();
+                mb.node("ChannelAffine", {cur, "", b1}, {m1});
+                mb.node("Activation", {m1, sl}, {m2}, Json(Json::Object{{"type", "prelu"}}));
+                mb.node("ChannelAffine", {m2, "", b2}, {out});
+                break;
+              }
+              case 's': {
+                const std::string sc = cst(1.f), bi = cst(1.f);
+                mb.node("ChannelAffine", {cur, sc, bi}, {out});
+                break;
+              }
+              case 'a': mb.node("Add", {cur, "res"}, {out}); break;
+              case 'o': mb.node("Add", {cur, "res"}, {out}, Json(Json::Object{{"activation", "relu"}})); break;
+              default: mb.node("Activation", {cur}, {out}, Json(Json::Object{{"type", "relu6"}})); break;
+            }
+            cur = out;
+          }
+          mb.node("ChannelAffine", {cur, "", ""}, {"y"});  // keeps the chain's last op inside the fused tree
+          mb.output("y");
+          auto m = mb.build();
+          std::vector<std::vector<float>> in = {with_specials(randn(num_elements(xs), seed++), 3), with_specials(randn(num_elements(ys), seed++), 4)};
+          const Out ref = run(m, tiers(kRef), in);
+          for (int threads : {1, 4}) {
+            const Out o = run(m, tiers(kOpt), in, threads);
+            expect_identical(o.y, ref.y, std::string("unit16 chain ") + sig + (dense ? " bdense " : " bconv ") + act + " oc " +
+                                             std::to_string(oc) + " t" + std::to_string(threads));
+          }
+        }
+      }
+    }
+  }
+}
+
+BF_TEST(shared_binarizations_bit_exact) {
+  // Bi-ViT qkv: several BDense binarize the same (LayerNorm) output identically -> one PackBits node per
+  // (tensor, mode, threshold) group, the BDense read its bits. Groups: 3 x ge (shared), 2 x gt with the same
+  // threshold (shared), 1 x gt with another threshold and 1 x ge reading the tensor twice (not shared); the tensor
+  // also feeds an Add. Outputs must equal the unfused reference graph bit for bit.
+  uint32_t seed = 5200;
+  for (int64_t d : {int64_t(64), int64_t(40), int64_t(192)}) {
+    const int64_t rows = 37, o = d;
+    bftest::ModelBuilder mb;
+    auto g = randn(d, seed++), b = randn(d, seed++), t1 = randn(d, seed++, 0.3f), t2 = randn(d, seed++, 0.3f);
+    mb.constant("g", DType::kF32, {d}, g.data());
+    mb.constant("b", DType::kF32, {d}, b.data());
+    mb.constant("t1", DType::kF32, {d}, t1.data());
+    mb.constant("t2", DType::kF32, {d}, t2.data());
+    mb.input("x", DType::kF32, {rows, d});
+    mb.node("ChannelAffine", {"x", "g", "b"}, {"n"});  // exact in every tier (a LayerNorm would select float_fast)
+    std::vector<std::string> outs;
+    struct U {
+      const char* mode;
+      const char* thr;
+    };
+    int k = 0;
+    for (const U& u : {U{"ge", ""}, U{"ge", ""}, U{"gt", "t1"}, U{"ge", ""}, U{"gt", "t1"}, U{"gt", "t2"}}) {
+      std::vector<int8_t> w(static_cast<size_t>(o * d));
+      std::mt19937 rng(seed++);
+      for (auto& v : w) v = rng() & 1 ? 1 : -1;
+      auto wb = bftest::pack_pm1(w, o, d);
+      auto mul = randn(o, seed++, 0.05f);
+      const std::string id = std::to_string(k++);
+      mb.constant("w" + id, DType::kBit, {o, d}, wb.data());
+      mb.constant("m" + id, DType::kF32, {o}, mul.data());
+      mb.node("BDense", {"n", "w" + id, "m" + id, "", u.thr}, {"d" + id}, Json(Json::Object{{"input_binarize", u.mode}}));
+      outs.push_back("d" + id);
+    }
+    mb.node("Concat", outs, {"cat"}, Json(Json::Object{{"axis", Json(-1)}}));
+    mb.node("Concat", {"n", "n", "n", "n", "n", "n"}, {"rep"}, Json(Json::Object{{"axis", Json(-1)}}));
+    mb.node("Add", {"cat", "rep"}, {"y"});
+    mb.output("y");
+    auto m = mb.build();
+    std::vector<std::vector<float>> in = {with_specials(randn(rows * d, seed++, 2.f), 9)};
+    const Out ref = run(m, tiers(kRef), in);
+    for (const auto& ts : std::vector<std::set<std::string>>{{"reference", "float_opt"}, {"reference", "binary_scalar", "float_opt"}, kOpt})
+      for (int threads : {1, 3}) {
+        SessionOptions so;
+        so.num_threads = threads;
+        so.policy = tiers(ts);
+        Session s(m, so);
+        std::memcpy(s.input(0).raw(), in[0].data(), in[0].size() * 4);
+        s.run();
+        s.run();
+        EXPECT_EQ(s.shared_binarizations(), 2);
+        const Tensor& y = s.output(0);
+        expect_identical(std::vector<float>(y.data<float>(), y.data<float>() + y.size()), ref.y,
+                         "shared binarizations d=" + std::to_string(d) + " t" + std::to_string(threads));
+      }
+    SessionOptions so;
+    so.policy = force("BDense", "bdense.reference", kOpt);  // a forced BDense kernel: no sharing
+    EXPECT_EQ(Session(m, so).shared_binarizations(), 0);
+  }
+}
+
 BF_TEST(reshape_output_aliases_input_buffer) {
   // x -> Add -> a -> Reshape r -> (other nodes allocate buffers) -> Add(r', ...)
   // The aliased buffer must stay live until the last use of any view.
@@ -846,6 +991,214 @@ BF_TEST(softmax_float_opt_within_bound) {
     }
   }
   std::printf("    softmax worst err/bound %.3f\n", worst_seen);
+}
+
+// ============================================================ float32 fast kernels (stage all / optimized)
+namespace {
+
+// Error of y against the reference in units of 2^-23 * scale (scale > 0), and in ulps of the reference value.
+struct ErrStats {
+  double worst = 0, max_abs = 0, max_ulp = 0;
+  void add(float y, float ref, double scale) {
+    const double e = std::fabs(double(y) - double(ref));
+    worst = std::max(worst, e / (std::ldexp(scale, -23) + 1e-30));
+    max_abs = std::max(max_abs, e);
+    const double ulp = std::ldexp(1.0, std::max(std::ilogb(ref == 0.f ? 1e-38f : ref), -126) - 23);
+    max_ulp = std::max(max_ulp, e / ulp);
+  }
+};
+
+}  // namespace
+
+BF_TEST(layernorm_float_fast_within_bound) {
+  // layernorm.float_fast vs the double reference: with t = (x - mean) / sd the exact normalized value,
+  //   |y - ref| <= 4 * 2^-23 * ((|t| + 1) |g| + |b|)   (measured worst 1.56)
+  // i.e. a few float roundings of t plus an absolute error of ~2^-23 sd in the mean (float sums of the
+  // deviations); also for rows with a large mean (|mean| up to 3000 sd), constant rows and eps = 1e-12.
+  uint32_t seed = 900;
+  ErrStats st, big;  // big: no gamma / beta, |t| >= 0.25 (ulp of the normalized value)
+  for (int64_t d : {1, 3, 4, 5, 7, 8, 15, 16, 17, 64, 192, 255, 384, 768}) {
+    for (int64_t rows : {1, 3, 9, 64}) {
+      for (int gb = 0; gb < 4; ++gb) {
+        for (double eps : {1e-12, 1e-5}) {
+          auto g = randn(d, seed++), b = randn(d, seed++);
+          bftest::ModelBuilder mb;
+          if (gb & 1) mb.constant("g", DType::kF32, {d}, g.data());
+          if (gb & 2) mb.constant("b", DType::kF32, {d}, b.data());
+          mb.input("x", DType::kF32, {rows, d});
+          mb.node("LayerNorm", {"x", (gb & 1) ? "g" : "", (gb & 2) ? "b" : ""}, {"y"}, Json(Json::Object{{"eps", Json(eps)}}));
+          mb.output("y");
+          auto m = mb.build();
+          std::vector<float> x = with_specials(randn(rows * d, seed, 3.f), seed + 1);
+          ++seed;
+          for (int64_t r = 0; r < rows; ++r) {  // per-row offsets up to ~1e4 (cancellation), one constant row
+            const float off = (r % 3 == 0) ? 0.f : (r % 3 == 1 ? 37.5f : -9000.f);
+            for (int64_t i = 0; i < d; ++i) x[r * d + i] = (r == 2 ? 0.1f : x[r * d + i]) + off;
+          }
+          const Out ref = run(m, tiers(kRef), {x});
+          for (int threads : {1, 3}) {
+            const Out o = run(m, force("LayerNorm", "layernorm.float_fast"), {x}, threads);
+            for (int64_t r = 0; r < rows; ++r) {
+              double mean = 0, var = 0, mabs = 0;
+              for (int64_t i = 0; i < d; ++i) mabs += std::fabs(x[r * d + i]) / double(d);
+              for (int64_t i = 0; i < d; ++i) mean += x[r * d + i];
+              mean /= double(d);
+              for (int64_t i = 0; i < d; ++i) var += (x[r * d + i] - mean) * (x[r * d + i] - mean);
+              const double sd = std::sqrt(var / double(d) + eps);
+              for (int64_t i = 0; i < d; ++i) {
+                const double t = (x[r * d + i] - mean) / sd;
+                const double scale = (std::fabs(t) + 1.0) * std::fabs((gb & 1) ? g[i] : 1.f) + ((gb & 2) ? std::fabs(b[i]) : 0.0) + 1e-30;
+                const size_t k = static_cast<size_t>(r * d + i);
+                const double before = st.worst;
+                st.add(o.y[k], ref.y[k], scale);
+                if (gb == 0 && std::fabs(t) >= 0.25) big.add(o.y[k], ref.y[k], scale);
+                if (st.worst > before && st.worst > 4)
+                  std::printf("      d=%lld rows=%lld r=%lld i=%lld gb=%d eps=%g x=%.9g t=%.9g y=%.9g ref=%.9g\n", (long long)d, (long long)rows,
+                              (long long)r, (long long)i, gb, eps, x[k], t, o.y[k], ref.y[k]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  std::printf("    layernorm.float_fast: worst err/(2^-23 ((|t| + 1) |g| + |b|)) %.3f, max abs %.3g; y = t, |t| >= 0.25: max abs %.3g, max %.1f ulp\n",
+              st.worst, st.max_abs, big.max_abs, big.max_ulp);
+  EXPECT_TRUE(st.worst <= 4.0);
+}
+
+BF_TEST(reduce_mean_float_fast_within_bound) {
+  // reduce_mean.float_fast (last axis) vs the double reference, with S = mean |x| of the reduced run:
+  //   |y - ref| <= (len / 16 + 6) * 2^-23 * S   (float sums in 16 lanes / pairwise trees)
+  // Other axes are not supported (reduce_mean.float_opt is selected there).
+  uint32_t seed = 950;
+  double worst = 0, max_abs = 0;
+  for (Shape s : {Shape{1, 56, 56, 64, 8}, Shape{1, 14, 14, 256, 4}, Shape{3, 5, 7}, Shape{2, 9}, Shape{4, 3, 13, 6}, Shape{2, 197},
+                  Shape{3, 1000}, Shape{5, 1}}) {
+    bftest::ModelBuilder mb;
+    mb.input("x", DType::kF32, s);
+    mb.node("ReduceMean", {"x"}, {"y"}, Json(Json::Object{{"axis", Json(-1)}, {"keepdims", Json(0)}}));
+    mb.output("y");
+    auto m = mb.build();
+    std::vector<float> x = with_specials(randn(num_elements(s), seed, 2.f), seed + 1);
+    seed += 2;
+    for (size_t i = 0; i < x.size(); i += 5) x[i] += 50.f;
+    const int64_t len = s.back();
+    const Out ref = run(m, tiers(kRef), {x});
+    for (int threads : {1, 4}) {
+      const Out o = run(m, tiers(kOpt), {x}, threads);
+      const Out f = run(m, force("ReduceMean", "reduce_mean.float_fast"), {x}, threads);
+      if (!available("reduce_mean.float_opt_avx2")) EXPECT_EQ(o.kernels.begin()->second, std::string("reduce_mean.float_fast"));
+      for (size_t k = 0; k < f.y.size(); ++k) {
+        double sa = 0;
+        for (int64_t i = 0; i < len; ++i) sa += std::fabs(x[k * len + i]);
+        const double e = std::fabs(double(f.y[k]) - double(ref.y[k]));
+        max_abs = std::max(max_abs, e);
+        worst = std::max(worst, e / (std::ldexp((len / 16.0 + 6.0) * sa / double(len), -23) + 1e-30));
+      }
+    }
+  }
+  {  // not the last axis: the exact kernel is selected
+    bftest::ModelBuilder mb;
+    mb.input("x", DType::kF32, {1, 4, 4, 256});
+    mb.node("ReduceMean", {"x"}, {"y"}, Json(Json::Object{{"axis", Json(1)}, {"keepdims", Json(0)}}));
+    mb.output("y");
+    auto m = mb.build();
+    std::vector<std::vector<float>> in = {randn(4 * 4 * 256, 7)};
+    const Out o = run(m, tiers(kOpt), in);
+    EXPECT_TRUE(o.kernels.begin()->second.rfind("reduce_mean.float_opt", 0) == 0);
+    expect_identical(o.y, run(m, tiers(kRef), in).y, "reduce_mean axis 1");
+  }
+  std::printf("    reduce_mean.float_fast: worst err/bound %.3f, max abs %.3g\n", worst, max_abs);
+  EXPECT_TRUE(worst <= 1.0);
+}
+
+BF_TEST(softmax_float_fast_within_bound) {
+  // softmax.float_fast: exp(x - max) (Cephes polynomial, ~1 ulp), float sums in 16 lanes, y = e * (1 / sum):
+  //   |y - ref| <= 2e-6 |ref| + 1e-12   (as softmax.float_opt; measured worst ~0.3 of it)
+  uint32_t seed = 980;
+  double worst = 0;
+  ErrStats st;
+  for (int64_t c : {1, 3, 7, 8, 9, 15, 16, 17, 49, 64, 197, 198, 1000}) {
+    for (float mag : {0.1f, 3.f, 30.f}) {
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kF32, {5, c});
+      mb.node("Softmax", {"x"}, {"y"});
+      mb.output("y");
+      auto m = mb.build();
+      std::vector<std::vector<float>> in = {randn(5 * c, seed++, mag)};
+      in[0][0] = -1e30f;  // masked score (exp underflows to 2^-126 instead of 0)
+      const Out ref = run(m, tiers(kRef), in);
+      for (int threads : {1, 2}) {
+        const Out o = run(m, force("Softmax", "softmax.float_fast"), in, threads);
+        for (size_t i = 0; i < o.y.size(); ++i) {
+          worst = std::max(worst, std::fabs(double(o.y[i]) - double(ref.y[i])) / (2e-6 * std::fabs(double(ref.y[i])) + 1e-12));
+          if (ref.y[i] > 1e-30f) st.add(o.y[i], ref.y[i], std::fabs(ref.y[i]));
+        }
+      }
+    }
+  }
+  std::printf("    softmax.float_fast: worst err/bound %.3f, max %.1f ulp of ref (ref > 1e-30)\n", worst, st.max_ulp);
+  EXPECT_TRUE(worst <= 1.0);
+}
+
+BF_TEST(gelu_float_fast_sign_exact_and_bounded) {
+  // activation_gelu.float_fast (erfc form for every lane, no small-|x| branch): sign-exact like the exact kernel
+  // (-0 for x <= kGeluCutoff, sign(x) elsewhere) and |y - ref| <= 1e-6 |ref| + 2^-52 |x|.
+  if (!available("activation_gelu.float_fast")) {   // not registered on 32-bit ARM (denormal flush, see the kernel)
+    std::printf("    activation_gelu.float_fast: not available on this target\n");
+    return;
+  }
+  const std::vector<float> x = float_grid(40.f, 1021);
+  const std::vector<float> ref = activation_ref_values("gelu", x);
+  for (int threads : {1, 2}) {
+    const std::vector<float> y = activation_opt_values("gelu", x, "activation_gelu.float_fast", threads);
+    double worst = 0, worst_rel = 0;
+    int bad_sign = 0;
+    for (size_t i = 0; i < x.size(); ++i) {
+      if (sgn(y[i]) != sgn(ref[i]) || std::signbit(y[i]) != std::signbit(ref[i])) ++bad_sign;
+      const double err = std::fabs(double(y[i]) - double(ref[i]));
+      worst = std::max(worst, err / (1e-6 * std::fabs(double(ref[i])) + std::ldexp(std::fabs(double(x[i])), -52)));
+      if (x[i] > -5.5f && std::fabs(ref[i]) > 1e-30) worst_rel = std::max(worst_rel, err / std::fabs(double(ref[i])));
+    }
+    std::printf("    activation_gelu.float_fast: %zu inputs, sign mismatches %d, worst err/bound %.3f, max rel (x > -5.5) %.3g\n", x.size(), bad_sign, worst,
+                worst_rel);
+    EXPECT_EQ(bad_sign, 0);
+    EXPECT_TRUE(worst <= 1.0);
+  }
+  // non-GELU activations are not taken
+  bftest::ModelBuilder mb;
+  mb.input("x", DType::kF32, {1, 64});
+  mb.node("Activation", {"x"}, {"y"}, Json(Json::Object{{"type", "tanh"}}));
+  mb.output("y");
+  EXPECT_TRUE(run(mb.build(), tiers(kOpt), {randn(64, 3)}).kernels.begin()->second.rfind("activation_ext.float_opt", 0) == 0);
+}
+
+BF_TEST(float_fast_kernels_only_in_float_opt_stages) {
+  // Stage `neon` (no float_opt tier) keeps the bit-exact reference LayerNorm / Softmax / ReduceMean; with float_opt
+  // the fast kernels win over the exact float_opt ones (unless an x86-64 AVX2 kernel is available).
+  bftest::ModelBuilder mb;
+  mb.input("x", DType::kF32, {4, 8, 8});
+  mb.node("LayerNorm", {"x", "", ""}, {"a"}, Json(Json::Object{{"eps", Json(1e-5)}}));
+  mb.node("Softmax", {"a"}, {"b"});
+  mb.node("Activation", {"b"}, {"c"}, Json(Json::Object{{"type", "gelu"}}));
+  mb.node("ReduceMean", {"c"}, {"y"}, Json(Json::Object{{"axis", Json(-1)}, {"keepdims", Json(0)}}));
+  mb.output("y");
+  auto m = mb.build();
+  std::vector<std::vector<float>> in = {randn(4 * 8 * 8, 5)};
+  const Out neon = run(m, tiers({"reference", "binary_scalar", "neon", "binary_avx2"}), in);
+  for (const auto& kv : neon.kernels) EXPECT_TRUE(kv.second.find(".reference") != std::string::npos);
+  expect_identical(neon.y, run(m, tiers(kRef), in).y, "stage neon");
+  const Out opt = run(m, tiers(kOpt), in);
+  const Out all = run(m, KernelPolicy{}, in);
+  for (const Out* o : {&opt, &all})
+    for (const auto& kv : o->kernels) {
+      const bool avx2 = available(kv.second) && kv.second.find("_avx2") != std::string::npos;
+      // 32-bit ARM has no fast GELU (denormal flush): its float_opt GELU is expected there
+      const bool a32_gelu = !available("activation_gelu.float_fast") && kv.second.rfind("activation", 0) == 0 &&
+                            kv.second.find(".float_opt") != std::string::npos;
+      EXPECT_TRUE(avx2 || a32_gelu || kv.second.find(".float_fast") != std::string::npos);
+    }
 }
 
 // ============================================================ data movement

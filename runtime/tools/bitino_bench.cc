@@ -404,6 +404,7 @@ int main(int argc, char** argv) {
                                              {"folded_thresholds", Json(session.folded_thresholds())},
                                              {"hosted_epilogues", Json(session.hosted_epilogues())},
                                              {"bit_outputs", Json(session.bit_outputs())},
+                                             {"shared_binarizations", Json(session.shared_binarizations())},
                                              {"aliased_reshapes", Json(session.aliased_reshapes())}});
     cfg["spin_us"] = spin_us;
     cfg["spin_run"] = spin_run;

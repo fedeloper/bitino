@@ -43,6 +43,7 @@ Json ints(std::vector<int64_t> v) {
 
 // ------------------------------------------------------------------ requant
 // Independent definition with 128-bit integers: floor((x*2^l*M + 2^30) / 2^31), then round-half-up >> r.
+#if defined(__SIZEOF_INT128__)
 int64_t requant_def(int64_t x, int32_t m, int32_t shift) {
   const int l = shift > 0 ? shift : 0, r = shift < 0 ? -shift : 0;
   __int128 xs = static_cast<__int128>(x) * (static_cast<__int128>(1) << l);
@@ -53,6 +54,23 @@ int64_t requant_def(int64_t x, int32_t m, int32_t shift) {
   if (r == 0) return static_cast<int64_t>(h);
   return static_cast<int64_t>((h + (static_cast<__int128>(1) << (r - 1))) >> r);
 }
+#else
+// 32-bit targets have no __int128: the same definition in int64, which holds every intermediate once x * 2^l is
+// saturated to int32 (it is formed only when |x * 2^l| <= 2^62, otherwise it saturates by the sign of x).
+int64_t requant_def(int64_t x, int32_t m, int32_t shift) {
+  const int l = shift > 0 ? shift : 0, r = shift < 0 ? -shift : 0;
+  int64_t xs;
+  if (x == 0) xs = 0;
+  else if (l > 62 || x > (INT64_C(1) << (62 - l)) || x < -(INT64_C(1) << (62 - l))) xs = x > 0 ? INT32_MAX : INT32_MIN;
+  else xs = x * (INT64_C(1) << l);
+  if (xs > INT32_MAX) xs = INT32_MAX;
+  if (xs < INT32_MIN) xs = INT32_MIN;
+  const int64_t p = xs * m + (INT64_C(1) << 30);  // |xs * m| < 2^62
+  const int64_t h = p >> 31;                        // arithmetic shift = floor
+  if (r == 0) return h;
+  return (h + (INT64_C(1) << (r - 1))) >> r;
+}
+#endif
 
 BF_TEST(int8_full_requant_matches_definition_and_edges) {
   std::mt19937_64 rng(7);

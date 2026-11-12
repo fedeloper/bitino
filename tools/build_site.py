@@ -31,6 +31,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 SITE_SRC = os.path.join(ROOT, "site")
 REPO_URL = "https://github.com/fedeloper/bitino"
 AUTHOR_URL = "https://federicofontana.dev"
+SITE_URL = "https://fedeloper.github.io/bitino"   # GitHub Pages (.github/workflows/pages.yml)
+# README plots link to the interactive site only once it is live (Pages needs the repo public or a paid plan; the
+# workflow waits in scripts/public_pending/pages.yml of the development repo until then)
+SITE_LIVE = False
 
 
 def load(p, default=None):
@@ -253,10 +257,19 @@ FEATURED = ("larq-zoo-quicknet-small", "larq-zoo-quicknet", "larq-zoo-quicknet-l
             "bbcu-sr-l-x4")
 
 
+def is_a32(dev: dict) -> bool:
+    """32-bit Android (armeabi-v7a build: AArch32 NEON kernels, or the portable fallback on older builds)."""
+    return dev.get("abi") == "armeabi-v7a" or dev.get("kernels") == "portable-fallback"
+
+
+def a32_tag(dev: dict) -> str:
+    return " (32-bit fallback)" if dev.get("kernels") == "portable-fallback" else " (32-bit)" if is_a32(dev) else ""
+
+
 def primary_device(d: dict) -> str | None:
     """The phone of the headline tables: the most recent full arm64 suite (latest run date, then most runs)."""
     c = [(max((r.get("date") or "") for r in doc.get("runs", [])), len(doc.get("runs", [])), did)
-         for did, doc in d["speed"].items() if d["devices"][did].get("kernels") != "portable-fallback"]
+         for did, doc in d["speed"].items() if not is_a32(d["devices"][did])]
     return max(c)[2] if c else None
 
 
@@ -398,7 +411,7 @@ def readme_tables(d: dict) -> dict[str, str]:
             out += ("<br>" if out else "") + "int8 " + pair(p.get("t1_int8"), p.get("t4_int8"))
         return out or "–"
 
-    head = " | ".join(f"{devs[did].get('short') or did} ms" + (" (32-bit fallback)" if devs[did].get("kernels") == "portable-fallback" else "")
+    head = " | ".join(f"{devs[did].get('short') or did} ms" + a32_tag(devs[did])
                       for did in pids)
     lines = [f"| model | task | accuracy (reference → Bitino) | {head} |", "|---|---|---|" + "---|" * len(pids)]
     for m in hi:
@@ -424,12 +437,18 @@ def readme_tables(d: dict) -> dict[str, str]:
                   "int8 kernels on the exact file. Accuracy: the original model in its own framework → Bitino's exact stage, "
                   "on the small check subset; int8_full Δ: the full-integer file's paired difference against the exact stage. "
                   "Fastest first.\n")
-        oh = "".join(f" {devs[o].get('short') or o} 1 thread" + (" (32-bit fallback)" if devs[o].get("kernels") == "portable-fallback" else "") + " |"
+        oh = "".join(f" {devs[o].get('short') or o} 1 thread" + a32_tag(devs[o]) + " |"
                      for o in others)
         for key, title, ms_ in groups:
             task_col = key == "others"
-            img = "".join(f"\n![{title}{' int8_full' if 'int8' in fn else ''}: accuracy vs latency, Pareto frontier](docs/img/{fn})\n"
-                          for fn, _ in pareto_files(d, key, title))
+            files = pareto_files(d, key, title)
+            img = "".join((f"\n[![{title}{' int8_full' if 'int8' in fn else ''}: accuracy vs latency, Pareto frontier]"
+                           f"(docs/img/{fn})]({SITE_URL}/benchmarks.html#speed-{key})\n") if SITE_LIVE else
+                          f"\n![{title}{' int8_full' if 'int8' in fn else ''}: accuracy vs latency, Pareto frontier](docs/img/{fn})\n"
+                          for fn, _ in files)
+            if files and SITE_LIVE:
+                img += (f"\nInteractive version (hover a dot for its numbers, click to jump to its row): "
+                        f"[benchmarks page]({SITE_URL}/benchmarks.html#speed-{key}).\n")
             speed += (f"\n### {title} ({len(ms_)} models)\n{img}\n| model |" + (" task |" if task_col else "") +
                       f" accuracy (reference → Bitino) | int8_full Δ | {ps} 1 thread | {ps} 4 threads | {ps} int8 1 thread |{oh}\n"
                       "|---|" + ("---|" if task_col else "") + "---|---:|---:|---:|---:|" + "---:|" * len(others) + "\n")
@@ -677,7 +696,7 @@ def verified_text(dev: dict) -> str:
     ds = v.get("dates") or []
     when = (f", {ds[0]}" if len(ds) == 1 else f", {ds[0]} to {ds[-1]}") if ds else ""
     how = ("exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference"
-           if dev.get("kernels") == "portable-fallback" else "outputs byte-identical to the emulated-ARM run of the same code")
+           if is_a32(dev) else "outputs byte-identical to the emulated-ARM run of the same code")
     return f"{v['stages_passed']}/{v['stages']} correctness checks passed on {v['models']} models{when} ({how})"
 
 
@@ -686,11 +705,11 @@ def device_card(did: str, dev: dict, runs: list[dict]) -> str:
     counts = " · ".join(f"{n} {vbadge(v)}" for v, n in sorted(validity_counts(runs).items()))
     dates = sorted({r.get("date") for r in runs if r.get("date")})
     span = (dates[0] if dates[0] == dates[-1] else f"{dates[0]} to {dates[-1]}") if dates else "–"
-    fb = dev.get("kernels") == "portable-fallback"
+    fb = is_a32(dev)
     notes = "".join(f"<p class=small>{esc(n)}</p>" for n in dev.get("notes") or [])
     return f"""<div class="device" id="dev-{esc(did)}">
     <h3>{esc(dev.get('name') or did)}</h3>
-    <p class=small>{esc(dev.get('soc'))} · Android {esc(dev.get('android'))} · {esc(dev.get('abi'))}{' · <b>32-bit fallback build</b>' if fb else ''}</p>
+    <p class=small>{esc(dev.get('soc'))} · Android {esc(dev.get('android'))} · {esc(dev.get('abi'))}{(' · <b>' + esc(a32_tag(dev).strip(' ()')) + ' build</b>') if fb else ''}</p>
     <p class=small>{esc(cores)}</p>
     <p class=small>{esc(dev.get('isa'))}; 1-thread runs pinned to the {esc(device_pin(dev))} (cpu{esc(dev.get('fastest_cpu', '7'))})</p>
     <p class=small>{len(runs)} runs, {esc(span)}: {counts}</p>
@@ -738,7 +757,7 @@ def site_benchmarks(d: dict) -> str:
     group_html = ""
     if gpid:
         pdev, ps = devs[gpid], esc(devs[gpid].get("short") or gpid)
-        oth = "".join(f"<th class=num>{esc(devs[o].get('short') or o)} 1T{' (32-bit)' if devs[o].get('kernels') == 'portable-fallback' else ''}</th>" for o in gothers)
+        oth = "".join(f"<th class=num>{esc(devs[o].get('short') or o)} 1T{esc(a32_tag(devs[o]))}</th>" for o in gothers)
         group_html = (f"<p class=small>Median latency of one inference (batch 1) in ms. Main columns: {esc(pdev.get('name'))} "
                       f"({esc(pdev.get('soc'))}); 1T = 1 thread pinned to the fastest core, 4T = 4 threads, int8 = the "
                       "full-integer file where measured. Accuracy on the small check subset (reference → Bitino); int8_full Δ = "
