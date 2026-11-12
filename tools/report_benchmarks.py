@@ -35,9 +35,16 @@ def main() -> int:
     all_reps: list[dict] = []
     for c in plan["configs"]:
         reps = [json.load(open(p)) for p in sorted(glob.glob(os.path.join(a.run_dir, f"{c['name']}__r*.json")))]
+        # A pinned configuration whose thread was still unpinned in the timed iterations (bitino_bench retries the
+        # pin at every inference; more failures than warmup + 1 mean the timed part ran unpinned, e.g. while the
+        # vendor kept the requested core paused) measured some other core: such repeats are excluded.
+        n_all = len(reps)
+        if c.get("affinity"):
+            reps = [r for r in reps if (r["config"].get("affinity_errors") or 0) <= r["config"].get("warmup", 0) + 1]
+        unpinned = n_all - len(reps)
         all_reps.extend(reps)
         if not reps:
-            rows.append({"name": c["name"], "status": "no data"})
+            rows.append({"name": c["name"], "status": "no data" if not n_all else "no pinned repeat", "unpinned_repeats": unpinned})
             continue
         meds = [r["latency"]["median_ms"] for r in reps]
         pooled = [s for r in reps for s in r["latency"]["samples_ms"]]
@@ -58,6 +65,7 @@ def main() -> int:
             "vm_hwm_kb": max(r["memory"]["vm_hwm_kb"] for r in reps), "model_file_bytes": r0["model"]["file_bytes"],
             "checkpoint_sha256": r0["model"]["manifest"].get("source", {}).get("checkpoint_sha256"),
             "model_data_sha256": r0["model"]["data_sha256"], "affinity_errors": r0["config"]["affinity_errors"],
+            "unpinned_repeats": unpinned,
             "temp_c_range": [min(temps), max(temps)] if temps else None,
             "pinned_cpu_freq_khz_after": [min(fx), max(fx)] if fx else None,
             "build": r0["build"], "device": r0["device"].get("model") or (r0["device"].get("cpu_model") or "").strip(),

@@ -240,6 +240,105 @@
     "kernels": "neon",
     "model_data_sha256": "a452de2923901a081a16662715a1eec86565f70e3bcd1e9577b75bb67814280e",
     "runtime": "development runtime as of 2026-11-11"
+   },
+   {
+    "model_id": "s2bnn-reacta-distill-only",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 20.337734,
+    "median_range_ms": [
+     20.2913285,
+     20.4389585
+    ],
+    "p90_ms": 20.5419484,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27008,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:22:57Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a452de2923901a081a16662715a1eec86565f70e3bcd1e9577b75bb67814280e",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "s2bnn-reacta-distill-only",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 10.3906515,
+    "median_range_ms": [
+     10.3725005,
+     10.4359375
+    ],
+    "p90_ms": 12.2849747,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 33208,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:22:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a452de2923901a081a16662715a1eec86565f70e3bcd1e9577b75bb67814280e",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "s2bnn-reacta-distill-only",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 20.2366145,
+    "median_range_ms": [
+     20.2012245,
+     20.276328
+    ],
+    "p90_ms": 20.6278743,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27492,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:23:00Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a452de2923901a081a16662715a1eec86565f70e3bcd1e9577b75bb67814280e",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

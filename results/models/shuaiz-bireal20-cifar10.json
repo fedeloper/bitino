@@ -170,66 +170,33 @@
     "device": "oneplus-open",
     "date": "2026-11-12",
     "timestamp_utc": null,
-    "plan": "int8full_20261112_1204_cph2551",
+    "plan": "int8full_20261112_1601_cph2551",
     "config": "t1_x2_int8_full",
     "model_file": "model_int8_full.bitino",
     "stage": "int8_full",
     "threads": 1,
     "affinity": "7",
-    "median_ms": 1.5752605,
+    "median_ms": 0.693854501,
     "median_range_ms": [
-     1.4883595,
-     1.6747135
+     0.692344001,
+     0.69836
     ],
-    "p90_ms": 2.777130000000001,
+    "p90_ms": 0.7349263973,
     "repeats": 3,
     "iterations": 30,
-    "warmup": 10,
-    "peak_rss_kb": 6560,
+    "warmup": 50,
+    "peak_rss_kb": 6652,
     "validity": "vendor-policy",
     "caps_seen": [
      "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
     ],
     "notes": [
-     "phone clock was wrong (it read 2026-01-26T02:00:00Z); date from the host clock"
+     "phone clock was wrong (it read 2026-01-26T05:42:46Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "a8d9b5132ecf8a74dbadbacdff110ee6f6d7641ae9dace5d89249d9d63c37575",
     "runtime": "development runtime as of 2026-11-12"
-   },
-   {
-    "model_id": "shuaiz-bireal20-cifar10",
-    "device": "oneplus-open",
-    "date": "2026-11-11",
-    "timestamp_utc": null,
-    "plan": "quick_20261111_1500_cph2551",
-    "config": "t1_x2",
-    "model_file": "model.bitino",
-    "stage": "all",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 1.1097655,
-    "median_range_ms": [
-     1.108151,
-     1.1113025
-    ],
-    "p90_ms": 1.8743902999999986,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 6356,
-    "validity": "vendor-policy",
-    "caps_seen": [
-     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
-    ],
-    "notes": [
-     "phone clock was wrong (it read 2026-01-25T07:04:53Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "29f6b642bf855f79b4810c491b40aa11e62dae72cfb86b8e8875b01db6ea2546",
-    "runtime": "development runtime as of 2026-11-11"
    },
    {
     "model_id": "shuaiz-bireal20-cifar10",
@@ -300,35 +267,136 @@
    {
     "model_id": "shuaiz-bireal20-cifar10",
     "device": "oneplus-open",
-    "date": "2026-11-11",
+    "date": "2026-11-12",
     "timestamp_utc": null,
-    "plan": "quick_20261111_1500_cph2551",
-    "config": "t1_x2_int8",
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t4_unpinned",
     "model_file": "model.bitino",
-    "stage": "optimized_int8",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 1.090651,
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.4268745,
     "median_range_ms": [
-     1.084922,
-     1.0953125
+     0.412526,
+     0.479921998
     ],
-    "p90_ms": 1.901599699999999,
+    "p90_ms": 0.9625936999999999,
     "repeats": 3,
     "iterations": 50,
     "warmup": 10,
-    "peak_rss_kb": 6388,
+    "peak_rss_kb": 7204,
     "validity": "vendor-policy",
     "caps_seen": [
      "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
     ],
     "notes": [
-     "phone clock was wrong (it read 2026-01-25T07:05:05Z); date from the host clock"
+     "phone clock was wrong (it read 2026-01-26T05:23:25Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "29f6b642bf855f79b4810c491b40aa11e62dae72cfb86b8e8875b01db6ea2546",
-    "runtime": "development runtime as of 2026-11-11"
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "shuaiz-bireal20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1550_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.4245052505,
+    "median_range_ms": [
+     0.424375001,
+     0.4246355
+    ],
+    "p90_ms": 0.4513600989,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 50,
+    "peak_rss_kb": 6544,
+    "validity": "unknown-caps",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown",
+     "phone clock was wrong (it read 2026-01-26T05:39:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "29f6b642bf855f79b4810c491b40aa11e62dae72cfb86b8e8875b01db6ea2546",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "shuaiz-bireal20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1550_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.4892445,
+    "median_range_ms": [
+     0.399713499,
+     0.495885499
+    ],
+    "p90_ms": 0.6451249026999991,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6972,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:39:35Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "29f6b642bf855f79b4810c491b40aa11e62dae72cfb86b8e8875b01db6ea2546",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "shuaiz-bireal20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1550_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.5200390005,
+    "median_range_ms": [
+     0.414661501,
+     0.6254165
+    ],
+    "p90_ms": 0.6888594999000001,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 50,
+    "peak_rss_kb": 6392,
+    "validity": "unknown-caps",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "run made before the frequency-cap gate (2026-11-02): thermal caps during it are unknown",
+     "phone clock was wrong (it read 2026-01-26T05:40:14Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "29f6b642bf855f79b4810c491b40aa11e62dae72cfb86b8e8875b01db6ea2546",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

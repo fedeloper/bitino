@@ -420,6 +420,105 @@
     "kernels": "neon",
     "model_data_sha256": "b15c813787ac44713addb76d0bb27aee19c138f45b9401b60d55b2150d13ddbf",
     "runtime": "development runtime as of 2026-11-11"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 11.0123435,
+    "median_range_ms": [
+     10.964401,
+     11.021172
+    ],
+    "p90_ms": 11.0780939,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19876,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:20:00Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b15c813787ac44713addb76d0bb27aee19c138f45b9401b60d55b2150d13ddbf",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 5.8441405,
+    "median_range_ms": [
+     5.8187235,
+     5.8515365
+    ],
+    "p90_ms": 5.9008857,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 24180,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:20:01Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b15c813787ac44713addb76d0bb27aee19c138f45b9401b60d55b2150d13ddbf",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001-fp16",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.8699995,
+    "median_range_ms": [
+     7.791979,
+     8.0533075
+    ],
+    "p90_ms": 8.1066351,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20520,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:20:02Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b15c813787ac44713addb76d0bb27aee19c138f45b9401b60d55b2150d13ddbf",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

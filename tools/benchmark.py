@@ -497,6 +497,8 @@ def main() -> int:
             tag = f"{c['name']}__r{rep}"
             # A run interrupted by a dropped USB link is repeated once the device is back; a run capped while it ran
             # is repeated once the cap lifts.
+            cc = c   # a run left unpinned (requested core paused) is repeated with a longer warmup, during which the
+            #           runtime retries the pin and the vendor's core control usually wakes the core
             for attempt in range(3):
                 try:
                     gate = tgate.wait() if tgate else wait_uncapped(a.cap_max)
@@ -506,9 +508,12 @@ def main() -> int:
                         print("device lost for 30 min; stopping", file=sys.stderr)
                         return 2
                     continue
-                res = run_one(a, c, tag, pushed, cool, gate, tgate)
+                res = run_one(a, cc, tag, pushed, cool, gate, tgate)
                 if res == "ok" or (res == "throttled" and (gate["timeout"] or attempt == 2)):
                     break
+                if res == "unpinned":
+                    cc = {**c, "warmup": max(5 * c.get("warmup", a.warmup), 50)}
+                    continue
                 if res == "throttled":
                     continue
                 if adb("get-state", check=False).stdout.strip() == "device":
@@ -544,6 +549,14 @@ def run_one(a, c, tag, pushed, cool, gate, tgate=None) -> str:
     if adb("pull", dev_json, local, check=False).returncode != 0:
         print(f"[{tag}] FAILED: pull", file=sys.stderr)
         return "failed"
+    try:   # pinned configuration still unpinned in the timed iterations (requested core paused): repeat it
+        cfg = json.load(open(local))["config"]
+        if c.get("affinity") and (cfg.get("affinity_errors") or 0) > cfg.get("warmup", 0) + 1:
+            print(f"[{tag}] UNPINNED: {cfg.get('affinity_errors')} pin failures (core {c['affinity']} unavailable); repeating",
+                  file=sys.stderr)
+            return "unpinned"
+    except (OSError, ValueError, KeyError):
+        pass
     if tgate:   # relative to the highest limits seen, not to cpuinfo_max_freq (vendor policy caps are not throttling)
         throttled = gate["throttled_before"] or tgate.throttled(after)
     else:

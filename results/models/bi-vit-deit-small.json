@@ -173,6 +173,23 @@
      "exact_vs_numpy": null
     }
    }
+  },
+  "redmi-9a": {
+   "suite": "20261112_1359",
+   "date": "2026-11-12",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": true
+    },
+    "all": {
+     "pass": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
+    }
+   }
   }
  },
  "instructions_M": {
@@ -852,6 +869,200 @@
     "kernels": "neon",
     "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
     "runtime": "development runtime as of 2026-11-11"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 35.2734635,
+    "median_range_ms": [
+     35.2055205,
+     35.920078
+    ],
+    "p90_ms": 35.972396499999995,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 35760,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T04:59:03Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 19.4686455,
+    "median_range_ms": [
+     19.4641925,
+     19.5409375
+    ],
+    "p90_ms": 19.580495,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 35848,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T04:59:05Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 33.245286,
+    "median_range_ms": [
+     33.2048175,
+     33.325703
+    ],
+    "p90_ms": 33.373604799999995,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 33200,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T04:59:08Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 182.2626825,
+    "median_range_ms": [
+     181.801577,
+     182.723788
+    ],
+    "p90_ms": 183.6419535,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 35380,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T13:24:24Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 80.17345175,
+    "median_range_ms": [
+     80.004115,
+     80.3427885
+    ],
+    "p90_ms": 81.257342,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 35632,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T13:24:28Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 172.99174,
+    "median_range_ms": [
+     172.875827,
+     173.107653
+    ],
+    "p90_ms": 174.0182658,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 32504,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T13:24:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [

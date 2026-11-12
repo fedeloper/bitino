@@ -176,16 +176,16 @@
     "stage": "int8_full",
     "threads": 1,
     "affinity": "7",
-    "median_ms": 2.0642185,
+    "median_ms": 2.0592185,
     "median_range_ms": [
      2.0592185,
-     2.0822395
+     2.0592185
     ],
-    "p90_ms": 2.2014118,
-    "repeats": 3,
+    "p90_ms": 2.161646,
+    "repeats": 1,
     "iterations": 30,
     "warmup": 10,
-    "peak_rss_kb": 7860,
+    "peak_rss_kb": 7824,
     "validity": "vendor-policy",
     "caps_seen": [
      "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
@@ -329,6 +329,105 @@
     "kernels": "neon",
     "model_data_sha256": "e93213f0e5381c7cf21b6387b578bbcdfc24b38505b3b5c75a9104fbe308cb55",
     "runtime": "development runtime as of 2026-11-11"
+   },
+   {
+    "model_id": "recu-vgg-small-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.077839,
+    "median_range_ms": [
+     2.07125,
+     2.083516
+    ],
+    "p90_ms": 2.1436201,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 9096,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:22:47Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e93213f0e5381c7cf21b6387b578bbcdfc24b38505b3b5c75a9104fbe308cb55",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "recu-vgg-small-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 1.109844,
+    "median_range_ms": [
+     1.0507295,
+     1.1160415
+    ],
+    "p90_ms": 1.3715518999999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 10436,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:22:48Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e93213f0e5381c7cf21b6387b578bbcdfc24b38505b3b5c75a9104fbe308cb55",
+    "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "recu-vgg-small-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-12",
+    "timestamp_utc": null,
+    "plan": "quick_20261112_1513_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.988516,
+    "median_range_ms": [
+     1.9882555,
+     1.9956775
+    ],
+    "p90_ms": 2.0460579,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 9080,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T05:22:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e93213f0e5381c7cf21b6387b578bbcdfc24b38505b3b5c75a9104fbe308cb55",
+    "runtime": "development runtime as of 2026-11-12"
    }
   ],
   "x86": [
