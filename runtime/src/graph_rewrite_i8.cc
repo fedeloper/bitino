@@ -247,7 +247,9 @@ int remove_dead_luts(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, c
 
 // ------------------------------------------------------ fold_lut_thresholds
 bool binarizes_input0(const Node& c, int y) {
-  if ((c.op != "I8BConv2D" && c.op != "I8BDense") || in_at(c, 0) != y) return false;
+  // I8BConv2DRes (int8_full v2 / log2 blocks) binarizes its input 0 like I8BConv2D (y must not also be its residual)
+  if ((c.op != "I8BConv2D" && c.op != "I8BDense" && c.op != "I8BConv2DRes" && c.op != "I8BConv2DResI") || in_at(c, 0) != y)
+    return false;
   for (size_t i = 1; i < c.inputs.size(); ++i)
     if (c.inputs[i] == y) return false;
   const std::string m = c.attrs.get_string("input_binarize", "ge");

@@ -1473,7 +1473,7 @@ class BinaryLayerNeon : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
     conv_ = ctx.node->op != "I8BDense";
-    res_ = ctx.node->op == "I8BConv2DRes";
+    res_ = ctx.node->op == "I8BConv2DRes" || ctx.node->op == "I8BConv2DResI";
     const Tensor& x = ctx.in(0);
     bit_in_ = x.dtype() == DType::kBit;
     c_ = x.dim(-1);
@@ -1506,6 +1506,8 @@ class BinaryLayerNeon : public Kernel {
     attrs["i8_qmin"] = ctx.attrs().get_int("qmin", -128);
     attrs["i8_qmax"] = ctx.attrs().get_int("qmax", 127);
     if (res_) attrs["i8_res"] = 1;
+    if (res_ && ctx.attrs().get_string("output", "l8") == "i8") attrs["i8_res_lin"] = 1;  // int8_full v2: linear output code
+    if (ctx.node->op == "I8BConv2DResI") attrs["i8_res_int"] = 1;                        // int8_full v2: integer epilogue
     sub_.node.attrs = attrs;
     Shape xs = x.shape();
     sub_.owned.reserve(2);
@@ -1530,7 +1532,7 @@ class BinaryLayerNeon : public Kernel {
     if (ternary_) sub_.ctx.inputs = {ctx.inputs[0], ctx.inputs[1], ctx.inputs[2], ctx.inputs[3], &sub_.owned[0]};
     else sub_.ctx.inputs = {bit_in_ ? ctx.inputs[0] : &sub_.owned[0], ctx.inputs[1], ctx.inputs[2], ctx.inputs[3], nullptr};
     if (res_) {  // residual, slope, out_bias, bit_thr at the node's positions; bit output as out(1)
-      for (size_t i = 5; i < ctx.inputs.size(); ++i) sub_.ctx.inputs.push_back(ctx.inputs[i]);
+      for (size_t i = 5; i < ctx.inputs.size(); ++i) sub_.ctx.inputs.push_back(ctx.inputs[i]);  // (I8BConv2DResI: may be empty)
       if (ctx.outputs.size() > 1) sub_.ctx.outputs.push_back(ctx.outputs[1]);
     } else if (ctx.has_in(5)) {
       sub_.ctx.inputs.push_back(ctx.inputs[5]);
@@ -1657,11 +1659,20 @@ bool binary_layer_neon_supported(const KernelContext& ctx) {
   if (a32_f32_output(ctx)) return false;
   if (ctx.node->op == "I8BConv2DRes" && !(a32_res_exact(ctx) && int8_full::res_epilogue_normal(ctx))) return false;
 #endif
-  if (ctx.node->op == "I8BConv2DRes") {
-    // the pre stage (inputs 10-13) runs in the two-phase epilogue only: int16 dot products, K <= 32767
-    const bool pre = ctx.has_in(10) || ctx.has_in(11) || ctx.has_in(12) || ctx.has_in(13);
+  if (ctx.node->op == "I8BConv2DResI") {  // integer epilogue (int8_full v2): two-phase only (int16 dots), no fp32 values
+    // (r_tile with residual rows that are not whole 16-channel units runs the kernel's scalar epilogue: still exact)
     const Tensor& w = ctx.in(1);
-    if (pre && w.dim(1) * w.dim(2) * w.dim(3) > 32767) return false;
+    return w.dim(1) * w.dim(2) * w.dim(3) <= 32767 && (mode != "sign_zero" || ctx.in(0).dtype() == DType::kBit) &&
+           ctx.attrs().get_int("groups", 1) == 1 && int8_full::ResIEpilogue::within_bound(ctx, w.dim(1) * w.dim(2) * w.dim(3));
+  }
+  if (ctx.node->op == "I8BConv2DRes") {
+    // the pre stage (inputs 10-13) runs in the two-phase epilogue only: int16 dots, K <= 32767
+    const bool pre = ctx.has_in(10) || ctx.has_in(11) || ctx.has_in(12) || ctx.has_in(13);
+    // so does the linear output code (output "i8", int8_full v2), with linear residual codes
+    const bool lin = ctx.attrs().get_string("output", "l8") == "i8";
+    if (lin && ctx.attrs().get_string("r_code", "l8") != "linear") return false;
+    const Tensor& w = ctx.in(1);
+    if ((pre || lin) && w.dim(1) * w.dim(2) * w.dim(3) > 32767) return false;
     return (mode != "sign_zero" || ctx.in(0).dtype() == DType::kBit) && ctx.attrs().get_int("groups", 1) == 1;
   }
   if (ctx.in(0).dtype() == DType::kBit) return ctx.node->op == "I8BConv2D" || (ctx.node->op == "I8BDense" && !ctx.has_in(5));
@@ -3611,6 +3622,200 @@ bool matmul_sdot_supported(const KernelContext& ctx) {
 
 // ---------------------------------------------------------------- I8Mul
 // Same shapes, or b broadcast as [N, 1, 1, C] / [1, ..., C] rows (ChannelGate): per row of C channels.
+// I8GatedAdd (int8_full::GatedAddParams; int8_full v2): per sample, the gate folded into per-channel int32 constants
+// gk = (g - z_g) kp and b' = b - z_x kx - z_p gk + c, c = 2^(S-1) + z_y 2^S (thresholds T + c); then per 16 channels of a
+// pixel acc' = SMLAL(b', q_x, kx) + q_p gk (int32 MLA), bits CMGE against T + c, y = high half of SQSHL(acc', 16 - S)
+// (= rshr(acc, S) + z_y, or both saturated to the same clamp; res2_epilogue_int_fast's argument), saturating narrow,
+// clamp. Channel tails (C % 16) and shifts > 16 use the scalar form. Exact: the constants' bound (< 2^30 with |c| <= 2^23).
+class GatedAddNeon : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override {
+    int8_full::GatedAddParams p(ctx);
+    // the folded form's terms: |q_x kx| <= 128 max|kx|, |q_p gk| <= 128 * 255 max|kp|, |b'| <= max|b| + |z_x| max|kx| +
+    // |z_p| 255 max|kp| + |c|; every int32 sum exact iff their total < 2^31
+    int64_t mx = 0, mp = 0, mb = 0;
+    for (int64_t i = 0; i < p.c; ++i) {
+      mx = std::max<int64_t>(mx, std::llabs(p.kx[i]));
+      mp = std::max<int64_t>(mp, std::llabs(p.kp[i]));
+      mb = std::max<int64_t>(mb, std::llabs(p.b[i]));
+    }
+    const int64_t cst = p.shift > 0 ? (int64_t(1) << (p.shift - 1)) + int64_t(p.zy) * (int64_t(1) << p.shift) : p.zy;
+    const int64_t tot = 128 * mx + 128 * 255 * mp + mb + std::llabs(p.zx) * mx + std::llabs(p.zp) * 255 * mp + std::llabs(cst);
+    fast_ = p.shift <= 16 && mx <= 32767 && tot < (int64_t(1) << 31) - 1;
+  }
+  void run(const KernelContext& ctx) override {
+    const int8_full::GatedAddParams p(ctx);
+    const Tensor& x = ctx.in(0);
+    const int64_t c = p.c, rows = x.size() / c, per = rows / x.dim(0), words = bit_words(c), nb = p.nb;
+    const int8_t *qx = x.data<int8_t>(), *qp = ctx.in(1).data<int8_t>(), *qg = ctx.in(2).data<int8_t>();
+    int8_t* y = ctx.out(0).data<int8_t>();
+    const int64_t cpad = (c + 15) / 16 * 16;
+    const int64_t cf = fast_ ? c / 16 * 16 : 0;  // channels of the vector path
+    const int64_t cst = p.shift > 0 ? (int64_t(1) << (p.shift - 1)) + int64_t(p.zy) * (int64_t(1) << p.shift) : p.zy;
+    // constants: kx int16, thresholds + c (int32, clamped to int32: acc' never reaches INT32_MAX by the bound)
+    std::vector<int16_t> kx16(static_cast<size_t>(cpad), 0);
+    std::vector<int32_t> thr(static_cast<size_t>(std::max<int64_t>(nb, 1) * cpad), 0);
+    for (int64_t i = 0; i < c; ++i) kx16[i] = static_cast<int16_t>(std::min<int64_t>(32767, std::max<int64_t>(-32768, p.kx[i])));
+    const int64_t cf2 = nb <= 2 ? cf : 0;  // the vector unit keeps at most two threshold rows in registers
+    for (int64_t j = 0; j < nb; ++j)
+      for (int64_t i = 0; i < c; ++i)
+        thr[j * cpad + i] = static_cast<int32_t>(std::min<int64_t>(INT32_MAX, std::max<int64_t>(INT32_MIN, int64_t(p.thr[j * c + i]) + cst)));
+    // per sample: gk and b' (+ c)
+    const int64_t ns = x.dim(0);
+    std::vector<int32_t> gk(static_cast<size_t>(ns * cpad), 0), bb(static_cast<size_t>(ns * cpad), 0);
+    for (int64_t n = 0; n < ns; ++n)
+      for (int64_t i = 0; i < c; ++i) {
+        const int64_t g = (int64_t(qg[n * c + i]) - p.zg) * p.kp[i];
+        gk[n * cpad + i] = static_cast<int32_t>(g);
+        bb[n * cpad + i] = static_cast<int32_t>(p.b[i] - int64_t(p.zx) * p.kx[i] - int64_t(p.zp) * g + cst);
+      }
+    const int up = 16 - p.shift;
+    ctx.pool->parallel_for(rows, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [&](int64_t r0, int64_t r1) {
+      static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+      const uint8x16_t bw = vld1q_u8(kW);
+      const int32x4_t upv = vdupq_n_s32(up);
+      const int8x16_t lo = vdupq_n_s8(static_cast<int8_t>(p.qmin)), hi = vdupq_n_s8(static_cast<int8_t>(p.qmax));
+      uint8_t* bitp[2] = {nb > 0 ? reinterpret_cast<uint8_t*>(ctx.out(1).data<uint32_t>()) : nullptr,
+                          nb > 1 ? reinterpret_cast<uint8_t*>(ctx.out(2).data<uint32_t>()) : nullptr};
+      for (int64_t u = 0; u < cf2; u += 16) {
+        const bool top0 = (u & 31) == 0 && u + 16 >= c;  // the word's upper half holds no channel: written as 0
+        for (int64_t r = r0; r < r1;) {
+          const int64_t n = r / per, r_end = std::min<int64_t>(r1, (n + 1) * per);
+          if (nb == 0) unit<0>(qx, qp, y, kx16.data(), gk.data() + n * cpad, bb.data() + n * cpad, thr.data(), cpad, bitp, words, c, u, r, r_end, top0, upv, lo, hi, bw);
+          else if (nb == 1) unit<1>(qx, qp, y, kx16.data(), gk.data() + n * cpad, bb.data() + n * cpad, thr.data(), cpad, bitp, words, c, u, r, r_end, top0, upv, lo, hi, bw);
+          else unit<2>(qx, qp, y, kx16.data(), gk.data() + n * cpad, bb.data() + n * cpad, thr.data(), cpad, bitp, words, c, u, r, r_end, top0, upv, lo, hi, bw);
+          r = r_end;
+        }
+      }
+      // scalar channels (tail, or everything when the fast form does not apply)
+      if (cf2 < c)
+          for (int64_t r = r0; r < r1; ++r) {
+          const int64_t n = r / per;
+          for (int64_t ch = cf2; ch < c; ++ch) {
+            const int64_t i = r * c + ch;
+            const int64_t a = p.acc(qx[i], qp[i], qg[n * c + ch], ch);
+            y[i] = p.y(a);
+            for (int64_t j = 0; j < nb; ++j) {
+              uint32_t* w = ctx.out(1 + j).data<uint32_t>() + r * words + (ch >> 5);
+              if ((ch & 31) == 0 || ch == cf2) *w &= (ch & 31) ? ((1u << (ch & 31)) - 1u) : 0u;  // clear the word's rest
+              if (!(a >= p.thr[j * c + ch])) *w |= 1u << (ch & 31);
+            }
+          }
+        }
+    });
+  }
+
+ private:
+  // pixels [r0, r1) of one sample, channels [u, u + 16): constants (and up to two threshold rows) in registers
+  template <int kNb>
+  static void unit(const int8_t* qx, const int8_t* qp, int8_t* y, const int16_t* kx16, const int32_t* gk, const int32_t* bb,
+                   const int32_t* thr, int64_t cpad, uint8_t* const* bitp, int64_t words, int64_t c, int64_t u, int64_t r0, int64_t r1,
+                   bool top0, int32x4_t upv, int8x16_t lo, int8x16_t hi, uint8x16_t bw) {
+    const int16x8_t ka = vld1q_s16(kx16 + u), kb = vld1q_s16(kx16 + u + 8);
+    int32x4_t g4[4], b4[4], t0[4], t1[4];
+    for (int k = 0; k < 4; ++k) {
+      g4[k] = vld1q_s32(gk + u + 4 * k);
+      b4[k] = vld1q_s32(bb + u + 4 * k);
+      if (kNb > 0) t0[k] = vld1q_s32(thr + u + 4 * k);
+      if (kNb > 1) t1[k] = vld1q_s32(thr + cpad + u + 4 * k);
+    }
+    auto pack = [&](const int32x4_t* a, const int32x4_t* t, uint8_t* yb) {
+      uint32x4_t ge[4];
+      for (int k = 0; k < 4; ++k) ge[k] = vcgeq_s32(a[k], t[k]);
+      const uint16x8_t m01 = vuzp1q_u16(vreinterpretq_u16_u32(ge[0]), vreinterpretq_u16_u32(ge[1]));
+      const uint16x8_t m23 = vuzp1q_u16(vreinterpretq_u16_u32(ge[2]), vreinterpretq_u16_u32(ge[3]));
+      uint8x16_t sb = vbicq_u8(bw, vuzp1q_u8(vreinterpretq_u8_u16(m01), vreinterpretq_u8_u16(m23)));
+      sb = vpaddq_u8(sb, sb);
+      sb = vpaddq_u8(sb, sb);
+      sb = vpaddq_u8(sb, sb);
+      if (top0) vst1q_lane_u32(reinterpret_cast<uint32_t*>(yb), vreinterpretq_u32_u16(vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(sb)))), 0);
+      else vst1q_lane_u16(reinterpret_cast<uint16_t*>(yb), vreinterpretq_u16_u8(sb), 0);
+    };
+    const int64_t bstep = words * 4;
+    for (int64_t r = r0; r < r1; ++r) {
+      const int8x16_t vx = vld1q_s8(qx + r * c + u), vp = vld1q_s8(qp + r * c + u);
+      const int16x8_t x0 = vmovl_s8(vget_low_s8(vx)), x1 = vmovl_high_s8(vx);
+      const int16x8_t p0 = vmovl_s8(vget_low_s8(vp)), p1 = vmovl_high_s8(vp);
+      int32x4_t a[4];
+      a[0] = vmlaq_s32(vmlal_s16(b4[0], vget_low_s16(x0), vget_low_s16(ka)), vmovl_s16(vget_low_s16(p0)), g4[0]);
+      a[1] = vmlaq_s32(vmlal_high_s16(b4[1], x0, ka), vmovl_high_s16(p0), g4[1]);
+      a[2] = vmlaq_s32(vmlal_s16(b4[2], vget_low_s16(x1), vget_low_s16(kb)), vmovl_s16(vget_low_s16(p1)), g4[2]);
+      a[3] = vmlaq_s32(vmlal_high_s16(b4[3], x1, kb), vmovl_high_s16(p1), g4[3]);
+      if (kNb > 0) pack(a, t0, bitp[0] + r * bstep + u / 8);
+      if (kNb > 1) pack(a, t1, bitp[1] + r * bstep + u / 8);
+      for (int k = 0; k < 4; ++k) a[k] = vqshlq_s32(a[k], upv);
+      const int16x8_t h0 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(a[0]), vreinterpretq_u16_s32(a[1])));
+      const int16x8_t h1 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(a[2]), vreinterpretq_u16_s32(a[3])));
+      vst1q_s8(y + r * c + u, vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(h0), vqmovn_s16(h1)), hi), lo));
+    }
+  }
+  bool fast_ = false;
+};
+
+// I8GapAffine (int8_ops._gap_affine): per sample, the channel sums of each input in int32 lanes (pairs of int8 widened and
+// accumulated: |sum| <= 128 * H * W < 2^31 for H * W < 2^24), then the int64 epilogue per channel (as the reference).
+class GapAffineNeon : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const size_t k = ctx.inputs.size() - 2;
+    const Tensor& x0 = ctx.in(0);
+    const int64_t ns = x0.dim(0), hw = x0.dim(1) * x0.dim(2), c = x0.dim(3);
+    const int32_t* K = ctx.in(k).data<int32_t>();
+    const int32_t* B = ctx.in(k + 1).data<int32_t>();
+    const Json& a = ctx.attrs();
+    const std::vector<int64_t> zs = a.get_ints("zeros", {});
+    const int sh = static_cast<int>(a.get_int("shift", 0));
+    const int32_t zy = static_cast<int32_t>(a.get_int("y_zero", 0));
+    const int lo = static_cast<int>(a.get_int("qmin", -128)), hi = static_cast<int>(a.get_int("qmax", 127));
+    int8_t* y = ctx.out(0).data<int8_t>();
+    sums_.assign(static_cast<size_t>(k * ((c + 15) / 16 * 16)), 0);
+    const int64_t cp = (c + 15) / 16 * 16;
+    for (int64_t n = 0; n < ns; ++n) {
+      std::fill(sums_.begin(), sums_.end(), 0);
+      for (size_t i = 0; i < k; ++i) {
+        const int8_t* q = ctx.in(i).data<int8_t>() + n * hw * c;
+        int32_t* s = sums_.data() + i * cp;
+        int64_t ch = 0;
+        for (; ch + 16 <= c; ch += 16) {
+          int32x4_t acc[4] = {vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0)};
+          int64_t j = 0;
+          for (; j + 2 <= hw; j += 2) {  // two pixels: int16 sums of a pair, then SADDW into int32
+            const int16x8_t l = vaddl_s8(vget_low_s8(vld1q_s8(q + j * c + ch)), vget_low_s8(vld1q_s8(q + (j + 1) * c + ch)));
+            const int16x8_t h = vaddl_high_s8(vld1q_s8(q + j * c + ch), vld1q_s8(q + (j + 1) * c + ch));
+            acc[0] = vaddw_s16(acc[0], vget_low_s16(l));
+            acc[1] = vaddw_high_s16(acc[1], l);
+            acc[2] = vaddw_s16(acc[2], vget_low_s16(h));
+            acc[3] = vaddw_high_s16(acc[3], h);
+          }
+          for (; j < hw; ++j) {
+            const int8x16_t v = vld1q_s8(q + j * c + ch);
+            const int16x8_t l = vmovl_s8(vget_low_s8(v)), h = vmovl_high_s8(v);
+            acc[0] = vaddw_s16(acc[0], vget_low_s16(l));
+            acc[1] = vaddw_high_s16(acc[1], l);
+            acc[2] = vaddw_s16(acc[2], vget_low_s16(h));
+            acc[3] = vaddw_high_s16(acc[3], h);
+          }
+          for (int t = 0; t < 4; ++t) vst1q_s32(s + ch + 4 * t, acc[t]);
+        }
+        for (; ch < c; ++ch) {
+          int32_t v = 0;
+          for (int64_t j = 0; j < hw; ++j) v += q[j * c + ch];
+          s[ch] = v;
+        }
+      }
+      for (int64_t ch = 0; ch < c; ++ch) {
+        int64_t acc = B[ch];
+        for (size_t i = 0; i < k; ++i) acc += (int64_t(sums_[i * cp + ch]) - hw * zs[i]) * K[i * c + ch];
+        y[n * c + ch] = q8::clamp8((sh > 0 ? (acc + (int64_t(1) << (sh - 1))) >> sh : acc) + zy, lo, hi);
+      }
+    }
+  }
+
+ private:
+  std::vector<int32_t> sums_;
+};
+bool gap_affine_neon_supported(const KernelContext& ctx) { return ctx.in(0).dim(1) * ctx.in(0).dim(2) < (int64_t(1) << 23); }
+
 class MulNeon : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
@@ -4498,6 +4703,7 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8BDense", "i8bdense.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BConv2D", "i8bconv2d.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BConv2DRes", "i8bconv2dres.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
+  add("I8BConv2DResI", "i8bconv2dresi.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BMatMul", "i8bmatmul.neon", kFeatNeon, bmatmul_i8_neon_supported, make_kernel<BMatMulI8Neon>);
 #if defined(__aarch64__)
   add("I8Conv2D", "i8conv2d.neon_sdot", kFeatNeon | kFeatDotProd, gemm_sdot_supported, make_kernel<GemmSdot>);
@@ -4525,6 +4731,8 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Concat", "i8concat.neon", kFeatNeon, nullptr, make_kernel<ConcatNeon>);
   add("I8Gather", "i8gather.neon", kFeatNeon, gather_neon_supported, make_kernel<GatherNeon>);
   add("I8Mul", "i8mul.neon", kFeatNeon, mul_neon_supported, make_kernel<MulNeon>);
+  add("I8GatedAdd", "i8gatedadd.neon", kFeatNeon, nullptr, make_kernel<GatedAddNeon>);
+  add("I8GapAffine", "i8gapaffine.neon", kFeatNeon, gap_affine_neon_supported, make_kernel<GapAffineNeon>);
   add("I8MaxPool2D", "i8maxpool2d.neon", kFeatNeon, pool_neon_supported, make_kernel<PoolNeon>);
   add("I8AvgPool2D", "i8avgpool2d.neon", kFeatNeon, nullptr, make_kernel<PoolNeon>);
   add("I8Conv2D", "i8conv2d.neon_depthwise", kFeatNeon, depthwise_neon_supported, make_kernel<DepthwiseNeon>);

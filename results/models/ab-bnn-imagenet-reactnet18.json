@@ -95,6 +95,23 @@
     "date": "2026-11-03"
    },
    {
+    "a": "model_int8_full_log2.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5808,
+    "b_top1": 0.5782,
+    "delta_pt": -0.26,
+    "ci95_pt": [
+     -1.078,
+     0.558
+    ],
+    "mcnemar_p": 0.5651006898726296,
+    "agreement": 0.7906,
+    "study": "int8_full_log2_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
+   },
+   {
     "a": "model_int8_full.bitino:int8_full",
     "b": "model_int8_full_log2.bitino:int8_full",
     "eval_set": "imagenet-val-subset-5000",
@@ -110,6 +127,23 @@
     "agreement": 0.7274,
     "study": "int8_full_vs_int8_full_log2_eval5000",
     "date": "2026-11-03"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5496,
+    "b_top1": 0.5782,
+    "delta_pt": 2.86,
+    "ci95_pt": [
+     1.915,
+     3.805
+    ],
+    "mcnemar_p": 3.6442466885146575e-09,
+    "agreement": 0.7342,
+    "study": "int8_full_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
    }
   ],
   "int8_full": [
@@ -175,9 +209,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
@@ -212,7 +246,7 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261113_0025",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
@@ -231,9 +265,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1029",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "1d054b95",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

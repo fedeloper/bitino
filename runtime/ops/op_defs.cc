@@ -189,7 +189,11 @@ void infer_reshape(const Node& n, const Ins& ins, Outs& outs) {
   }
   if (infer_at >= 0) s[infer_at] = num_elements(x.shape) / known;
   BF_CHECK(num_elements(s) == num_elements(x.shape), "reshape element count mismatch");
-  BF_CHECK(x.dtype == DType::kF32 || x.dtype == DType::kI8, "Reshape supports f32 and i8");
+  // bit tensors (int8_full v2: the bit outputs of token-wise fused blocks) only with the last dimension unchanged, so that
+  // the storage (rows of packed words) is the same
+  BF_CHECK(x.dtype == DType::kF32 || x.dtype == DType::kI8 ||
+               (x.dtype == DType::kBit && !s.empty() && !x.shape.empty() && s.back() == x.shape.back()),
+           "Reshape supports f32, i8 and bit tensors with the last dimension unchanged");
   set_out(outs, 0, x.dtype, s);
 }
 

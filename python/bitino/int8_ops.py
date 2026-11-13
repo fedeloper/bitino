@@ -360,6 +360,12 @@ def run_op(op: str, ins: list, a: dict, cache: dict, name: str) -> np.ndarray:
         return _binary_layer(op, ins, a, cache, name)
     if op == "I8BConv2DRes":
         return _bconv_res(ins, a)
+    if op == "I8BConv2DResI":
+        return _bconv_res_i(ins, a)
+    if op == "I8GatedAdd":
+        return _gated_add(ins, a)
+    if op == "I8GapAffine":
+        return _gap_affine(ins, a)
     if op == "I8BMatMul":
         return _bmatmul(ins, a)
     raise NotImplementedError(f"numpy executor: op {op}")
@@ -535,8 +541,18 @@ def bconv_res_pre(v, ins, a):
     return v
 
 
+def lin_encode(w, a: dict) -> np.ndarray:
+    """I8BConv2DRes output "i8" (2026-11-13, int8_full v2: the fused block writes the tensor's linear int8 grid; constants
+    in units of its scale): y = clamp(rne(w) + y_zero, qmin, qmax), rne the round-half-to-even conversion to an integer
+    (FCVTNS; saturating, so values beyond +-2^20 give the same y)."""
+    r = np.clip(np.rint(np.asarray(w, np.float32)), np.float32(-2.0 ** 20), np.float32(2.0 ** 20))
+    y = r.astype(np.int64) + int(a.get("y_zero", 0))
+    return clamp_q(y, int(a.get("qmin", -128)), int(a.get("qmax", 127)))
+
+
 def _bconv_res(ins, a):
-    """I8BConv2DRes: binary convolution + residual + per-channel PReLU (+ bias) -> l8 code, and optionally the
+    """I8BConv2DRes: binary convolution + residual + per-channel PReLU (+ bias) -> l8 code (or, output "i8", the linear
+    code lin_encode(w)), and optionally the
     binarization of the pre-activation sum for the next binary layer (output 1, bit tensor):
     v = fp32(fp32(acc) * post_mul[o]) + post_add[o];  v = bconv_res_pre(v) (optional inputs 10-13);  u = v + R(res);  w = u >= 0 ? u : fp32(u * slope[o]);
     w = w + out_bias[o] (if given);  y = l8_encode(w);  bit: +1 iff s >= bit_thr[o] (bit_binarize ge) / s > (gt), with
@@ -553,13 +569,119 @@ def _bconv_res(ins, a):
     w = np.where(u >= 0, u, (u * np.asarray(ins[6], np.float32)).astype(np.float32)).astype(np.float32)
     if len(ins) > 7 and ins[7] is not None:
         w = (w + np.asarray(ins[7], np.float32)).astype(np.float32)
-    y = l8_encode(w)
+    y = l8_encode(w) if a.get("output", "l8") == "l8" else lin_encode(w, a)
     if len(ins) > 8 and ins[8] is not None:
         t = np.asarray(ins[8], np.float32)
         s = w if a.get("bit_src", "sum") == "out" else u
         pos = (s > t) if a.get("bit_binarize", "ge") == "gt" else (s >= t)
         return y, np.where(pos, 1.0, -1.0).astype(np.float32)
     return y
+
+
+def bconv_res_i_bound(K: int, m1, m2, b, slope=None, k: int = 0, ob=None, pb=None) -> int:
+    """Largest |value| the I8BConv2DResI epilogue can reach (pre-stage a, acc and w; int32 arithmetic is exact iff < 2^31)."""
+    pre = K * int(np.max(np.abs(np.asarray(m1, np.int64))))
+    if pb is not None:
+        pre += int(np.max(np.abs(np.asarray(pb, np.int64))))
+    acc = pre + 128 * int(np.max(np.abs(np.asarray(m2, np.int64)))) + int(np.max(np.abs(np.asarray(b, np.int64))))
+    w = acc
+    if slope is not None:
+        w = max(acc, ((acc * int(np.max(np.abs(np.asarray(slope, np.int64)))) >> 31) + 1) << k)
+    if ob is not None:
+        w += int(np.max(np.abs(np.asarray(ob, np.int64))))
+    return max(acc, w)
+
+
+def _bconv_res_i(ins, a):
+    """I8BConv2DResI (int8_full v2, 2026-11-13): binary convolution + residual block with an integer epilogue. With dot the
+    exact binary dot product (int8_ops._int_conv) and q the residual code (in(5), int8 [N, OH, OW, O]):
+        acc = dot * m1[o] + q * m2[o] + b[o]                                     in(6) m1, in(8) m2, in(7) b (int32, exact)
+              (with the pre stage in(12) pre_b, in(13) pre_lo, in(14) pre_hi:
+               acc = clamp(dot * m1[o] + pre_b[o], pre_lo[o], pre_hi[o]) + q * m2[o] + b[o]; e.g. a ReLU and the sign of the
+               batch norm after it, QuickNet's BConv[relu] -> BatchNorm -> Add)
+        w   = acc < 0 ? (mulhi(acc, slope[o]) << slope_shift) : acc                in(10) slope (optional; mulhi = SQRDMULH)
+        w   = w + out_bias[o]                                                       in(11) (optional)
+        y   = clamp(rshr(w, shift) + y_zero, qmin, qmax)                            output 0 (int8, linear)
+        bit = +1 iff s >= bit_thr[o], s = acc (bit_src "sum", default) or w ("out")  in(9) (optional), output 1
+    Attribute r_tile (default 1): the residual has O / r_tile channels, channel o reads residual channel o mod (O / r_tile).
+    The residual in(5) (and then m2) may be absent (q * m2 = 0: a binary convolution with an integer PReLU epilogue, BNext's
+    BConv -> PReLU). Inputs 2 / 3 are unused (empty); in(4) the input-binarization thresholds as for I8BConv2D. The quantizer bounds every
+    term (bconv_res_i_bound < 2^31), so every value is an exact int32."""
+    thr = ins[4] if len(ins) > 4 else None
+    xb = binary_input(ins[0], a, thr)
+    w1 = ins[1].astype(np.int32)
+    dot = _int_conv(xb, w1, a, int(a.get("pad_value", 0))).astype(np.int64)
+    m1, b = (np.asarray(ins[i], np.int64) for i in (6, 7))
+    m2 = np.asarray(ins[8], np.int64) if _opt_in(ins, 5) is not None else np.zeros(1, np.int64)   # no residual: q * m2 = 0
+    sl, ob, pb = _opt_in(ins, 10), _opt_in(ins, 11), _opt_in(ins, 12)
+    K = int(np.prod(w1.shape[1:]))
+    if bconv_res_i_bound(K, m1, m2, b, sl, int(a.get("slope_shift", 0)), ob, pb) >= 2 ** 31:
+        raise ValueError("I8BConv2DResI: constants exceed the int32 bound")
+    pre = dot * m1
+    if pb is not None:
+        pre = np.clip(pre + np.asarray(pb, np.int64), np.asarray(ins[13], np.int64), np.asarray(ins[14], np.int64))
+    acc = pre + b
+    if _opt_in(ins, 5) is not None:
+        r = np.asarray(ins[5], np.int64)
+        rt = int(a.get("r_tile", 1))
+        if rt > 1:   # residual of O / r_tile channels, repeated along the channels (BHViT's repeat)
+            r = np.concatenate([r] * rt, axis=-1)
+        acc = acc + r * m2
+    w = acc
+    if sl is not None:
+        neg = mulhi(acc, np.asarray(sl, np.int64)) << int(a.get("slope_shift", 0))
+        w = np.where(acc < 0, neg, acc)
+    if ob is not None:
+        w = w + np.asarray(ob, np.int64)
+    y = clamp_q(rshr(w, int(a.get("shift", 0))) + int(a.get("y_zero", 0)), int(a.get("qmin", -128)), int(a.get("qmax", 127)))
+    bt = _opt_in(ins, 9)
+    if bt is not None:
+        s = w if a.get("bit_src", "sum") == "out" else acc
+        return y, np.where(s >= np.asarray(bt, np.int64), 1.0, -1.0).astype(np.float32)
+    return y
+
+
+def gated_add_bound(kx, kp, b) -> int:
+    """Largest |acc| of I8GatedAdd (also of its folded form q_x kx + q_p (g - z_g) kp + b'), < 2^31 required."""
+    return 256 * int(np.max(np.abs(np.asarray(kx, np.int64)))) + 65280 * int(np.max(np.abs(np.asarray(kp, np.int64)))) + \
+        int(np.max(np.abs(np.asarray(b, np.int64))))
+
+
+def _gated_add(ins, a):
+    """I8GatedAdd (int8_full v2, 2026-11-13): a residual add of a squeeze-excitation-gated branch (BNext's
+    x + norm(sigmoid(se) * p)), in integers. x, p int8 [N, H, W, C], g int8 [N, 1, 1, C] (the gate's code):
+        acc = (x - x_zero) * kx[c] + (p - p_zero) * (g[n, c] - g_zero) * kp[c] + b[c]      (exact int32, gated_add_bound)
+        y   = clamp(rshr(acc, shift) + y_zero, qmin, qmax)
+        bit_j = +1 iff acc >= bit_thr[j, c]          (in(6) i32 [nb, C], optional: outputs 1 .. nb)"""
+    x, p, g = (np.asarray(ins[i], np.int64) for i in (0, 1, 2))
+    kx, kp, b = (np.asarray(ins[i], np.int64) for i in (3, 4, 5))
+    if gated_add_bound(kx, kp, b) >= 2 ** 31:
+        raise ValueError("I8GatedAdd: constants exceed the int32 bound")
+    acc = (x - int(a.get("x_zero", 0))) * kx + (p - int(a.get("p_zero", 0))) * (g - int(a.get("g_zero", 0))) * kp + b
+    y = clamp_q(rshr(acc, int(a.get("shift", 0))) + int(a.get("y_zero", 0)), int(a.get("qmin", -128)), int(a.get("qmax", 127)))
+    bt = _opt_in(ins, 6)
+    if bt is None:
+        return y
+    T = np.asarray(bt, np.int64).reshape(-1, x.shape[-1])
+    return (y,) + tuple(np.where(acc >= T[j], 1.0, -1.0).astype(np.float32) for j in range(T.shape[0]))
+
+
+def _gap_affine(ins, a):
+    """I8GapAffine (int8_full v2, 2026-11-13): the global average pool of an affine sum of int8 tensors, without the sum's
+    own rounding (BNext's GAP(mix), mix = s * x + (1 - s) * p). x_1..x_n int8 [N, H, W, C] (inputs 0 .. n-1), then
+    K i32 [n, C] and B i32 [C]:
+        S_i = sum over H, W of (x_i - zeros[i])                                 (exact integers)
+        acc = sum_i S_i * K[i, c] + B[c]                                         (int64, exact)
+        y   = clamp(rshr(acc, shift) + y_zero, qmin, qmax)                       [N, 1, 1, C]"""
+    n = len(ins) - 2
+    K = np.asarray(ins[n], np.int64)
+    B = np.asarray(ins[n + 1], np.int64)
+    zs = a.get("zeros", [0] * n)
+    acc = B.reshape(1, 1, 1, -1).astype(np.int64)
+    for i in range(n):
+        S = (np.asarray(ins[i], np.int64) - int(zs[i])).sum(axis=(1, 2), keepdims=True)
+        acc = acc + S * K[i]
+    return clamp_q(rshr(acc, int(a.get("shift", 0))) + int(a.get("y_zero", 0)), int(a.get("qmin", -128)), int(a.get("qmax", 127)))
 
 
 def _bmatmul(ins, a):

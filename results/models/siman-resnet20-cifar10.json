@@ -72,6 +72,23 @@
     "agreement": 0.8903,
     "study": "exact_vs_int8_full_cifar10test10000",
     "date": "2026-11-03"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8503,
+    "b_top1": 0.847,
+    "delta_pt": -0.33,
+    "ci95_pt": [
+     -0.915,
+     0.255
+    ],
+    "mcnemar_p": 0.28369525488229796,
+    "agreement": 0.8882,
+    "study": "int8_full_vs_int8_full_v2_cifar10test10000",
+    "date": "2026-11-13"
    }
   ]
  },
@@ -102,9 +119,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

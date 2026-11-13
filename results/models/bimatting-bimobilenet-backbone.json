@@ -86,6 +86,23 @@
     "agreement": 0.0014,
     "study": "exact_vs_int8_full_poolbug_eval5000",
     "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.2888,
+    "b_top1": 0.3446,
+    "delta_pt": 5.58,
+    "ci95_pt": [
+     4.444,
+     6.716
+    ],
+    "mcnemar_p": 8.50929672723234e-22,
+    "agreement": 0.4346,
+    "study": "int8_full_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
    }
   ],
   "int8_full": [
@@ -135,9 +152,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
@@ -166,9 +183,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1029",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "1d054b95",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
@@ -197,7 +214,7 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261113_0025",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {

@@ -202,7 +202,9 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
   for (const Node& node : nodes_) {
     if (node.op != "Reshape" || node.inputs.empty() || node.inputs[0] < 0) continue;
     const int in = node.inputs[0], out = node.outputs[0];
-    if (pinned[out] || infos_[in].dtype == DType::kBit || infos_[in].dtype != infos_[out].dtype ||
+    const bool bit_ok = infos_[in].dtype != DType::kBit ||
+                        (!infos_[in].shape.empty() && !infos_[out].shape.empty() && infos_[in].shape.back() == infos_[out].shape.back());
+    if (pinned[out] || !bit_ok || infos_[in].dtype != infos_[out].dtype ||
         storage_bytes(infos_[in].dtype, infos_[in].shape) != storage_bytes(infos_[out].dtype, infos_[out].shape))
       continue;
     alias_root[out] = alias_root[in] >= 0 ? alias_root[in] : in;

@@ -118,8 +118,10 @@ def main() -> int:
     ap.add_argument("--no-monotone", action="store_true", help="no R3b (binary layers reading through monotone chains)")
     ap.add_argument("--no-affine-trees", action="store_true", help="no R7 (Add/ChannelAffine trees as one affine sum)")
     ap.add_argument("--stats", help="reuse calibration statistics (JSON written by a previous run as <out>.stats.json)")
-    ap.add_argument("--residual-code", choices=("linear", "l8"), default="linear",
-                    help="l8: 8-bit log2 residual stream with fused I8BConv2DRes blocks (python/bitino/quantize_l8.py)")
+    ap.add_argument("--residual-code", choices=("linear", "l8", "lin8"), default="linear",
+                    help="l8: 8-bit log2 residual stream with fused I8BConv2DRes blocks (python/bitino/quantize_l8.py); lin8: "
+                         "int8_full v2, the same fused blocks writing the int8_full linear grids (I8BConv2DRes output i8; "
+                         "model_int8_full_v2.bitino, docs/int8.md)")
     ap.add_argument("--pool-grid-fix", dest="pool_grid_fix", action="store_true", default=True,
                     help="(default) pass-through ops after AvgPool2D / Pad get the pool's actual (input) grid (fixes a stale-grid "
                          "bug of the Larq heads / SE gates; quantize_int8._Emitter.assign_params)")
@@ -171,6 +173,15 @@ def main() -> int:
     ap.add_argument("--res-pre", action="store_true",
                     help="with --residual-code l8: also fuse blocks whose binary convolution has a ReLU (QuickNet BConv[relu] -> "
                          "BatchNorm -> Add): I8BConv2DRes pre stage (quantize_l8.fuse, int8_ops.bconv_res_pre); off by default")
+    ap.add_argument("--dense", action="store_true",
+                    help="with --residual-code lin8: token-wise BDense residual blocks (BHViT) as 1x1 I8BConv2DResI "
+                         "(quantize_l8.fuse_dense)")
+    ap.add_argument("--gated", action="store_true",
+                    help="with --residual-code lin8: BNext blocks, BConv -> PReLU as I8BConv2DResI and the squeeze-excitation "
+                         "gated residual add as I8GatedAdd (quantize_l8.fuse_gated)")
+    ap.add_argument("--int-epilogue", action="store_true",
+                    help="with --residual-code lin8: fused blocks without a pre stage use the integer epilogue (I8BConv2DResI, "
+                         "int8_ops._bconv_res_i) instead of the fp32 one")
     a = ap.parse_args()
 
     g = F.read(a.model)
@@ -218,14 +229,41 @@ def main() -> int:
     E = QI._Emitter(Q, qopts)
     qg, rep = E.emit()  # == QI.quantize(g, stats, shapes, qopts)
     l8rep = None
-    if a.residual_code == "l8":
+    if a.residual_code in ("l8", "lin8"):
         l8o = dict(qopts, l8_range=a.l8_range, stem=a.stem, identity_blocks=a.identity_blocks)
+        if a.residual_code == "lin8":
+            l8o["code"] = "lin8"
+            if a.int_epilogue:
+                l8o["int_epilogue"] = True
         if a.res_pre:
             l8o["res_pre"] = True
         qg, l8rep = QL.fuse(qg, Q, E, l8o)
-        if not l8rep.get("fused_blocks"):   # e.g. MeliusNet: no BConv2D -> Add(residual) block (the improvement adds are padded)
+        if a.residual_code == "lin8" and a.dense:   # BHViT: token-wise BDense residual blocks as 1x1 I8BConv2DResI
+            qg, drep = QL.fuse_dense(qg, Q, E, l8o)
+            l8rep["dense"] = {k: v for k, v in drep.items() if k != "int8_ops"}
+            if drep.get("int8_ops"):
+                l8rep["int8_ops"] = drep["int8_ops"]
+        if a.residual_code == "lin8" and a.gated:   # BNext: PReLU binary convolutions and gated residual adds
+            qg, grep_ = QL.fuse_gated(qg, Q, E, l8o)
+            l8rep["gated"] = {k: v for k, v in grep_.items() if k != "int8_ops"}
+            if grep_.get("int8_ops"):
+                l8rep["int8_ops"] = grep_["int8_ops"]
+        if a.residual_code == "lin8":   # common subexpressions (BHViT's repeated rolls)
+            qg, crep = QL.cse(qg)
+            l8rep["cse_removed"] = crep["cse_removed"]
+            if crep["cse_removed"]:
+                from collections import Counter
+                l8rep["int8_ops"] = dict(Counter(n.op for n in qg.nodes if n.op.startswith("I8")))
+        if not l8rep.get("fused_blocks") and not l8rep.get("gated", {}).get("prelu_convs") and \
+                not l8rep.get("dense", {}).get("dense_blocks"):
+            # e.g. MeliusNet: no BConv2D -> Add(residual) block (the improvement adds are padded)
             raise SystemExit("--residual-code l8: no residual block to fuse (quantize_l8.fuse: fused_blocks 0); no file written")
-        l8rep["l8_range"] = a.l8_range
+        if "int8_ops" not in l8rep:
+            l8rep["int8_ops"] = rep["int8_ops"]
+        if a.residual_code == "l8":
+            l8rep["l8_range"] = a.l8_range
+        if a.int_epilogue:
+            l8rep["int_epilogue_option"] = True
         l8rep["identity_blocks"] = a.identity_blocks
         if a.res_pre:
             l8rep["res_pre"] = True
@@ -246,11 +284,15 @@ def main() -> int:
         "tensor_params": rep["tensor_params"],
         **({"residual_code": {"code": "l8", "scheme": "8-bit log2 residual stream (sign, 0, 2^(E + (j-127)/8)), fused "
                               "I8BConv2DRes blocks with bit outputs; docs/int8.md", **{k: v for k, v in l8rep.items() if k != "int8_ops"}}}
-           if l8rep else {}),
+           if l8rep and a.residual_code == "l8" else {}),
+        **({"residual_code": {"code": "lin8", "scheme": "int8_full v2: fused I8BConv2DRes blocks writing the int8_full linear grid "
+                              "of the block output (output i8: clamp(rne(w) + y_zero)), linear residual codes, bit outputs of the "
+                              "unrounded sums; docs/int8.md", **{k: v for k, v in l8rep.items() if k != "int8_ops"}}}
+           if l8rep and a.residual_code == "lin8" else {}),
         "date": datetime.date.today().isoformat(),
     }
     qg.manifest = dict(qg.manifest)
-    qg.manifest["variant"] = "int8_full" if a.residual_code == "linear" else "int8_full_l8"
+    qg.manifest["variant"] = {"linear": "int8_full", "l8": "int8_full_l8", "lin8": "int8_full_v2"}[a.residual_code]
     qg.manifest["quantization"] = quant
     sha = F.write(qg, a.out)
     # sanity: the quantized graph runs in the numpy oracle and agrees with the float model on a calibration record

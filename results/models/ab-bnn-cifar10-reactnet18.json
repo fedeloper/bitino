@@ -127,6 +127,40 @@
     "agreement": 0.9729,
     "study": "int8_full_log2_split_vs_int8_full_log2_cifar10test10000",
     "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full_log2.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9191,
+    "b_top1": 0.9183,
+    "delta_pt": -0.08,
+    "ci95_pt": [
+     -0.372,
+     0.212
+    ],
+    "mcnemar_p": 0.638590339271932,
+    "agreement": 0.9743,
+    "study": "int8_full_log2_vs_int8_full_v2_cifar10test10000",
+    "date": "2026-11-13"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.9177,
+    "b_top1": 0.9183,
+    "delta_pt": 0.06,
+    "ci95_pt": [
+     -0.221,
+     0.341
+    ],
+    "mcnemar_p": 0.7276586764549052,
+    "agreement": 0.9761,
+    "study": "int8_full_vs_int8_full_v2_cifar10test10000",
+    "date": "2026-11-13"
    }
   ],
   "int8_full": [
@@ -187,9 +221,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
@@ -224,7 +258,7 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261113_0025",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
@@ -243,9 +277,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1029",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "1d054b95",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

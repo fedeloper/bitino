@@ -566,6 +566,29 @@ inline void i8_store4x4(int8_t* y, int64_t ys, float32x4_t v0, float32x4_t v1, f
 // out_bias (optional), in(8) bit_thr (optional, then out(1) is the bit tensor). Groups == 1 only.
 struct I8Res {
   bool on = false, l8 = true, bits = false, gt = false, has_bias = false, bit_out = false;  // bit_out: bit_src "out" (bits of w)
+  // output "i8" (int8_full v2, attribute i8_res_lin): the linear code clamp(rne(w) + y_zero, qmin, qmax) instead of the l8
+  // code (int8_ops.lin_encode); linear residual codes and the two-phase epilogue only
+  bool ylin = false;
+  int32_t yz = 0, ylo = -128, yhi = 127;
+  // integer epilogue (I8BConv2DResI, attribute i8_res_int; int8_full::ResIEpilogue): acc = dot * m1 + q * m2 + b, PReLU by
+  // SQRDMULH + shift, out_bias, bits of acc / w against int32 thresholds, y = clamp(rshr(w, shift) + y_zero)
+  bool ri = false, ri_slope = false, ri_ob = false;
+  std::vector<int16_t> im1, im2;                // by channel, padded to oc_pad + 16
+  std::vector<int32_t> ib, ithr, islope, iob;   // by channel, padded to oc_pad + 16
+  int ishift = 0, ik = 0;
+  // fast form (res2_epilogue_int_fast): rounding constant and y_zero folded into fb / fob, thresholds fthr
+  bool ifast = false;
+  int islope_mode = 0;                          // 0 none, 1 max form, 2 select form
+  std::vector<int32_t> fb, fthr, fob;
+  bool ipre = false;                            // pre stage: clamp(dot * m1 + pb, plo, phi)
+  bool ires = true;                             // residual given (else q * m2 = 0)
+  int64_t rtile = 1;                            // I8BConv2DResI r_tile: residual of oc / rtile channels
+  std::vector<int32_t> ipb, iplo, iphi;
+  // the fast form's pre stage: every channel's clamp is max(., 0) (sigma 1) or min(., 0) = -max(-., 0) (sigma -1), so
+  // acc = b + sigma * max(dot * (sigma m1) + sigma pb, 0) + q * m2 (MLA by sigma); fewer live registers than lo / hi
+  bool isigma = false;
+  std::vector<int16_t> sm1;
+  std::vector<int32_t> spb, ssig;
   bool has_lut = false;            // in(9) out_lut: the l8 codes are remapped by apply_out_lut after the tile
   alignas(16) uint8_t lut[256];    // out_lut[code + 128]
   std::vector<float> slope, bias, bthr;  // by channel, padded to oc_pad + 4
@@ -593,6 +616,10 @@ struct I8Res {
   void parse(const KernelContext& ctx, int64_t oc, int64_t oc_pad) {
     on = ctx.attrs().get_int("i8_res", 0) != 0;
     if (!on) return;
+    if (ctx.attrs().get_int("i8_res_int", 0) != 0) {
+      parse_int(ctx, oc, oc_pad);
+      return;
+    }
     int8_full::ResEpilogue ep(ctx);
     pre = ep.pre_on();
     if (pre) {
@@ -608,6 +635,11 @@ struct I8Res {
       if (ep.pre_add) std::copy_n(ep.pre_add, oc, padd.data());
     }
     l8 = ep.r_l8;
+    ylin = ctx.attrs().get_int("i8_res_lin", 0) != 0;
+    yz = static_cast<int32_t>(ctx.attrs().get_int("y_zero", 0));
+    ylo = static_cast<int32_t>(ctx.attrs().get_int("i8_qmin", -128));
+    yhi = static_cast<int32_t>(ctx.attrs().get_int("i8_qmax", 127));
+    BF_CHECK(!ylin || !l8, "bconv2d.neon_opt: linear residual output needs a linear residual code");
     rz = ep.r_zero;
     rs = ep.r_scale;
     std::copy_n(ep.dec, 256, dec);
@@ -637,6 +669,100 @@ struct I8Res {
         if (std::fpclassify(bthr[i]) == FP_SUBNORMAL) bthr[i] = bthr[i] > 0.f ? std::numeric_limits<float>::min() : 0.f;
 #endif
   }
+  void parse_int(const KernelContext& ctx, int64_t oc, int64_t oc_pad) {
+    const Json& a = ctx.attrs();
+    ri = true;
+    l8 = false;
+    bits = ctx.has_in(9);
+    bit_out = a.get_string("bit_src", "sum") == "out";
+    ri_slope = ctx.has_in(10);
+    ri_ob = ctx.has_in(11);
+    ishift = static_cast<int>(a.get_int("shift", 0));
+    ik = static_cast<int>(a.get_int("slope_shift", 0));
+    yz = static_cast<int32_t>(a.get_int("y_zero", 0));
+    ylo = static_cast<int32_t>(a.get_int("i8_qmin", -128));
+    yhi = static_cast<int32_t>(a.get_int("i8_qmax", 127));
+    const size_t n = static_cast<size_t>(oc_pad + 16);
+    auto i32 = [&](size_t i, std::vector<int32_t>* v) {
+      v->assign(n, 0);
+      if (ctx.has_in(i)) std::copy_n(ctx.in(i).data<int32_t>(), oc, v->data());
+    };
+    auto i16 = [&](size_t i, std::vector<int16_t>* v) {
+      v->assign(n, 0);
+      const int32_t* p = ctx.in(i).data<int32_t>();
+      for (int64_t c = 0; c < oc; ++c) v->at(static_cast<size_t>(c)) = static_cast<int16_t>(p[c]);  // |m| <= 32767 (checked)
+    };
+    i16(6, &im1);
+    rtile = a.get_int("r_tile", 1);
+    ires = ctx.has_in(5);
+    if (ires) i16(8, &im2);
+    else im2.assign(n, 0);
+    i32(7, &ib);
+    i32(9, &ithr);
+    i32(10, &islope);
+    i32(11, &iob);
+    ipre = ctx.has_in(12);
+    i32(12, &ipb);
+    i32(13, &iplo);
+    i32(14, &iphi);
+    isigma = ipre;
+    sm1.assign(n, 0);
+    spb.assign(n, 0);
+    ssig.assign(n, 1);
+    for (int64_t i = 0; i < oc && ipre; ++i) {
+      const bool pos = iplo[i] == 0 && iphi[i] == INT32_MAX, neg = iplo[i] == INT32_MIN && iphi[i] == 0;
+      isigma = isigma && (pos || neg);
+      ssig[i] = neg ? -1 : 1;
+      sm1[i] = static_cast<int16_t>(neg ? -im1[i] : im1[i]);  // |m1| <= 32767: the negation fits
+      spb[i] = neg ? -ipb[i] : ipb[i];                         // |pb| < 2^31 - 1 by the bound
+    }
+    // fast form: shift <= 16, every folded value below 2^31 (the operator's bound plus |c|)
+    const int64_t c = (ishift > 0 ? (int64_t(1) << (ishift - 1)) : 0) + static_cast<int64_t>(yz) * (int64_t(1) << ishift);
+    const int64_t K = ctx.in(1).dim(1) * ctx.in(1).dim(2) * ctx.in(1).dim(3);
+    int64_t mb = 0, mo = 0, mp = 0;
+    for (int64_t i = 0; i < oc; ++i) {
+      mb = std::max<int64_t>(mb, std::llabs(ib[i]));
+      mo = std::max<int64_t>(mo, std::llabs(iob[i]));
+      mp = std::max<int64_t>(mp, std::llabs(ipb[i]));
+    }
+    int64_t m1x = 0, m2x = 0, slx = 0;
+    bool pos = true;
+    for (int64_t i = 0; i < oc; ++i) {
+      m1x = std::max<int64_t>(m1x, std::abs(im1[i]));
+      m2x = std::max<int64_t>(m2x, std::abs(im2[i]));
+      slx = std::max<int64_t>(slx, std::llabs(islope[i]));
+      pos = pos && islope[i] >= 0;
+    }
+    const int64_t acc = K * m1x + mp + 128 * m2x + mb;
+    const int64_t w = std::max(acc, ri_slope ? (((acc * slx) >> 31) + 1) << ik : acc) + mo;
+    ifast = ishift <= 16 && std::max(acc, w) + std::llabs(c) < (int64_t(1) << 31) - 1 && (!ipre || isigma) &&
+            (rtile == 1 || (oc / rtile) % 16 == 0);
+    if (!ifast) return;
+    islope_mode = !ri_slope ? 0 : (ik == 0 && pos ? 1 : 2);
+    fb = ib;
+    fthr = ithr;
+    fob = iob;
+    for (int64_t i = 0; i < oc; ++i) {
+      if (!ri_slope) {  // w = acc + ob: everything into b; bits of acc (sum) are T + ob + c, bits of w (out) T + c
+        fb[i] = static_cast<int32_t>(ib[i] + iob[i] + c);
+        fthr[i] = static_cast<int32_t>(std::min<int64_t>(INT32_MAX, std::max<int64_t>(INT32_MIN, int64_t(ithr[i]) + c + (bit_out ? 0 : iob[i]))));
+      } else {          // after the PReLU: ob + c; bits of w are T + c, bits of acc unchanged
+        fob[i] = static_cast<int32_t>(iob[i] + c);
+        if (bit_out) fthr[i] = static_cast<int32_t>(std::min<int64_t>(INT32_MAX, std::max<int64_t>(INT32_MIN, int64_t(ithr[i]) + c)));
+      }
+    }
+  }
+  // scalar integer epilogue (tails), int8_full::ResIEpilogue::finish
+  int8_t finish_int(int32_t dot, int64_t o, int8_t r, bool* bit) const {  // r: 0 without a residual (im2 = 0)
+    int64_t pre = static_cast<int64_t>(dot) * im1[o];
+    if (ipre) pre = std::min<int64_t>(std::max<int64_t>(pre + ipb[o], iplo[o]), iphi[o]);
+    const int64_t acc = pre + static_cast<int64_t>(r) * im2[o] + ib[o];
+    int64_t w = acc;
+    if (ri_slope && acc < 0) w = q8::mulhi(acc, islope[o]) * (int64_t(1) << ik);
+    if (ri_ob) w += iob[o];
+    *bit = bits && !((bit_out ? w : acc) >= ithr[o]);
+    return q8::clamp8(q8::rshr(w, ishift) + yz, ylo, yhi);
+  }
   // the pre stage of one value (scalar; tails), sample b
   float pre1(float v, int64_t b, int64_t o) const {
     v = v >= 0.f ? v : v * pslope[o];
@@ -650,9 +776,22 @@ struct I8Res {
     float w = u >= 0.f ? u : u * slope[o];
     if (has_bias) w = w + bias[o];
     *bit = !((bit_out ? w : u) >= bthr[o]);
+    if (ylin) {  // int8_ops.lin_encode
+      const int64_t yv = static_cast<int64_t>(std::nearbyint(std::fmin(std::fmax(w, -1048576.f), 1048576.f))) + yz;
+      return static_cast<int8_t>(yv < ylo ? ylo : (yv > yhi ? yhi : yv));
+    }
     return q8::l8_encode(w);
   }
 };
+
+// int8_ops.lin_encode of 16 values: clamp(rne(w) + z, lo, hi). FCVTNS saturates to int32 (and the scalar form clamps to
+// +-2^20 first): with |z| <= 2^16 (op definition) both give lo / hi beyond the int8 range, so the codes are equal.
+inline __attribute__((always_inline)) int8x16_t lin_encode16(float32x4_t w0, float32x4_t w1, float32x4_t w2, float32x4_t w3, int32x4_t z,
+                                                             int8x16_t lo, int8x16_t hi) {
+  const int16x8_t a = vcombine_s16(vqmovn_s32(vqaddq_s32(vcvtnq_s32_f32(w0), z)), vqmovn_s32(vqaddq_s32(vcvtnq_s32_f32(w1), z)));
+  const int16x8_t b = vcombine_s16(vqmovn_s32(vqaddq_s32(vcvtnq_s32_f32(w2), z)), vqmovn_s32(vqaddq_s32(vcvtnq_s32_f32(w3), z)));
+  return vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(a), vqmovn_s16(b)), hi), lo);
+}
 
 // int8 sign_zero row -> nz / neg planes (words of 32 codes; int16 compares, so T = 128 needs no care); kPc: per-channel
 // thresholds (a compile-time flag since 2026-11-13: the runtime test per 8 codes cost ~2x)
@@ -1038,8 +1177,9 @@ class BConv2DNeonOpt : public Kernel {
     BF_CHECK(!res_.on || (i8_out_.on && g_.groups == 1), "bconv2d.neon_opt: residual epilogue needs int8 output, groups 1");
     // Residual epilogue in two phases (compute_res2): int16 dot products of a 16-channel unit, then the epilogue per
     // pixel over 16 contiguous channels. |dot| <= K must fit int16.
-    res2_ = res_.on && k_bits_ <= 32767 && (res_.pre || !opts_res2_off());
-    BF_CHECK(!res_.pre || res2_, "bconv2d.neon_opt: residual pre stage needs the two-phase epilogue (K <= 32767)");
+    res2_ = res_.on && k_bits_ <= 32767 && (res_.pre || res_.ylin || res_.ri || !opts_res2_off());
+    BF_CHECK(!(res_.pre || res_.ylin || res_.ri) || res2_,
+             "bconv2d.neon_opt: residual pre stage / linear output / integer epilogue needs the two-phase epilogue (K <= 32767)");
     // Plain int8 / fp32 output in two phases as well (compute_dot2; BITINO_BCONV_DOT2=0 keeps compute_tile_a).
     dot2_ = !res_.on && g_.groups == 1 && k_bits_ <= 32767 && (i8_out_.on || !direct_bits_) && !opts_dot2_off();
     // fp32 output with a chain epilogue: the epilogue runs on each 16-channel unit in registers (EltwiseProgram::store_unit16)
@@ -1479,11 +1619,272 @@ class BConv2DNeonOpt : public Kernel {
     else if (res_.bit_out) BF_RES2(L, B, kBitsOut);     \
     else BF_RES2(L, B, kBitsSum);                       \
   } while (0)
+    if (res_.ri) {
+      res2_epilogue_int_dispatch(ctx, mask, p0, np, u, db);
+      return;
+    }
+    if (res_.ylin) {
+      res2_epilogue_lin_dispatch(ctx, mask, p0, np, u, db);
+      return;
+    }
     if (res_.pre) {
       res2_epilogue_pre_dispatch(ctx, mask, p0, np, u, db);
       return;
     }
     if (res_.l8) {
+      if (res_.has_bias) BF_RES2_K(true, true);
+      else BF_RES2_K(true, false);
+    } else {
+      if (res_.has_bias) BF_RES2_K(false, true);
+      else BF_RES2_K(false, false);
+    }
+#undef BF_RES2_K
+#undef BF_RES2
+  }
+
+  // integer epilogue (I8BConv2DResI), out of line. Fast form (I8Res::ifast, shift <= 16): PReLU none / max / select
+  // and bits; otherwise the generic form (PReLU or not, out_bias or not, bits).
+  __attribute__((noinline)) void res2_epilogue_int_dispatch(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np,
+                                                            int64_t u, int16_t* db) const {
+    if (res_.ifast && !res_.ires && !res_.ipre) {  // no residual (BNext's BConv -> PReLU)
+#define BF_RES2F(S, K) res2_epilogue_int_fast<S, K, false, false>(ctx, mask, p0, np, u, db)
+#define BF_RES2F_K(S)                                   \
+  do {                                                  \
+    if (!res_.bits) BF_RES2F(S, kBitsNone);             \
+    else if (res_.bit_out) BF_RES2F(S, kBitsOut);       \
+    else BF_RES2F(S, kBitsSum);                         \
+  } while (0)
+      if (res_.islope_mode == 0) BF_RES2F_K(0);
+      else if (res_.islope_mode == 1) BF_RES2F_K(1);
+      else BF_RES2F_K(2);
+#undef BF_RES2F_K
+#undef BF_RES2F
+      return;
+    }
+    if (!res_.ires) {  // no residual with a pre stage or shift > 16 (no quantizer output): the scalar epilogue
+      res2_epilogue_tail(ctx, mask, p0, np, u, 16, db);
+      return;
+    }
+    if (res_.ifast && res_.ipre) {
+#define BF_RES2F(S, K) res2_epilogue_int_fast<S, K, true>(ctx, mask, p0, np, u, db)
+#define BF_RES2F_K(S)                                   \
+  do {                                                  \
+    if (!res_.bits) BF_RES2F(S, kBitsNone);             \
+    else if (res_.bit_out) BF_RES2F(S, kBitsOut);       \
+    else BF_RES2F(S, kBitsSum);                         \
+  } while (0)
+      if (res_.islope_mode == 0) BF_RES2F_K(0);
+      else if (res_.islope_mode == 1) BF_RES2F_K(1);
+      else BF_RES2F_K(2);
+#undef BF_RES2F_K
+#undef BF_RES2F
+      return;
+    }
+    if (res_.ipre || (res_.rtile > 1 && !res_.ifast)) {  // shift > 16 with a pre stage / r_tile off the unit grid: scalar
+      res2_epilogue_tail(ctx, mask, p0, np, u, 16, db);
+      return;
+    }
+    if (res_.ifast) {
+#define BF_RES2F(S, K) res2_epilogue_int_fast<S, K>(ctx, mask, p0, np, u, db)
+#define BF_RES2F_K(S)                                   \
+  do {                                                  \
+    if (!res_.bits) BF_RES2F(S, kBitsNone);             \
+    else if (res_.bit_out) BF_RES2F(S, kBitsOut);       \
+    else BF_RES2F(S, kBitsSum);                         \
+  } while (0)
+      if (res_.islope_mode == 0) BF_RES2F_K(0);
+      else if (res_.islope_mode == 1) BF_RES2F_K(1);
+      else BF_RES2F_K(2);
+#undef BF_RES2F_K
+#undef BF_RES2F
+      return;
+    }
+#define BF_RES2I(S, B, K) res2_epilogue_int<S, B, K>(ctx, mask, p0, np, u, db)
+#define BF_RES2I_K(S, B)                                \
+  do {                                                  \
+    if (!res_.bits) BF_RES2I(S, B, kBitsNone);          \
+    else if (res_.bit_out) BF_RES2I(S, B, kBitsOut);    \
+    else BF_RES2I(S, B, kBitsSum);                      \
+  } while (0)
+    if (res_.ri_slope) {
+      if (res_.ri_ob) BF_RES2I_K(true, true);
+      else BF_RES2I_K(true, false);
+    } else {
+      if (res_.ri_ob) BF_RES2I_K(false, true);
+      else BF_RES2I_K(false, false);
+    }
+#undef BF_RES2I_K
+#undef BF_RES2I
+  }
+
+  // Fast integer epilogue (shift S <= 16). The rounding constant and the zero point are folded into the constants at
+  // prepare time (I8Res::parse_int): c = 2^(S-1) + y_zero 2^S joins b (no PReLU; then w' = acc' = acc + c, and the
+  // bit thresholds are T + c) or the out_bias (PReLU; w' = w + c, thresholds of w are T + c, of acc T). Then
+  //   rshr(w, S) + y_zero = floor(w' / 2^S) = high half of SQSHL(w', 16 - S)
+  // (no saturation: equal; saturation: |w' 2^(16 - S)| >= 2^31, so both sides clamp to the same qmin / qmax), taken by UZP2.
+  // PReLU (kSlope): 0 none; 1 max form w = SMAX(acc, SQRDMULH(acc, P)) (slope_shift 0, every P >= 0: mulhi(acc, P) <= acc
+  // for acc >= 0 and >= acc for acc < 0, so this is the select); 2 select form with the slope shift.
+  template <int kSlope, int kBits, bool kPre = false, bool kRes = true>
+  void res2_epilogue_int_fast(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np, int64_t u, int16_t* db) const {
+    const int64_t oc = g_.oc;
+    int8_t* y = ctx.out(0).data<int8_t>() + p0 * oc + u;
+    const int64_t cr = oc / res_.rtile;  // residual row (r_tile: the unit reads channels u mod cr .. + 15)
+    const int8_t* rp = kRes ? ctx.in(5).data<int8_t>() + p0 * cr + u % cr : nullptr;
+    auto* yb = kBits != kBitsNone ? reinterpret_cast<uint8_t*>(ctx.out(1).data<uint32_t>() + p0 * out_words_) + u / 8 : nullptr;
+    const int64_t ybs = out_words_ * 4;
+    const bool whole_word = (u & 31) == 0 && u + 16 >= oc;  // the word's upper half holds no channel: write it as 0
+    const int16x8_t m1a = vld1q_s16(res_.im1.data() + u), m1b = vld1q_s16(res_.im1.data() + u + 8);
+    const int16x8_t m2a = vld1q_s16(res_.im2.data() + u), m2b = vld1q_s16(res_.im2.data() + u + 8);
+    int32x4_t b[4], thr[4], sl[4], ob[4], pb[4], sg[4];
+    for (int k = 0; k < 4; ++k) {
+      b[k] = vld1q_s32(res_.fb.data() + u + 4 * k);
+      if (kBits) thr[k] = vld1q_s32(res_.fthr.data() + u + 4 * k);
+      if (kSlope) sl[k] = vld1q_s32(res_.islope.data() + u + 4 * k);
+      if (kSlope) ob[k] = vld1q_s32(res_.fob.data() + u + 4 * k);
+      if (kPre) {
+        pb[k] = vld1q_s32(res_.spb.data() + u + 4 * k);
+        sg[k] = vld1q_s32(res_.ssig.data() + u + 4 * k);
+      }
+    }
+    const int16x8_t pm1a = kPre ? vld1q_s16(res_.sm1.data() + u) : m1a, pm1b = kPre ? vld1q_s16(res_.sm1.data() + u + 8) : m1b;
+    const int32x4_t kv = vdupq_n_s32(res_.ik), up = vdupq_n_s32(16 - res_.ishift);
+    const int8x16_t lo = vdupq_n_s8(static_cast<int8_t>(res_.ylo)), hi = vdupq_n_s8(static_cast<int8_t>(res_.yhi));
+    static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+    const uint8x16_t bw = vld1q_u8(kW);
+    dots_border(mask, np, u, db);
+    for (int64_t r = 0; r < np; ++r, rp += kRes ? cr : 0, y += oc) {
+      const int16x8_t d0 = vld1q_s16(db + r * 16), d1 = vld1q_s16(db + r * 16 + 8);
+      int32x4_t a[4];
+      if constexpr (!kRes) {
+        a[0] = vmlal_s16(b[0], vget_low_s16(d0), vget_low_s16(m1a));
+        a[1] = vmlal_high_s16(b[1], d0, m1a);
+        a[2] = vmlal_s16(b[2], vget_low_s16(d1), vget_low_s16(m1b));
+        a[3] = vmlal_high_s16(b[3], d1, m1b);
+      }
+      const int8x16_t q = kRes ? vld1q_s8(rp) : vdupq_n_s8(0);
+      const int16x8_t q0 = vmovl_s8(vget_low_s8(q)), q1 = vmovl_high_s8(q);
+      if constexpr (!kRes) {
+      } else if constexpr (kPre) {  // a = b + sigma * max(dot * sigma m1 + sigma pb, 0) + q * m2
+        a[0] = vmlal_s16(pb[0], vget_low_s16(d0), vget_low_s16(pm1a));
+        a[1] = vmlal_high_s16(pb[1], d0, pm1a);
+        a[2] = vmlal_s16(pb[2], vget_low_s16(d1), vget_low_s16(pm1b));
+        a[3] = vmlal_high_s16(pb[3], d1, pm1b);
+        const int32x4_t z = vdupq_n_s32(0);
+        for (int k = 0; k < 4; ++k) a[k] = vmlaq_s32(b[k], vmaxq_s32(a[k], z), sg[k]);
+        a[0] = vmlal_s16(a[0], vget_low_s16(q0), vget_low_s16(m2a));
+        a[1] = vmlal_high_s16(a[1], q0, m2a);
+        a[2] = vmlal_s16(a[2], vget_low_s16(q1), vget_low_s16(m2b));
+        a[3] = vmlal_high_s16(a[3], q1, m2b);
+      } else {
+        a[0] = vmlal_s16(vmlal_s16(b[0], vget_low_s16(d0), vget_low_s16(m1a)), vget_low_s16(q0), vget_low_s16(m2a));
+        a[1] = vmlal_high_s16(vmlal_high_s16(b[1], d0, m1a), q0, m2a);
+        a[2] = vmlal_s16(vmlal_s16(b[2], vget_low_s16(d1), vget_low_s16(m1b)), vget_low_s16(q1), vget_low_s16(m2b));
+        a[3] = vmlal_high_s16(vmlal_high_s16(b[3], d1, m1b), q1, m2b);
+      }
+      int32x4_t w[4];
+      uint32x4_t ge[4];
+      for (int k = 0; k < 4; ++k) {
+        if constexpr (kSlope == 0) w[k] = a[k];
+        if constexpr (kSlope == 1) w[k] = vaddq_s32(vmaxq_s32(a[k], vqrdmulhq_s32(a[k], sl[k])), ob[k]);
+        if constexpr (kSlope == 2)
+          w[k] = vaddq_s32(vbslq_s32(vcltzq_s32(a[k]), vshlq_s32(vqrdmulhq_s32(a[k], sl[k]), kv), a[k]), ob[k]);
+        if constexpr (kBits == kBitsSum) ge[k] = vcgeq_s32(a[k], thr[k]);
+        if constexpr (kBits == kBitsOut) ge[k] = vcgeq_s32(w[k], thr[k]);
+        w[k] = vqshlq_s32(w[k], up);
+      }
+      const int16x8_t h0 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(w[0]), vreinterpretq_u16_s32(w[1])));
+      const int16x8_t h1 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(w[2]), vreinterpretq_u16_s32(w[3])));
+      vst1q_s8(y, vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(h0), vqmovn_s16(h1)), hi), lo));
+      if constexpr (kBits != kBitsNone) {
+        // bit = 1 iff !(s >= thr): 16 mask bytes, BIC with the bit weights, three ADDPs -> 2 bytes
+        const uint16x8_t m01 = vuzp1q_u16(vreinterpretq_u16_u32(ge[0]), vreinterpretq_u16_u32(ge[1]));
+        const uint16x8_t m23 = vuzp1q_u16(vreinterpretq_u16_u32(ge[2]), vreinterpretq_u16_u32(ge[3]));
+        const uint8x16_t mb = vuzp1q_u8(vreinterpretq_u8_u16(m01), vreinterpretq_u8_u16(m23));
+        uint8x16_t sb = vbicq_u8(bw, mb);
+        sb = vpaddq_u8(sb, sb);
+        sb = vpaddq_u8(sb, sb);
+        sb = vpaddq_u8(sb, sb);
+        vst1q_lane_u16(reinterpret_cast<uint16_t*>(yb + r * ybs), vreinterpretq_u16_u8(sb), 0);
+      }
+    }
+    if (kBits != kBitsNone && whole_word)  // the word's upper half holds no channel: 0
+      for (int64_t r = 0; r < np; ++r) std::memset(yb + r * ybs + 2, 0, 2);
+  }
+
+  // Integer epilogue of one 16-channel unit for np pixels (int8_full::ResIEpilogue): one pass, int32 lanes, constants in
+  // registers. acc = SMLAL(SMLAL(b, dot, m1), q, m2) (exact: |acc| < 2^31 by the quantizer's bound), PReLU of acc < 0 as
+  // SQRDMULH(acc, slope) << k (= mulhi * 2^k, the bound excludes saturation), + out_bias, bits of acc / w (CMGE against
+  // the int32 thresholds), y = clamp(SRSHL(w, -shift) + y_zero) with saturating narrows (rshr rounds half up like SRSHL).
+  template <bool kSlope, bool kOB, int kBits>
+  void res2_epilogue_int(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np, int64_t u, int16_t* db) const {
+    const int64_t oc = g_.oc;
+    int8_t* y = ctx.out(0).data<int8_t>() + p0 * oc + u;
+    const int8_t* rp = ctx.in(5).data<int8_t>() + p0 * oc + u;
+    auto* yb = kBits != kBitsNone ? reinterpret_cast<uint8_t*>(ctx.out(1).data<uint32_t>() + p0 * out_words_) + u / 8 : nullptr;
+    const int64_t ybs = out_words_ * 4;
+    const bool whole_word = (u & 31) == 0 && u + 16 >= oc;  // the word's upper half holds no channel: write it as 0
+    const int16x8_t m1a = vld1q_s16(res_.im1.data() + u), m1b = vld1q_s16(res_.im1.data() + u + 8);
+    const int16x8_t m2a = vld1q_s16(res_.im2.data() + u), m2b = vld1q_s16(res_.im2.data() + u + 8);
+    int32x4_t b[4], thr[4], sl[4], ob[4];
+    for (int k = 0; k < 4; ++k) {
+      b[k] = vld1q_s32(res_.ib.data() + u + 4 * k);
+      if (kBits) thr[k] = vld1q_s32(res_.ithr.data() + u + 4 * k);
+      if (kSlope) sl[k] = vld1q_s32(res_.islope.data() + u + 4 * k);
+      if (kOB) ob[k] = vld1q_s32(res_.iob.data() + u + 4 * k);
+    }
+    const int32x4_t kv = vdupq_n_s32(res_.ik), sh = vdupq_n_s32(-res_.ishift), yz = vdupq_n_s32(res_.yz);
+    const int8x16_t lo = vdupq_n_s8(static_cast<int8_t>(res_.ylo)), hi = vdupq_n_s8(static_cast<int8_t>(res_.yhi));
+    static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+    const uint8x16_t bw = vld1q_u8(kW);
+    dots_border(mask, np, u, db);
+    for (int64_t r = 0; r < np; ++r, rp += oc, y += oc) {
+      const int16x8_t d0 = vld1q_s16(db + r * 16), d1 = vld1q_s16(db + r * 16 + 8);
+      const int8x16_t q = vld1q_s8(rp);
+      const int16x8_t q0 = vmovl_s8(vget_low_s8(q)), q1 = vmovl_high_s8(q);
+      int32x4_t a[4];
+      a[0] = vmlal_s16(vmlal_s16(b[0], vget_low_s16(d0), vget_low_s16(m1a)), vget_low_s16(q0), vget_low_s16(m2a));
+      a[1] = vmlal_high_s16(vmlal_high_s16(b[1], d0, m1a), q0, m2a);
+      a[2] = vmlal_s16(vmlal_s16(b[2], vget_low_s16(d1), vget_low_s16(m1b)), vget_low_s16(q1), vget_low_s16(m2b));
+      a[3] = vmlal_high_s16(vmlal_high_s16(b[3], d1, m1b), q1, m2b);
+      int32x4_t w[4];
+      uint32x4_t ge[4];
+      for (int k = 0; k < 4; ++k) {
+        w[k] = a[k];
+        if constexpr (kSlope) w[k] = vbslq_s32(vcltzq_s32(a[k]), vshlq_s32(vqrdmulhq_s32(a[k], sl[k]), kv), a[k]);
+        if constexpr (kOB) w[k] = vaddq_s32(w[k], ob[k]);
+        if constexpr (kBits == kBitsSum) ge[k] = vcgeq_s32(a[k], thr[k]);
+        if constexpr (kBits == kBitsOut) ge[k] = vcgeq_s32(w[k], thr[k]);
+        w[k] = vqaddq_s32(vrshlq_s32(w[k], sh), yz);
+      }
+      const int16x8_t h0 = vcombine_s16(vqmovn_s32(w[0]), vqmovn_s32(w[1])), h1 = vcombine_s16(vqmovn_s32(w[2]), vqmovn_s32(w[3]));
+      vst1q_s8(y, vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(h0), vqmovn_s16(h1)), hi), lo));
+      if constexpr (kBits != kBitsNone) {
+        // bit = 1 iff !(s >= thr): 16 mask bytes, BIC with the bit weights, three ADDPs -> 2 bytes
+        const uint16x8_t m01 = vuzp1q_u16(vreinterpretq_u16_u32(ge[0]), vreinterpretq_u16_u32(ge[1]));
+        const uint16x8_t m23 = vuzp1q_u16(vreinterpretq_u16_u32(ge[2]), vreinterpretq_u16_u32(ge[3]));
+        const uint8x16_t mb = vuzp1q_u8(vreinterpretq_u8_u16(m01), vreinterpretq_u8_u16(m23));
+        uint8x16_t sb = vbicq_u8(bw, mb);
+        sb = vpaddq_u8(sb, sb);
+        sb = vpaddq_u8(sb, sb);
+        sb = vpaddq_u8(sb, sb);
+        vst1q_lane_u16(reinterpret_cast<uint16_t*>(yb + r * ybs), vreinterpretq_u16_u8(sb), 0);
+      }
+    }
+    if (kBits != kBitsNone && whole_word)  // the word's upper half holds no channel: 0
+      for (int64_t r = 0; r < np; ++r) std::memset(yb + r * ybs + 2, 0, 2);
+  }
+
+  // linear output (int8_full v2; linear residual), out of line: pre stage or not, bias, bits
+  __attribute__((noinline)) void res2_epilogue_lin_dispatch(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np,
+                                                            int64_t u, int16_t* db) const {
+#define BF_RES2(P, B, K) res2_epilogue<false, B, K, P, true>(ctx, mask, p0, np, u, db)
+#define BF_RES2_K(P, B)                                 \
+  do {                                                  \
+    if (!res_.bits) BF_RES2(P, B, kBitsNone);           \
+    else if (res_.bit_out) BF_RES2(P, B, kBitsOut);     \
+    else BF_RES2(P, B, kBitsSum);                       \
+  } while (0)
+    if (res_.pre) {
       if (res_.has_bias) BF_RES2_K(true, true);
       else BF_RES2_K(true, false);
     } else {
@@ -1620,7 +2021,7 @@ class BConv2DNeonOpt : public Kernel {
   }
 
   // kBits: kBitsNone, kBitsSum (bits of u) or kBitsOut (bit_src "out": bits of w, after the bias)
-  template <bool kL8, bool kBias, int kBits, bool kPre = false>
+  template <bool kL8, bool kBias, int kBits, bool kPre = false, bool kYLin = false>
   void res2_epilogue(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np, int64_t u, int16_t* db) const {
     const int64_t oc = g_.oc;
     int8_t* y = ctx.out(0).data<int8_t>() + p0 * oc + u;
@@ -1641,6 +2042,8 @@ class BConv2DNeonOpt : public Kernel {
     const int32x4_t rz = vdupq_n_s32(res_.rz);
     const float32x4_t rs = vdupq_n_f32(res_.rs);
     const float32x4_t zero = vdupq_n_f32(0.f);
+    const int32x4_t yz = vdupq_n_s32(res_.yz);
+    const int8x16_t ylo = vdupq_n_s8(static_cast<int8_t>(res_.ylo)), yhi = vdupq_n_s8(static_cast<int8_t>(res_.yhi));
     static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
     const uint8x16_t bw = vld1q_u8(kW);
     dots_border(mask, np, u, db);
@@ -1692,7 +2095,8 @@ class BConv2DNeonOpt : public Kernel {
         if constexpr (kBits == kBitsSum) ge[k] = vcgeq_f32(uu, bthr[k]);
         if constexpr (kBits == kBitsOut) ge[k] = vcgeq_f32(w[k], bthr[k]);
       }
-      vst1q_s8(y, l8neon::encode16(w[0], w[1], w[2], w[3], et));
+      if constexpr (kYLin) vst1q_s8(y, lin_encode16(w[0], w[1], w[2], w[3], yz, ylo, yhi));
+      else vst1q_s8(y, l8neon::encode16(w[0], w[1], w[2], w[3], et));
       if constexpr (kBits != kBitsNone) {
         // bit = 1 iff !(s >= thr), s = u or w: 16 mask bytes, BIC with the bit weights, three ADDPs -> 2 bytes
         const uint16x8_t m01 = vuzp1q_u16(vreinterpretq_u16_u32(ge[0]), vreinterpretq_u16_u32(ge[1]));
@@ -1716,7 +2120,7 @@ class BConv2DNeonOpt : public Kernel {
     const int32_t ps = pad_value_ - 1;
     uint32_t* ybw = res_.bits ? ctx.out(1).data<uint32_t>() : nullptr;
     int8_t* y8 = ctx.out(0).data<int8_t>();
-    const int8_t* r8 = ctx.in(5).data<int8_t>();
+    const int8_t* r8 = ctx.has_in(5) ? ctx.in(5).data<int8_t>() : nullptr;  // I8BConv2DResI without a residual
     for (int64_t r = 0; r < np; ++r) {
       const int64_t q = p0 + r;
       uint32_t bits = 0;
@@ -1725,9 +2129,14 @@ class BConv2DNeonOpt : public Kernel {
         int32_t dot = db[r * 16 + jj];
         if (pad_value_ != 1)
           for (uint64_t m = mask[r]; m; m &= m - 1) dot += ps * tap_sum_[__builtin_ctzll(m) * oc_pad_ + o];
+        bool bit;
+        if (res_.ri) {
+          y8[q * oc + o] = res_.finish_int(dot, o, r8 ? r8[q * (oc / res_.rtile) + o % (oc / res_.rtile)] : int8_t{0}, &bit);
+          bits |= static_cast<uint32_t>(bit) << jj;
+          continue;
+        }
         float v = static_cast<float>(dot) * mul_[o] + add_[o];
         if (res_.pre) v = res_.pre1(v, q / (g_.oh * g_.ow), o);
-        bool bit;
         y8[q * oc + o] = res_.finish(v, o, r8[q * oc + o], &bit);
         bits |= static_cast<uint32_t>(bit) << jj;
       }

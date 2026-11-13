@@ -72,6 +72,23 @@
     "agreement": 0.8956,
     "study": "exact_vs_int8_full_cifar10test10000",
     "date": "2026-11-03"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "cifar10-test-first-10000",
+    "n": 10000,
+    "a_top1": 0.8606,
+    "b_top1": 0.8591,
+    "delta_pt": -0.15,
+    "ci95_pt": [
+     -0.703,
+     0.403
+    ],
+    "mcnemar_p": 0.619988780754796,
+    "agreement": 0.9009,
+    "study": "int8_full_vs_int8_full_v2_cifar10test10000",
+    "date": "2026-11-13"
    }
   ]
  },
@@ -102,9 +119,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
@@ -133,9 +150,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1029",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "1d054b95",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

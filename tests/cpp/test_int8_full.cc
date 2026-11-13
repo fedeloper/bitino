@@ -1197,6 +1197,7 @@ struct ResCfg {
   int r_exp;
   bool bit_out = false;  // bit_src "out": the bits binarize w (the block output) instead of u
   int pre = 0;           // pre stage inputs (bit mask): 1 pre_slope, 2 pre_mul, 4 pre_add, 8 gate [N, 1, 1, O]
+  Json extra = Json::Object{};  // attributes set last (int8_full v2: output "i8", y_zero, qmin / qmax)
 };
 
 // One I8BConv2DRes node (constants prefixed with p); outs = its output names.
@@ -1293,6 +1294,7 @@ void add_res_node(bftest::ModelBuilder& mb, Rng& r, const ResCfg& c, const std::
     }
   }
   while (!ins.empty() && ins.back().empty()) ins.pop_back();
+  for (const auto& kv : c.extra.as_object()) at[kv.first] = kv.second;
   mb.node("I8BConv2DRes", ins, outs, at);
 }
 
@@ -1402,6 +1404,233 @@ BF_TEST(int8_full_bconv_res_pre_bit_exact_vs_reference) {
         std::vector<uint8_t> xin = c.xin == 1 ? res_codes(r, g.n * g.h * g.w * g.ic) : r.i8(g.n * g.h * g.w * g.ic);
         compare_all(mb, {xin, res_codes(r, g.n * oh * ow * g.oc)}, "I8BConv2DRes pre config " + std::to_string(idx),
                     "i8bconv2dres.neon");
+      }
+    }
+  }
+}
+
+// int8_full v2 (2026-11-13): I8BConv2DRes with the linear output code (output "i8": clamp(rne(w) + y_zero, qmin, qmax)),
+// linear residuals, with and without bias / bits of u or w / pre stage, y_zero far from 0 and clamped ranges.
+BF_TEST(int8_full_bconv_res_linear_output_bit_exact_vs_reference) {
+  Rng r(5151);
+  struct G { int64_t n, h, w, ic, oc, k, s, pad_value; };
+  int idx = 0;
+  for (G g : std::vector<G>{{1, 9, 11, 64, 64, 3, 1, 0}, {2, 7, 6, 128, 40, 3, 1, 0}, {1, 8, 7, 64, 21, 3, 2, 1},
+                            {1, 6, 6, 130, 16, 1, 1, -1}}) {
+    for (int variant = 0; variant < 6; ++variant, ++idx) {
+      ResCfg c{g.n, g.h, g.w, g.ic, g.oc, g.k, g.s, g.pad_value, variant % 2, false, variant % 3 == 0, variant != 3, variant == 4,
+               r.i(-3, 3)};
+      c.bit_out = variant == 5;
+      c.pre = variant == 2 ? 7 : 0;
+      const int64_t oh = (g.h + 2 * (g.k / 2) - g.k) / g.s + 1, ow = (g.w + 2 * (g.k / 2) - g.k) / g.s + 1;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {g.n, g.h, g.w, g.ic});
+      mb.input("res", DType::kI8, {g.n, oh, ow, g.oc});
+      std::vector<std::string> outs;
+      // linear output; residual units scaled up so that w spans the int8 range
+      c.extra = Json::Object{{"output", "i8"}, {"y_zero", variant == 1 ? 100 : r.i(-60, 60)}, {"qmin", variant == 3 ? -100 : -128},
+                             {"qmax", variant == 3 ? 90 : 127}, {"r_scale", static_cast<double>(r.f(0.3f, 4.f))}};
+      add_res_node(mb, r, c, "x", "res", "a", outs);
+      for (auto& o : outs) mb.output(o);
+      std::vector<uint8_t> xin = c.xin == 1 ? res_codes(r, g.n * g.h * g.w * g.ic) : r.i8(g.n * g.h * g.w * g.ic);
+      compare_all(mb, {xin, res_codes(r, g.n * oh * ow * g.oc)}, "I8BConv2DRes linear output config " + std::to_string(idx),
+                  "i8bconv2dres.neon");
+    }
+  }
+}
+
+// I8BConv2DResI (int8_full v2): the integer residual epilogue. Random multipliers within the operator's bound, every
+// combination of PReLU (none, slopes in [0, 1) = the kernel's max form, signed / > 1 slopes with a slope shift), out_bias,
+// bits of acc / w, the clamp pre stage, y_zero, clamped ranges, shifts 0..16 (fast form) and > 16 (generic form), channel
+// tails (scalar epilogue), strides, 1x1, pad values, batch 2, bit and int8 inputs; and a chain reading the bits.
+BF_TEST(int8_full_bconv_resi_bit_exact_vs_reference) {
+  Rng r(6161);
+  struct G { int64_t n, h, w, ic, oc, k, s, pad_value; };
+  int idx = 0;
+  auto add_node = [&](bftest::ModelBuilder& mb, const G& g, int variant, const std::string& x, const std::string& res,
+                      const std::string& p, bool bit_in, std::vector<std::string>& outs) {
+    const int64_t K = g.k * g.k * g.ic;
+    std::vector<int8_t> wv(static_cast<size_t>(g.oc * K));
+    for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+    auto wp = bftest::pack_pm1(wv, g.oc * g.k * g.k, g.ic);
+    mb.constant(p + "w", DType::kBit, {g.oc, g.k, g.k, g.ic}, wp.data());
+    const int slope_mode = variant % 3;            // 0 none, 1 slopes in [0, 1), 2 signed / > 1 with a slope shift
+    const bool ob = variant % 2 == 1, pre = variant % 4 == 2, bits = variant % 5 != 4, bit_out = variant % 7 == 3;
+    const int shift = variant == 8 ? 0 : (variant == 9 ? 20 : r.i(6, 16));
+    const int k = slope_mode == 2 ? r.i(1, 2) : 0;
+    // |acc| < 2^30: m1 * K + 128 * m2 + |b| (+ |pre_b|)
+    const int64_t m1max = std::min<int64_t>(32767, (int64_t(1) << 28) / K), m2max = std::min<int64_t>(32767, int64_t(1) << 20);
+    std::vector<int32_t> m1(static_cast<size_t>(g.oc)), b(static_cast<size_t>(g.oc)), m2(static_cast<size_t>(g.oc)),
+        thr(static_cast<size_t>(g.oc)), sl(static_cast<size_t>(g.oc)), obv(static_cast<size_t>(g.oc)), pb(static_cast<size_t>(g.oc)),
+        plo(static_cast<size_t>(g.oc)), phi(static_cast<size_t>(g.oc));
+    const int32_t m2c = static_cast<int32_t>(r.i(-static_cast<int>(m2max), static_cast<int>(m2max)));
+    const int64_t unit = int64_t(1) << std::min(shift, 16);
+    for (int64_t o = 0; o < g.oc; ++o) {
+      m1[o] = o % 9 == 4 ? 0 : r.i(-static_cast<int>(m1max), static_cast<int>(m1max));
+      m2[o] = o % 6 == 1 ? r.i(-static_cast<int>(m2max), static_cast<int>(m2max)) : m2c;
+      b[o] = static_cast<int32_t>(r.f(-100.f, 100.f) * static_cast<float>(unit));
+      thr[o] = o % 8 == 0 ? b[o] : static_cast<int32_t>(r.f(-30.f, 30.f) * static_cast<float>(unit));  // tie at dot = q = 0
+      sl[o] = slope_mode == 1 ? r.i(0, 2147483647) : r.i(-2147483647, 2147483647);
+      if (o % 5 == 0) sl[o] = 0;
+      obv[o] = static_cast<int32_t>(r.f(-20.f, 20.f) * static_cast<float>(unit));
+      pb[o] = static_cast<int32_t>(r.f(-50.f, 50.f) * static_cast<float>(unit));
+      const bool neg = o % 3 == 1;
+      plo[o] = neg ? INT32_MIN : 0;
+      phi[o] = neg ? 0 : INT32_MAX;
+      if (variant == 10 && o % 4 == 3) {  // a general clamp (not max(., 0) / min(., 0)): the scalar epilogue
+        plo[o] = -static_cast<int32_t>(r.f(0.f, 20.f) * static_cast<float>(unit));
+        phi[o] = static_cast<int32_t>(r.f(0.f, 20.f) * static_cast<float>(unit));
+      }
+    }
+    mb.constant(p + "m1", DType::kI32, {g.oc}, m1.data());
+    mb.constant(p + "b", DType::kI32, {g.oc}, b.data());
+    mb.constant(p + "m2", DType::kI32, {g.oc}, m2.data());
+    std::vector<std::string> ins = {x, p + "w", "", "", "", res, p + "m1", p + "b", p + "m2"};
+    Json at = Json::Object{{"strides", ints({g.s, g.s})}, {"pads", ints({g.k / 2, g.k / 2, g.k / 2, g.k / 2})},
+                           {"pad_value", g.pad_value}, {"shift", shift}, {"y_zero", variant == 6 ? -110 : r.i(-40, 40)},
+                           {"qmin", variant == 7 ? -90 : -128}, {"qmax", variant == 7 ? 100 : 127}};
+    if (!bit_in) {
+      auto t = r.f32(g.ic, -0.01f, 0.01f);
+      for (int64_t i = 0; i < g.ic; i += 5) t[i] = q8::deq(r.i(-128, 127), 0.002f, 3);
+      mb.constant(p + "t", DType::kF32, {g.ic}, t.data());
+      ins[4] = p + "t";
+      at["input_binarize"] = r.i(0, 1) ? "gt" : "ge";
+      at["x_scale"] = 0.002;
+      at["x_zero"] = 3;
+    }
+    outs = {p + "y"};
+    if (bits) {
+      mb.constant(p + "bt", DType::kI32, {g.oc}, thr.data());
+      ins.push_back(p + "bt");
+      if (bit_out) at["bit_src"] = "out";
+      outs.push_back(p + "bits");
+    } else {
+      ins.push_back("");
+    }
+    if (slope_mode) {
+      mb.constant(p + "sl", DType::kI32, {g.oc}, sl.data());
+      ins.push_back(p + "sl");
+      at["slope_shift"] = k;
+    } else {
+      ins.push_back("");
+    }
+    if (ob) mb.constant(p + "ob", DType::kI32, {g.oc}, obv.data());
+    ins.push_back(ob ? p + "ob" : "");
+    if (pre) {
+      mb.constant(p + "pb", DType::kI32, {g.oc}, pb.data());
+      mb.constant(p + "plo", DType::kI32, {g.oc}, plo.data());
+      mb.constant(p + "phi", DType::kI32, {g.oc}, phi.data());
+      ins.push_back(p + "pb");
+      ins.push_back(p + "plo");
+      ins.push_back(p + "phi");
+    }
+    while (!ins.empty() && ins.back().empty()) ins.pop_back();
+    mb.node("I8BConv2DResI", ins, outs, at);
+  };
+  for (G g : std::vector<G>{{1, 9, 11, 64, 64, 3, 1, 0},     // pair mode, whole words
+                            {2, 7, 6, 128, 40, 3, 1, 0},     // oc 40: a last unit of 8 channels (scalar tail), two samples
+                            {1, 8, 7, 64, 21, 3, 2, 1},      // stride 2, channel tail
+                            {1, 6, 6, 130, 16, 1, 1, -1},    // 1x1, K tail
+                            {1, 10, 9, 32, 48, 3, 1, 0}}) {  // 16-channel input rows
+    for (int variant = 0; variant < 12; ++variant, ++idx) {
+      const int64_t oh = (g.h + 2 * (g.k / 2) - g.k) / g.s + 1, ow = (g.w + 2 * (g.k / 2) - g.k) / g.s + 1;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {g.n, g.h, g.w, g.ic});
+      mb.input("res", DType::kI8, {g.n, oh, ow, g.oc});
+      std::vector<std::string> outs;
+      add_node(mb, g, variant, "x", "res", "a", false, outs);
+      for (auto& o : outs) mb.output(o);
+      compare_all(mb, {r.i8(g.n * g.h * g.w * g.ic), res_codes(r, g.n * oh * ow * g.oc)},
+                  "I8BConv2DResI config " + std::to_string(idx), "i8bconv2dresi.neon");
+    }
+  }
+  // chain: block b reads block a's bits (x) and int8 output (residual)
+  for (int variant : {0, 1, 2, 5}) {
+    const G g{1, 9, 10, 64, 64, 3, 1, 0};
+    bftest::ModelBuilder mb;
+    mb.input("x", DType::kI8, {1, g.h, g.w, g.ic});
+    mb.input("res", DType::kI8, {1, g.h, g.w, g.oc});
+    std::vector<std::string> o1, o2;
+    add_node(mb, g, 0, "x", "res", "a", false, o1);
+    add_node(mb, g, variant, o1[1], o1[0], "b", true, o2);
+    for (auto& o : o1) mb.output(o);
+    for (auto& o : o2) mb.output(o);
+    compare_all(mb, {r.i8(g.h * g.w * g.ic), res_codes(r, g.h * g.w * g.oc)}, "I8BConv2DResI chain " + std::to_string(variant),
+                "i8bconv2dresi.neon");
+  }
+}
+
+// I8GatedAdd (int8_full v2: BNext's x + k * sigmoid(se) * p): random constants within the bound, zero points far from 0,
+// 0 / 1 / 2 / 3 bit outputs, shifts 0..16 (fast form) and > 16, clamped ranges, channel counts with tails, batch 2.
+BF_TEST(int8_full_gated_add_bit_exact_vs_reference) {
+  Rng r(7171);
+  int idx = 0;
+  for (int64_t c : {16, 32, 40, 64, 7}) {
+    for (int variant = 0; variant < 6; ++variant, ++idx) {
+      const int64_t n = variant % 2 ? 2 : 1, h = 5, w = 7, nb = variant % 4;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {n, h, w, c});
+      mb.input("p", DType::kI8, {n, h, w, c});
+      mb.input("g", DType::kI8, {n, 1, 1, c});
+      const int shift = variant == 5 ? 20 : (variant == 4 ? 0 : r.i(8, 16));
+      std::vector<int32_t> kx(static_cast<size_t>(c)), kp(static_cast<size_t>(c)), b(static_cast<size_t>(c)),
+          thr(static_cast<size_t>(std::max<int64_t>(nb, 1) * c));
+      for (int64_t i = 0; i < c; ++i) {
+        kx[i] = r.i(-20000, 20000);
+        kp[i] = i % 7 == 2 ? 0 : r.i(-4000, 4000);
+        b[i] = r.i(-(1 << 24), 1 << 24);
+      }
+      for (auto& t : thr) t = r.i(-(1 << 22), 1 << 22);
+      thr[0] = b[0] - 3 * kx[0];  // a tie at x - z_x = 3, p - z_p = 0 is reachable
+      mb.constant("kx", DType::kI32, {c}, kx.data());
+      mb.constant("kp", DType::kI32, {c}, kp.data());
+      mb.constant("b", DType::kI32, {c}, b.data());
+      std::vector<std::string> ins = {"x", "p", "g", "kx", "kp", "b"}, outs = {"y"};
+      if (nb) {
+        mb.constant("t", DType::kI32, {nb, c}, thr.data());
+        ins.push_back("t");
+        for (int64_t j = 0; j < nb; ++j) outs.push_back("bits" + std::to_string(j));
+      }
+      mb.node("I8GatedAdd", ins, outs,
+              Json::Object{{"x_zero", r.i(-128, 127)}, {"p_zero", variant == 3 ? 120 : r.i(-20, 20)}, {"g_zero", -128}, {"shift", shift},
+                           {"y_zero", r.i(-100, 100)}, {"qmin", variant == 2 ? -90 : -128}, {"qmax", variant == 2 ? 100 : 127}});
+      for (auto& o : outs) mb.output(o);
+      auto gq = r.i8(n * c);
+      gq[0] = 0x80;
+      compare_all(mb, {r.i8(n * h * w * c), r.i8(n * h * w * c), gq}, "I8GatedAdd config " + std::to_string(idx), "i8gatedadd.neon");
+    }
+  }
+}
+
+// I8GapAffine (int8_full v2: BNext's GAP(mix) without rounding the full-resolution mix): one to three inputs, large and
+// odd spatial sizes, shifts up to 40, channel tails, batch 2.
+BF_TEST(int8_full_gap_affine_bit_exact_vs_reference) {
+  Rng r(8181);
+  int idx = 0;
+  for (int64_t c : {16, 64, 40, 3}) {
+    for (int k : {1, 2, 3}) {
+      for (int64_t hw : {1, 49, 3136}) {
+        const int64_t n = idx % 2 ? 2 : 1, h = hw == 3136 ? 56 : (hw == 49 ? 7 : 1), w = hw / h;
+        bftest::ModelBuilder mb;
+        std::vector<std::vector<uint8_t>> in;
+        std::vector<std::string> ins;
+        Json::Array zs;
+        for (int i = 0; i < k; ++i) {
+          mb.input("x" + std::to_string(i), DType::kI8, {n, h, w, c});
+          ins.push_back("x" + std::to_string(i));
+          in.push_back(r.i8(n * h * w * c));
+          zs.push_back(Json(r.i(-128, 127)));
+        }
+        std::vector<int32_t> K(static_cast<size_t>(k * c)), B(static_cast<size_t>(c));
+        for (auto& v : K) v = r.i(-(1 << 30), 1 << 30) >> r.i(0, 20);
+        for (auto& v : B) v = r.i(-(1 << 30), 1 << 30);
+        mb.constant("K", DType::kI32, {k, c}, K.data());
+        mb.constant("B", DType::kI32, {c}, B.data());
+        ins.push_back("K");
+        ins.push_back("B");
+        mb.node("I8GapAffine", ins, {"y"}, Json::Object{{"zeros", Json(zs)}, {"shift", r.i(10, 40)}, {"y_zero", r.i(-50, 50)}});
+        mb.output("y");
+        compare_all(mb, in, "I8GapAffine config " + std::to_string(idx++), "i8gapaffine.neon");
       }
     }
   }

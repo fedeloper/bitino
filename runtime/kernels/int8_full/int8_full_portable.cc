@@ -62,6 +62,7 @@ class BinaryLayerPortable : public Kernel {
   void prepare(const KernelContext& ctx) override {
     conv_ = ctx.node->op != "I8BDense";
     res_ = ctx.node->op == "I8BConv2DRes";
+    resi_ = ctx.node->op == "I8BConv2DResI";  // integer epilogue: the float kernel computes fp32(dot) (no post_mul / post_add)
     bit_in_ = ctx.in(0).dtype() == DType::kBit;
     c_ = ctx.in(0).dim(-1);
     pix_ = ctx.in(0).size() / c_;
@@ -69,6 +70,7 @@ class BinaryLayerPortable : public Kernel {
     ternary_ = mode == "sign_zero" && !bit_in_;
     if (!bit_in_) thr_ = thresholds(mode, int8_full::deq_of(ctx.attrs(), "x"), ctx.has_in(4) ? ctx.in(4).data<float>() : nullptr, c_);
     if (res_) ep_ = std::make_unique<int8_full::ResEpilogue>(ctx);
+    if (resi_) epi_ = std::make_unique<int8_full::ResIEpilogue>(ctx, ctx.in(1).dim(1) * ctx.in(1).dim(2) * ctx.in(1).dim(3));
     sub_.node.op = conv_ ? "BConv2D" : "BDense";
     sub_.node.name = ctx.node->name + "/binary";
     Json attrs = Json::Object{};
@@ -99,6 +101,25 @@ class BinaryLayerPortable : public Kernel {
     sub_.k->run(sub_.ctx);
     const float* v = sub_.owned[1].data<float>();
     const int64_t n = ctx.out(0).size();
+    if (resi_) {  // v = fp32(dot), exact (|dot| <= K < 2^24)
+      const int64_t oc = ctx.out(0).dim(-1), pix = n / oc, ow = bit_words(oc);
+      const int8_t* r = ctx.has_in(5) ? ctx.in(5).data<int8_t>() : nullptr;
+      int8_t* y = ctx.out(0).data<int8_t>();
+      uint32_t* yb = ctx.has_in(9) ? ctx.out(1).data<uint32_t>() : nullptr;
+      ctx.pool->parallel_for(pix, std::max<int64_t>(1, 16384 / std::max<int64_t>(oc, 1)), [&](int64_t p0, int64_t p1) {
+        for (int64_t p = p0; p < p1; ++p) {
+          if (yb) std::memset(yb + p * ow, 0, sizeof(uint32_t) * ow);
+          for (int64_t o = 0; o < oc; ++o) {
+            const int64_t i = p * oc + o;
+            bool neg = false;
+            const int64_t cr = oc / epi_->r_tile;  // residual channels (r_tile)
+            y[i] = epi_->finish(static_cast<int64_t>(v[i]), o, r ? r[p * cr + o % cr] : int8_t{0}, &neg);
+            if (yb && neg) yb[p * ow + (o >> 5)] |= 1u << (o & 31);
+          }
+        }
+      });
+      return;
+    }
     if (res_) {
       const int64_t oc = ctx.out(0).dim(-1), pix = n / oc, ow = bit_words(oc);
       const int8_t* r = ctx.in(5).data<int8_t>();
@@ -159,8 +180,9 @@ class BinaryLayerPortable : public Kernel {
     });
   }
 
-  bool conv_ = false, ternary_ = false, res_ = false, bit_in_ = false;
+  bool conv_ = false, ternary_ = false, res_ = false, resi_ = false, bit_in_ = false;
   std::unique_ptr<int8_full::ResEpilogue> ep_;
+  std::unique_ptr<int8_full::ResIEpilogue> epi_;
   int64_t c_ = 0, pix_ = 0;
   Thr thr_;
   Sub sub_;
@@ -262,6 +284,7 @@ void register_int8_full_portable_kernels(OpRegistry& reg) {
   reg.add_kernel({"I8BDense", "i8bdense.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
   reg.add_kernel({"I8BConv2D", "i8bconv2d.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
   reg.add_kernel({"I8BConv2DRes", "i8bconv2dres.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
+  reg.add_kernel({"I8BConv2DResI", "i8bconv2dresi.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
   reg.add_kernel({"I8BMatMul", "i8bmatmul.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BMatMulPortable>});
 }
 

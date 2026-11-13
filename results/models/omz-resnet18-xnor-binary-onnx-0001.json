@@ -69,6 +69,23 @@
     "agreement": 0.7736,
     "study": "exact_vs_int8_full_eval5000",
     "date": "2026-11-03"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5824,
+    "b_top1": 0.5884,
+    "delta_pt": 0.6,
+    "ci95_pt": [
+     -0.242,
+     1.442
+    ],
+    "mcnemar_p": 0.17720807265227576,
+    "agreement": 0.795,
+    "study": "int8_full_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
    }
   ]
  },
@@ -99,9 +116,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

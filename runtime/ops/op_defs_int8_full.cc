@@ -455,8 +455,8 @@ void infer_bconv(const Node& n, const Ins& ins, Outs& outs) {
 }
 
 // I8BConv2DRes (int8_ops._bconv_res): inputs x, w, post_mul, post_add, threshold?, residual i8 [N,OH,OW,O],
-// slope f32[O], out_bias f32[O]?, bit_thr f32[O]?, out_lut i8[1, 256]? (Session rewrite only); outputs y (i8 l8 code, or
-// out_lut of it), bits (bit, iff bit_thr is given).
+// slope f32[O], out_bias f32[O]?, bit_thr f32[O]?, out_lut i8[1, 256]? (Session rewrite only); outputs y (i8 l8 code, or the
+// linear code with output "i8", or out_lut of it), bits (bit, iff bit_thr is given).
 void infer_bconv_res(const Node& n, const Ins& ins, Outs& outs) {
   const auto& x = req(ins, 0, "x");
   check_binary_x(n, x);
@@ -466,7 +466,15 @@ void infer_bconv_res(const Node& n, const Ins& ins, Outs& outs) {
   parse_binarize(n.attrs);
   int64_t pv = n.attrs.get_int("pad_value", 0);
   BF_CHECK(pv >= -1 && pv <= 1, "I8BConv2DRes pad_value must be -1, 0 or 1");
-  BF_CHECK(n.attrs.get_string("output", "l8") == "l8", "I8BConv2DRes output must be l8");
+  // output "l8" (default): the l8 code of w; "i8" (int8_full v2): the linear code clamp(rne(w) + y_zero, qmin, qmax)
+  const std::string oc = n.attrs.get_string("output", "l8");
+  BF_CHECK(oc == "l8" || oc == "i8", "I8BConv2DRes output must be l8 or i8");
+  if (oc == "i8") {
+    const int64_t qmin = n.attrs.get_int("qmin", -128), qmax = n.attrs.get_int("qmax", 127);
+    BF_CHECK(qmin >= -128 && qmin <= qmax && qmax <= 127, "I8BConv2DRes qmin / qmax out of range");
+    const int64_t z = n.attrs.get_int("y_zero", 0);
+    BF_CHECK(z >= -(int64_t{1} << 16) && z <= (int64_t{1} << 16), "I8BConv2DRes y_zero out of range");
+  }
   check_vec(ins, 2, DType::kF32, g.oc, "post_mul");
   check_vec(ins, 3, DType::kF32, g.oc, "post_add");
   if (has(ins, 4)) check_vec(ins, 4, DType::kF32, g.ic, "threshold");
@@ -506,6 +514,112 @@ void infer_bconv_res(const Node& n, const Ins& ins, Outs& outs) {
   } else {
     BF_CHECK(outs.size() == 1, "I8BConv2DRes without bit_thr has 1 output");
   }
+}
+
+// I8BConv2DResI (int8_ops._bconv_res_i; int8_full v2): the I8BConv2DRes block with an integer epilogue. Inputs x, w, -, -,
+// threshold?, residual i8 [N,OH,OW,O], m1 i32[O], b i32[O], m2 i32[O], bit_thr i32[O]?, slope i32[O]?, out_bias i32[O]?,
+// pre_b / pre_lo / pre_hi i32[O]? (pre stage);
+// attributes shift, slope_shift, y_zero, qmin, qmax, bit_src; outputs y (i8), bits (bit, iff bit_thr is given).
+void infer_bconv_res_i(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req(ins, 0, "x");
+  check_binary_x(n, x);
+  const auto& w = req(ins, 1, "w");
+  BF_CHECK(w.dtype == DType::kBit, "I8BConv2DResI: w must be bit");
+  auto g = conv_geometry(n.attrs, x.shape, w.shape);
+  BF_CHECK(g.groups == 1, "I8BConv2DResI: groups must be 1");
+  parse_binarize(n.attrs);
+  int64_t pv = n.attrs.get_int("pad_value", 0);
+  BF_CHECK(pv >= -1 && pv <= 1, "I8BConv2DResI pad_value must be -1, 0 or 1");
+  BF_CHECK(!has(ins, 2) && !has(ins, 3), "I8BConv2DResI: inputs 2 and 3 are unused");
+  if (has(ins, 4)) check_vec(ins, 4, DType::kF32, g.ic, "threshold");
+  if (has(ins, 5)) {  // residual (optional: without it, q * m2 = 0); r_tile: O / r_tile channels, repeated
+    const auto& r = req_i8(ins, 5, "residual");
+    const int64_t rt = n.attrs.get_int("r_tile", 1);
+    BF_CHECK(rt >= 1 && g.oc % rt == 0, "I8BConv2DResI r_tile must divide the output channels");
+    BF_CHECK(r.shape == Shape({g.n, g.oh, g.ow, g.oc / rt}), "I8BConv2DResI residual shape ", shape_str(r.shape));
+    check_vec(ins, 8, DType::kI32, g.oc, "m2");
+  }
+  check_vec(ins, 6, DType::kI32, g.oc, "m1");
+  check_vec(ins, 7, DType::kI32, g.oc, "b");
+  if (has(ins, 10)) check_vec(ins, 10, DType::kI32, g.oc, "slope");
+  if (has(ins, 11)) check_vec(ins, 11, DType::kI32, g.oc, "out_bias");
+  if (has(ins, 12)) {  // pre stage: clamp(dot * m1 + pre_b, pre_lo, pre_hi)
+    check_vec(ins, 12, DType::kI32, g.oc, "pre_b");
+    check_vec(ins, 13, DType::kI32, g.oc, "pre_lo");
+    check_vec(ins, 14, DType::kI32, g.oc, "pre_hi");
+  }
+  const int64_t sh = n.attrs.get_int("shift", 0), k = n.attrs.get_int("slope_shift", 0);
+  BF_CHECK(sh >= 0 && sh <= 30 && k >= 0 && k <= 30, "I8BConv2DResI shift / slope_shift out of range");
+  const int64_t qmin = n.attrs.get_int("qmin", -128), qmax = n.attrs.get_int("qmax", 127);
+  BF_CHECK(qmin >= -128 && qmin <= qmax && qmax <= 127, "I8BConv2DResI qmin / qmax out of range");
+  const int64_t z = n.attrs.get_int("y_zero", 0);
+  BF_CHECK(z >= -(int64_t{1} << 16) && z <= (int64_t{1} << 16), "I8BConv2DResI y_zero out of range");
+  set_out(outs, DType::kI8, {g.n, g.oh, g.ow, g.oc});
+  if (has(ins, 9)) {
+    check_vec(ins, 9, DType::kI32, g.oc, "bit_thr");
+    const std::string bs = n.attrs.get_string("bit_src", "sum");
+    BF_CHECK(bs == "sum" || bs == "out", "I8BConv2DResI bit_src must be sum or out");
+    BF_CHECK(outs.size() == 2 && outs[1], "I8BConv2DResI with bit_thr needs 2 outputs");
+    outs[1]->dtype = DType::kBit;
+    outs[1]->shape = {g.n, g.oh, g.ow, g.oc};
+  } else {
+    BF_CHECK(outs.size() == 1, "I8BConv2DResI without bit_thr has 1 output");
+  }
+}
+
+// I8GatedAdd (int8_ops._gated_add; int8_full v2): x, p i8 [N,H,W,C], g i8 [N,1,1,C], kx / kp / b i32[C], bit_thr i32[nb,C]?;
+// attributes x_zero, p_zero, g_zero, shift, y_zero, qmin, qmax; outputs y (i8) and nb bit tensors.
+void infer_gated_add(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  const auto& p = req_i8(ins, 1, "p");
+  const auto& g = req_i8(ins, 2, "g");
+  BF_CHECK(x.shape.size() == 4 && p.shape == x.shape, "I8GatedAdd: x and p must be [N, H, W, C] of one shape");
+  const int64_t c = x.shape[3];
+  BF_CHECK(g.shape == Shape({x.shape[0], 1, 1, c}), "I8GatedAdd: g must be [N, 1, 1, C], got ", shape_str(g.shape));
+  check_vec(ins, 3, DType::kI32, c, "kx");
+  check_vec(ins, 4, DType::kI32, c, "kp");
+  check_vec(ins, 5, DType::kI32, c, "b");
+  const int64_t sh = n.attrs.get_int("shift", 0);
+  BF_CHECK(sh >= 0 && sh <= 30, "I8GatedAdd shift out of range");
+  const int64_t qmin = n.attrs.get_int("qmin", -128), qmax = n.attrs.get_int("qmax", 127);
+  BF_CHECK(qmin >= -128 && qmin <= qmax && qmax <= 127, "I8GatedAdd qmin / qmax out of range");
+  for (const char* k : {"x_zero", "p_zero", "g_zero", "y_zero"}) {
+    const int64_t z = n.attrs.get_int(k, 0);
+    BF_CHECK(z >= -(int64_t{1} << 16) && z <= (int64_t{1} << 16), "I8GatedAdd ", k, " out of range");
+  }
+  set_out(outs, DType::kI8, x.shape);
+  int64_t nb = 0;
+  if (has(ins, 6)) {
+    BF_CHECK(ins[6]->dtype == DType::kI32 && ins[6]->shape.size() == 2 && ins[6]->shape[1] == c, "I8GatedAdd: bit_thr must be i32 [nb, C]");
+    nb = ins[6]->shape[0];
+  }
+  BF_CHECK(static_cast<int64_t>(outs.size()) == 1 + nb, "I8GatedAdd: needs 1 + nb outputs");
+  for (int64_t j = 1; j <= nb; ++j) {
+    BF_CHECK(outs[j], "I8GatedAdd: missing bit output");
+    outs[j]->dtype = DType::kBit;
+    outs[j]->shape = x.shape;
+  }
+}
+
+// I8GapAffine (int8_ops._gap_affine; int8_full v2): x_1..x_n i8 [N,H,W,C], K i32 [n, C], B i32 [C]; attributes zeros[n],
+// shift (0..62), y_zero, qmin, qmax; output [N, 1, 1, C] i8. |K| * 255 * H * W * n + |B| < 2^62 (int64 accumulator).
+void infer_gap_affine(const Node& n, const Ins& ins, Outs& outs) {
+  BF_CHECK(ins.size() >= 3, "I8GapAffine: needs inputs and K, B");
+  const size_t k = ins.size() - 2;
+  const auto& x0 = req_i8(ins, 0, "x");
+  BF_CHECK(x0.shape.size() == 4, "I8GapAffine: inputs must be [N, H, W, C]");
+  for (size_t i = 1; i < k; ++i) BF_CHECK(req_i8(ins, i, "x").shape == x0.shape, "I8GapAffine: inputs of one shape");
+  const int64_t c = x0.shape[3];
+  BF_CHECK(has(ins, k) && ins[k]->dtype == DType::kI32 && ins[k]->shape == Shape({static_cast<int64_t>(k), c}), "I8GapAffine: K must be i32 [n, C]");
+  check_vec(ins, k + 1, DType::kI32, c, "B");
+  BF_CHECK(n.attrs.get_ints("zeros", {}).size() == k, "I8GapAffine: zeros[n]");
+  const int64_t sh = n.attrs.get_int("shift", 0);
+  BF_CHECK(sh >= 0 && sh <= 62, "I8GapAffine shift out of range");
+  const int64_t qmin = n.attrs.get_int("qmin", -128), qmax = n.attrs.get_int("qmax", 127);
+  BF_CHECK(qmin >= -128 && qmin <= qmax && qmax <= 127, "I8GapAffine qmin / qmax out of range");
+  BF_CHECK(static_cast<double>(x0.shape[1] * x0.shape[2]) * 256.0 * static_cast<double>(k) * 2147483648.0 < 4.6e18,
+           "I8GapAffine: spatial size too large for the int64 accumulator");
+  set_out(outs, DType::kI8, {x0.shape[0], 1, 1, c});
 }
 
 void infer_bmatmul(const Node& n, const Ins& ins, Outs& outs) {
@@ -557,6 +671,9 @@ void register_int8_full_op_defs(OpRegistry& reg) {
   reg.add_op({"I8BDense", infer_bdense});
   reg.add_op({"I8BConv2D", infer_bconv});
   reg.add_op({"I8BConv2DRes", infer_bconv_res});
+  reg.add_op({"I8BConv2DResI", infer_bconv_res_i});
+  reg.add_op({"I8GatedAdd", infer_gated_add});
+  reg.add_op({"I8GapAffine", infer_gap_affine});
   reg.add_op({"I8BMatMul", infer_bmatmul});
 }
 

@@ -146,6 +146,58 @@ class MulRef : public AddMulRef {
   MulRef() : AddMulRef(false) {}
 };
 
+// I8GapAffine (int8_ops._gap_affine): exact int64 sums, one rounding
+class GapAffineRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const size_t k = ctx.inputs.size() - 2;
+    const Tensor& x0 = ctx.in(0);
+    const int64_t ns = x0.dim(0), hw = x0.dim(1) * x0.dim(2), c = x0.dim(3);
+    const int32_t* K = ctx.in(k).data<int32_t>();
+    const int32_t* B = ctx.in(k + 1).data<int32_t>();
+    const Json& a = ctx.attrs();
+    const std::vector<int64_t> zs = a.get_ints("zeros", {});
+    const int sh = static_cast<int>(a.get_int("shift", 0));
+    const int32_t zy = static_cast<int32_t>(a.get_int("y_zero", 0));
+    const int lo = static_cast<int>(a.get_int("qmin", -128)), hi = static_cast<int>(a.get_int("qmax", 127));
+    int8_t* y = ctx.out(0).data<int8_t>();
+    for (int64_t n = 0; n < ns; ++n)
+      for (int64_t ch = 0; ch < c; ++ch) {
+        int64_t acc = B[ch];
+        for (size_t i = 0; i < k; ++i) {
+          const int8_t* q = ctx.in(i).data<int8_t>() + n * hw * c + ch;
+          int64_t s = 0;
+          for (int64_t j = 0; j < hw; ++j) s += q[j * c];
+          s -= hw * zs[i];
+          acc += s * K[i * c + ch];
+        }
+        y[n * c + ch] = q8::clamp8(rshr64(acc, sh) + zy, lo, hi);
+      }
+  }
+  static int64_t rshr64(int64_t x, int n) { return n > 0 ? (x + (int64_t(1) << (n - 1))) >> n : x; }
+};
+
+// I8GatedAdd (int8_full::GatedAddParams, int8_ops._gated_add)
+class GatedAddRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    int8_full::GatedAddParams p(ctx);
+    const Tensor& x = ctx.in(0);
+    const int64_t c = p.c, rows = x.size() / c, per = rows / x.dim(0), words = bit_words(c);
+    const int8_t *qx = x.data<int8_t>(), *qp = ctx.in(1).data<int8_t>(), *qg = ctx.in(2).data<int8_t>();
+    int8_t* y = ctx.out(0).data<int8_t>();
+    for (int64_t j = 0; j < p.nb; ++j) std::fill_n(ctx.out(1 + j).data<uint32_t>(), rows * words, 0u);
+    for (int64_t r = 0; r < rows; ++r)
+      for (int64_t ch = 0; ch < c; ++ch) {
+        const int64_t i = r * c + ch;
+        const int64_t a = p.acc(qx[i], qp[i], qg[(r / per) * c + ch], ch);
+        y[i] = p.y(a);
+        for (int64_t j = 0; j < p.nb; ++j)
+          if (!(a >= p.thr[j * c + ch])) ctx.out(1 + j).data<uint32_t>()[r * words + (ch >> 5)] |= 1u << (ch & 31);
+      }
+  }
+};
+
 // ------------------------------------------------------ twins (internal)
 // I8LutN: y_j = table_j[x] (row = channel of the last axis for per-channel tables); I8AddN: the I8Add of AddMulRef
 // with the j-th output parameters (xa + xb computed as there, once per element per output: the reference stays literal).
@@ -717,7 +769,8 @@ class BDenseRef : public Kernel {
   int8_full::BinarizeI8 bin_;
 };
 
-// I8BConv2D and I8BConv2DRes (res_ = true: residual + PReLU epilogue, l8 output, optional bit output).
+// I8BConv2D, I8BConv2DRes (residual + PReLU epilogue, l8 / linear output, optional bit output) and I8BConv2DResI (the
+// integer residual epilogue, int8_full::ResIEpilogue).
 // x: int8 codes binarized with integer thresholds, or a bit tensor taken as is.
 class BConv2DRef : public Kernel {
  public:
@@ -740,15 +793,19 @@ class BConv2DRef : public Kernel {
       for (int64_t p = 0; p < np; ++p) bin_.row(x.data<int8_t>() + p * g.ic, g.ic, xb.data() + p * g.ic);
     }
     const bool res = ctx.node->op == "I8BConv2DRes";
+    const bool resi = ctx.node->op == "I8BConv2DResI";  // integer epilogue (int8_full v2)
     std::unique_ptr<int8_full::ResEpilogue> ep;
+    std::unique_ptr<int8_full::ResIEpilogue> epi;
     if (res) {
       ep = std::make_unique<int8_full::ResEpilogue>(ctx);
       ep->bind_gate(ctx);
     }
+    if (resi) epi = std::make_unique<int8_full::ResIEpilogue>(ctx, g.kh * g.kw * g.kic);
     const float* bthr = res && ctx.has_in(8) ? ctx.in(8).data<float>() : nullptr;
+    const bool ibits = resi && ctx.has_in(9);
     const bool bgt = ctx.attrs().get_string("bit_binarize", "ge") == "gt";
     const int64_t ow_words = bit_words(g.oc);
-    if (bthr) std::fill_n(ctx.out(1).data<uint32_t>(), g.n * g.oh * g.ow * ow_words, 0u);
+    if (bthr || ibits) std::fill_n(ctx.out(1).data<uint32_t>(), g.n * g.oh * g.ow * ow_words, 0u);
     const int64_t words = bit_words(g.kic), ocg = g.oc / g.groups;
     for (int64_t n = 0; n < g.n; ++n)
       for (int64_t oy = 0; oy < g.oh; ++oy)
@@ -767,6 +824,14 @@ class BConv2DRef : public Kernel {
                 }
               }
             const int64_t pix = (n * g.oh + oy) * g.ow + ox, at = pix * g.oc + o;
+            if (resi) {
+              bool neg = false;
+              const int64_t cr = g.oc / epi->r_tile;  // residual channels (r_tile)
+              const int8_t rq = ctx.has_in(5) ? ctx.in(5).data<int8_t>()[pix * cr + o % cr] : int8_t{0};
+              ctx.out(0).data<int8_t>()[at] = epi->finish(acc, o, rq, &neg);
+              if (ibits && neg) ctx.out(1).data<uint32_t>()[pix * ow_words + (o >> 5)] |= 1u << (o & 31);
+              continue;
+            }
             if (!res) {
               int8_full::binary_store(ctx, at, o, acc);
               continue;
@@ -854,6 +919,9 @@ void register_int8_full_reference_kernels(OpRegistry& reg) {
   add("I8BDense", "i8bdense.reference", make_kernel<BDenseRef>);
   add("I8BConv2D", "i8bconv2d.reference", make_kernel<BConv2DRef>);
   add("I8BConv2DRes", "i8bconv2dres.reference", make_kernel<BConv2DRef>);
+  add("I8BConv2DResI", "i8bconv2dresi.reference", make_kernel<BConv2DRef>);
+  add("I8GatedAdd", "i8gatedadd.reference", make_kernel<GatedAddRef>);
+  add("I8GapAffine", "i8gapaffine.reference", make_kernel<GapAffineRef>);
   add("I8BMatMul", "i8bmatmul.reference", make_kernel<BMatMulRef>);
 }
 

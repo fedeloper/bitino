@@ -409,7 +409,7 @@ class CopyRef : public Kernel {  // Reshape
     // The session aliases a Reshape's output to its input buffer (zero-copy)
     // unless the output is a graph output; only then is there anything to copy.
     if (ctx.in(0).raw() == ctx.out(0).raw()) return;
-    std::memcpy(ctx.out(0).raw(), ctx.in(0).raw(), ctx.in(0).bytes());  // f32 or i8 (int8_full models)
+    std::memcpy(ctx.out(0).raw(), ctx.in(0).raw(), ctx.in(0).bytes());  // f32, i8 or bit (same last dimension: same storage)
   }
 };
 

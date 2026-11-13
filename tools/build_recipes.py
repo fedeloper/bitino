@@ -493,6 +493,25 @@ def build_recipe(mid, st, reg, man, adir, int8_args):
         rng = str(cal.get("range") or "")
         if rng.startswith("percentile"):
             flags += ["--percentile", rng.split()[1]]
+        if (q.get("residual_code") or {}).get("code") == "lin8":
+            # int8_full v2 (lin8 residual code, promoted 2026-11-13): the quantizer arguments recorded at build time
+            # (reports/int8_full_v2/build/<m>.json; --stats is a local cache, --n is set above)
+            br = os.path.join(ROOT, "reports", "int8_full_v2", "build", f"{mid}.json")
+            bargs = load(br).get("args", []) if os.path.exists(br) else []
+            flags = [f for i, f in enumerate(flags) if f != "--residual-code" and not (i and flags[i - 1] == "--residual-code")]
+            skip = False
+            for i, t in enumerate(bargs):
+                if skip:
+                    skip = False
+                    continue
+                if t in ("--stats", "--n"):
+                    skip = True
+                    continue
+                if t.startswith("--") and t in flags:
+                    nxt = bargs[i + 1] if i + 1 < len(bargs) and not bargs[i + 1].startswith("--") else None
+                    skip = nxt is not None
+                    continue
+                flags.append(t)
         for extra_arg in int8_args.get((mid, fn), []):
             toks = extra_arg.split(" (default)")[0].replace("=", " ").split()
             if toks and toks[0].startswith("--") and toks[0] not in flags:

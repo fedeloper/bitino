@@ -127,6 +127,40 @@
     "agreement": 0.8452,
     "study": "int8_full_log2_split_vs_int8_full_log2_eval5000",
     "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full_log2.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6316,
+    "b_top1": 0.6248,
+    "delta_pt": -0.68,
+    "ci95_pt": [
+     -1.477,
+     0.117
+    ],
+    "mcnemar_p": 0.10471898356757946,
+    "agreement": 0.8266,
+    "study": "int8_full_log2_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.5902,
+    "b_top1": 0.6248,
+    "delta_pt": 3.46,
+    "ci95_pt": [
+     2.545,
+     4.375
+    ],
+    "mcnemar_p": 1.4905586935496053e-13,
+    "agreement": 0.7526,
+    "study": "int8_full_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
    }
   ],
   "int8_full": [
@@ -179,9 +213,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

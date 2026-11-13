@@ -95,6 +95,23 @@
     "date": "2026-11-04"
    },
    {
+    "a": "model_int8_full_log2.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6028,
+    "b_top1": 0.6032,
+    "delta_pt": 0.04,
+    "ci95_pt": [
+     -0.803,
+     0.883
+    ],
+    "mcnemar_p": 0.9628991323668596,
+    "agreement": 0.804,
+    "study": "int8_full_log2_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
+   },
+   {
     "a": "model_int8_full.bitino:int8_full",
     "b": "model_int8_full_log2.bitino:int8_full",
     "eval_set": "imagenet-val-subset-5000",
@@ -110,6 +127,23 @@
     "agreement": 0.8062,
     "study": "int8_full_vs_int8_full_log2_eval5000",
     "date": "2026-11-04"
+   },
+   {
+    "a": "model_int8_full.bitino:int8_full",
+    "b": "model_int8_full_v2.bitino:int8_full",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "a_top1": 0.6036,
+    "b_top1": 0.6032,
+    "delta_pt": -0.04,
+    "ci95_pt": [
+     -0.83,
+     0.75
+    ],
+    "mcnemar_p": 0.9604260298133745,
+    "agreement": 0.8188,
+    "study": "int8_full_vs_int8_full_v2_eval5000",
+    "date": "2026-11-13"
    }
   ],
   "int8_full": [
@@ -153,9 +187,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0832",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "5a70c19a",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,

@@ -109,6 +109,9 @@ struct ResEpilogue {
   const float* slope = nullptr;
   const float* bias = nullptr;
   const int8_t* out_lut = nullptr;  // in(9): output 0 = out_lut[code + 128] (an I8Lut absorbed by Session)
+  // output "i8" (int8_full v2): the linear code clamp(rne(w) + y_zero, qmin, qmax) instead of l8_encode(w)
+  bool y_lin = false;
+  int32_t y_zero = 0, qmin = -128, qmax = 127;
   float dec[256];  // R of each residual code (index res + 128)
   explicit ResEpilogue(const KernelContext& ctx) {
     const Json& a = ctx.attrs();
@@ -120,6 +123,10 @@ struct ResEpilogue {
     slope = ctx.in(6).data<float>();
     bias = ctx.has_in(7) ? ctx.in(7).data<float>() : nullptr;
     out_lut = ctx.has_in(9) ? ctx.in(9).data<int8_t>() : nullptr;
+    y_lin = a.get_string("output", "l8") == "i8";
+    y_zero = static_cast<int32_t>(a.get_int("y_zero", 0));
+    qmin = static_cast<int32_t>(a.get_int("qmin", -128));
+    qmax = static_cast<int32_t>(a.get_int("qmax", 127));
     for (int q = -128; q <= 127; ++q)
       dec[q + 128] = r_l8 ? q8::l8_decode(q, r_exp) : static_cast<float>(static_cast<int64_t>(q) - r_zero) * r_scale;
     pre_slope = ctx.has_in(10) ? ctx.in(10).data<float>() : nullptr;
@@ -164,9 +171,116 @@ struct ResEpilogue {
     float w = u >= 0.f ? u : u * slope[o];
     if (bias) w = w + bias[o];
     *bit_value = bit_out ? w : u;
-    const int8_t c = q8::l8_encode(w);
+    const int8_t c = y_lin ? lin_encode(w) : q8::l8_encode(w);
     return out_lut ? out_lut[c + 128] : c;
   }
+  // int8_ops.lin_encode: rne(w) (saturating conversion; |w| beyond 2^20 gives the same code) + y_zero, clamped
+  int8_t lin_encode(float w) const {
+    const float r = std::nearbyint(std::fmin(std::fmax(w, -1048576.f), 1048576.f));
+    const int64_t y = static_cast<int64_t>(r) + y_zero;
+    return static_cast<int8_t>(y < qmin ? qmin : (y > qmax ? qmax : y));
+  }
+};
+
+// I8BConv2DResI (int8_ops._bconv_res_i; int8_full v2): the integer epilogue of one output value from the exact binary
+// dot product and the residual code. Every value is an int32 by the quantizer's bound (checked in the constructor).
+struct ResIEpilogue {
+  const int32_t *m1 = nullptr, *b = nullptr, *m2 = nullptr, *bthr = nullptr, *slope = nullptr, *ob = nullptr;
+  const int32_t *pb = nullptr, *plo = nullptr, *phi = nullptr;  // pre stage: clamp(dot * m1 + pb, plo, phi)
+  int shift = 0, k = 0;
+  int32_t y_zero = 0, qmin = -128, qmax = 127;
+  bool bit_out = false;  // bit_src "out": the bits compare w instead of acc
+  int64_t r_tile = 1;    // the residual has O / r_tile channels (channel o reads o mod (O / r_tile))
+  ResIEpilogue(const KernelContext& ctx, int64_t K) {
+    const Json& a = ctx.attrs();
+    m1 = ctx.in(6).data<int32_t>();
+    b = ctx.in(7).data<int32_t>();
+    m2 = ctx.has_in(5) ? ctx.in(8).data<int32_t>() : nullptr;  // no residual: q * m2 = 0
+    bthr = ctx.has_in(9) ? ctx.in(9).data<int32_t>() : nullptr;
+    slope = ctx.has_in(10) ? ctx.in(10).data<int32_t>() : nullptr;
+    ob = ctx.has_in(11) ? ctx.in(11).data<int32_t>() : nullptr;
+    if (ctx.has_in(12)) {
+      pb = ctx.in(12).data<int32_t>();
+      plo = ctx.in(13).data<int32_t>();
+      phi = ctx.in(14).data<int32_t>();
+    }
+    shift = static_cast<int>(a.get_int("shift", 0));
+    k = static_cast<int>(a.get_int("slope_shift", 0));
+    y_zero = static_cast<int32_t>(a.get_int("y_zero", 0));
+    qmin = static_cast<int32_t>(a.get_int("qmin", -128));
+    qmax = static_cast<int32_t>(a.get_int("qmax", 127));
+    bit_out = a.get_string("bit_src", "sum") == "out";
+    r_tile = a.get_int("r_tile", 1);
+    BF_CHECK(within_bound(ctx, K), "I8BConv2DResI: constants exceed the int32 / int16 bounds");
+  }
+  // int8_ops.bconv_res_i_bound: |acc|, |w| < 2^31 (int32 lanes compute the int64 values) and |m1|, |m2| <= 32767 (int16
+  // multipliers of the vector epilogue)
+  static bool within_bound(const KernelContext& ctx, int64_t K) {
+    const int64_t oc = ctx.in(6).size();
+    auto mx = [&](size_t i) {
+      int64_t v = 0;
+      if (ctx.has_in(i) && (i != 8 || ctx.has_in(5)))
+        for (int64_t c = 0; c < oc; ++c) v = std::max<int64_t>(v, std::llabs(static_cast<long long>(ctx.in(i).data<int32_t>()[c])));
+      return v;
+    };
+    const int k = static_cast<int>(ctx.attrs().get_int("slope_shift", 0));
+    const int64_t acc = K * mx(6) + mx(12) + 128 * mx(8) + mx(7);
+    int64_t w = acc;
+    if (ctx.has_in(10)) w = std::max(acc, (((acc * mx(10)) >> 31) + 1) << k);
+    w += mx(11);
+    return std::max(acc, w) < (int64_t(1) << 31) && mx(6) <= 32767 && mx(8) <= 32767;
+  }
+  // y of one value; *bit = true iff the bit is -1 (!(s >= bit_thr))
+  int8_t finish(int64_t dot, int64_t o, int8_t res, bool* bit) const {
+    int64_t pre = dot * m1[o];
+    if (pb) pre = std::min<int64_t>(std::max<int64_t>(pre + pb[o], plo[o]), phi[o]);
+    const int64_t acc = pre + (m2 ? static_cast<int64_t>(res) * m2[o] : 0) + b[o];
+    int64_t w = acc;
+    if (slope && acc < 0) w = q8::mulhi(acc, slope[o]) * (int64_t(1) << k);
+    if (ob) w += ob[o];
+    if (bthr) *bit = !((bit_out ? w : acc) >= bthr[o]);
+    return q8::clamp8(q8::rshr(w, shift) + y_zero, qmin, qmax);
+  }
+};
+
+// I8GatedAdd (int8_ops._gated_add; int8_full v2) constants and the bound check: 256 max|kx| + 65280 max|kp| + max|b| < 2^31
+// (also covers the folded form q_x kx + q_p gk + b' with gk = (g - z_g) kp, b' = b - z_x kx - z_p gk the kernels use).
+struct GatedAddParams {
+  const int32_t *kx = nullptr, *kp = nullptr, *b = nullptr, *thr = nullptr;
+  int64_t c = 0, nb = 0;
+  int32_t zx = 0, zp = 0, zg = 0, zy = 0, qmin = -128, qmax = 127;
+  int shift = 0;
+  explicit GatedAddParams(const KernelContext& ctx) {
+    const Json& a = ctx.attrs();
+    c = ctx.in(0).dim(3);
+    kx = ctx.in(3).data<int32_t>();
+    kp = ctx.in(4).data<int32_t>();
+    b = ctx.in(5).data<int32_t>();
+    if (ctx.has_in(6)) {
+      thr = ctx.in(6).data<int32_t>();
+      nb = ctx.in(6).dim(0);
+    }
+    zx = static_cast<int32_t>(a.get_int("x_zero", 0));
+    zp = static_cast<int32_t>(a.get_int("p_zero", 0));
+    zg = static_cast<int32_t>(a.get_int("g_zero", 0));
+    zy = static_cast<int32_t>(a.get_int("y_zero", 0));
+    qmin = static_cast<int32_t>(a.get_int("qmin", -128));
+    qmax = static_cast<int32_t>(a.get_int("qmax", 127));
+    shift = static_cast<int>(a.get_int("shift", 0));
+    int64_t mx = 0, mp = 0, mb = 0;
+    for (int64_t i = 0; i < c; ++i) {
+      mx = std::max<int64_t>(mx, std::llabs(kx[i]));
+      mp = std::max<int64_t>(mp, std::llabs(kp[i]));
+      mb = std::max<int64_t>(mb, std::llabs(b[i]));
+    }
+    bound = 256 * mx + 65280 * mp + mb;
+    BF_CHECK(bound < (int64_t(1) << 31), "I8GatedAdd: constants exceed the int32 bound");
+  }
+  int64_t bound = 0;
+  int64_t acc(int8_t x, int8_t p, int8_t g, int64_t ch) const {
+    return (int64_t(x) - zx) * kx[ch] + (int64_t(p) - zp) * (int64_t(g) - zg) * kp[ch] + b[ch];
+  }
+  int8_t y(int64_t acc) const { return q8::clamp8(q8::rshr(acc, shift) + zy, qmin, qmax); }
 };
 
 // ---- No denormal can occur (AArch32 NEON flush-to-zero; 2026-11-13)
