@@ -209,14 +209,13 @@
    "notes": [
     "32-bit Android: runs the armeabi-v7a build, whose NEON kernels are AArch32 builds of the arm64 ones (runtime/kernels/neon_a32.h, since 2026-11-12; earlier runs used the portable C++ fallback). The int8 stages use AArch32 NEON kernels too (since 2026-11-12: int8_full_neon through neon_a32.h, VMULL.S8 GEMM tiles instead of SDOT/I8MM for int8_full and optimized_int8; the development log (not published)). The Cortex-A53 in 32-bit mode cannot overlap vector loads with vector arithmetic (the development log (not published))."
    ],
-   "runs": 42,
+   "runs": 107,
    "verified": {
     "models": 132,
     "stages": 264,
     "stages_passed": 264,
     "stages_pending": 0,
     "dates": [
-     "2026-11-12",
      "2026-11-13"
     ]
    }

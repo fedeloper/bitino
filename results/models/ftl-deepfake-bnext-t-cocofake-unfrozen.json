@@ -876,6 +876,95 @@
     "runtime": "development runtime as of 2026-11-13"
    }
   ],
+  "redmi-9a": [
+   {
+    "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+    "device": "redmi-9a",
+    "date": "2026-11-13",
+    "timestamp_utc": "2026-11-13T11:27:49Z",
+    "plan": "quick_20261113_1255_m2006c3lg",
+    "config": "t1_fast",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "0",
+    "median_ms": 384.3755195,
+    "median_range_ms": [
+     384.073231,
+     384.677808
+    ],
+    "p90_ms": 385.0717689,
+    "repeats": 2,
+    "iterations": 10,
+    "warmup": 2,
+    "peak_rss_kb": 38032,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": null,
+    "abi": "armeabi-v7a",
+    "kernels": "neon-aarch32",
+    "model_data_sha256": "b8da254f08b042a97a72cadbfd55c72d4a8e692d51245798a85c25deafe5486f",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+    "device": "redmi-9a",
+    "date": "2026-11-13",
+    "timestamp_utc": "2026-11-13T11:27:51Z",
+    "plan": "quick_20261113_1255_m2006c3lg",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 130.7536155,
+    "median_range_ms": [
+     130.741077,
+     130.766154
+    ],
+    "p90_ms": 131.0430921,
+    "repeats": 2,
+    "iterations": 10,
+    "warmup": 2,
+    "peak_rss_kb": 62308,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": null,
+    "abi": "armeabi-v7a",
+    "kernels": "neon-aarch32",
+    "model_data_sha256": "b8da254f08b042a97a72cadbfd55c72d4a8e692d51245798a85c25deafe5486f",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+    "device": "redmi-9a",
+    "date": "2026-11-13",
+    "timestamp_utc": "2026-11-13T11:27:57Z",
+    "plan": "quick_20261113_1255_m2006c3lg",
+    "config": "t1_fast_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "0",
+    "median_ms": 382.5900575,
+    "median_range_ms": [
+     382.565154,
+     382.614961
+    ],
+    "p90_ms": 383.66215420000003,
+    "repeats": 2,
+    "iterations": 10,
+    "warmup": 2,
+    "peak_rss_kb": 35600,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": null,
+    "abi": "armeabi-v7a",
+    "kernels": "neon-aarch32",
+    "model_data_sha256": "b8da254f08b042a97a72cadbfd55c72d4a8e692d51245798a85c25deafe5486f",
+    "runtime": "development runtime as of 2026-11-13"
+   }
+  ],
   "x86": []
  }
 }

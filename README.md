@@ -126,7 +126,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 | model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.282 ◇ | 0.215 ◇ | 0.431 ◇ | – | 1.32 | 3.35 |
+| `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.282 ◇ | 0.215 ◇ | 0.431 ◇ | – | 1.32 | 3.15 |
 | `finn-examples-bnn-pynq-cnv-w1a1` | 85.9% → 85.9% | -0.77 pt | 0.282 ◇ | 0.213 ◇ | 0.251 ◇ | – | 1.33 | – |
 | `aliasgharshinwari-finn-cnv-w1a1-cifar10` | 89.8% → 89.8% | +0.06 pt | 0.286 ◇ | 0.217 ◇ | 0.281 ◇ | 0.57 ⚠ | 1.32 | – |
 | `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.3 ◇ | 0.222 ◇ | 0.398 ◇ | – | 1.36 | – |
@@ -134,7 +134,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `fda-bnn-resnet20-cifar10-mindspore` | 89.8% → 89.8% | -0.55 pt | 0.45 ◇ | 0.492 ◇ | 0.461 ◇ | – | 1.86 | – |
 | `biper-resnet20-cifar10` | 86.7% → 86.7% | -0.63 pt | 0.454 ◇ | 0.398 ◇ | 0.528 ◇ | – | 1.88 | – |
 | `recu-resnet20-cifar10` | 88.3% → 88.3% | -0.67 pt | 0.467 ◇ | 0.544 ◇ | 0.53 ◇ | – | 1.87 | – |
-| `rbnn-resnet20-cifar10` | 88.3% → 88.3% | -1.01 pt | 0.495 ◇ | 0.598 ◇ | 0.49 ◇ | – | 2.03 | 8.24 |
+| `rbnn-resnet20-cifar10` | 88.3% → 88.3% | -1.01 pt | 0.495 ◇ | 0.598 ◇ | 0.49 ◇ | – | 2.03 | 7.2 |
 | `siman-resnet20-cifar10` | 87.5% → 87.5% | -2.32 pt | 0.501 ◇ | 0.509 ◇ | 0.56 ◇ | – | 2.03 | – |
 | `rbnn-resnet20-bireal-cifar10` | 89.8% → 89.8% | -1.13 pt | 0.508 ◇ | 0.515 ◇ | 0.545 ◇ | – | 2.06 | – |
 | `adabin-resnet20-cifar10` | 91.4% → 91.4% | -0.64 pt | 0.879 ◇ | 0.753 ◇ | 0.898 ◇ | 1.22 ⚠ | 4.04 | – |
@@ -147,7 +147,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `siman-vgg-small-cifar10` | 95.3% → 95.3% | -0.49 pt | 2.13 ◇ | 1.12 ◇ | 2.07 ◇ | – | 10.9 | – |
 | `rbnn-resnet18-cifar10` | 94.5% → 94.5% | -0.75 pt | 2.16 ◇ | 1.32 ◇ | 2.24 ◇ | – | 10.8 | – |
 | `siman-resnet18-cifar10` | 95.3% → 95.3% | -0.15 pt | 2.17 ◇ | 1.31 ◇ | 2.24 ◇ | – | 10.7 | – |
-| `ab-bnn-cifar10-reactnet18` | 93.8% → 93.8% | +0.06 pt | 2.25 ◇ | 1.23 ◇ | 2.49 ◇ | 3.72 ⚠ | 11.3 | 27.1 |
+| `ab-bnn-cifar10-reactnet18` | 93.8% → 93.8% | +0.06 pt | 2.25 ◇ | 1.23 ◇ | 2.49 ◇ | 3.72 ⚠ | 11.3 | 25.9 |
 | `bnas-a-cifar10` | 93.8% → 93.8% | -0.42 pt | 8.69 ◇ | 5.22 ◇ | 7.19 ◇ | – | 49.9 | – |
 
 ### ImageNet (55 models)
@@ -158,32 +158,32 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 | model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `larq-zoo-quicknet-small` | 59.4% → 58.6% | -1.96 pt | 4.67 ◇ | 2.49 ◇ | 5.04 ◇ | 9.26 † | 23.4 | 58.7 |
+| `larq-zoo-quicknet-small` | 59.4% → 58.6% | -1.96 pt | 4.67 ◇ | 2.49 ◇ | 5.04 ◇ | 9.26 † | 23.4 | 55.0 |
 | `larq-zoo-binary-alexnet` | 28.9% → 28.9% | +0.30 pt | 5.45 ◇ | 2.69 ◇ | 3.07 ◇ | – | 29.3 | – |
-| `larq-zoo-quicknet` | 66.4% → 66.4% | -0.72 pt | 7.36 ◇ | 3.9 ◇ | 7.67 ◇ | – | 38.6 | 94.6 |
+| `larq-zoo-quicknet` | 66.4% → 66.4% | -0.72 pt | 7.36 ◇ | 3.9 ◇ | 7.67 ◇ | – | 38.6 | 92.7 |
 | `larq-zoo-xnornet` | 34.4% → 34.4% | -0.36 pt | 7.77 ◇ | 4.16 ◇ | 4.2 ◇ | – | 42.0 | – |
 | `dabnn-bireal18-stem` | 58.6% → 58.6% | -0.42 pt | 7.96 ◇ | 4.25 ◇ | 7.98 ◇ | – | 45.2 | – |
-| `larq-zoo-birealnet` | 57.8% → – | -0.20 pt | 10.3 ◇ | 5.41 ◇ | 8.53 ◇ | – | 59.1 | 131.8 |
+| `larq-zoo-birealnet` | 57.8% → – | -0.20 pt | 10.3 ◇ | 5.41 ◇ | 8.53 ◇ | – | 59.1 | 125.3 |
 | `dabnn-bireal18` | 58.6% → 58.6% | +0.16 pt | 10.3 ◇ | 5.39 ◇ | 8.5 ◇ | – | 59.8 | – |
 | `bitorch-resnete18-imagenet` | 64.8% → 62.5% | -0.84 pt | 10.4 ◇ | 5.46 ◇ | 8.1 ◇ | – | 60.0 | – |
 | `larq-zoo-binary-resnet-e18` | 55.5% → 55.5% | -0.92 pt | 10.4 ◇ | 5.44 ◇ | 8.44 ◇ | – | 59.7 | – |
 | `nncf-resnet18-binarization-xnor` | 61.7% → 61.7% | -0.12 pt | 10.7 ◇ | 5.54 ◇ | 7.83 ◇ | – | 59.8 | – |
 | `nncf-resnet18-binarization-dorefa` | 62.5% → 62.5% | +0.14 pt | 10.7 ◇ | 5.53 ◇ | 7.81 ◇ | – | 59.7 | – |
-| `omz-resnet18-xnor-binary-onnx-0001` | 59.4% → 59.4% | -1.20 pt | 10.7 ◇ | 5.59 ◇ | 8.08 ◇ | – | 59.9 | 129.1 |
+| `omz-resnet18-xnor-binary-onnx-0001` | 59.4% → 59.4% | -1.20 pt | 10.7 ◇ | 5.59 ◇ | 8.08 ◇ | – | 59.9 | 123.4 |
 | `omz-resnet18-xnor-binary-onnx-0001-fp16` | 64.1% → 64.1% | +0.00 pt | 10.8 ◇ | 5.54 ◇ | 8.08 ◇ | – | 60.1 | – |
 | `snn-subbit-reactnet18-w1a1-imagenet` | 64.8% → 64.8% | -0.20 pt | 10.8 ◇ | 5.55 ◇ | 8.26 ◇ | – | 61.1 | – |
 | `rbonn-reactnet-resnet18-imagenet` | 65.6% → 65.6% | -0.56 pt | 10.8 ◇ | 5.53 ◇ | 8.26 ◇ | – | 61.0 | – |
-| `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 10.8 ◇ | 5.53 ◇ | 8.77 ◇ | 16.9 ⚠ | 61.2 | 138.5 |
+| `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 10.8 ◇ | 5.53 ◇ | 8.77 ◇ | 16.9 ⚠ | 61.2 | 132.3 |
 | `snn-subbit-reactnet18-w0.67a1-imagenet` | 64.1% → 64.8% | -0.68 pt | 10.8 ◇ | 5.52 ◇ | 8.26 ◇ | – | 61.0 | – |
 | `biper-resnet18-imagenet` | 59.4% → 59.4% | -1.86 pt | 11.0 ◇ | 5.75 ◇ | 8.5 ◇ | – | 61.0 | – |
-| `recu-resnet18-imagenet` | 59.4% → 59.4% | -1.74 pt | 11.0 ◇ | 5.74 ◇ | 8.52 ◇ | – | 60.9 | 139.4 |
+| `recu-resnet18-imagenet` | 59.4% → 59.4% | -1.74 pt | 11.0 ◇ | 5.74 ◇ | 8.52 ◇ | – | 60.9 | 132.7 |
 | `siman-resnet18-imagenet` | 54.7% → 54.7% | -4.58 pt | 11.1 ◇ | 6.05 ◇ | 8.33 ◇ | – | 62.4 | – |
 | `tensorpack-dorefa-alexnet-w1a1-g32` | 46.1% → 46.1% | -0.32 pt | 11.3 ◇ | 5.81 ◇ | 7.64 ◇ | – | 59.9 | – |
 | `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.90 pt | 11.4 ◇ | 6.25 ◇ | 8.31 ◇ | – | 63.3 | – |
 | `sa-bnn-resnet18-imagenet` | 61.7% → 62.5% | -0.78 pt | 11.5 ◇ | 5.79 ◇ | 8.67 ◇ | – | 61.4 | – |
 | `larq-zoo-real-to-binary-net` | 64.8% → 64.8% | -1.12 pt | 12.1 ◇ | 6.44 ◇ | 10.1 ◇ | – | 65.5 | – |
 | `larq-zoo-quicknet-xl-legacy` | 64.1% → 64.8% | -0.92 pt | 13.0 ◇ | 7.39 ◇ | 14.6 ◇ | – | 67.6 | – |
-| `larq-zoo-quicknet-large` | 71.1% → 70.3% | -1.96 pt | 13.2 ◇ | 7.2 ◇ | 14.2 ◇ | – | 66.8 | 157.2 |
+| `larq-zoo-quicknet-large` | 71.1% → 70.3% | -1.96 pt | 13.2 ◇ | 7.2 ◇ | 14.2 ◇ | – | 66.8 | 157.6 |
 | `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 13.7 ◇ | 8.06 ◇ | 12.3 ◇ | 42.1 ⚠ | 67.4 | – |
 | `biper-resnet34-imagenet` | 66.4% → 66.4% | -1.26 pt | 17.3 ◇ | 9.11 ◇ | 15.4 ◇ | – | 89.7 | – |
 | `recu-resnet34-imagenet` | 68.8% → 68.8% | -4.56 pt | 17.4 ◇ | 9.12 ◇ | 15.4 ◇ | – | 89.6 | – |
@@ -194,12 +194,12 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `larq-zoo-binary-densenet28` | 60.9% → 60.9% | -0.66 pt | 21.3 ◇ | 11.1 ◇ | 14.6 ◇ | – | 113.3 | – |
 | `bitorch-densenet28-imagenet` | 59.4% → 59.4% | -0.76 pt | 22.6 ◇ | 11.8 ◇ | 14.5 ◇ | – | 119.4 | – |
 | `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.2 ◇ | 12.0 ◇ | 19.9 ◇ | – | 117.9 | – |
-| `bnext-tiny` | 69.5% → 68.0% | -3.84 pt | 24.1 ◇ | 12.4 ◇ | 27.0 ◇ | – | 116.5 | 419.6 |
+| `bnext-tiny` | 69.5% → 68.0% | -3.84 pt | 24.1 ◇ | 12.4 ◇ | 27.0 ◇ | – | 116.5 | 343.2 |
 | `larq-zoo-binary-densenet37` | 66.4% → 65.6% | -41.28 pt | 24.4 ◇ | 12.9 ◇ | 20.1 ◇ | – | 129.4 | – |
 | `larq-zoo-meliusnet22` | 65.6% → 66.4% | -57.38 pt | 24.9 ◇ | 13.0 ◇ | 24.7 ◇ | – | 127.3 | – |
 | `bnas-d-imagenet` | 60.2% → 60.2% | -54.94 pt | 26.2 ◇ | 14.4 ◇ | 16.0 ◇ | – | 137.0 | – |
 | `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | -61.52 pt | 26.5 ◇ | 13.9 ◇ | 19.6 ◇ | – | 136.5 | – |
-| `bhvit-tiny-binary` | 64.1% → 62.5% | -0.74 pt | 28.7 ◇ | 14.4 ◇ | 34.3 ◇ | 46.6 ⚠ | 140.8 | 636.4 |
+| `bhvit-tiny-binary` | 64.1% → 62.5% | -0.74 pt | 28.7 ◇ | 14.4 ◇ | 34.3 ◇ | 46.6 ⚠ | 140.8 | 576.8 |
 | `bhvit-tiny-somefp` | 65.6% → 65.6% | -6.20 pt | 31.0 ◇ | 15.6 ◇ | 33.6 ◇ | 58.8 ⚠ | 154.2 | – |
 | `bnas-e-imagenet` | 56.2% → 56.2% | -0.92 pt | 32.9 ◇ | 18.3 ◇ | 23.3 ◇ | – | 182.9 | – |
 | `larq-zoo-binary-densenet45` | 60.9% → 61.7% | -43.86 pt | 33.0 ◇ | 17.2 ◇ | 27.7 ◇ | – | 171.8 | – |
@@ -209,7 +209,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `bhvit-small-binary` | 68.8% → 65.6% | – | 44.0 ◇ | 22.2 ◇ | 53.3 ◇ | 85.8 ⚠ | 216.0 | – |
 | `larq-zoo-binary-densenet37-dilated` | 65.6% → 65.6% | -59.00 pt | 44.3 ◇ | 22.7 ◇ | 34.2 ◇ | – | 239.0 | – |
 | `bhvit-small-somefp` | 72.7% → 76.6% | -1.90 pt | 46.6 ◇ | 23.3 ◇ | 52.7 ◇ | 106.9 ⚠ | 230.1 | – |
-| `bnext-small` | 76.6% → 75.0% | -2.70 pt | 47.0 ◇ | 23.3 ◇ | 51.2 ◇ | – | 223.1 | 787.1 |
+| `bnext-small` | 76.6% → 75.0% | -2.70 pt | 47.0 ◇ | 23.3 ◇ | 51.2 ◇ | – | 223.1 | 638.6 |
 | `bnext-middle` | 78.9% → 78.9% | -1.34 pt | 80.4 ◇ | 40.2 ◇ | 89.0 ◇ | – | 388.3 | – |
 | `bnas-h-imagenet` | 60.2% → 60.2% | +0.08 pt | 106.1 ◇ | 53.3 ◇ | 68.4 ◇ | – | 561.2 | – |
 | `bnext-large` | 79.7% → 80.5% | -0.88 pt | 183.2 ◇ | 90.2 ◇ | 197.4 ◇ | – | 884.1 | – |
@@ -233,7 +233,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `brillsson-meliusnet22` | non-semantic speech representation | 91.9% → 91.9% | – | 3.19 ◇ | 2.15 ◇ | 2.9 ◇ | – | 17.5 | – |
 | `larqface-binarydensenet28-msceleb` | face-recognition | 99.2% → 99.2% | – | 5.2 ◇ | 3.1 ◇ | 3.99 ◇ | – | 29.0 | – |
 | `larqface-binarydensenet37-msceleb` | face-recognition | 99.2% → 99.2% | – | 6.07 ◇ | 3.63 ◇ | 4.79 ◇ | – | 33.0 | – |
-| `larqface-binaryfacenet-msceleb` | face-recognition | 95.1% → 95.1% | – | 6.2 ◇ | 3.87 ◇ | 6.2 ◇ | – | 27.4 | – |
+| `larqface-binaryfacenet-msceleb` | face-recognition | 95.1% → 95.1% | – | 6.2 ◇ | 3.87 ◇ | 6.2 ◇ | – | 27.4 | 100.7 |
 | `larqface-binarydensenet45-msceleb` | face-recognition | 99.2% → 99.2% | – | 8.39 ◇ | 4.92 ◇ | 6.52 ◇ | – | 44.3 | – |
 | `bimatting-bimobilenet-backbone` | imagenet | 55.5% → 55.5% | -22.86 pt | 8.52 ◇ | 4.8 ◇ | 9.48 ◇ | – | 42.0 | – |
 | `ida-det-bires18-imagenet-backbone` | imagenet | 65.6% → 65.6% | -0.64 pt | 10.8 ◇ | 5.55 ◇ | 8.42 ◇ | – | 61.1 | – |
@@ -242,13 +242,13 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `s2bnn-reacta-distill-only` | imagenet self-supervised representation learning | – → 0.96370 | – | 20.0 ◇ | 10.2 ◇ | 19.9 ◇ | – | 96.0 | – |
 | `burn-reacta-stage2` | imagenet self-supervised representation learning | – → 0.99615 | – | 20.3 ◇ | 10.5 ◇ | 20.0 ◇ | – | 97.4 | – |
 | `ftl-deepfake-bnext-t-cocofake` | deepfake-image-detection | – → – | – | 25.5 ◇ | 13.2 ◇ | 26.3 ◇ | – | 126.5 | – |
-| `ftl-deepfake-bnext-t-cocofake-unfrozen` | deepfake-image-detection | – → – | – | 25.6 ◇ | 13.3 ◇ | 26.1 ◇ | – | 126.8 | – |
+| `ftl-deepfake-bnext-t-cocofake-unfrozen` | deepfake-image-detection | – → – | – | 25.6 ◇ | 13.3 ◇ | 26.1 ◇ | – | 126.8 | 384.4 |
 | `ftl-deepfake-bnext-t-dffd` | deepfake-image-detection | – → – | – | 25.7 ◇ | 13.3 ◇ | 26.6 ◇ | – | 126.0 | – |
 | `ftl-deepfake-bnext-t-cifake-unfrozen` | deepfake-image-detection | – → – | – | 25.7 ◇ | 13.3 ◇ | 26.3 ◇ | – | 126.7 | – |
 | `ftl-deepfake-bnext-t-dffd-unfrozen` | deepfake-image-detection | – → – | – | 25.7 ◇ | 13.3 ◇ | 26.3 ◇ | – | 126.3 | – |
 | `ftl-deepfake-bnext-t-cifake` | deepfake-image-detection | – → – | – | 25.8 ◇ | 13.3 ◇ | 26.2 ◇ | – | 125.9 | – |
 | `bsrc2023-binary-sr-x2-v0` | single-image-super-resolution-x2 | 31.88 dB → 31.88 dB | – | 25.9 ◇ | 13.8 ◇ | 15.8 ◇ | – | 144.5 | – |
-| `bibert-bert-base-sst2` | glue-sst2 | 89.8% → 89.8% | -0.34 pt | 27.2 ◇ | 13.7 ◇ | 27.9 ◇ | – | 135.9 | 351.3 |
+| `bibert-bert-base-sst2` | glue-sst2 | 89.8% → 89.8% | -0.34 pt | 27.2 ◇ | 13.7 ◇ | 27.9 ◇ | – | 135.9 | 322.3 |
 | `bbcu-deblocking` | jpeg-artifact-reduction | 31.33 dB → 31.33 dB | – | 27.4 ◇ | 13.3 ◇ | 28.2 ◇ | 33.1 ⚠ | 143.5 | – |
 | `bbcu-denoise` | color-image-denoising | 29.74 dB → 29.74 dB | – | 27.9 ◇ | 13.6 ◇ | 28.2 ◇ | 34.0 ⚠ | 147.2 | – |
 | `bbcu-sr-l-x2` | single-image-super-resolution-x2 | 32.03 dB → 32.03 dB | – | 35.4 ◇ | 18.0 ◇ | 19.5 ◇ | 36.6 ⚠ | 197.4 | – |
@@ -273,9 +273,9 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `ftl-deepfake-bnext-m-dffd-unfrozen` | deepfake-image-detection | – → – | – | 82.6 ◇ | 41.1 ◇ | 82.0 ◇ | – | 398.4 | – |
 | `bsrc2023-binary-sr-x2-v1` | single-image-super-resolution-x2 | 32.22 dB → 32.22 dB | – | 91.6 ◇ | 45.0 ◇ | 61.5 ◇ | – | 544.4 | – |
 
-Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 2377 vendor-policy; moto e13: 828 clean; Redmi 9A: 42 clean. 
+Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 2377 vendor-policy; moto e13: 828 clean; Redmi 9A: 107 clean. 
 
-Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 460/460 correctness checks passed on 132 models, 2026-11-13 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 503/503 correctness checks passed on 132 models, 2026-11-13 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 264/264 correctness checks passed on 132 models, 2026-11-12 to 2026-11-13 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
+Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 460/460 correctness checks passed on 132 models, 2026-11-13 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 503/503 correctness checks passed on 132 models, 2026-11-13 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 264/264 correctness checks passed on 132 models, 2026-11-13 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
 The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host
