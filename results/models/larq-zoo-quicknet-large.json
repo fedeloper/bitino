@@ -17,8 +17,8 @@
    "data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f"
   },
   "model_int8_full.bitino": {
-   "bytes": 4054400,
-   "data_sha256": "aa7936890fabe5874fc17f5da6a7b2d6ab29398b77c2d4f8e6aac674996fb0f1"
+   "bytes": 3846592,
+   "data_sha256": "cc123f0fa1b486955afbd385fb35be8b05560731c28779c6a3c179f36020aa5d"
   }
  },
  "accuracy": {
@@ -110,14 +110,11 @@
   "int8_full": [
    {
     "file": "model_int8_full.bitino",
-    "note": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 62.86% vs exact 64.82% (-1.96 pt, McNemar p=3.5e-05); before 60.80% (-4.02 pt); emulated 166.16 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
+    "note": "eval5000: 63.08% vs exact 64.82%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 62.86% (v2 - previous +0.22 pt, paired p=0.64, n=5000), faster on every phone timed",
     "eval_set": "imagenet-val-subset-5000",
     "n": 5000,
-    "top1": 0.6286,
-    "exact_top1": 0.6481999999999999,
-    "delta_vs_exact_pt": -1.96,
-    "mcnemar_p": 3.5e-05,
-    "instructions_M": 166.16
+    "top1": 0.6308,
+    "exact_top1": 0.6481999999999999
    }
   ]
  },
@@ -225,7 +222,7 @@
  },
  "instructions_M": {
   "values": {
-   "int8_full": 166.16,
+   "int8_full": 152.362,
    "optimized": 136.313
   },
   "method": "qemu-aarch64 TCG plugin, 1 thread, -cpu max, (warmup 1 + 2 it) - (warmup 1 + 1 it); instruction counts, not latency",

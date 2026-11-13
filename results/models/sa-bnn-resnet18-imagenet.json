@@ -17,8 +17,8 @@
    "data_sha256": "f71075ea20008bef0afd72b61a3f40a43c1236eafe2160dd288ccb7b0413648c"
   },
   "model_int8_full.bitino": {
-   "bytes": 3670016,
-   "data_sha256": "cf4387abade9964957fe236e3540f1832f4ce39a772bae5178b2a9ec2bd2ee47"
+   "bytes": 2419456,
+   "data_sha256": "53b184e3d58df35bc28646a0ff42c7b542765f47fc00da65d24ba260c5f6ef3f"
   },
   "model_int8_full_log2.bitino": {
    "bytes": 2401600,
@@ -158,6 +158,14 @@
     "delta_vs_exact_pt": -0.78,
     "mcnemar_p": 0.084,
     "instructions_M": 77.24
+   },
+   {
+    "file": "model_int8_full.bitino",
+    "note": "eval5000: 59.30% vs exact 59.62%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 58.66% (v2 - previous +0.64 pt, paired p=0.14, n=5000), faster on every phone timed",
+    "eval_set": "imagenet-val-subset-5000",
+    "n": 5000,
+    "top1": 0.593,
+    "exact_top1": 0.5962
    }
   ]
  },

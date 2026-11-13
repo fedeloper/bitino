@@ -17,8 +17,8 @@
    "data_sha256": "667736f483d2392290d788523f1ba26e80d76c68e00b52f8967ec47d4df5e2d1"
   },
   "model_int8_full.bitino": {
-   "bytes": 116352,
-   "data_sha256": "eef70dcf19c98b2019751b789ab226f5899a37ed881b6de7fff9421b6a96f8a7"
+   "bytes": 118528,
+   "data_sha256": "823e21d57f3d2bfa80ed2521b970f3120c95ec5483012a57831adf5d2c9b87e7"
   }
  },
  "accuracy": {
@@ -89,6 +89,16 @@
     "agreement": 0.9134,
     "study": "int8_full_vs_int8_full_v2_cifar10test10000",
     "date": "2026-11-13"
+   }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "cifar10-test-10000: 86.10% vs exact 86.98%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 86.35% (v2 - previous -0.25 pt, paired p=0.36, n=10000), faster on every phone timed",
+    "eval_set": "cifar10-test-10000",
+    "n": 10000,
+    "top1": 0.861,
+    "exact_top1": 0.8698
    }
   ]
  },

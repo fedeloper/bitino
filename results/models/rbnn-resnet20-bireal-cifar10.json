@@ -17,8 +17,8 @@
    "data_sha256": "c76835af7d6b212059b557198837402700b269be6b449132a45c3030c98e2ad3"
   },
   "model_int8_full.bitino": {
-   "bytes": 132416,
-   "data_sha256": "dbb48d1458fae686edb6bc01ef977ee3b74a5cd7a6884724e53b405ad8408fc7"
+   "bytes": 134592,
+   "data_sha256": "e63af8b517dff1a2ba660968c95ea5a3f57bca5e70030dd2b9aff98cd64439ec"
   }
  },
  "accuracy": {
@@ -90,6 +90,16 @@
     "study": "int8_full_vs_int8_full_v2_cifar10test10000",
     "date": "2026-11-13"
    }
+  ],
+  "int8_full": [
+   {
+    "file": "model_int8_full.bitino",
+    "note": "cifar10-test-10000: 87.11% vs exact 87.81%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 86.68% (v2 - previous +0.43 pt, paired p=0.11, n=10000), faster on every phone timed",
+    "eval_set": "cifar10-test-10000",
+    "n": 10000,
+    "top1": 0.8711,
+    "exact_top1": 0.8781
+   }
   ]
  },
  "device_verification": {
@@ -150,9 +160,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1029",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
-   "runtime_commit": "1d054b95",
+   "runtime_commit": "709d853b",
    "stages": {
     "neon": {
      "pass": true,
