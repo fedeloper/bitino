@@ -351,7 +351,10 @@ BF_TEST(bdense_ternary_simd_matches_reference) {
   int idx = 0;
   // 4100 (33 steps: two uint8 runs) and 2000 (16 steps) cover the long-K paths of bdense.ternary_neon's 4-row micro-kernel.
   for (Case c : {Case{9, 7, 37}, Case{1, 768, 768}, Case{3, 31, 5}, Case{64, 100, 40}, Case{130, 768, 70}, Case{2, 3072, 33},
-                 Case{17, 64, 8}, Case{5, 129, 9}, Case{8, 4100, 12}, Case{6, 2000, 7}}) {
+                 Case{17, 64, 8}, Case{5, 129, 9}, Case{8, 4100, 12}, Case{6, 2000, 7},
+                 // AArch64 8-channel blocks: 4-row tiles without zero inputs on the binary 4x8 tile (seed 2: zeros only in
+                 // rows r % 5 == 2, so tiles of zero-free rows, mixed tiles and row tails)
+                 Case{13, 768, 64}, Case{66, 3072, 32}, Case{8, 4100, 16}, Case{23, 96, 24}}) {
     for (int wz = 0; wz < 2; ++wz)
       for (int thr = 0; thr < 2; ++thr) {
         std::mt19937 rng(static_cast<uint32_t>(700 + idx));
@@ -384,7 +387,8 @@ BF_TEST(bdense_ternary_simd_matches_reference) {
           fill(s.input(0), seed);
           // Exact ties with the threshold (sign_zero -> 0).
           float* x = s.input(0).data<float>();
-          for (int64_t i = 0; i < s.input(0).size(); i += 9) x[i] = thr ? th[i % c.k] : 0.f;
+          for (int64_t i = 0; i < s.input(0).size(); i += 9)
+            if (seed == 1 || (i / c.k) % 5 == 2) x[i] = thr ? th[i % c.k] : 0.f;
           s.run();
           if (kernel) *kernel = s.kernel_choices().begin()->second;
           const Tensor& y = s.output(0);

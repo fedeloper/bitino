@@ -332,6 +332,19 @@ the AArch32 builds of the NEON kernels do about it:
   (`nextafter(0, +inf)` of a `gt` compare with 0) are replaced by the grid values giving the same compares
   (`2^-126` resp. 0). Otherwise the IEEE portable kernel. qemu-arm does not flush NEON arithmetic (it did flush the
   compare in the one failing test case), so these properties were checked on the Redmi 9A.
+* I8BConv2DRes and the l8 output of I8Conv2D on armeabi-v7a (2026-11-13): their fp32 epilogues (`v = fp32(acc) *
+  post_mul + post_add`, the pre stage, the residual `R`, `u = v + R`, PReLU, bias, the l8 code and the bit compares of
+  `u` / `w`) run on AArch32 NEON when a plan-time proof shows that **no value of the chain can be denormal**
+  (`int8_full::FtzBound`, `res_epilogue_normal`, `gemm_f32_epilogue_normal`): FTZ only changes denormal operands and
+  results, so the NEON values are the IEEE ones. Each value carries a lower bound `L` of its nonzero magnitudes and a
+  power of two `G` it is a multiple of: an integer has `L = G = 1`; `x * c` (constants over channels) gives
+  `L' = 2^floor(log2(L min|c|))` (RN is monotone) and `G' = L' 2^-23` (every float `>= L'` is a multiple of it);
+  `x + y` gives `G' = min(G_x, G_y)` and `L' = G'` (a nonzero multiple of `G'`; RN keeps the sum a multiple of `G'`);
+  PReLU the minimum of both branches; a nonzero l8 residual is `>= 2^(e-16)`, a multiple of `2^(e-39)`. The kernel is
+  taken only if every `L >= 2^-126` and every constant (thresholds after the `gt` adjustment included) is 0 or normal.
+  All 379 I8BConv2DRes nodes of the zoo pass; the others would stay on the portable kernel. Unit test
+  `int8_full_ftz_bound` checks the bound against brute force (a chain it accepts never reaches a denormal) and its
+  rejections.
 
 ## Binarization semantics that must be preserved
 

@@ -112,7 +112,9 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
   // threshold folding through LUTs here, twin merging after 1c.
   auto check_rewritten = [&](const char* what) {
     for (const Node& node : nodes_) {
-      if (node.op != "I8LutN" && node.op != "I8AddN" && node.op != "I8Conv2DN" && node.op != "I8Lut" && node.op != "I8BConv2D" && node.op != "I8BDense") continue;
+      if (node.op != "I8LutN" && node.op != "I8AddN" && node.op != "I8Conv2DN" && node.op != "I8Lut" && node.op != "I8BConv2D" && node.op != "I8BDense" &&
+          node.op != "I8PackBits" && node.op != "I8LayerNormN")
+        continue;
       std::vector<const TensorInfo*> ins;
       for (int id : node.inputs) ins.push_back(id >= 0 ? &infos_[id] : nullptr);
       std::vector<TensorInfo> check;
@@ -130,7 +132,8 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     i8_rewrites_[0] += st.composed_luts + st.collapsed_ops;
     i8_rewrites_[1] += st.folded_luts;
     i8_rewrites_[2] += st.removed_luts;
-    if (st.composed_luts || st.folded_luts || st.collapsed_ops) check_rewritten("int8 LUT rewrite");
+    i8_rewrites_[6] += st.interval_folds;
+    if (st.composed_luts || st.folded_luts || st.collapsed_ops || st.interval_folds) check_rewritten("int8 LUT rewrite");
   }
 
   // 1c. int8_full rewrite (bit-exact, independent of the tiers): an I8Lut with one table row whose input is output 0
@@ -174,9 +177,9 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
   if (opts_.fuse) {
     I8RewriteStats st = rewrite_int8_twins(nodes_, infos_, g.outputs);
     i8_rewrites_[3] += st.lut_twins;
-    i8_rewrites_[4] += st.add_twins + st.conv_twins;
+    i8_rewrites_[4] += st.add_twins + st.conv_twins + st.ln_twins;
     i8_rewrites_[5] += st.merged_nodes;
-    if (st.lut_twins || st.add_twins || st.conv_twins) check_rewritten("int8 twin rewrite");
+    if (st.lut_twins || st.add_twins || st.conv_twins || st.ln_twins) check_rewritten("int8 twin rewrite");
   }
 
   // 2. Activation memory: constants are views into the model; graph inputs and

@@ -112,9 +112,12 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   `I8Add` / `I8AffineSum` whose operands are all `x` or `I8Lut(x)` of one tensor becomes one `I8Lut` of `x`, its table
   the operator's integer formula on all 256 codes), `compose_luts` (`I8Lut` of an `I8Lut` -> one table),
   `fold_lut_thresholds` (a binary layer binarizing an `I8Lut` output reads the LUT input with integer thresholds when
-  every channel's set `{x : L[x] >= T}` is an upper set), and twin merging (nodes reading the same inputs: `I8Lut`
-  -> internal `I8LutN`, `I8Add` with equal input parameters -> `I8AddN`, `I8Conv2D` with byte-identical weights /
-  bias -> `I8Conv2DN`: one pass, one shared computation, one output stage per twin).
+  every channel's set `{x : L[x] >= T}` is an upper set; when every channel's set `{x : L[x] < T}` is an interval
+  `[lo, hi]` instead, e.g. V-shaped PReLU tables, it reads the bit tensor of the internal `I8PackBits(x, [lo; hi])`,
+  bit -1 iff `lo[c] <= x <= hi[c]`), and twin merging (nodes reading the same inputs: `I8Lut` -> internal `I8LutN`,
+  `I8Add` with equal input parameters -> `I8AddN`, `I8Conv2D` with byte-identical weights / bias -> `I8Conv2DN`,
+  `I8LayerNorm` with the same statistics attributes -> `I8LayerNormN`: one pass, one shared computation, one output
+  stage per twin). `I8BDense` also accepts a bit-tensor input (as `I8BConv2D`), used by `I8PackBits`.
 
 * **Bit-packed outputs.** Last rewrite (after fusion, so epilogue-fused outputs qualify): a `BConv2D`, or a
   `BDense` with a binary (`ge` / `gt`) input and no `w_zero`, whose f32 output (possibly the output of its hosted

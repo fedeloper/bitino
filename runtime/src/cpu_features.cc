@@ -1,5 +1,6 @@
 #include "bitino/cpu_features.h"
 
+#include <cstdio>
 #include <cstdlib>
 #include <string>
 
@@ -13,6 +14,34 @@
 
 namespace bitino {
 namespace {
+
+#if (defined(__aarch64__) || defined(__arm__)) && defined(__linux__)
+// Prime core part number from sysfs (see CpuInfo::prime_part).
+uint32_t detect_prime_part() {
+  uint32_t best_part = 0;
+  long best_freq = -1;
+  for (int c = 0; c < 64; ++c) {
+    const std::string base = "/sys/devices/system/cpu/cpu" + std::to_string(c);
+    unsigned long long midr = 0;
+    long freq = 0;
+    FILE* f = std::fopen((base + "/regs/identification/midr_el1").c_str(), "r");
+    if (!f) continue;
+    const bool ok = std::fscanf(f, "%llx", &midr) == 1;
+    std::fclose(f);
+    if (!ok || ((midr >> 24) & 0xff) != 0x41) continue;  // Arm implementer only
+    if ((f = std::fopen((base + "/cpufreq/cpuinfo_max_freq").c_str(), "r"))) {
+      if (std::fscanf(f, "%ld", &freq) != 1) freq = 0;
+      std::fclose(f);
+    }
+    const uint32_t part = static_cast<uint32_t>((midr >> 4) & 0xfff);
+    if (freq > best_freq || (freq == best_freq && part > best_part)) {
+      best_freq = freq;
+      best_part = part;
+    }
+  }
+  return best_part;
+}
+#endif
 
 CpuInfo detect() {
   CpuInfo info;
@@ -78,6 +107,10 @@ CpuInfo detect() {
   info.arch = "unknown";
 #endif
 
+#if (defined(__aarch64__) || defined(__arm__)) && defined(__linux__)
+  info.prime_part = detect_prime_part();
+#endif
+  if (const char* part = std::getenv("BITINO_CPU_PART")) info.prime_part = static_cast<uint32_t>(std::strtoul(part, nullptr, 16));
   if (const char* dis = std::getenv("BITINO_DISABLE_FEATURES")) {
     std::string s = std::string(",") + dis + ",";
     auto off = [&](const char* name, uint32_t f) {

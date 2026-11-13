@@ -4,8 +4,10 @@
 // python/bitino/int8_ops.py.
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <vector>
 
 #include "bitino/op.h"
@@ -166,6 +168,137 @@ struct ResEpilogue {
     return out_lut ? out_lut[c + 128] : c;
   }
 };
+
+// ---- No denormal can occur (AArch32 NEON flush-to-zero; 2026-11-13)
+// AArch32 Advanced SIMD flushes denormal operands and results to +-0; on normal values (and zeros, infinities, NaNs)
+// it rounds as IEEE fp32. A chain of fp32 operations therefore gives the IEEE result when every operand and every
+// result is 0 or normal (|x| >= 2^-126). FtzBound tracks, per value, a lower bound L of its nonzero magnitudes and
+// a power of two G it is a multiple of (x == 0 or |x| >= L; x in G Z), through:
+//   * an integer:                          L = G = 1;
+//   * x * c (c a constant, over channels): |x c| >= L min|c| and RN is monotone, so a nonzero result is at least
+//     L' = 2^floor(log2(L min|c|)); every float of magnitude >= L' is a multiple of G' = L' 2^-23;
+//   * x * y (two values):                  the same with L_x L_y;
+//   * x + y / x + c:                       the exact sum is a multiple of G' = min(G_x, G_y) (G_c = ulp(c)), so a
+//     nonzero sum is >= G'; RN keeps it a multiple of G' (exact below 2^24 G', a coarser ulp above): L' = G';
+//   * PReLU (x >= 0 ? x : x * s):          the minimum of both branches.
+// ok is false as soon as a bound L, or a constant operand, falls below 2^-126 (a value could then be denormal).
+struct FtzBound {
+  double L = 1.0, G = 1.0;
+  bool ok = true;
+  static double p2floor(double x) {
+    int e = 0;
+    std::frexp(x, &e);  // x = m 2^e, m in [0.5, 1)
+    return std::ldexp(1.0, e - 1);
+  }
+  static constexpr double kMinNormal = 1.1754943508222875e-38;  // 2^-126
+  static bool normal_or_zero(float c) { return c == 0.f || std::fabs(static_cast<double>(c)) >= kMinNormal || !std::isfinite(c); }
+  // a nonzero product is >= L, a nonzero sum >= its G (= L): each must be normal
+  void check_l() { ok = ok && L >= kMinNormal; }
+  // x * c[i] for every i (c may hold zeros: those products are +-0)
+  void mul_const(const float* c, int64_t n) {
+    double m = INFINITY;
+    for (int64_t i = 0; i < n; ++i) {
+      ok = ok && normal_or_zero(c[i]);
+      if (c[i] != 0.f && std::isfinite(c[i])) m = std::min(m, std::fabs(static_cast<double>(c[i])));
+    }
+    if (m == INFINITY) return;  // all zero (or non-finite): no new nonzero magnitudes
+    L = p2floor(L * m);
+    G = L * std::ldexp(1.0, -23);
+    check_l();
+  }
+  void mul(const FtzBound& y) {
+    ok = ok && y.ok;
+    L = p2floor(L * y.L);
+    G = L * std::ldexp(1.0, -23);
+    check_l();
+  }
+  // x + c[i] for every i
+  void add_const(const float* c, int64_t n) {
+    double g = G;
+    for (int64_t i = 0; i < n; ++i) {
+      ok = ok && normal_or_zero(c[i]);
+      if (c[i] != 0.f && std::isfinite(c[i])) g = std::min(g, p2floor(std::fabs(static_cast<double>(c[i]))) * std::ldexp(1.0, -23));
+    }
+    G = g;
+    L = std::min(L, g);
+    check_l();
+  }
+  void add(const FtzBound& y) {
+    ok = ok && y.ok;
+    G = std::min(G, y.G);
+    L = std::min({L, y.L, G});
+    check_l();
+  }
+  void prelu(const float* s, int64_t n) {
+    FtzBound neg = *this;
+    neg.mul_const(s, n);
+    L = std::min(L, neg.L);
+    G = std::min(G, neg.G);
+    ok = ok && neg.ok;
+  }
+};
+
+// True when every fp32 value of the I8BConv2DRes epilogue (int8_full::ResEpilogue and binary_value) is 0 or normal
+// for every input, so a flush-to-zero vector implementation (AArch32 NEON) computes the IEEE values: v = fp32(acc) *
+// post_mul + post_add (acc an integer), the pre stage, R(res), u, PReLU, bias; the bit thresholds (after the gt
+// adjustment to the next float, as the NEON kernel compares) normal or zero.
+inline bool res_epilogue_normal(const KernelContext& ctx) {
+  const Json& a = ctx.attrs();
+  auto cvec = [&](size_t i, const float** p, int64_t* n) {
+    if (!ctx.has_in(i)) return false;
+    *p = ctx.in(i).data<float>();
+    *n = ctx.in(i).size();
+    return true;
+  };
+  const float* c = nullptr;
+  int64_t n = 0;
+  FtzBound v;  // fp32(acc): an integer
+  if (cvec(2, &c, &n)) v.mul_const(c, n);
+  if (cvec(3, &c, &n)) v.add_const(c, n);
+  if (cvec(10, &c, &n)) v.prelu(c, n);
+  if (cvec(11, &c, &n)) v.mul_const(c, n);
+  if (cvec(12, &c, &n)) v.add_const(c, n);
+  if (ctx.has_in(13)) {  // G = fp32(q - g_zero) * g_scale
+    FtzBound g;
+    const float gs = static_cast<float>(a.get_number("g_scale", 1.0));
+    g.mul_const(&gs, 1);
+    v.mul(g);
+  }
+  FtzBound r;  // R(res)
+  if (a.get_string("r_code", "l8") == "l8") {
+    const int e = static_cast<int>(a.get_int("r_exp", 0));
+    // nonzero codes decode to +-ldexp(D, e + (k >> 3) - 16), D in [1, 2), k >= 2: >= 2^(e - 16), multiples of 2^(e - 39)
+    r.L = std::ldexp(1.0, e - 16);
+    r.G = std::ldexp(1.0, e - 39);
+    r.ok = e - 16 >= -126 && e - 1 <= 127;
+  } else {
+    const float rs = static_cast<float>(a.get_number("r_scale", 1.0));
+    r.mul_const(&rs, 1);
+  }
+  FtzBound u = v;
+  u.add(r);
+  FtzBound w = u;
+  if (cvec(6, &c, &n)) w.prelu(c, n);
+  if (cvec(7, &c, &n)) w.add_const(c, n);
+  bool ok = v.ok && u.ok && w.ok;
+  if (ok && cvec(8, &c, &n)) {
+    const bool gt = a.get_string("bit_binarize", "ge") == "gt";
+    for (int64_t i = 0; i < n && ok; ++i) {
+      const float t = gt ? std::nextafter(c[i], std::numeric_limits<float>::infinity()) : c[i];
+      ok = FtzBound::normal_or_zero(t);
+    }
+  }
+  return ok;
+}
+
+// True when the fp32 epilogue of I8Conv2D / I8Dense (GemmEpilogue::f: fp32(acc) * scale[o] + bias[o], acc an integer)
+// can produce no denormal value, so a flush-to-zero vector epilogue gives the IEEE values (and l8 codes).
+inline bool gemm_f32_epilogue_normal(const KernelContext& ctx) {
+  FtzBound v;
+  v.mul_const(ctx.in(3).data<float>(), ctx.in(3).size());
+  if (ctx.has_in(2)) v.add_const(ctx.in(2).data<float>(), ctx.in(2).size());
+  return v.ok;
+}
 
 // Integer binarization thresholds of an int8 operand (per channel or scalar).
 struct BinarizeI8 {

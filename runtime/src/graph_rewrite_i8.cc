@@ -257,11 +257,14 @@ bool binarizes_input0(const Node& c, int y) {
 void fold_lut_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& outputs, I8RewriteStats* st) {
   UseInfo u = uses_of(nodes, infos.size(), outputs);
   std::vector<bool> removed(nodes.size(), false);
+  // interval folds: I8PackBits nodes to insert before node index k (shared per (x, bounds))
+  std::map<size_t, std::vector<Node>> insert_before;
+  std::map<std::pair<int, std::string>, int> packed;  // (x, bounds bytes) -> bit tensor
   for (size_t l = 0; l < nodes.size(); ++l) {
     LutInfo li;
     if (!lut_info(nodes[l], infos, &li) || infos[li.table].dtype != DType::kI8) continue;
     const int x = nodes[l].inputs[0], y = nodes[l].outputs[0];
-    const Shape& ys = infos[y].shape;
+    const Shape ys = infos[y].shape;  // a copy: infos grows below
     if (li.rows > 1 && li.axis != static_cast<int64_t>(ys.size()) - 1) continue;  // per-channel along the binarized axis only
     const int64_t c = ys.back();
     const int8_t* tab = infos[li.table].constant.data<int8_t>();
@@ -280,8 +283,9 @@ void fold_lut_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& info
       const int64_t nthr = thr_in >= 0 ? num_elements(infos[thr_in].shape) : 1;
       if (nthr != 1 && nthr != c) continue;
       std::vector<float> tx(static_cast<size_t>(c));
-      bool ok = true;
-      for (int64_t ch = 0; ch < c && ok; ++ch) {
+      std::vector<int8_t> lo(static_cast<size_t>(c)), hi(static_cast<size_t>(c));
+      bool upper = true, interval = true;
+      for (int64_t ch = 0; ch < c && (upper || interval); ++ch) {
         const float t = thr_in >= 0 ? infos[thr_in].constant.data<float>()[nthr == 1 ? 0 : ch] : 0.f;
         const int ty = gt ? q8::qthr_gt(t, d) : q8::qthr_ge(t, d);  // bit +1 <=> y >= ty
         const int8_t* row = tab + (li.rows > 1 ? ch : 0) * 256;
@@ -291,31 +295,86 @@ void fold_lut_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& info
             first = q;
             break;
           }
-        for (int q = first; q <= 127 && ok; ++q) ok = row[q + 128] >= ty;  // upper set
+        for (int q = first; q <= 127 && upper; ++q) upper = row[q + 128] >= ty;  // upper set
         tx[ch] = static_cast<float>(first);
+        // the -1 codes {x : L[x] < ty} as one interval [a, b] (empty: a = 127, b = -128)
+        int a = 128, b = -129;
+        for (int q = -128; q <= 127; ++q)
+          if (row[q + 128] < ty) {
+            a = std::min(a, q);
+            b = q;
+          }
+        for (int q = a; q <= b && interval; ++q) interval = row[q + 128] < ty;
+        lo[ch] = static_cast<int8_t>(a > b ? 127 : a);
+        hi[ch] = static_cast<int8_t>(a > b ? -128 : b);
       }
-      if (!ok) continue;
-      const int tid = add_constant(infos, cn.name + "/thr_through_lut", DType::kF32, Shape{c});
-      std::copy(tx.begin(), tx.end(), infos[tid].constant.data<float>());
-      if (cn.inputs.size() < 5) cn.inputs.resize(5, -1);
-      cn.inputs[0] = x;
-      cn.inputs[4] = tid;
+      if (upper) {
+        const int tid = add_constant(infos, cn.name + "/thr_through_lut", DType::kF32, Shape{c});
+        std::copy(tx.begin(), tx.end(), infos[tid].constant.data<float>());
+        if (cn.inputs.size() < 5) cn.inputs.resize(5, -1);
+        cn.inputs[0] = x;
+        cn.inputs[4] = tid;
+        Json attrs = cn.attrs;
+        attrs["input_binarize"] = "ge";
+        attrs["x_code"] = "linear";
+        attrs["x_scale"] = 1.0;
+        attrs["x_zero"] = 0;
+        attrs["thresholds_through"] = nodes[l].name;
+        cn.attrs = attrs;
+        --remaining;
+        ++st->folded_luts;
+        continue;
+      }
+      if (!interval) continue;
+      // interval fold (2026-11-13; e.g. V-shaped PReLU LUTs of BHViT, MeliusNet, ReActNet-18 variants): the consumer reads
+      // the bits of I8PackBits(x) (bit -1 iff lo[c] <= x <= hi[c]), the same binarization of y = L(x)
+      std::string key(reinterpret_cast<const char*>(lo.data()), static_cast<size_t>(c));
+      key.append(reinterpret_cast<const char*>(hi.data()), static_cast<size_t>(c));
+      auto it = packed.find({x, key});
+      int bt;
+      if (it != packed.end()) {
+        bt = it->second;
+      } else {
+        const int bid = add_constant(infos, cn.name + "/interval_bounds", DType::kI8, Shape{2, c});
+        std::copy(lo.begin(), lo.end(), infos[bid].constant.data<int8_t>());
+        std::copy(hi.begin(), hi.end(), infos[bid].constant.data<int8_t>() + c);
+        TensorInfo bi;
+        bi.name = infos[y].name + ":bits_through_lut" + std::to_string(packed.size());
+        bi.dtype = DType::kBit;
+        bi.shape = ys;
+        infos.push_back(std::move(bi));
+        bt = static_cast<int>(infos.size()) - 1;
+        Node pb;
+        pb.op = "I8PackBits";
+        pb.name = nodes[l].name + "/interval_bits";
+        pb.inputs = {x, bid};
+        pb.outputs = {bt};
+        insert_before[k].push_back(std::move(pb));
+        packed[{x, key}] = bt;
+      }
+      cn.inputs[0] = bt;
+      if (cn.inputs.size() > 4) cn.inputs[4] = -1;
       Json attrs = cn.attrs;
       attrs["input_binarize"] = "ge";
-      attrs["x_code"] = "linear";
-      attrs["x_scale"] = 1.0;
-      attrs["x_zero"] = 0;
-      attrs["thresholds_through"] = nodes[l].name;
+      attrs["bits_through"] = nodes[l].name;
       cn.attrs = attrs;
       --remaining;
-      ++st->folded_luts;
+      ++st->interval_folds;
     }
     if (remaining == 0) {
       removed[l] = true;
       ++st->removed_luts;
     }
   }
-  drop_removed(nodes, removed);
+  std::vector<Node> kept;
+  kept.reserve(nodes.size() + insert_before.size());
+  for (size_t n = 0; n < nodes.size(); ++n) {
+    auto it = insert_before.find(n);
+    if (it != insert_before.end())
+      for (Node& pb : it->second) kept.push_back(std::move(pb));
+    if (!removed[n]) kept.push_back(std::move(nodes[n]));
+  }
+  nodes.swap(kept);
 }
 
 // -------------------------------------------------------------- merge_twins
@@ -392,6 +451,47 @@ void merge_twins(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, I8Rew
     removed[first] = false;
     ++st->add_twins;
     st->merged_nodes += static_cast<int>(kv.second.size());
+  }
+  // I8LayerNorm twins (2026-11-13): same x, x_zero, x_scale, eps (the row statistics and the factor r), 2-4 of them ->
+  // one I8LayerNormN (statistics, u and fp32(u) * r once; per output G, B and the clamp)
+  std::map<std::vector<std::string>, std::vector<size_t>> lns;
+  for (size_t n = 0; n < nodes.size(); ++n) {
+    const Node& l = nodes[n];
+    if (removed[n] || l.op != "I8LayerNorm" || l.inputs.size() != 3 || l.outputs.size() != 1 || l.inputs[0] < 0) continue;
+    lns[{std::to_string(l.inputs[0]), attr_dump(l.attrs, "x_zero"), attr_dump(l.attrs, "x_scale"), attr_dump(l.attrs, "eps")}].push_back(n);
+  }
+  for (auto& kv : lns) {
+    if (kv.second.size() < 2) continue;
+    for (size_t g0 = 0; g0 + 1 < kv.second.size(); g0 += 4) {
+      std::vector<size_t> grp(kv.second.begin() + g0, kv.second.begin() + std::min(kv.second.size(), g0 + 4));
+      if (grp.size() < 2) continue;
+      Node m;
+      m.op = "I8LayerNormN";
+      m.name = nodes[grp.front()].name + "/twins" + std::to_string(grp.size());
+      m.inputs.push_back(nodes[grp.front()].inputs[0]);
+      Json attrs = Json::Object{};
+      for (const char* key : {"x_zero", "x_scale", "eps"})
+        if (nodes[grp.front()].attrs.contains(key)) attrs[key] = nodes[grp.front()].attrs[key];
+      Json::Array lo, hi, names;
+      for (size_t n : grp) {
+        const Node& l = nodes[n];
+        m.inputs.push_back(l.inputs[1]);
+        m.inputs.push_back(l.inputs[2]);
+        m.outputs.push_back(l.outputs[0]);
+        lo.push_back(Json(l.attrs.get_int("qmin", -128)));
+        hi.push_back(Json(l.attrs.get_int("qmax", 127)));
+        names.push_back(Json(l.name));
+        removed[n] = true;
+      }
+      attrs["qmins"] = Json(lo);
+      attrs["qmaxs"] = Json(hi);
+      attrs["merged_nodes"] = Json(names);
+      m.attrs = attrs;
+      nodes[grp.front()] = std::move(m);
+      removed[grp.front()] = false;
+      ++st->ln_twins;
+      st->merged_nodes += static_cast<int>(grp.size());
+    }
   }
   // I8Conv2D twins: same x, byte-identical weights and bias, same geometry (groups 1), int8 output, no bit output -> one
   // I8Conv2DN (the accumulators computed once, one requantization per twin)

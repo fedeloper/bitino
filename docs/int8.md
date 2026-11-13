@@ -559,12 +559,15 @@ only kernels of the I8 operators and exact for them).
 | tier | contents |
 |---|---|
 | `int8_full_reference` | every I8 operator, portable C++, bit-identical to `python/bitino/int8_ops.py` (the oracle) |
-| `int8_full_neon` | AArch64: Quantize, LUT (TBL/TBX; per-channel tables on the last axis as transposed 16×16 blocks), Add (incl. scalar b), AffineSum, LayerNorm, Softmax, Transpose, ReduceMean (last axis incl. rows of 2/4/8, middle axis), GlobalAvgPool, Pad, Concat, Mul, pooling, depthwise convolution, an int32 SDOT GEMM for I8Conv2D / I8Dense (any K with a provably exact int32 accumulator, grouped convolutions) and I8MatMul, and the binary wrappers |
+| `int8_full_neon` | AArch64: Quantize, LUT (TBL/TBX; per-channel tables on the last axis as transposed 16×16 blocks), Add (incl. scalar b), AffineSum, LayerNorm, Softmax, Transpose, ReduceMean (last axis incl. rows of 2/4/8, middle axis), GlobalAvgPool, Pad, Concat, Mul, Gather (int8 tables), pooling, depthwise convolution (also with a channel multiplier), an int32 SDOT GEMM for I8Conv2D / I8Dense (any K with a provably exact int32 accumulator, grouped convolutions) and I8MatMul, the binary wrappers (I8BMatMul writes its int8 output from the bit-plane tiles), and the internal twin / rewrite nodes (I8LutN, I8AddN, I8Conv2DN, I8LayerNormN, I8PackBits) |
 | `int8_full_opt` | portable wrappers of the binary operators around the best float-path binary kernel of the CPU (x86-64 hosts: AVX2) |
 
 Since 2026-11-12 the `int8_full_neon` kernels also build for 32-bit ARM (armeabi-v7a, `kernels/neon_a32.h`) except the
 SDOT / SMMLA GEMMs, which have AArch32 VMULL.S8 tiles instead (`*.neon_a32_mull`, `i8matmul.neon_a32`; the SMLAL GEMM
 `*.neon_a32` for weights holding -128); see "int8_full latency" and "AArch32 int8 kernels" at the end of this section.
+SDOT / SMMLA GEMMs, which have an AArch32 SMLAL GEMM instead; see "int8_full latency" at the end of this section. Since
+2026-11-13 I8BConv2DRes and the l8 GEMM epilogue run on AArch32 NEON too when no fp32 value of their epilogue can be
+denormal (round 2 below).
 
 Stage `int8_full` = `optimized` + these three tiers; `int8_full_reference` = reference only. Every NEON and
 portable kernel is bit-identical to the reference (`int8_full_neon_bit_exact_vs_reference`: random shapes and

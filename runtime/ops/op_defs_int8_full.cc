@@ -166,6 +166,15 @@ void infer_conv2dn(const Node& n, const Ins& ins, Outs& outs) {
   }
 }
 
+// I8PackBits(x, bounds) -> bits (internal, src/graph_rewrite_i8.h fold_lut_thresholds): bit c of a row is 1 (= -1) iff
+// bounds[0][c] <= x[c] <= bounds[1][c] (an empty interval lo > hi gives 0 = +1); bounds i8 [2, C], C = last axis of x.
+void infer_packbits(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  const auto& b = req(ins, 1, "bounds");
+  BF_CHECK(!x.shape.empty() && b.dtype == DType::kI8 && b.shape == Shape({2, x.shape.back()}), n.op, ": bounds must be i8 [2, C]");
+  set_out(outs, DType::kBit, x.shape);
+}
+
 void infer_addn(const Node& n, const Ins& ins, Outs& outs) {
   const auto& a = req_i8(ins, 0, "a");
   const auto& b = req_i8(ins, 1, "b");
@@ -254,6 +263,24 @@ void infer_layernorm(const Node& n, const Ins& ins, Outs& outs) {
   BF_CHECK(n.attrs.get_number("x_scale", 0) > 0 && n.attrs.get_number("eps", 1e-5) >= 0, "I8LayerNorm needs x_scale > 0, eps >= 0");
   check_q(n);
   set_out(outs, DType::kI8, x.shape);
+}
+
+// I8LayerNormN(x, G_0, B_0, ..., G_{k-1}, B_{k-1}) -> y_0..y_{k-1} (internal twins, src/graph_rewrite_i8.cc): k I8LayerNorm
+// of x with the same x_zero / x_scale / eps, output j with G_j, B_j, qmins[j], qmaxs[j].
+void infer_layernormn(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  BF_CHECK(!x.shape.empty() && x.shape.back() <= 16384, "I8LayerNormN: bad x");
+  const size_t k = outs.size();
+  BF_CHECK(k >= 2 && k <= 4 && ins.size() == 1 + 2 * k, "I8LayerNormN: x, then G / B per output (2-4 outputs)");
+  BF_CHECK(n.attrs.get_ints("qmins", {}).size() == k && n.attrs.get_ints("qmaxs", {}).size() == k, "I8LayerNormN: qmins / qmaxs per output");
+  const auto lo = n.attrs.get_ints("qmins", {}), hi = n.attrs.get_ints("qmaxs", {});
+  for (size_t j = 0; j < k; ++j) {
+    check_vec(ins, 1 + 2 * j, DType::kF32, x.shape.back(), "G");
+    check_vec(ins, 2 + 2 * j, DType::kF32, x.shape.back(), "B");
+    BF_CHECK(-128 <= lo[j] && lo[j] <= hi[j] && hi[j] <= 127, "I8LayerNormN: qmin/qmax out of range");
+    outs[j]->dtype = DType::kI8;
+    outs[j]->shape = x.shape;
+  }
 }
 
 void infer_softmax(const Node& n, const Ins& ins, Outs& outs) {
@@ -364,7 +391,8 @@ void check_binary_epilogue(const Node& n, const Ins& ins, int64_t o) {
 }
 
 void infer_bdense(const Node& n, const Ins& ins, Outs& outs) {
-  const auto& x = req_i8(ins, 0, "x");
+  const auto& x = req(ins, 0, "x");  // int8 codes, or a bit tensor (Session rewrites only, e.g. I8PackBits)
+  check_binary_x(n, x);
   const auto& w = req(ins, 1, "w");
   BF_CHECK(w.dtype == DType::kBit && w.shape.size() == 2 && x.shape.back() == w.shape[1], "I8BDense: w must be bit [O, K]");
   BinarizeMode m = parse_binarize(n.attrs);
@@ -475,11 +503,13 @@ void register_int8_full_op_defs(OpRegistry& reg) {
   reg.add_op({"I8AffineSum", infer_affine_sum});
   reg.add_op({"I8LutN", infer_lutn});
   reg.add_op({"I8AddN", infer_addn});
+  reg.add_op({"I8PackBits", infer_packbits});
   reg.add_op({"I8Conv2DN", infer_conv2dn});
   reg.add_op({"I8Conv2D", infer_conv});
   reg.add_op({"I8Dense", infer_dense});
   reg.add_op({"I8MatMul", infer_matmul});
   reg.add_op({"I8LayerNorm", infer_layernorm});
+  reg.add_op({"I8LayerNormN", infer_layernormn});
   reg.add_op({"I8Softmax", infer_softmax});
   reg.add_op({"I8Concat", infer_concat});
   reg.add_op({"I8Transpose", infer_transpose});

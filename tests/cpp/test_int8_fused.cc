@@ -177,6 +177,58 @@ BF_TEST(int8_full_affinesum_shift_requant_bit_exact) {
   EXPECT_TRUE(g_cases > 0);
 }
 
+// I8AffineSum with mult 2^30 and a positive shift (2026-11-13; QuickNet's binarize-aware twins have shift 1): the shift
+// path with coefficients scaled by 2^(shift-1), prescaled (small K) or shifted by 0 (mode 3), near the no-saturation
+// bound acc 2^shift < 2^31, and beyond it (saturating: the SQSHL path); clamped outputs, channel tails, 1-4 inputs.
+BF_TEST(int8_full_affinesum_positive_shift_bit_exact) {
+  Rng r(1114);
+  int k = 0;
+  for (int shift = 1; shift <= 6; ++shift) {
+    for (int nin : {1, 2, 3, 4}) {
+      for (int variant = 0; variant < 4; ++variant) {  // 0 small K (prescaled), 1 int16 K, 2 near the bound, 3 saturating
+        ++k;
+        const int64_t c = std::vector<int64_t>{16, 19, 48, 7, 100}[static_cast<size_t>(k % 5)];
+        const int64_t rows = 1 + (k * 7) % 41;
+        const bool pc = k % 3 != 0;
+        bftest::ModelBuilder mb;
+        std::vector<std::string> ins;
+        std::vector<std::vector<uint8_t>> data;
+        std::vector<int64_t> zs;
+        for (int i = 0; i < nin; ++i) {
+          mb.input("x" + std::to_string(i), DType::kI8, {rows, c});
+          ins.push_back("x" + std::to_string(i));
+          auto d = r.i8(rows * c);
+          for (int64_t q = 0; q < rows * c; q += 5) d[q] = (q / 5) % 2 ? 0x80 : 0x7F;  // extreme codes
+          data.push_back(d);
+          zs.push_back(r.i(-128, 127));
+        }
+        const int64_t kc = pc ? c : 1;
+        std::vector<int32_t> K(static_cast<size_t>(nin * kc)), B(static_cast<size_t>(kc));
+        const int64_t lim = (int64_t(1) << (31 - shift)) / (nin * 260);  // sum |K| (128 + |z|) 2^shift < 2^31
+        // variant 3: |acc| < 2^31 (the quantizer's bound) but acc 2^shift saturates
+        const int64_t kmax = variant == 0 ? std::max<int64_t>(1, (int64_t(1) << (14 - shift)) / (nin * 128))
+                                          : (variant == 1 ? std::min<int64_t>(32767, lim) : (variant == 2 ? lim : (int64_t(1) << 30) / (nin * 256)));
+        const int64_t bmax = variant == 0 ? 64 : (variant == 3 ? (int64_t(1) << 20) : lim * 8);
+        for (auto& v : K) v = static_cast<int32_t>(r.l(-kmax, kmax));
+        for (auto& v : B) v = static_cast<int32_t>(r.l(-bmax, bmax));
+        mb.constant("K", DType::kI32, {nin, kc}, K.data());
+        mb.constant("B", DType::kI32, {kc}, B.data());
+        ins.push_back("K");
+        ins.push_back("B");
+        Json at = Json::Object{{"zeros", zeros_json(zs)}, {"mult", 1 << 30}, {"shift", shift}, {"y_zero", r.i(-128, 127)}};
+        if (k % 4 == 1) {
+          at["qmin"] = r.i(-128, -20);
+          at["qmax"] = r.i(0, 127);
+        }
+        mb.node("I8AffineSum", ins, {"y"}, at);
+        mb.output("y");
+        compare(mb, data, "I8AffineSum positive shift " + std::to_string(shift) + " nin " + std::to_string(nin) + " variant " +
+                              std::to_string(variant), "i8affinesum.neon");
+      }
+    }
+  }
+}
+
 // I8Mul with int8 zero points: int16 differences and SMULL products (same shape and per-sample channel broadcast,
 // negative / zero / positive shifts, clamped outputs, channel tails), and zero points outside int8 (the int32 path).
 BF_TEST(int8_full_mul_s16_bit_exact) {
@@ -374,6 +426,91 @@ BF_TEST(int8_full_rewrite_fold_lut_thresholds_bit_exact) {
   }
 }
 
+// fold_lut_thresholds, interval form (2026-11-13): V-shaped LUT rows (decreasing then increasing, plateaus, ties at the
+// threshold), a Lambda-shaped row (must not fold: two rays), BDense and BConv2D consumers, two consumers with equal
+// thresholds sharing one I8PackBits and a third with other thresholds, C not a multiple of 16 / 32 / 64.
+std::vector<int8_t> v_rows(Rng& r, int64_t rows, int lambda_row) {
+  std::vector<int8_t> t(static_cast<size_t>(rows * 256));
+  for (int64_t row = 0; row < rows; ++row) {
+    const int m = r.i(-140, 140);  // the minimum's position (outside the codes: monotone rows)
+    const int lo = r.i(-128, 20);
+    const int sa = r.i(0, 3), sb = r.i(0, 3);
+    for (int q = -128; q <= 127; ++q) {
+      int v = q < m ? lo + ((m - q) * (sa + 1)) / 4 : lo + ((q - m) * (sb + 1)) / 3;
+      if (row == lambda_row) v = -v;
+      t[row * 256 + q + 128] = static_cast<int8_t>(std::min(127, std::max(-128, v)));
+    }
+  }
+  return t;
+}
+
+BF_TEST(int8_full_rewrite_fold_lut_intervals_bit_exact) {
+  Rng r(2010);
+  int k = 0;
+  for (const char* mode : {"ge", "gt"}) {
+    for (int variant = 0; variant < 5; ++variant) {  // 0 BDense, 1 BConv2D, 2 two + one consumers, 3 one table, 4 Lambda row
+      ++k;
+      const bool conv = variant == 1;
+      const int64_t c = std::vector<int64_t>{7, 33, 70, 100, 130}[static_cast<size_t>(k % 5)];
+      bftest::ModelBuilder mb;
+      const Shape xs = conv ? Shape{1, 9, 11, c} : Shape{37, c};
+      mb.input("x", DType::kI8, xs);
+      const int64_t rows = variant == 3 ? 1 : c;
+      auto tab = v_rows(r, rows, variant == 4 ? static_cast<int>(c / 2) : -1);
+      mb.constant("t", DType::kI8, {rows, 256}, tab.data());
+      mb.node("I8Lut", {"x", "t"}, {"y"});
+      const float s = r.f(0.01f, 0.1f);
+      const int z = r.i(-30, 30);
+      auto thr_vec = [&]() {
+        std::vector<float> thr(static_cast<size_t>(c));
+        for (auto& v : thr) v = r.f(-140 * s, 140 * s);
+        for (int64_t i = 0; i < c; i += 3) thr[i] = q8::deq(r.i(-128, 127), s, z);  // ties
+        thr[0] = 1e9f;                                                           // never
+        if (c > 1) thr[1] = -1e9f;                                               // always
+        return thr;
+      };
+      auto thr = thr_vec(), thr2 = thr_vec();
+      mb.constant("thr", DType::kF32, {c}, thr.data());
+      mb.constant("thr2", DType::kF32, {c}, thr2.data());
+      const int64_t o = 21;
+      auto pm = std::vector<float>(o), pa = std::vector<float>(o);
+      for (auto& v : pm) v = r.f(-3.f, 3.f);
+      for (auto& v : pa) v = r.f(-50.f, 50.f);
+      mb.constant("pm", DType::kF32, {o}, pm.data());
+      mb.constant("pa", DType::kF32, {o}, pa.data());
+      Json at = Json::Object{{"input_binarize", mode}, {"x_scale", static_cast<double>(s)}, {"x_zero", z}};
+      if (conv) {
+        std::vector<int8_t> wv(static_cast<size_t>(o * 9 * c));
+        for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+        auto wp = bftest::pack_pm1(wv, o * 9, c);
+        mb.constant("w", DType::kBit, {o, 3, 3, c}, wp.data());
+        Json::Array pads;
+        for (int i = 0; i < 4; ++i) pads.push_back(Json(1));
+        at["pads"] = Json(pads);
+        at["pad_value"] = (k % 3) - 1;
+        mb.node("I8BConv2D", {"y", "w", "pm", "pa", "thr"}, {"b"}, at);
+        mb.output("b");
+      } else {
+        std::vector<int8_t> wv(static_cast<size_t>(o * c));
+        for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+        auto wp = bftest::pack_pm1(wv, o, c);
+        mb.constant("w", DType::kBit, {o, c}, wp.data());
+        mb.node("I8BDense", {"y", "w", "pm", "pa", "thr"}, {"b"}, at);
+        mb.output("b");
+        if (variant == 2) {
+          mb.node("I8BDense", {"y", "w", "pa", "pm", "thr"}, {"b2"}, at);   // same bounds: shares the bits
+          mb.node("I8BDense", {"y", "w", "pm", "pa", "thr2"}, {"b3"}, at);  // other bounds
+          mb.output("b2");
+          mb.output("b3");
+        }
+      }
+      // folded: the LUT becomes an I8PackBits (variant 2: two of them); a Lambda row keeps the LUT
+      compare(mb, {r.i8(num_elements(xs))}, "fold_lut_intervals case " + std::to_string(k), variant == 4 ? "" : "i8packbits.neon",
+              variant == 2 ? 5 : (variant == 4 ? -1 : 2));
+    }
+  }
+}
+
 // merge_twins: 2-3 I8Lut nodes on one input (one-row and per-channel tables mixed; C < 16 runs the reference twin
 // kernel), and I8Add nodes with the same inputs and input parameters (half / scaled inputs, same shapes and a broadcast
 // row, clamped outputs, positive out shifts; a third Add with other input parameters stays separate).
@@ -427,6 +564,23 @@ BF_TEST(int8_full_rewrite_twins_bit_exact) {
         compare(mb, {r.i8(na), r.i8(bmode ? c : n)}, "add twins case " + std::to_string(k), "i8addn.neon", 2);
       }
     }
+  }
+}
+
+// I8Gather of int8 tables (i8gather.neon, 2026-11-13): row lengths below / at / above the 8- and 16-byte moves, repeated
+// and out-of-range indices (fill_q).
+BF_TEST(int8_full_gather_rows_bit_exact) {
+  Rng r(2012);
+  for (int64_t d : {1, 5, 8, 13, 16, 31, 64, 100}) {
+    const int64_t v = 37, n = 53;
+    bftest::ModelBuilder mb;
+    mb.input("t", DType::kI8, {v, d});
+    std::vector<int32_t> idx(static_cast<size_t>(n));
+    for (auto& x : idx) x = r.i(-3, static_cast<int>(v) + 2);
+    mb.constant("idx", DType::kI32, {n}, idx.data());
+    mb.node("I8Gather", {"t", "idx"}, {"y"}, Json::Object{{"fill_q", r.i(-128, 127)}});
+    mb.output("y");
+    compare(mb, {r.i8(v * d)}, "gather d " + std::to_string(d), "i8gather.neon");
   }
 }
 
@@ -491,14 +645,16 @@ BF_TEST(int8_full_rewrite_conv_twins_bit_exact) {
 BF_TEST(int8_full_depthwise_bit_exact) {
   Rng r(2005);
   int k = 0;
-  for (int64_t c : {16, 64, 21}) {
+  // (c, channel multiplier): groups = c / mult input channels (QuickNet-XL: 8 inputs, multiplier 8)
+  for (std::pair<int64_t, int64_t> cm : std::vector<std::pair<int64_t, int64_t>>{{16, 1}, {64, 1}, {21, 1}, {64, 8}, {48, 3}, {40, 5}}) {
+    const int64_t c = cm.first, mult = cm.second, cin = c / mult;
     for (int64_t ks : {3, 5}) {
       for (int s = 1; s <= 2; ++s) {
         for (int variant = 0; variant < 3; ++variant) {  // 0 plain, 1 dilation 2 + no bias, 2 positive shifts + clamp
           ++k;
           const int64_t h = 11, w = 9, pad = ks / 2 * (variant == 1 ? 2 : 1);
           bftest::ModelBuilder mb;
-          mb.input("x", DType::kI8, {1, h, w, c});
+          mb.input("x", DType::kI8, {1, h, w, cin});
           auto wv = r.i8(c * ks * ks);
           wv[0] = 0x80;
           wv[1] = 0x7F;
@@ -517,14 +673,14 @@ BF_TEST(int8_full_depthwise_bit_exact) {
           for (int i = 0; i < 4; ++i) pads.push_back(Json(pad));
           const int xz = r.i(-128, 127);
           Json at = Json::Object{{"x_zero", xz}, {"pad_q", r.i(-128, 127)}, {"pads", Json(pads)}, {"strides", Json(strides)},
-                                 {"dilations", Json(dil)}, {"groups", c}, {"y_zero", r.i(-128, 127)}};
+                                 {"dilations", Json(dil)}, {"groups", cin}, {"y_zero", r.i(-128, 127)}};
           if (variant == 2) {
             at["qmin"] = r.i(-128, -30);
             at["qmax"] = r.i(10, 127);
           }
           mb.node("I8Conv2D", {"x", "w", variant == 1 ? "" : "b", "m", "s"}, {"y"}, at);
           mb.output("y");
-          auto x = r.i8(h * w * c);
+          auto x = r.i8(h * w * cin);
           x[0] = 0x80;
           x[1] = 0x7F;
           compare(mb, {x}, "depthwise case " + std::to_string(k), "i8conv2d.neon_depthwise");
@@ -592,6 +748,43 @@ BF_TEST(int8_full_rewrite_collapse_unary_bit_exact) {
 
 // I8LayerNorm: the SMLAL row form (full output range) and the clamped form, row lengths with and without 16-element
 // tails, extreme zero points and codes, tiny / zero / large gains, constant rows.
+// merge_twins, I8LayerNorm (2026-11-13): 2-3 LayerNorms of one input with the same statistics attributes (-> I8LayerNormN),
+// full-range and clamped outputs mixed, d with and without 16-element tails, a constant row; a LayerNorm with another
+// eps stays separate.
+BF_TEST(int8_full_rewrite_layernorm_twins_bit_exact) {
+  Rng r(2013);
+  int k = 0;
+  for (int64_t d : {16, 48, 200, 768}) {
+    for (int nt = 2; nt <= 3; ++nt) {
+      ++k;
+      const int64_t rows = 1 + k % 7;
+      bftest::ModelBuilder mb;
+      mb.input("x", DType::kI8, {rows, d});
+      const Json base = Json::Object{{"x_zero", r.i(-128, 127)}, {"x_scale", static_cast<double>(r.f(0.001f, 3.f))}, {"eps", 1e-5}};
+      for (int j = 0; j <= nt; ++j) {
+        std::vector<float> g(static_cast<size_t>(d)), b(static_cast<size_t>(d));
+        for (auto& v : g) v = r.f(-80.f, 80.f);
+        for (auto& v : b) v = r.f(-90.f, 90.f);
+        mb.constant("g" + std::to_string(j), DType::kF32, {d}, g.data());
+        mb.constant("b" + std::to_string(j), DType::kF32, {d}, b.data());
+        Json at = base;
+        if ((j + k) % 3 == 1) {
+          at["qmin"] = r.i(-128, -10);
+          at["qmax"] = r.i(10, 127);
+        }
+        if (j == nt) at["eps"] = 1e-6;  // other statistics: not merged
+        mb.node("I8LayerNorm", {"x", "g" + std::to_string(j), "b" + std::to_string(j)}, {"y" + std::to_string(j)}, at);
+        mb.output("y" + std::to_string(j));
+      }
+      auto x = r.i8(rows * d);
+      x[0] = 0x80;
+      x[1] = 0x7F;
+      if (rows > 2) std::fill_n(x.begin() + d, d, x[d]);
+      compare(mb, {x}, "layernorm twins case " + std::to_string(k), "i8layernormn.neon", 2);
+    }
+  }
+}
+
 BF_TEST(int8_full_layernorm_bit_exact) {
   Rng r(2007);
   int k = 0;

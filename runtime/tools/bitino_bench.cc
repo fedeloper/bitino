@@ -386,6 +386,7 @@ int main(int argc, char** argv) {
                                              {"i8_absorbed_luts", Json(session.absorbed_luts())},
                                              {"i8_composed_luts", Json(session.i8_rewrites()[0])},
                                              {"i8_folded_luts", Json(session.i8_rewrites()[1])},
+                                             {"i8_interval_folds", Json(session.i8_rewrites()[6])},
                                              {"i8_removed_luts", Json(session.i8_rewrites()[2])},
                                              {"i8_lut_twins", Json(session.i8_rewrites()[3])},
                                              {"i8_add_twins", Json(session.i8_rewrites()[4])},

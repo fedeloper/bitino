@@ -21,8 +21,15 @@ enum CpuFeature : uint32_t {
   kFeatAvxVnni = 1u << 10, // x86 AVX-VNNI (VEX-encoded VPDPBUSD, 256-bit; Alder Lake and later)
 };
 
+// MIDR part numbers (implementer Arm) used by kernel tuning choices
+constexpr uint32_t kPartCortexA75 = 0xD0A;
+
 struct CpuInfo {
   uint32_t features = 0;
+  // Part number (MIDR_EL1[15:4], implementer Arm only) of the prime core: the CPU with the highest cpuinfo_max_freq,
+  // ties to the highest part number (Linux / Android sysfs; 0 when unknown). Tuning only (instruction schedules
+  // with the same results); BITINO_CPU_PART=<hex> overrides it.
+  uint32_t prime_part = 0;
   std::string arch;  // "aarch64", "x86_64", ...
   bool has(uint32_t f) const { return (features & f) == f; }
   std::string describe() const;

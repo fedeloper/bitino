@@ -12,13 +12,16 @@
 //    consumer's integer threshold on y, T_y[c] = qthr_ge / qthr_gt of its float threshold on y's grid, becomes a
 //    threshold on x when {x : L[c][x] >= T_y[c]} is an upper set {x >= T_x[c]} (checked on all 256 codes of every
 //    channel): the consumer then reads x with x_scale 1, x_zero 0 (deq = identity, exact) and the threshold T_x[c]
-//    (an integer, as a float: qthr_ge(T, identity) = T for T in [-128, 128]). The LUT is removed when nothing else
-//    reads y.
+//    (an integer, as a float: qthr_ge(T, identity) = T for T in [-128, 128]). Otherwise, when the -1 codes
+//    {x : L[c][x] < T_y[c]} form an interval [lo_c, hi_c] for every channel (V-shaped LUTs, e.g. PReLU with negative
+//    slopes), the consumer reads the bit tensor I8PackBits(x, [lo; hi]) (bit -1 iff lo_c <= x <= hi_c; shared by consumers
+//    with equal bounds). The LUT is removed when nothing else reads y.
 //  * merge_twins: element-wise nodes that read the same inputs ("twins", e.g. a tensor and its binarize-aware copy):
 //    I8Lut nodes on one input -> one I8LutN (one pass, shared loads / transposes); I8Add nodes with the same inputs and
 //    input parameters -> one I8AddN (the rescaled input sum computed once, one output requantization per twin);
 //    I8Conv2D nodes with the same input, byte-identical weights and bias and the same geometry -> one I8Conv2DN (the
-//    int32 accumulators computed once, one requantization per twin).
+//    int32 accumulators computed once, one requantization per twin); I8LayerNorm nodes with the same x and statistics
+//    attributes -> one I8LayerNormN (row statistics and fp32(u) * r once).
 #pragma once
 
 #include <vector>
@@ -32,9 +35,11 @@ struct I8RewriteStats {
   int composed_luts = 0;   // I8Lut nodes removed by composition
   int folded_luts = 0;     // binary-layer inputs re-pointed through a LUT (threshold folding)
   int removed_luts = 0;    // I8Lut nodes removed after folding
+  int interval_folds = 0;  // binary-layer inputs read as I8PackBits(x) through a LUT (interval binarization)
   int lut_twins = 0;       // I8LutN nodes created
   int add_twins = 0;       // I8AddN nodes created
   int conv_twins = 0;      // I8Conv2DN nodes created
+  int ln_twins = 0;        // I8LayerNormN nodes created
   int merged_nodes = 0;    // nodes replaced by the twin nodes
 };
 

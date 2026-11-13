@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "kernels/int8_full/int8_full.h"
+#include "kernels/int8_full/bmm_i8_epilogue.h"
 #include "kernels/int8_full/l8_neon.h"
 #include "kernels/int8_full/q8_math.h"
 #if defined(__aarch64__)
@@ -59,6 +60,8 @@ std::unique_ptr<Kernel> make_bconv2d_neon_opt_kernel();
 std::unique_ptr<Kernel> make_bdense_neon_kernel();
 std::unique_ptr<Kernel> make_bdense_ternary_neon_kernel();
 std::unique_ptr<Kernel> make_bmatmul_neon_kernel();
+std::unique_ptr<Kernel> make_bmatmul_neon_i8_kernel(const BmmI8Epilogue* e);
+int64_t bmatmul_i8_col_pad(int64_t n);
 
 #if defined(__aarch64__)
 // SMMLA tiles (int8_full_gemm_i8mm.cc, +i8mm TU; called only with kFeatI8mm)
@@ -564,25 +567,56 @@ class AffineSumNeon : public Kernel {
     // The shift is done as SHRN #16 (exact: |acc'| < 2^31, so acc' >> 16 fits int16) and, for s > 16, an int16
     // arithmetic shift by s - 16; for s < 16 the coefficients and the bias are scaled by 2^(16 - s) first (exact,
     // when the scaled bound still fits), so that the shift is 16.
-    int64_t pre = 0;  // prescale exponent of the shift path
+    // Positive shifts (2026-11-13; e.g. QuickNet's binarize-aware twins, shift 1): with mult = 2^30 and shift = l >= 1,
+    // requant(acc) = mulhi(sat32(acc 2^l), 2^30) = floor(acc 2^(l-1) + 1/2) = acc 2^(l-1) when acc 2^l does not
+    // saturate (bound below), so y = clamp(floor((acc 2^(l-1) + zy) / 2^0)): the same shift path with the coefficients
+    // and the bias scaled by 2^(l-1) (kexp) and s = 0 (then prescaled to 16 or shifted by 0, mode 3).
+    int64_t pre = 0;   // prescale exponent of the shift path
+    int64_t kexp = 0;  // coefficient exponent of a positive shift
     {
       const int32_t m = static_cast<int32_t>(ctx.attrs().get_int("mult", 0)), s = static_cast<int32_t>(ctx.attrs().get_int("shift", 0));
       const int64_t zy = ctx.attrs().get_int("y_zero", 0);
-      shr_ = fast_ && m == (int32_t(1) << 30) && s <= 0 && s >= -30;
+      shr_ = fast_ && m == (int32_t(1) << 30) && s >= -30 && s <= 15;
       if (shr_) {
-        const int r = -s;
-        shr_s_ = r + 1;
+        int64_t c0 = 0;
+        if (s <= 0) {
+          const int r = -s;
+          shr_s_ = r + 1;
+          c0 = 1 + (r > 0 ? (int64_t(1) << r) : 0) + zy * (int64_t(1) << shr_s_);
+        } else {
+          shr_s_ = 0;
+          kexp = s - 1;
+          c0 = zy;
+        }
         pre = shr_s_ < 16 ? 16 - shr_s_ : 0;
-        const int64_t c0 = 1 + (r > 0 ? (int64_t(1) << r) : 0) + zy * (int64_t(1) << shr_s_);
         bshr_.assign(cp_, 0);
         for (int64_t ch = 0; ch < c_ && shr_; ++ch) {
           int64_t bound = 0;
           for (size_t i = 0; i < nin_; ++i) bound += std::abs(static_cast<int64_t>(kfull_[i * cp_ + ch])) * 128;
-          const int64_t b = static_cast<int64_t>(bfold_[ch]) + c0;
-          shr_ = (std::abs(b) + bound) * (int64_t(1) << pre) < (int64_t(1) << 31);
+          // s > 0: no saturation of acc 2^s (|acc| <= |B'| + sum |K| 128)
+          if (s > 0) shr_ = (std::abs(static_cast<int64_t>(bfold_[ch])) + bound) * (int64_t(1) << s) < (int64_t(1) << 31);
+          const int64_t b = static_cast<int64_t>(bfold_[ch]) * (int64_t(1) << kexp) + c0;
+          bound *= int64_t(1) << kexp;
+          shr_ = shr_ && (std::abs(b) + bound) * (int64_t(1) << pre) < (int64_t(1) << 31);
           bshr_[ch] = static_cast<int32_t>(b * (int64_t(1) << pre));
         }
-        if (!shr_) pre = 0;
+        if (!shr_) {
+          // s > 0 whose prescaled form does not fit: the int32 shift path (mode 3, shift by 0) when the unscaled one fits
+          pre = 0;
+          if (s > 0 && fast_) {
+            shr_ = true;
+            for (int64_t ch = 0; ch < c_ && shr_; ++ch) {
+              int64_t bound = 0;
+              for (size_t i = 0; i < nin_; ++i) bound += std::abs(static_cast<int64_t>(kfull_[i * cp_ + ch])) * 128;
+              shr_ = (std::abs(static_cast<int64_t>(bfold_[ch])) + bound) * (int64_t(1) << s) < (int64_t(1) << 31);
+              const int64_t b = static_cast<int64_t>(bfold_[ch]) * (int64_t(1) << kexp) + c0;
+              shr_ = shr_ && std::abs(b) + bound * (int64_t(1) << kexp) < (int64_t(1) << 31);
+              bshr_[ch] = static_cast<int32_t>(b);
+            }
+            shr3_ = shr_;
+          }
+          if (!shr_) kexp = 0;
+        }
       }
       if (shr_ && pre > 0) {
         // prescaling must not push int16 coefficient rows out of int16 (SMLAL rows are cheaper than the 4 extra
@@ -592,7 +626,7 @@ class AffineSumNeon : public Kernel {
           for (size_t i = 0; i < nin_; ++i) {
             bool fits = true;
             for (int64_t ch = 0; ch < c_; ++ch) {
-              const int64_t v = static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << e);
+              const int64_t v = static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << (kexp + e));
               fits = fits && v >= -32768 && v <= 32767;
             }
             cnt += fits;
@@ -608,7 +642,7 @@ class AffineSumNeon : public Kernel {
     }
     // inputs whose coefficients all fit int16 first (order_), their rows in kh_, the others' rows in k32_
     // (shift path: the prescaled coefficients)
-    auto kv = [&](size_t i, int64_t ch) { return static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << pre); };
+    auto kv = [&](size_t i, int64_t ch) { return static_cast<int64_t>(kfull_[i * cp_ + ch]) * (int64_t(1) << (kexp + pre)); };
     order_.clear();
     n16_ = 0;
     for (int pass = 0; pass < 2; ++pass)
@@ -921,6 +955,9 @@ bool affine_sum_neon_supported(const KernelContext& ctx) {
 }
 
 // ------------------------------------------------------------ I8LayerNorm
+// I8LayerNorm, and I8LayerNormN (twins on one input, src/graph_rewrite_i8.cc merge_twins; 2026-11-13): the row
+// statistics, u = d q - c and v = fp32(u) * r are computed once, then per output j rne(fp32(v * G_j) + B_j) clamped to
+// [lo_j, hi_j] (the operations of the reference, in the same order).
 class LayerNormNeon : public Kernel {
  public:
   void run(const KernelContext& ctx) override {
@@ -928,13 +965,25 @@ class LayerNormNeon : public Kernel {
     const int64_t d = x.dim(-1), rows = x.size() / d;
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
     const double xs = ctx.attrs().get_number("x_scale", 1.0), eps = ctx.attrs().get_number("eps", 1e-5);
-    const float* G = ctx.in(1).data<float>();
-    const float* B = ctx.in(2).data<float>();
-    const int lo = static_cast<int>(ctx.attrs().get_int("qmin", -128)), hi = static_cast<int>(ctx.attrs().get_int("qmax", 127));
+    const bool multi = ctx.node->op == "I8LayerNormN";
+    const size_t k = ctx.outputs.size();
+    constexpr size_t kMax = 4;
+    BF_CHECK(k <= kMax, "i8layernorm.neon: at most 4 outputs");
+    const float* G[kMax];
+    const float* B[kMax];
+    int lo[kMax], hi[kMax];
+    int8_t* y[kMax];
+    bool full = true;
+    for (size_t jj = 0; jj < k; ++jj) {
+      G[jj] = ctx.in(1 + 2 * jj).data<float>();
+      B[jj] = ctx.in(2 + 2 * jj).data<float>();
+      lo[jj] = static_cast<int>(multi ? ctx.attrs().get_ints("qmins", {})[jj] : ctx.attrs().get_int("qmin", -128));
+      hi[jj] = static_cast<int>(multi ? ctx.attrs().get_ints("qmaxs", {})[jj] : ctx.attrs().get_int("qmax", 127));
+      y[jj] = ctx.out(jj).data<int8_t>();
+      full = full && lo[jj] == -128 && hi[jj] == 127;
+    }
     const int8_t* q = x.data<int8_t>();
-    int8_t* y = ctx.out(0).data<int8_t>();
     ctx.pool->parallel_for(rows, std::max<int64_t>(1, 16384 / std::max<int64_t>(d, 1)), [&](int64_t r0, int64_t r1) {
-      const int16x8_t vlo = vdupq_n_s16(static_cast<int16_t>(lo)), vhi = vdupq_n_s16(static_cast<int16_t>(hi));
       for (int64_t r = r0; r < r1; ++r) {
         const int8_t* qr = q + r * d;
         // raw sums of q and q^2 (int32: d <= 16384, |q| <= 128)
@@ -965,39 +1014,41 @@ class LayerNormNeon : public Kernel {
         const int32x4_t vnc = vnegq_s32(vc);
         const int16_t d16 = static_cast<int16_t>(d);
         const float32x4_t vr = vdupq_n_f32(rf);
-        int8_t* yr = y + r * d;
         i = 0;
-        if (d <= 32767 && lo == -128 && hi == 127) {
+        if (d <= 32767 && full) {
           for (; i + 16 <= d; i += 16) {
             const int8x16_t qv = vld1q_s8(qr + i);
             const int16x8_t l = vmovl_s8(vget_low_s8(qv)), h = vmovl_high_s8(qv);
             const int32x4_t ui[4] = {vmlal_n_s16(vnc, vget_low_s16(l), d16), vmlal_high_n_s16(vnc, l, d16), vmlal_n_s16(vnc, vget_low_s16(h), d16),
                                      vmlal_high_n_s16(vnc, h, d16)};
-            int32x4_t o[4];
-            for (int k = 0; k < 4; ++k) {
-              const float32x4_t v = vmulq_f32(vcvtq_f32_s32(ui[k]), vr);
-              o[k] = rne4(vaddq_f32(vmulq_f32(v, vld1q_f32(G + i + 4 * k)), vld1q_f32(B + i + 4 * k)));
+            float32x4_t v[4];
+            for (int kk = 0; kk < 4; ++kk) v[kk] = vmulq_f32(vcvtq_f32_s32(ui[kk]), vr);
+            for (size_t jj = 0; jj < k; ++jj) {
+              int32x4_t o[4];
+              for (int kk = 0; kk < 4; ++kk) o[kk] = rne4(vaddq_f32(vmulq_f32(v[kk], vld1q_f32(G[jj] + i + 4 * kk)), vld1q_f32(B[jj] + i + 4 * kk)));
+              const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(o[0]), o[1]), cd = vqmovn_high_s32(vqmovn_s32(o[2]), o[3]);
+              vst1q_s8(y[jj] + r * d + i, vqmovn_high_s16(vqmovn_s16(ab), cd));
             }
-            const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(o[0]), o[1]), cd = vqmovn_high_s32(vqmovn_s32(o[2]), o[3]);
-            vst1q_s8(yr + i, vqmovn_high_s16(vqmovn_s16(ab), cd));
           }
         }
         for (; i + 16 <= d; i += 16) {
-          int32x4_t w[4], o[4];
+          int32x4_t w[4];
           widen16(vld1q_s8(qr + i), w);
-          for (int k = 0; k < 4; ++k) {
-            const float32x4_t u = vcvtq_f32_s32(vsubq_s32(vmulq_s32(w[k], vd), vc));
-            const float32x4_t v = vmulq_f32(u, vr);
-            const float32x4_t t = vaddq_f32(vmulq_f32(v, vld1q_f32(G + i + 4 * k)), vld1q_f32(B + i + 4 * k));
-            o[k] = rne4(t);
+          float32x4_t v[4];
+          for (int kk = 0; kk < 4; ++kk) v[kk] = vmulq_f32(vcvtq_f32_s32(vsubq_s32(vmulq_s32(w[kk], vd), vc)), vr);
+          for (size_t jj = 0; jj < k; ++jj) {
+            int32x4_t o[4];
+            for (int kk = 0; kk < 4; ++kk) o[kk] = rne4(vaddq_f32(vmulq_f32(v[kk], vld1q_f32(G[jj] + i + 4 * kk)), vld1q_f32(B[jj] + i + 4 * kk)));
+            vst1q_s8(y[jj] + r * d + i, narrow16(o[0], o[1], o[2], o[3], vdupq_n_s16(static_cast<int16_t>(lo[jj])), vdupq_n_s16(static_cast<int16_t>(hi[jj]))));
           }
-          vst1q_s8(yr + i, narrow16(o[0], o[1], o[2], o[3], vlo, vhi));
         }
         for (; i < d; ++i) {
           const float u = static_cast<float>(d * (qr[i] - xz) - s1);
           const float v = u * rf;
-          const float w = v * G[i];
-          yr[i] = q8::round_f32(w + B[i], lo, hi);
+          for (size_t jj = 0; jj < k; ++jj) {
+            const float w = v * G[jj][i];
+            y[jj][r * d + i] = q8::round_f32(w + B[jj][i], lo[jj], hi[jj]);
+          }
         }
       }
     });
@@ -1162,7 +1213,10 @@ void pack_row_bits_i8(const int8_t* q, int64_t c, const int16_t* t, bool per_cha
 // Same bits when every threshold T is at most 127 (T >= -128 always), compared in int8 lanes (t8 = T as int8; per
 // channel, padded, or one value): 64 channels -> 2 words per step (CMGT, AND with the bit weights, three
 // pairwise-add levels), then whole words of 32, then the remaining channels as above.
-void pack_row_bits_i8x(const int8_t* q, int64_t c, const int8_t* t8, const int16_t* t, bool per_channel, uint32_t* out) {
+// (kPc: per-channel thresholds, a compile-time flag since 2026-11-13)
+template <bool kPc>
+void pack_row_bits_i8x_t(const int8_t* q, int64_t c, const int8_t* t8, const int16_t* t, uint32_t* out) {
+  constexpr bool per_channel = kPc;
   static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
   const uint8x16_t bitw = vld1q_u8(kW);
   const int8x16_t ts = vdupq_n_s8(t8[0]);
@@ -1181,6 +1235,10 @@ void pack_row_bits_i8x(const int8_t* q, int64_t c, const int8_t* t8, const int16
   }
   if (i < c) pack_row_bits_i8(q + i, c - i, per_channel ? t + i : t, per_channel, out + (i >> 5));
 }
+void pack_row_bits_i8x(const int8_t* q, int64_t c, const int8_t* t8, const int16_t* t, bool per_channel, uint32_t* out) {
+  if (per_channel) pack_row_bits_i8x_t<true>(q, c, t8, t, out);
+  else pack_row_bits_i8x_t<false>(q, c, t8, t, out);
+}
 
 BinThr bin_thresholds(const std::string& mode, const q8::Deq& d, const float* thr, int64_t c) {
   BinThr b;
@@ -1197,6 +1255,100 @@ BinThr bin_thresholds(const std::string& mode, const q8::Deq& d, const float* th
   b.tgt.resize(static_cast<size_t>(n));
   return b;
 }
+
+// ------------------------------------------------------------ I8PackBits
+// bit c = 1 iff lo[c] <= q[c] <= hi[c] (interval binarization of a LUT input, graph_rewrite_i8.cc fold_lut_thresholds):
+// 64 channels -> 2 words per step (CMGE, CMLE, AND with the bit weights, three pairwise-add levels), then words of 32,
+// then the last channels one at a time. Bounds padded to a multiple of 64.
+class PackBitsNeon : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override {
+    c_ = ctx.in(0).dim(-1);
+    const int64_t cp = (c_ + 63) / 64 * 64;
+    lo_.assign(static_cast<size_t>(cp), 127);
+    hi_.assign(static_cast<size_t>(cp), -128);
+    std::copy_n(ctx.in(1).data<int8_t>(), c_, lo_.data());
+    std::copy_n(ctx.in(1).data<int8_t>() + c_, c_, hi_.data());
+  }
+  void run(const KernelContext& ctx) override {
+    const int8_t* q = ctx.in(0).data<int8_t>();
+    uint32_t* y = ctx.out(0).data<uint32_t>();
+    const int64_t c = c_, rows = ctx.in(0).size() / c, words = bit_words(c);
+    const int8_t* lo = lo_.data();
+    const int8_t* hi = hi_.data();
+    ctx.pool->parallel_for(rows, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [=](int64_t r0, int64_t r1) {
+      static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+      const uint8x16_t bitw = vld1q_u8(kW);
+      for (int64_t r = r0; r < r1; ++r) {
+        const int8_t* x = q + r * c;
+        uint32_t* out = y + r * words;
+        auto mask = [&](int64_t i) {
+          const int8x16_t v = vld1q_s8(x + i);
+          return vandq_u8(vandq_u8(vcgeq_s8(v, vld1q_s8(lo + i)), vcleq_s8(v, vld1q_s8(hi + i))), bitw);
+        };
+        int64_t i = 0;
+        for (; i + 64 <= c; i += 64) {
+          uint8x16_t m = vpaddq_u8(vpaddq_u8(mask(i), mask(i + 16)), vpaddq_u8(mask(i + 32), mask(i + 48)));
+          m = vpaddq_u8(m, m);
+          const uint64_t w2 = vgetq_lane_u64(vreinterpretq_u64_u8(m), 0);
+          std::memcpy(out + (i >> 5), &w2, 8);
+        }
+        for (; i + 32 <= c; i += 32) {
+          uint8x16_t m = vpaddq_u8(mask(i), mask(i + 16));
+          m = vpaddq_u8(m, m);
+          m = vpaddq_u8(m, m);
+          out[i >> 5] = vgetq_lane_u32(vreinterpretq_u32_u8(m), 0);
+        }
+        if (i < c) {
+          uint32_t b = 0;
+          for (int64_t j = i; j < c; ++j) b |= static_cast<uint32_t>(lo[j] <= x[j] && x[j] <= hi[j]) << (j & 31);
+          out[i >> 5] = b;
+        }
+      }
+    });
+  }
+
+ private:
+  int64_t c_ = 0;
+  std::vector<int8_t> lo_, hi_;
+};
+
+// ------------------------------------------------------------- I8Gather
+// int8 tables: rows of d codes copied with fixed-size moves (the last one overlapping; the reference called memcpy per
+// row, e.g. BHViT's 192 row / channel shifts); out-of-range indices fill fill_q. Bit tables: the reference kernel.
+class GatherNeon : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& t = ctx.in(0);
+    const int64_t v = t.dim(0), d = t.dim(1), n = ctx.in(1).size();
+    const int8_t fill = static_cast<int8_t>(ctx.attrs().get_int("fill_q", 0));
+    const int32_t* ids = ctx.in(1).data<int32_t>();
+    const int8_t* tab = t.data<int8_t>();
+    int8_t* y = ctx.out(0).data<int8_t>();
+    ctx.pool->parallel_for(n, std::max<int64_t>(1, kSerial / std::max<int64_t>(d, 1)), [=](int64_t i0, int64_t i1) {
+      for (int64_t i = i0; i < i1; ++i) {
+        int8_t* yr = y + i * d;
+        const int64_t r = ids[i];
+        if (r < 0 || r >= v) {
+          for (int64_t c = 0; c < d; ++c) yr[c] = fill;
+          continue;
+        }
+        const int8_t* sr = tab + r * d;
+        if (d >= 16) {
+          int64_t c = 0;
+          for (; c + 16 <= d; c += 16) vst1q_s8(yr + c, vld1q_s8(sr + c));
+          if (c < d) vst1q_s8(yr + d - 16, vld1q_s8(sr + d - 16));
+        } else if (d >= 8) {
+          vst1_s8(yr, vld1_s8(sr));
+          vst1_s8(yr + d - 8, vld1_s8(sr + d - 8));
+        } else {
+          for (int64_t c = 0; c < d; ++c) yr[c] = sr[c];
+        }
+      }
+    });
+  }
+};
+bool gather_neon_supported(const KernelContext& ctx) { return ctx.in(0).dtype() == DType::kI8; }
 
 // A sub-kernel run on scratch tensors (the binary NEON kernels on the binarized int8 input).
 struct Sub {
@@ -1381,9 +1533,12 @@ bool a32_res_exact(const KernelContext& ctx) {
 bool binary_layer_neon_supported(const KernelContext& ctx) {
   const std::string mode = ctx.attrs().get_string("input_binarize", "ge");
 #if BF_NEON_A32
-  // AArch32: int8 outputs only; I8BConv2DRes (fp32 residual sums, PReLU, bit compares of the sums) when no denormal can
-  // occur (a32_res_exact), else on the IEEE portable kernel
-  if (a32_f32_output(ctx) || (ctx.node->op == "I8BConv2DRes" && !a32_res_exact(ctx))) return false;
+  // AArch32 (flush-to-zero NEON): int8 outputs only; I8BConv2DRes (fp32 residual sums, PReLU, l8 codes and bit compares
+  // of the sums) on NEON only when both no-denormal proofs hold (merged 2026-11-13: a32_res_exact, with denormal bit
+  // thresholds replaced by equivalent grid values in bconv2d.neon_opt, and int8_full::res_epilogue_normal), otherwise
+  // on the IEEE portable kernel
+  if (a32_f32_output(ctx)) return false;
+  if (ctx.node->op == "I8BConv2DRes" && !(a32_res_exact(ctx) && int8_full::res_epilogue_normal(ctx))) return false;
 #endif
   if (ctx.node->op == "I8BConv2DRes") {
     // the pre stage (inputs 10-13) runs in the two-phase epilogue only: int16 dot products, K <= 32767
@@ -1392,7 +1547,7 @@ bool binary_layer_neon_supported(const KernelContext& ctx) {
     if (pre && w.dim(1) * w.dim(2) * w.dim(3) > 32767) return false;
     return (mode != "sign_zero" || ctx.in(0).dtype() == DType::kBit) && ctx.attrs().get_int("groups", 1) == 1;
   }
-  if (ctx.in(0).dtype() == DType::kBit) return ctx.node->op == "I8BConv2D";
+  if (ctx.in(0).dtype() == DType::kBit) return ctx.node->op == "I8BConv2D" || (ctx.node->op == "I8BDense" && !ctx.has_in(5));
   if (ctx.node->op == "I8BConv2D") return mode != "sign_zero";  // bconv2d.neon_opt: ±1 inputs only
   return !(ctx.has_in(5) && mode != "sign_zero");
 }
@@ -1506,8 +1661,35 @@ class BMatMulI8Neon : public Kernel {
       sub_.ctx.pool = ctx.pool;
       sub_.ctx.cpu = ctx.cpu;
       sub_.ctx.inputs = {ctx.inputs[0], ctx.inputs[1]};
-      sub_.ctx.outputs = {&acc_};
-      sub_.k = make_bmatmul_neon_kernel();
+      // int8 output (2026-11-13): the tiles apply the combination and the requantization themselves (BmmI8Epilogue);
+      // fp32 outputs keep the fp32 counts + the loop of run()
+      direct_ = !p_->f32;
+      if (direct_) {
+        const int64_t cp = bmatmul_i8_col_pad(g_.n);
+        epi_.plain = plain_;
+        epi_.c_ab = static_cast<int32_t>(p_->c_ab);
+        epi_.lo = p_->lo;
+        epi_.hi = p_->hi;
+        epi_.mul_vec = p_->mul_vec;
+        epi_.add_vec = p_->add_vec;
+        mulp_.assign(static_cast<size_t>(p_->mul_vec ? cp : 1), 0.f);
+        std::copy_n(p_->mul, p_->mul_vec ? g_.n : 1, mulp_.data());
+        epi_.mul = mulp_.data();
+        if (p_->add) {
+          addp_.assign(static_cast<size_t>(p_->add_vec ? cp : 1), 0.f);
+          std::copy_n(p_->add, p_->add_vec ? g_.n : 1, addp_.data());
+          epi_.add = addp_.data();
+        }
+        rowterm_.assign(static_cast<size_t>(g_.batch * g_.m), 0);
+        colpad_.assign(static_cast<size_t>(g_.batch * cp), 0);
+        epi_.rowterm = rowterm_.data();
+        epi_.colterm = colpad_.data();
+        sub_.ctx.outputs = {ctx.outputs[0]};
+        sub_.k = make_bmatmul_neon_i8_kernel(&epi_);
+      } else {
+        sub_.ctx.outputs = {&acc_};
+        sub_.k = make_bmatmul_neon_kernel();
+      }
       sub_.k->prepare(sub_.ctx);
     }
   }
@@ -1529,6 +1711,19 @@ class BMatMulI8Neon : public Kernel {
       } else {
         for (int64_t bt = 0; bt < g_.batch; ++bt) qbin_col_sums(qb + bt * k * n, k, n, tb_, cs_.data() + bt * n);
       }
+    }
+    if (need_ab && direct_) {
+      const int8_full::BMatMulParams& p = *p_;
+      if (!plain_) {
+        const int64_t cp = bmatmul_i8_col_pad(n);
+        for (int64_t i = 0, nm = g_.batch * m; i < nm; ++i) rowterm_[i] = static_cast<int32_t>(p.c_rs * rs_[i]);
+        for (int64_t bt = 0; bt < g_.batch; ++bt)
+          for (int64_t j = 0; j < n; ++j) colpad_[bt * cp + j] = static_cast<int32_t>(p.c_cs * cs_[bt * n + j] + p.c0);
+      }
+      sub_.ctx.inputs = {ctx.inputs[0], ctx.inputs[1]};
+      sub_.ctx.outputs[0] = ctx.outputs[0];
+      sub_.k->run(sub_.ctx);
+      return;
     }
     if (need_ab) {
       sub_.ctx.inputs = {ctx.inputs[0], ctx.inputs[1]};
@@ -1586,6 +1781,10 @@ class BMatMulI8Neon : public Kernel {
   std::vector<int64_t> rs_, cs_;
   std::vector<int32_t> colterm_;
   bool plain_ = false;
+  bool direct_ = false;  // int8 output written by the tiles (epi_)
+  BmmI8Epilogue epi_;
+  std::vector<float> mulp_, addp_;
+  std::vector<int32_t> rowterm_, colpad_;
   Sub sub_;
 };
 bool bmatmul_i8_neon_supported(const KernelContext& ctx) {
@@ -3404,6 +3603,10 @@ class DepthwiseNeon : public Kernel {
         wt_[t * g_.oc + o] = w[o * taps + t];
         w16_[t * cp + o] = w[o * taps + t];
       }
+    // channel multiplier (groups == input channels, oc = M ic; 2026-11-13, QuickNet-XL's 8 -> 64 stem): the input is
+    // expanded to oc channels per run (channel o reads input channel o / M), then the multiplier-1 code runs on it
+    mult_ch_ = g_.oc / g_.ic;
+    if (mult_ch_ > 1) xe_.assign(static_cast<size_t>(g_.n * g_.ih * g_.iw * g_.oc + 16), 0);
     // int8 output: per-channel requantization constants for the vector epilogue (2026-11-12)
     int8_full::GemmEpilogue ep(ctx);
     vec_ = !ep.f32 && !ep.l8;
@@ -3422,12 +3625,13 @@ class DepthwiseNeon : public Kernel {
     }
   }
   void run(const KernelContext& ctx) override {
+    const int8_t* x = ctx.in(0).data<int8_t>();
+    if (mult_ch_ > 1) x = expand(ctx);
     if (vec_) {
-      if (any_lsh_) run_s16<true>(ctx);
-      else run_s16<false>(ctx);
+      if (any_lsh_) run_s16<true>(ctx, x);
+      else run_s16<false>(ctx, x);
       return;
     }
-    const int8_t* x = ctx.in(0).data<int8_t>();
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
     const int32_t pz = static_cast<int32_t>(ctx.attrs().get_int("pad_q", xz)) - xz;
     int8_full::GemmEpilogue ep(ctx);
@@ -3478,9 +3682,36 @@ class DepthwiseNeon : public Kernel {
   // |w| <= 127: exact, the supported() bound keeps the sum in int32; padding taps contribute pad_q - z), then
   // sat32(acc + bias), the per-channel requantization (SQSHL for positive shifts, SQRDMULH, SRSHL), + zy, saturating
   // narrows and the clamp: GemmEpilogue::q per element. Channel tails (C % 16) per element as the generic path.
-  template <bool kLsh>
-  void run_s16(const KernelContext& ctx) const {
+  // channel multiplier M: xe[p][o] = x[p][o / M] (a copy: the convolution reads the same codes)
+  const int8_t* expand(const KernelContext& ctx) {
     const int8_t* x = ctx.in(0).data<int8_t>();
+    const int64_t pix = g_.n * g_.ih * g_.iw, ic = g_.ic, oc = g_.oc, m = mult_ch_;
+    int8_t* xe = xe_.data();
+    if (ic <= 16) {
+      uint8_t idx[512];
+      const int64_t ocp = std::min<int64_t>((oc + 15) / 16 * 16, 512);
+      for (int64_t o = 0; o < ocp; ++o) idx[o] = static_cast<uint8_t>(std::min<int64_t>(o / m, ic - 1));
+      if (oc <= 512) {
+        ctx.pool->parallel_for(pix, std::max<int64_t>(1, kSerial / std::max<int64_t>(oc, 1)), [&](int64_t p0, int64_t p1) {
+          for (int64_t p = p0; p < p1; ++p) {
+            int8_t row[16] = {};
+            std::memcpy(row, x + p * ic, static_cast<size_t>(ic));
+            const int8x16_t rv = vld1q_s8(row);
+            int8_t* d = xe + p * oc;
+            int64_t o = 0;
+            for (; o + 16 <= oc; o += 16) vst1q_s8(d + o, vreinterpretq_s8_u8(vqtbl1q_u8(vreinterpretq_u8_s8(rv), vld1q_u8(idx + o))));
+            for (; o < oc; ++o) d[o] = row[o / m];
+          }
+        });
+        return xe;
+      }
+    }
+    for (int64_t p = 0; p < pix; ++p)
+      for (int64_t o = 0; o < oc; ++o) xe[p * oc + o] = x[p * ic + o / m];
+    return xe;
+  }
+  template <bool kLsh>
+  void run_s16(const KernelContext& ctx, const int8_t* x) const {
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
     const int32_t pz = static_cast<int32_t>(ctx.attrs().get_int("pad_q", xz)) - xz;
     const int8_full::GemmEpilogue ep(ctx);
@@ -3551,6 +3782,8 @@ class DepthwiseNeon : public Kernel {
   std::vector<int16_t> w16_;
   std::vector<int32_t> bias_, mult_, lsh_, nrs_;
   bool vec_ = false, any_lsh_ = false;
+  int64_t mult_ch_ = 1;
+  std::vector<int8_t> xe_;
 };
 bool depthwise_neon_supported(const KernelContext& ctx) {
   const int64_t groups = ctx.attrs().get_int("groups", 1);
@@ -3558,7 +3791,8 @@ bool depthwise_neon_supported(const KernelContext& ctx) {
   // |x - z| * |w| * taps < 2^31: zero points within int8 (|x - z| <= 255), |w| <= 127, taps <= 4096
   const int64_t xz = ctx.attrs().get_int("x_zero", 0);
   if (ctx.attrs().get_string("output", "i8") == "l8" || ctx.has_in(5)) return false;
-  return groups > 1 && w.dim(0) == groups && w.dim(3) == 1 && ctx.in(0).dim(3) == groups && w.dim(1) * w.dim(2) <= 4096 &&
+  // one input channel per group, channel multiplier w.dim(0) / groups (1: depthwise)
+  return groups > 1 && w.dim(0) % groups == 0 && w.dim(3) == 1 && ctx.in(0).dim(3) == groups && w.dim(1) * w.dim(2) <= 4096 &&
          xz >= -128 && xz <= 127;
 }
 
@@ -3595,6 +3829,16 @@ class GemmS16A32 : public Kernel {
     nout_ = multi_ ? ctx.outputs.size() : 1;
     const int8_full::GemmEpilogue ep0(ctx);
     vec_ = multi_ || (!ep0.f32 && !ep0.l8);
+    // l8 output (log2 residual stems / downsampling convolutions; 2026-11-13): vector fp32 epilogue and l8neon::encode16,
+    // exact under flush-to-zero when no value of the epilogue can be denormal (int8_full::gemm_f32_epilogue_normal)
+    l8vec_ = !multi_ && ep0.l8 && int8_full::gemm_f32_epilogue_normal(ctx);
+    if (l8vec_) {
+      const int64_t o16 = (o_ + 15) / 16 * 16;
+      fscale_.assign(static_cast<size_t>(o16), 0.f);
+      fbias_.assign(static_cast<size_t>(o16), -0.f);  // -0: the exact additive identity (no bias)
+      std::copy_n(ep0.scale, o_, fscale_.data());
+      if (ep0.bias_f) std::copy_n(ep0.bias_f, o_, fbias_.data());
+    }
     q_.assign(nout_, Q{});
     for (size_t j = 0; j < nout_ && vec_; ++j) {
       const int8_full::GemmEpilogue ep = multi_ ? int8_full::GemmEpilogue(ctx, static_cast<int>(j)) : ep0;
@@ -3682,6 +3926,7 @@ class GemmS16A32 : public Kernel {
       }
   }
   void store_row(const KernelContext& ctx, const std::vector<int8_full::GemmEpilogue>& eps, const int32_t* acc, int64_t r) const {
+    if (l8vec_) return store_row_l8(ctx, eps[0], acc, r);
     if (!vec_) {
       for (int64_t o = 0; o < o_; ++o) eps[0].store(ctx, r * o_ + o, o, acc[o]);
       return;
@@ -3708,8 +3953,27 @@ class GemmS16A32 : public Kernel {
     }
   }
 
+  // l8 output: y = l8_encode(fp32(fp32(acc) * scale[o]) + bias[o]) for 16 channels at a time (separate VMUL / VADD as
+  // GemmEpilogue::f; the bias add is skipped without a bias), the last channels per element
+  void store_row_l8(const KernelContext& ctx, const int8_full::GemmEpilogue& ep, const int32_t* acc, int64_t r) const {
+    int8_t* y = ctx.out(0).data<int8_t>() + r * o_;
+    const l8neon::EncTables& et = et_;
+    int64_t o = 0;
+    for (; o + 16 <= o_; o += 16) {
+      float32x4_t v[4];
+      for (int k = 0; k < 4; ++k) {
+        v[k] = vmulq_f32(vcvtq_f32_s32(vld1q_s32(acc + o + 4 * k)), vld1q_f32(fscale_.data() + o + 4 * k));
+        if (ep.bias_f) v[k] = vaddq_f32(v[k], vld1q_f32(fbias_.data() + o + 4 * k));
+      }
+      vst1q_s8(y + o, l8neon::encode16(v[0], v[1], v[2], v[3], et));
+    }
+    for (; o < o_; ++o) y[o] = q8::l8_encode(ep.f(acc[o], o));
+  }
+
   Conv2DGeom g_{};
-  bool dense_ = false, multi_ = false, vec_ = false;
+  bool dense_ = false, multi_ = false, vec_ = false, l8vec_ = false;
+  std::vector<float> fscale_, fbias_;
+  l8neon::EncTables et_;
   int64_t o_ = 0, op_ = 0, k_ = 0, kp_ = 0, rows_ = 0;
   int32_t xz_ = 0;
   int16_t pz_ = 0;
@@ -3848,6 +4112,7 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Add", "i8add.neon", kFeatNeon, add_neon_supported, make_kernel<AddNeon>);
   add("I8AffineSum", "i8affinesum.neon", kFeatNeon, affine_sum_neon_supported, make_kernel<AffineSumNeon>);
   add("I8LayerNorm", "i8layernorm.neon", kFeatNeon, nullptr, make_kernel<LayerNormNeon>);
+  add("I8LayerNormN", "i8layernormn.neon", kFeatNeon, nullptr, make_kernel<LayerNormNeon>);
   add("I8Softmax", "i8softmax.neon", kFeatNeon, softmax_neon_supported, make_kernel<SoftmaxNeon>);
   add("I8BDense", "i8bdense.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
   add("I8BConv2D", "i8bconv2d.neon", kFeatNeon, binary_layer_neon_supported, make_kernel<BinaryLayerNeon>);
@@ -3869,12 +4134,14 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Lut", "i8lut.neon_rows", kFeatNeon, lut_rows_supported, make_kernel<LutRowsNeon>);
   add("I8LutN", "i8lutn.neon", kFeatNeon, lutn_neon_supported, make_kernel<LutNNeon>);
   add("I8AddN", "i8addn.neon", kFeatNeon, addn_neon_supported, make_kernel<AddNNeon>);
+  add("I8PackBits", "i8packbits.neon", kFeatNeon, nullptr, make_kernel<PackBitsNeon>);
   add("I8Transpose", "i8transpose.neon", kFeatNeon, nullptr, make_kernel<TransposeNeon>);
   add("I8ReduceMean", "i8reducemean.neon", kFeatNeon, mean_last_supported, make_kernel<MeanLastNeon>);
   add("I8ReduceMean", "i8reducemean.neon_mid", kFeatNeon, mean_mid_supported, make_kernel<MeanMidNeon>);
   add("I8GlobalAvgPool", "i8globalavgpool.neon", kFeatNeon, mean_mid_supported, make_kernel<MeanMidNeon>);
   add("I8Pad", "i8pad.neon", kFeatNeon, pad_neon_supported, make_kernel<PadNeon>);
   add("I8Concat", "i8concat.neon", kFeatNeon, nullptr, make_kernel<ConcatNeon>);
+  add("I8Gather", "i8gather.neon", kFeatNeon, gather_neon_supported, make_kernel<GatherNeon>);
   add("I8Mul", "i8mul.neon", kFeatNeon, mul_neon_supported, make_kernel<MulNeon>);
   add("I8MaxPool2D", "i8maxpool2d.neon", kFeatNeon, pool_neon_supported, make_kernel<PoolNeon>);
   add("I8AvgPool2D", "i8avgpool2d.neon", kFeatNeon, nullptr, make_kernel<PoolNeon>);

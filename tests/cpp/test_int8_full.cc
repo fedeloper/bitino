@@ -15,6 +15,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <limits>
 #include <map>
 #include <random>
@@ -862,9 +863,10 @@ BF_TEST(int8_full_bmatmul_int8_operands_bit_exact_vs_reference) {
           bftest::ModelBuilder mb;
           mb.input("a", DType::kI8, {bt, m, k});
           mb.input("b", DType::kI8, tb ? Shape{bt, n, k} : Shape{bt, k, n});
-          auto mul = r.f32(var == 1 ? n : 1, -2.f, 2.f), add = r.f32(1, -5.f, 5.f);
+          // per-column mul / add (var 1; the int8 tile epilogue reads them padded to 8-column blocks)
+          auto mul = r.f32(var == 1 ? n : 1, -2.f, 2.f), add = r.f32(var == 1 ? n : 1, -5.f, 5.f);
           mb.constant("mul", DType::kF32, {static_cast<int64_t>(mul.size())}, mul.data());
-          mb.constant("add", DType::kF32, {1}, add.data());
+          mb.constant("add", DType::kF32, {static_cast<int64_t>(add.size())}, add.data());
           const double sa = 0.01, sb = 0.02;
           const int za = r.i(-20, 20), zb = r.i(-20, 20);
           // thresholds: a tie (deq of a code), above the grid (T = 128), below it (T = -128)
@@ -874,6 +876,10 @@ BF_TEST(int8_full_bmatmul_int8_operands_bit_exact_vs_reference) {
                                  {"a_zero", za}, {"a_threshold", ta}, {"b_scale", sb}, {"b_zero", zb}, {"b_threshold", tbv},
                                  {"c_ab", 1}, {"c_rs", var == 1 ? 3 : 0}, {"c_cs", var == 1 ? -2 : 0}, {"c0", var == 1 ? 5 : 0}};
           if (var == 2) at["output"] = "f32";
+          if (var == 0) {  // clamped int8 output
+            at["qmin"] = -60;
+            at["qmax"] = 90;
+          }
           mb.node("I8BMatMul", {"a", "b", "mul", "add"}, {"y"}, at);
           mb.output("y");
           compare_stages(mb, {r.i8(bt * m * k), r.i8(bt * k * n)}, "I8BMatMul", "i8bmatmul.neon");
@@ -1108,6 +1114,10 @@ std::vector<uint8_t> run_model_all(const bftest::ModelBuilder& mb, const std::st
   return out;
 }
 
+#if BF_NEON_A32
+int g_a32_res_neon = 0;  // AArch32: compare_all runs that selected i8bconv2dres.neon
+#endif
+
 void compare_all(const bftest::ModelBuilder& mb, const std::vector<std::vector<uint8_t>>& in, const std::string& what,
                  const std::string& neon_kernel) {
   auto ref = run_model_all(mb, kRef, 1, in);
@@ -1119,8 +1129,65 @@ void compare_all(const bftest::ModelBuilder& mb, const std::vector<std::vector<u
     bool found = neon_kernel.empty();
     for (const auto& kv : ks) found = found || kv.second == neon_kernel;
     if (!found) throw bftest::Failure{"expected kernel " + neon_kernel + " for " + what};
+#elif BF_NEON_A32
+    // AArch32: I8BConv2DRes runs the NEON epilogue when no value can be denormal (int8_full::res_epilogue_normal; the
+    // configurations with tiny scales or gt thresholds 0 stay on the portable kernel): counted, see a32_res_neon_runs
+    for (const auto& kv : ks) g_a32_res_neon += kv.second == neon_kernel && neon_kernel == "i8bconv2dres.neon";
 #endif
   }
+}
+
+// FtzBound (int8_full.h, 2026-11-13): the proof that no fp32 value of an epilogue chain is denormal, which lets the
+// AArch32 (flush-to-zero) NEON epilogues of I8BConv2DRes / I8Conv2D l8 run. Checked against brute force on small
+// cases: every value the bound admits is 0 or normal, and the bound rejects chains that do reach a denormal.
+BF_TEST(int8_full_ftz_bound) {
+  using int8_full::FtzBound;
+  const double kMin = FtzBound::kMinNormal;
+  // integer * c + d over |acc| <= 4096: every value 0 or normal whenever ok
+  Rng r(77);
+  int accepted = 0, rejected = 0;
+  for (int t = 0; t < 400; ++t) {
+    const float c = std::ldexp(r.f(1.f, 2.f), r.i(-140, -90)) * (r.i(0, 1) ? 1.f : -1.f);
+    const float d = t % 3 == 0 ? 0.f : std::ldexp(r.f(1.f, 2.f), r.i(-140, -90));
+    const float s = std::ldexp(r.f(0.1f, 1.f), r.i(-30, 0));
+    FtzBound b;
+    b.mul_const(&c, 1);
+    b.add_const(&d, 1);
+    b.prelu(&s, 1);
+    bool any_denormal = false;
+#if defined(__clang__)
+#pragma clang loop vectorize(disable)  // IEEE scalar arithmetic (AArch32 NEON would flush the denormals it looks for)
+#endif
+    for (int acc = -4096; acc <= 4096; ++acc) {
+      float v = static_cast<float>(acc) * c;
+      any_denormal = any_denormal || (v != 0.f && std::fabs(v) < kMin);
+      v = v + d;
+      any_denormal = any_denormal || (v != 0.f && std::fabs(v) < kMin);
+      if (v < 0.f) v = v * s;
+      any_denormal = any_denormal || (v != 0.f && std::fabs(v) < kMin);
+    }
+    if (b.ok) {
+      ++accepted;
+      if (any_denormal) throw bftest::Failure{"FtzBound accepted a chain with a denormal value (t " + std::to_string(t) + ")"};
+    } else {
+      ++rejected;
+    }
+  }
+  if (accepted == 0 || rejected == 0) throw bftest::Failure{"FtzBound test cases not mixed"};
+  // explicit rejections: denormal constant, product below 2^-126, sum granularity below 2^-126
+  FtzBound a;
+  const float den = 1e-39f, tiny = 1e-20f, g = std::ldexp(1.f, -110);
+  a.mul_const(&den, 1);
+  if (a.ok) throw bftest::Failure{"FtzBound: denormal constant accepted"};
+  FtzBound b;
+  b.mul_const(&tiny, 1);
+  b.mul_const(&tiny, 1);
+  if (b.ok) throw bftest::Failure{"FtzBound: 1e-40 product accepted"};
+  FtzBound c;
+  c.mul_const(&g, 1);  // L = 2^-110, G = 2^-133: a sum with another value can cancel to a denormal
+  FtzBound one;
+  c.add(one);
+  if (c.ok) throw bftest::Failure{"FtzBound: sum granularity 2^-133 accepted"};
 }
 
 struct ResCfg {
@@ -1237,6 +1304,16 @@ std::vector<uint8_t> res_codes(Rng& r, int64_t n) {
 }
 
 BF_TEST(int8_full_bconv_res_bit_exact_vs_reference) {
+#if BF_NEON_A32
+  const int a32_before = g_a32_res_neon;
+  struct A32Check {  // most configurations must take the AArch32 NEON epilogue
+    const int& before;
+    ~A32Check() noexcept(false) {
+      if (!std::uncaught_exceptions() && g_a32_res_neon - before < 20)
+        throw bftest::Failure{"AArch32: only " + std::to_string(g_a32_res_neon - before) + " I8BConv2DRes runs on i8bconv2dres.neon"};
+    }
+  } a32_check{a32_before};
+#endif
   Rng r(4242);
   struct G { int64_t n, h, w, ic, oc, k, s, pad_value; };
   int idx = 0;

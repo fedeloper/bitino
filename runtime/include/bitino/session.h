@@ -137,7 +137,7 @@ class Session {
   size_t activation_bytes_ = 0;
   size_t released_bytes_ = 0;
   int absorbed_luts_ = 0;
-  std::vector<int> i8_rewrites_ = std::vector<int>(6, 0);
+  std::vector<int> i8_rewrites_ = std::vector<int>(8, 0);
   int fused_nodes_ = 0, absorbed_nodes_ = 0, folded_thresholds_ = 0, aliased_reshapes_ = 0, hosted_epilogues_ = 0, bit_outputs_ = 0;
   int shared_binarizations_ = 0;
 };

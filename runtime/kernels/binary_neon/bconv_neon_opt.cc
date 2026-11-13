@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "bitino/cpu_features.h"
 #include "kernels/bconv_plan.h"
 #include "kernels/float_opt/eltwise_program.h"
 #include "kernels/neon_a32.h"
@@ -315,6 +316,12 @@ inline bool opts_dot2_off() {
   return e && std::string(e) == "0";
 }
 
+// BITINO_BCONV_T48=0 keeps the 4x4 tile in the fp32 two-phase BConv2D (tests and A/B; see popcount_4x8_u16).
+inline bool opts_t48_off() {
+  const char* e = std::getenv("BITINO_BCONV_T48");
+  return e && std::string(e) == "0";
+}
+
 // ---- uint16 popcount tiles (I8BConv2DRes two-phase epilogue, compute_res2). The sums of a tile row fit uint16
 // (K <= 32767 bits). Per tile row the 4 accumulators fold into [c0 c0' c1 c1' c2 c2' c3 c3'] (two partial sums
 // per channel), two rows then into [row r: c0..c3 | row r+1: c0..c3] with one more ADDP.
@@ -367,6 +374,59 @@ inline __attribute__((always_inline)) void popcount_8x4_u16(const uint8_t* a0, c
   out[2] = vuzp1q_u16(t[2], t[3]);
   out[3] = vuzp2q_u16(t[2], t[3]);
 }
+
+#if defined(__aarch64__)
+// Pair mode, 8 pixels (4 pair rows) x 4 channels with uint16 accumulators (fp32 two-phase BConv2D): per step 16 EOR +
+// 16 CNT, per pair row two levels of ADDP (bytes [c0 e x2 | c0 o x2 | c1 e x2 | ... | c3 o x2]) and one UADALP into
+// t[k] = [c0 even, c0 odd, c1 even, ..., c3 odd] (reduce4_pair_n's format): the instruction count of run_4x4 without
+// the uint8 runs to fold, scheduled as popcount_4x8_u16 (all EORs, all CNTs, then the ADDP levels; the next step's
+// rows are loaded after the CNTs, its weights after the first ADDPs; the last step loads nothing). Temporaries
+// v0-v15, rows v16-v19, weights v20-v23; the accumulators get registers above v23.
+#define BF_P84_STEP(LA0, LA1, LA2, LA3, LW)                                                                 \
+  "eor v0.16b, v16.16b, v20.16b\n eor v1.16b, v16.16b, v21.16b\n eor v2.16b, v16.16b, v22.16b\n"          \
+  "eor v3.16b, v16.16b, v23.16b\n eor v4.16b, v17.16b, v20.16b\n eor v5.16b, v17.16b, v21.16b\n"          \
+  "eor v6.16b, v17.16b, v22.16b\n eor v7.16b, v17.16b, v23.16b\n eor v8.16b, v18.16b, v20.16b\n"          \
+  "eor v9.16b, v18.16b, v21.16b\n eor v10.16b, v18.16b, v22.16b\n eor v11.16b, v18.16b, v23.16b\n"        \
+  "eor v12.16b, v19.16b, v20.16b\n eor v13.16b, v19.16b, v21.16b\n eor v14.16b, v19.16b, v22.16b\n"       \
+  "eor v15.16b, v19.16b, v23.16b\n"                                                                        \
+  "cnt v0.16b, v0.16b\n cnt v1.16b, v1.16b\n cnt v2.16b, v2.16b\n cnt v3.16b, v3.16b\n" LA0                 \
+  "cnt v4.16b, v4.16b\n cnt v5.16b, v5.16b\n cnt v6.16b, v6.16b\n cnt v7.16b, v7.16b\n" LA1                 \
+  "cnt v8.16b, v8.16b\n cnt v9.16b, v9.16b\n cnt v10.16b, v10.16b\n cnt v11.16b, v11.16b\n" LA2             \
+  "cnt v12.16b, v12.16b\n cnt v13.16b, v13.16b\n cnt v14.16b, v14.16b\n cnt v15.16b, v15.16b\n" LA3         \
+  "addp v0.16b, v0.16b, v1.16b\n addp v2.16b, v2.16b, v3.16b\n addp v4.16b, v4.16b, v5.16b\n"             \
+  "addp v6.16b, v6.16b, v7.16b\n" LW                                                                       \
+  "addp v8.16b, v8.16b, v9.16b\n addp v10.16b, v10.16b, v11.16b\n addp v12.16b, v12.16b, v13.16b\n"       \
+  "addp v14.16b, v14.16b, v15.16b\n"                                                                       \
+  "addp v0.16b, v0.16b, v2.16b\n addp v4.16b, v4.16b, v6.16b\n addp v8.16b, v8.16b, v10.16b\n"            \
+  "addp v12.16b, v12.16b, v14.16b\n"                                                                       \
+  "uadalp %[t0].8h, v0.16b\n uadalp %[t1].8h, v4.16b\n uadalp %[t2].8h, v8.16b\n uadalp %[t3].8h, v12.16b\n"
+
+inline __attribute__((always_inline)) void popcount_8x4_pair_u16(const uint8_t* a0, const uint8_t* a1, const uint8_t* a2,
+                                                                 const uint8_t* a3, const uint8_t* b, int64_t steps, uint16x8_t t[4]) {
+  uint16x8_t t0, t1, t2, t3;
+  int64_t n = steps - 1;
+  asm volatile(
+      "movi %[t0].8h, #0\n movi %[t1].8h, #0\n movi %[t2].8h, #0\n movi %[t3].8h, #0\n"
+      "ldr q16, [%[a0]], #16\n ldr q17, [%[a1]], #16\n ldr q18, [%[a2]], #16\n ldr q19, [%[a3]], #16\n"
+      "ldp q20, q21, [%[b]]\n ldp q22, q23, [%[b], #32]\n add %[b], %[b], #64\n"
+      "cbz %[n], 2f\n"
+      "1:\n" BF_P84_STEP("ldr q16, [%[a0]], #16\n", "ldr q17, [%[a1]], #16\n", "ldr q18, [%[a2]], #16\n", "ldr q19, [%[a3]], #16\n",
+                         "ldp q20, q21, [%[b]]\n ldp q22, q23, [%[b], #32]\n add %[b], %[b], #64\n")
+      "subs %[n], %[n], #1\n"
+      "b.ne 1b\n"
+      "2:\n" BF_P84_STEP("", "", "", "", "")
+      : [a0] "+r"(a0), [a1] "+r"(a1), [a2] "+r"(a2), [a3] "+r"(a3), [b] "+r"(b), [n] "+r"(n), [t0] "=&w"(t0), [t1] "=&w"(t1),
+        [t2] "=&w"(t2), [t3] "=&w"(t3)
+      :
+      : "cc", "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15",
+        "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23");
+  t[0] = t0;
+  t[1] = t1;
+  t[2] = t2;
+  t[3] = t3;
+}
+#undef BF_P84_STEP
+#endif
 
 // Single-row variant (BDense with one input row; kAnd: QBDense / QBConv2D rows).
 template <bool kAnd = false>
@@ -589,8 +649,11 @@ struct I8Res {
   }
 };
 
-// int8 sign_zero row -> nz / neg planes (words of 32 codes; int16 compares, so T = 128 needs no care)
-void pack_ternary_row_i8(const int8_t* q, int64_t k, const int32_t* tge, const int32_t* tgt, bool pc, uint32_t* nz, uint32_t* neg) {
+// int8 sign_zero row -> nz / neg planes (words of 32 codes; int16 compares, so T = 128 needs no care); kPc: per-channel
+// thresholds (a compile-time flag since 2026-11-13: the runtime test per 8 codes cost ~2x)
+template <bool kPc>
+void pack_ternary_row_i8_t(const int8_t* q, int64_t k, const int32_t* tge, const int32_t* tgt, uint32_t* nz, uint32_t* neg) {
+  constexpr bool pc = kPc;
   static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
   const uint8x16_t bw = vld1q_u8(kW);
   const int16x8_t sge = vdupq_n_s16(static_cast<int16_t>(tge[0])), sgt = vdupq_n_s16(static_cast<int16_t>(tgt[0]));
@@ -628,11 +691,61 @@ void pack_ternary_row_i8(const int8_t* q, int64_t k, const int32_t* tge, const i
     neg[w] = bs;
   }
 }
+// One pair of thresholds, both in int8 range (the usual case): the compares in int8 lanes (16 codes per CMGT / CMGE).
+void pack_ternary_row_i8_s8(const int8_t* q, int64_t k, int8_t tge, int8_t tgt, uint32_t* nz, uint32_t* neg) {
+  static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+  const uint8x16_t bw = vld1q_u8(kW);
+  const int8x16_t vge = vdupq_n_s8(tge), vgt = vdupq_n_s8(tgt);
+  int64_t w = 0;
+  for (; 32 * w + 32 <= k; ++w) {
+    const int8x16_t v0 = vld1q_s8(q + 32 * w), v1 = vld1q_s8(q + 32 * w + 16);
+    const uint8x16_t n0 = vcltq_s8(v0, vge), n1 = vcltq_s8(v1, vge);
+    const uint8x16_t z0 = vandq_u8(vorrq_u8(n0, vcgeq_s8(v0, vgt)), bw), z1 = vandq_u8(vorrq_u8(n1, vcgeq_s8(v1, vgt)), bw);
+    uint8x16_t r = vpaddq_u8(vpaddq_u8(z0, z1), vpaddq_u8(vandq_u8(n0, bw), vandq_u8(n1, bw)));
+    r = vpaddq_u8(r, r);  // u32 lanes: nz word, neg word
+    nz[w] = vgetq_lane_u32(vreinterpretq_u32_u8(r), 0);
+    neg[w] = vgetq_lane_u32(vreinterpretq_u32_u8(r), 1);
+  }
+  if (32 * w < k) {
+    uint32_t bn = 0, bs = 0;
+    for (int64_t b = 0; 32 * w + b < k; ++b) {
+      const int qv = q[32 * w + b];
+      const bool ng = qv < tge, ps = qv >= tgt;
+      bn |= uint32_t(ng || ps) << b;
+      bs |= uint32_t(ng) << b;
+    }
+    nz[w] = bn;
+    neg[w] = bs;
+  }
+}
+void pack_ternary_row_i8(const int8_t* q, int64_t k, const int32_t* tge, const int32_t* tgt, bool pc, uint32_t* nz, uint32_t* neg) {
+  if (pc) pack_ternary_row_i8_t<true>(q, k, tge, tgt, nz, neg);
+  else if (tge[0] <= 127 && tgt[0] <= 127) pack_ternary_row_i8_s8(q, k, static_cast<int8_t>(tge[0]), static_cast<int8_t>(tgt[0]), nz, neg);
+  else pack_ternary_row_i8_t<false>(q, k, tge, tgt, nz, neg);
+}
 
 // Phase 1 of the two-phase epilogues (BConv2DNeonOpt compute_res2 / compute_dot2, BDenseNeon tile2): int16
 // dot = K - 2 popcount of the tile rows [0, np) (pixels or Dense rows; pair rows in pair mode) and the channels
 // [u, u + nu) (nu <= 16; weight blocks of 4 interleaved as [block][step][4][16 bytes]) into db[row][16].
-template <bool kPair>
+// kLce (fp32 BConv2D, AArch64): pair rows on popcount_8x4_pair_u16 (same sums).
+template <bool kLce>
+inline __attribute__((always_inline)) void popcount_8x4_u16_sel(const uint8_t* a0, const uint8_t* a1, const uint8_t* a2,
+                                                                const uint8_t* a3, const uint8_t* b, int64_t steps, uint16x8_t out[4]) {
+#if defined(__aarch64__)
+  if constexpr (kLce) {
+    uint16x8_t t[4];
+    popcount_8x4_pair_u16(a0, a1, a2, a3, b, steps, t);
+    out[0] = vuzp1q_u16(t[0], t[1]);
+    out[1] = vuzp2q_u16(t[0], t[1]);
+    out[2] = vuzp1q_u16(t[2], t[3]);
+    out[3] = vuzp2q_u16(t[2], t[3]);
+    return;
+  }
+#endif
+  popcount_8x4_u16(a0, a1, a2, a3, b, steps, out);
+}
+
+template <bool kPair, bool kLce = false>
 inline __attribute__((always_inline)) void dots_unit_rows(const uint8_t* wts, const uint8_t* base, int64_t steps_, int32_t k_bits,
                                                           int64_t np, int64_t u, int64_t nu, int16_t* db) {
   constexpr int kTp = kPair ? 8 : 4;
@@ -647,7 +760,7 @@ inline __attribute__((always_inline)) void dots_unit_rows(const uint8_t* wts, co
     for (; i + kTp <= np; i += kTp, a += 4 * rb) {
       if constexpr (kPair) {
         uint16x8_t t[4];
-        popcount_8x4_u16(a, a + rb, a + 2 * rb, a + 3 * rb, b, steps_, t);
+        popcount_8x4_u16_sel<kLce>(a, a + rb, a + 2 * rb, a + 3 * rb, b, steps_, t);
         int16_t* d = dc + i * 16;
         for (int k = 0; k < 4; ++k) {  // t[k]: pixels (4 (k / 2) + k % 2, + 2)
           const int16x8_t v = vmlsq_n_s16(kb, vreinterpretq_s16_u16(t[k]), 2);
@@ -672,7 +785,7 @@ inline __attribute__((always_inline)) void dots_unit_rows(const uint8_t* wts, co
         const uint8_t* ar[4];
         for (int r = 0; r < 4; ++r) ar[r] = base + std::min(r0 + r, last_row) * rb;
         uint16x8_t t[4];
-        popcount_8x4_u16(ar[0], ar[1], ar[2], ar[3], b, steps_, t);
+        popcount_8x4_u16_sel<kLce>(ar[0], ar[1], ar[2], ar[3], b, steps_, t);
         alignas(16) int16_t tmp[8][4];
         for (int k = 0; k < 4; ++k) {
           const int16x8_t v = vmlsq_n_s16(kb, vreinterpretq_s16_u16(t[k]), 2);
@@ -691,6 +804,134 @@ inline __attribute__((always_inline)) void dots_unit_rows(const uint8_t* wts, co
     }
   }
 }
+
+#if defined(__aarch64__)
+// ---- 4 rows x 8 channels tile with uint16 accumulators (fp32 two-phase BConv2D, rows padded to 128 bits). Per
+// 128-bit step: 32 EOR + 32 CNT, the 32 byte vectors of a row summed by three levels of ADDP (row r: channels 0-7 as
+// [w0 x2 | w1 x2 | ... | w7 x2] bytes) and one UADALP per row into uint16 [ch 0..7]: 96 vector instructions per
+// 32 (row, channel) pairs, like the 4x4 tile's EOR / CNT / ADD, but 12 instead of 16 register loads, no uint8 runs
+// to fold (the uint16 lanes hold sums up to K <= 32767 bits) and a schedule that keeps the Cortex-A75's two NEON
+// pipes busier (A75 2.47 vs 2.67 cycles per (row, channel, 128 bits), X3 0.766 vs 0.750: ledger float_opt.md
+// round 3). Weights interleaved by 8 channels: [block][step][8][16 bytes] (interleave_rows8). Software pipelined:
+// the next step's rows are loaded once the EORs of this one are issued, its weights after their last use; the last
+// step loads nothing (no read past the rows or the weight block). Temporaries v0-v15, rows v16-v19, weights
+// v20-v27 (reused as temporaries in the second half); the accumulators get v28-v31.
+#define BF_T48_HALF1                                                                                       \
+  "eor v0.16b, v16.16b, v20.16b\n eor v1.16b, v17.16b, v20.16b\n eor v2.16b, v18.16b, v20.16b\n"        \
+  "eor v3.16b, v19.16b, v20.16b\n eor v4.16b, v16.16b, v21.16b\n eor v5.16b, v17.16b, v21.16b\n"        \
+  "eor v6.16b, v18.16b, v21.16b\n eor v7.16b, v19.16b, v21.16b\n eor v8.16b, v16.16b, v22.16b\n"        \
+  "eor v9.16b, v17.16b, v22.16b\n eor v10.16b, v18.16b, v22.16b\n eor v11.16b, v19.16b, v22.16b\n"      \
+  "eor v12.16b, v16.16b, v23.16b\n eor v13.16b, v17.16b, v23.16b\n eor v14.16b, v18.16b, v23.16b\n"     \
+  "eor v15.16b, v19.16b, v23.16b\n"                                                                      \
+  "cnt v0.16b, v0.16b\n cnt v1.16b, v1.16b\n cnt v2.16b, v2.16b\n cnt v3.16b, v3.16b\n"                  \
+  "cnt v4.16b, v4.16b\n cnt v5.16b, v5.16b\n cnt v6.16b, v6.16b\n cnt v7.16b, v7.16b\n"                  \
+  "cnt v8.16b, v8.16b\n cnt v9.16b, v9.16b\n cnt v10.16b, v10.16b\n cnt v11.16b, v11.16b\n"              \
+  "cnt v12.16b, v12.16b\n cnt v13.16b, v13.16b\n cnt v14.16b, v14.16b\n cnt v15.16b, v15.16b\n"          \
+  "addp v0.16b, v0.16b, v4.16b\n addp v1.16b, v1.16b, v5.16b\n addp v2.16b, v2.16b, v6.16b\n"           \
+  "addp v3.16b, v3.16b, v7.16b\n addp v8.16b, v8.16b, v12.16b\n addp v9.16b, v9.16b, v13.16b\n"         \
+  "addp v10.16b, v10.16b, v14.16b\n addp v11.16b, v11.16b, v15.16b\n"                                    \
+  "eor v4.16b, v16.16b, v24.16b\n eor v5.16b, v17.16b, v24.16b\n eor v6.16b, v18.16b, v24.16b\n"        \
+  "eor v7.16b, v19.16b, v24.16b\n eor v12.16b, v16.16b, v25.16b\n eor v13.16b, v17.16b, v25.16b\n"      \
+  "eor v14.16b, v18.16b, v25.16b\n eor v15.16b, v19.16b, v25.16b\n eor v20.16b, v16.16b, v26.16b\n"     \
+  "eor v21.16b, v17.16b, v26.16b\n eor v22.16b, v18.16b, v26.16b\n eor v23.16b, v19.16b, v26.16b\n"     \
+  "eor v24.16b, v16.16b, v27.16b\n eor v25.16b, v17.16b, v27.16b\n eor v26.16b, v18.16b, v27.16b\n"     \
+  "eor v27.16b, v19.16b, v27.16b\n"
+#define BF_T48_HALF2(LA0, LA1, LA2, LA3, LW0, LW1, LW2, LW3)                                               \
+  "cnt v4.16b, v4.16b\n cnt v5.16b, v5.16b\n cnt v6.16b, v6.16b\n cnt v7.16b, v7.16b\n" LA0               \
+  "cnt v12.16b, v12.16b\n cnt v13.16b, v13.16b\n cnt v14.16b, v14.16b\n cnt v15.16b, v15.16b\n" LA1       \
+  "cnt v20.16b, v20.16b\n cnt v21.16b, v21.16b\n cnt v22.16b, v22.16b\n cnt v23.16b, v23.16b\n" LA2       \
+  "cnt v24.16b, v24.16b\n cnt v25.16b, v25.16b\n cnt v26.16b, v26.16b\n cnt v27.16b, v27.16b\n" LA3       \
+  "addp v4.16b, v4.16b, v12.16b\n addp v5.16b, v5.16b, v13.16b\n addp v6.16b, v6.16b, v14.16b\n"        \
+  "addp v7.16b, v7.16b, v15.16b\n addp v12.16b, v20.16b, v24.16b\n addp v13.16b, v21.16b, v25.16b\n"    \
+  "addp v14.16b, v22.16b, v26.16b\n addp v15.16b, v23.16b, v27.16b\n" LW0                                \
+  "addp v0.16b, v0.16b, v8.16b\n addp v1.16b, v1.16b, v9.16b\n" LW1                                      \
+  "addp v2.16b, v2.16b, v10.16b\n addp v3.16b, v3.16b, v11.16b\n" LW2                                    \
+  "addp v4.16b, v4.16b, v12.16b\n addp v5.16b, v5.16b, v13.16b\n" LW3                                    \
+  "addp v6.16b, v6.16b, v14.16b\n addp v7.16b, v7.16b, v15.16b\n"                                        \
+  "addp v0.16b, v0.16b, v4.16b\n addp v1.16b, v1.16b, v5.16b\n addp v2.16b, v2.16b, v6.16b\n"           \
+  "addp v3.16b, v3.16b, v7.16b\n"                                                                        \
+  "uadalp %[c0].8h, v0.16b\n uadalp %[c1].8h, v1.16b\n uadalp %[c2].8h, v2.16b\n uadalp %[c3].8h, v3.16b\n"
+
+// popcount(a_r XOR w_j) summed over `steps` (>= 1) 128-bit steps for rows a0..a3 and the 8 interleaved channels at
+// b: out[r] = channels 0-7 of row r (uint16).
+inline __attribute__((always_inline)) void popcount_4x8_u16(const uint8_t* a0, const uint8_t* a1, const uint8_t* a2, const uint8_t* a3,
+                                                            const uint8_t* b, int64_t steps, uint16x8_t out[4]) {
+  uint16x8_t c0, c1, c2, c3;
+  int64_t n = steps - 1;
+  asm volatile(
+      "movi %[c0].8h, #0\n movi %[c1].8h, #0\n movi %[c2].8h, #0\n movi %[c3].8h, #0\n"
+      "ldr q16, [%[a0]], #16\n ldr q17, [%[a1]], #16\n ldr q18, [%[a2]], #16\n ldr q19, [%[a3]], #16\n"
+      "ldp q20, q21, [%[b]]\n ldp q22, q23, [%[b], #32]\n ldp q24, q25, [%[b], #64]\n ldp q26, q27, [%[b], #96]\n"
+      "add %[b], %[b], #128\n"
+      "cbz %[n], 2f\n"
+      "1:\n" BF_T48_HALF1 BF_T48_HALF2("ldr q16, [%[a0]], #16\n", "ldr q17, [%[a1]], #16\n", "ldr q18, [%[a2]], #16\n",
+                                       "ldr q19, [%[a3]], #16\n", "ldp q20, q21, [%[b]]\n", "ldp q22, q23, [%[b], #32]\n",
+                                       "ldp q24, q25, [%[b], #64]\n", "ldp q26, q27, [%[b], #96]\n add %[b], %[b], #128\n")
+      "subs %[n], %[n], #1\n"
+      "b.ne 1b\n"
+      "2:\n" BF_T48_HALF1 BF_T48_HALF2("", "", "", "", "", "", "", "")
+      : [a0] "+r"(a0), [a1] "+r"(a1), [a2] "+r"(a2), [a3] "+r"(a3), [b] "+r"(b), [n] "+r"(n), [c0] "=&w"(c0), [c1] "=&w"(c1),
+        [c2] "=&w"(c2), [c3] "=&w"(c3)
+      :
+      : "cc", "memory", "v0", "v1", "v2", "v3", "v4", "v5", "v6", "v7", "v8", "v9", "v10", "v11", "v12", "v13", "v14", "v15",
+        "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27");
+  out[0] = c0;
+  out[1] = c1;
+  out[2] = c2;
+  out[3] = c3;
+}
+#undef BF_T48_HALF1
+#undef BF_T48_HALF2
+
+// One row x 8 channels of the same layout (the 1-3 rows after the last 4-row tile): channels 0-7 (uint16).
+inline uint16x8_t popcount_1x8_u16(const uint8_t* a, const uint8_t* b, int64_t steps) {
+  uint16x8_t acc = vdupq_n_u16(0);
+  for (int64_t s = 0; s < steps; ++s, a += 16, b += 128) {
+    const uint8x16_t x = vld1q_u8(a);
+    const uint8x16x4_t w0 = vld1q_u8_x4(b), w1 = vld1q_u8_x4(b + 64);
+    const uint8x16_t p0 = vpaddq_u8(vcntq_u8(veorq_u8(x, w0.val[0])), vcntq_u8(veorq_u8(x, w0.val[1])));
+    const uint8x16_t p1 = vpaddq_u8(vcntq_u8(veorq_u8(x, w0.val[2])), vcntq_u8(veorq_u8(x, w0.val[3])));
+    const uint8x16_t p2 = vpaddq_u8(vcntq_u8(veorq_u8(x, w1.val[0])), vcntq_u8(veorq_u8(x, w1.val[1])));
+    const uint8x16_t p3 = vpaddq_u8(vcntq_u8(veorq_u8(x, w1.val[2])), vcntq_u8(veorq_u8(x, w1.val[3])));
+    acc = vpadalq_u8(acc, vpaddq_u8(vpaddq_u8(p0, p1), vpaddq_u8(p2, p3)));
+  }
+  return acc;
+}
+
+// Interleaves weight rows [rows][row_words] (zero-padded to a multiple of 8 rows and to kwp words) into
+// [rows/8][kwp/4 steps][8 rows][4 words] (popcount_4x8_u16).
+void interleave_rows8(const uint32_t* src, int64_t rows, int64_t row_words, int64_t kwp, uint32_t* dst) {
+  const int64_t blocks = (rows + 7) / 8, steps = kwp / 4;
+  for (int64_t b = 0; b < blocks; ++b)
+    for (int64_t s = 0; s < steps; ++s)
+      for (int j = 0; j < 8; ++j)
+        for (int q = 0; q < 4; ++q) {
+          const int64_t r = b * 8 + j, k = s * 4 + q;
+          dst[((b * steps + s) * 8 + j) * 4 + q] = (r < rows && k < row_words) ? src[r * row_words + k] : 0u;
+        }
+}
+
+// Phase 1 of compute_dot2 on the 4x8 tile (rows padded to 128 bits, nu a multiple of 8): int16 dot = K - 2 popcount
+// of the tile rows [0, np) and channels [u, u + nu) into db[row][16], as dots_unit_rows<false>. The 1-3 rows after
+// the last 4-row tile run one at a time (popcount_1x8_u16).
+inline void dots_unit_rows8(const uint8_t* wts8, const uint8_t* base, int64_t steps, int32_t k_bits, int64_t np, int64_t u, int64_t nu,
+                            int16_t* db) {
+  const int64_t rb = steps * 16;
+  const int16x8_t kb = vdupq_n_s16(static_cast<int16_t>(k_bits));
+  for (int64_t jb = 0; jb < nu; jb += 8) {
+    const uint8_t* b = wts8 + ((u + jb) / 8) * steps * 128;
+    int16_t* dc = db + jb;
+    int64_t i = 0;
+    for (const uint8_t* a = base; i + 4 <= np; i += 4, a += 4 * rb) {
+      uint16x8_t t[4];
+      popcount_4x8_u16(a, a + rb, a + 2 * rb, a + 3 * rb, b, steps, t);
+      for (int r = 0; r < 4; ++r) vst1q_s16(dc + (i + r) * 16, vmlsq_n_s16(kb, vreinterpretq_s16_u16(t[r]), 2));
+    }
+    for (; i < np; ++i)
+      vst1q_s16(dc + i * 16, vmlsq_n_s16(kb, vreinterpretq_s16_u16(popcount_1x8_u16(base + i * rb, b, steps)), 2));
+  }
+}
+#endif
 
 // Phase 2 of the plain two-phase epilogue (BConv2DNeonOpt compute_dot2, BDenseNeon tile2): rows [0, np) of db, 16
 // channels with the constants mul[0..16), add[0..16): v = act(fp32(dot) * mul + add), stored as int8 (FCVTNS,
@@ -799,6 +1040,19 @@ class BConv2DNeonOpt : public Kernel {
     // fp32 output with a chain epilogue: the epilogue runs on each 16-channel unit in registers (EltwiseProgram::store_unit16)
     unit16_ = dot2_ && !i8_out_.on && epi_.active() && g_.oc % 16 == 0 && epi_.unit16();
     if (res2_ || dot2_) dots_ = aligned_alloc_shared(static_cast<size_t>(n_tasks_ * mt_ * 16 * 2));
+#if defined(__aarch64__)
+    // fp32 two-phase output, rows of whole 128-bit steps: the 4x8 tile (dots_unit_rows8), weights by 8 channels
+    // (same size: oc_pad_ == oc). BITINO_BCONV_T48=0 keeps the 4x4 tile (tests and A/B).
+    t48_ = dot2_ && !i8_out_.on && !pair_ && g_.groups == 1 && g_.oc % 8 == 0 && !opts_t48_off();
+    // Pair mode: popcount_8x4_pair_u16 on the same weights, on a Cortex-A75 prime core only (A75 -5..-8 %, X3 +2..4 %
+    // per layer: the X3's four NEON pipes run run_4x4's interleaved form faster; ledger float_opt.md round 3).
+    // BITINO_BCONV_T48=0 also keeps run_4x4 there.
+    p84_ = dot2_ && !i8_out_.on && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();
+    if (t48_) {
+      wbuf_ = aligned_alloc_shared(static_cast<size_t>(oc_pad_ * steps_ * 16));
+      interleave_rows8(padded.data(), oc_pad_, k_words_, kwp_, static_cast<uint32_t*>(wbuf_.get()));
+    }
+#endif
   }
   size_t prepacked_bytes() const override { return static_cast<size_t>(oc_pad_ * steps_ * 16 + tap_sum_.size() * 4); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
@@ -1013,7 +1267,9 @@ class BConv2DNeonOpt : public Kernel {
     }
   }
 
-  void run_task(const KernelContext& ctx, const uint32_t* xb, int64_t task) {
+  // 64-byte aligned: the compiled tile loops inlined here (grouped / int8 / bit-output paths) are sensitive to their
+  // placement (larqface-binaryfacenet's depthwise layers +2-3 % on the X3 when this function moved by 56 bytes mod 64)
+  __attribute__((aligned(64))) void run_task(const KernelContext& ctx, const uint32_t* xb, int64_t task) {
     const int64_t nch = static_cast<int64_t>(chunks_.size());
     const int64_t i0 = task * items_ / n_tasks_, i1 = (task + 1) * items_ / n_tasks_;
     uint32_t* rows = static_cast<uint32_t*>(patches_.get()) + task * slot_words_;
@@ -1128,6 +1384,13 @@ class BConv2DNeonOpt : public Kernel {
 
   template <bool kPair>
   inline __attribute__((always_inline)) void dots_unit(const uint32_t* rows, int64_t np, int64_t u, int64_t nu, int16_t* db) const {
+#if defined(__aarch64__)
+    if (!kPair && t48_)
+      return dots_unit_rows8(static_cast<const uint8_t*>(wbuf_.get()), reinterpret_cast<const uint8_t*>(rows), steps_, k_bits_, np, u, nu, db);
+    if (kPair && p84_)
+      return dots_unit_rows<true, true>(static_cast<const uint8_t*>(wbuf_.get()), reinterpret_cast<const uint8_t*>(rows), steps_, k_bits_, np,
+                                        u, nu, db);
+#endif
     dots_unit_rows<kPair>(static_cast<const uint8_t*>(wbuf_.get()), reinterpret_cast<const uint8_t*>(rows), steps_, k_bits_, np, u, nu, db);
   }
 
@@ -1719,7 +1982,7 @@ class BConv2DNeonOpt : public Kernel {
   std::vector<Chunk> chunks_;
   std::shared_ptr<void> wbuf_, xbits_, patches_;
   std::shared_ptr<void> dots_;  // compute_res2: per task, mt_ x 16 int16 dot products
-  bool res2_ = false, dot2_ = false, unit16_ = false;
+  bool res2_ = false, dot2_ = false, unit16_ = false, t48_ = false, p84_ = false;
   std::shared_ptr<void> yf_;  // [pixels][oc] float output before binarization (bit output + epilogue)
   std::vector<int32_t> tap_sum_;
   std::vector<uint64_t> masks_;
@@ -1788,6 +2051,16 @@ class BDenseNeon : public Kernel {
     two_ = tiled_ && rt_ <= 256 && k_ <= 32767 && on_ >= 16 && !opts_dot2_off();
     // fp32 output with a chain epilogue: run on each 16-channel unit in registers (EltwiseProgram::store_unit16)
     unit16_ = two_ && !i8_out_.on && epi_.active() && on_ % 16 == 0 && epi_.unit16();
+#if defined(__aarch64__)
+    // fp32 two-phase rows of whole 128-bit steps, whole 16-channel units and no bit output: every output goes through
+    // tile2, so the weights are interleaved by 8 channels only (the 4x8 tile, dots_unit_rows8; as BConv2DNeonOpt).
+    t48_ = two_ && !i8_out_.on && !pair_ && !bout_.active && on_ % 16 == 0 && !opts_t48_off();
+    p84_ = two_ && !i8_out_.on && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();  // as BConv2DNeonOpt
+    if (t48_) {
+      wbuf_ = aligned_alloc_shared(static_cast<size_t>(on_pad_ * steps_ * 16));
+      interleave_rows8(ctx.in(1).data<uint32_t>(), on_, words_, kwp_, static_cast<uint32_t*>(wbuf_.get()));
+    }
+#endif
   }
   size_t prepacked_bytes() const override { return static_cast<size_t>(on_pad_ * steps_ * 16); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
@@ -1980,7 +2253,12 @@ class BDenseNeon : public Kernel {
     const auto* base = static_cast<const uint8_t*>(xbuf_.get()) + (kPair ? r0 / 2 : r0) * steps_ * 16;
     const int64_t np = r1 - r0, on16 = on_ / 16 * 16;
     for (int64_t u = 0; u < on16; u += 16) {
-      dots_unit_rows<kPair>(wts, base, steps_, static_cast<int32_t>(k_), np, u, 16, db);
+#if defined(__aarch64__)
+      if (!kPair && t48_) dots_unit_rows8(wts, base, steps_, static_cast<int32_t>(k_), np, u, 16, db);
+      else if (kPair && p84_) dots_unit_rows<true, true>(wts, base, steps_, static_cast<int32_t>(k_), np, u, 16, db);
+      else
+#endif
+        dots_unit_rows<kPair>(wts, base, steps_, static_cast<int32_t>(k_), np, u, 16, db);
       int8_t* y8 = nullptr;
       float* yf = nullptr;
       if constexpr (kI8) {
@@ -2102,7 +2380,7 @@ class BDenseNeon : public Kernel {
 
   Activation act_ = Activation::kNone;
   BinarizeMode mode_ = BinarizeMode::kGe;
-  bool tiled_ = false, pair_ = false, two_ = false, unit16_ = false;
+  bool tiled_ = false, pair_ = false, two_ = false, unit16_ = false, t48_ = false, p84_ = false;
   int64_t k_ = 0, on_ = 0, words_ = 0, kwp_ = 0, steps_ = 0, rows_ = 0, on_pad_ = 0, rt_ = 8, n_rt_ = 0;
   std::shared_ptr<void> wbuf_, xbuf_;
   std::shared_ptr<void> yf_;  // [rows][on] float output before binarization (bit output)
@@ -2319,9 +2597,22 @@ class BDenseTernaryNeon : public Kernel {
     kwp_ = (words_ + 3) / 4 * 4;
     rows_ = ctx.in(0).size() / k_;
     on_pad_ = (on_ + 3) / 4 * 4;
-    wneg_ = aligned_alloc_shared(static_cast<size_t>(on_pad_ * kwp_ * 4));
-    interleave_rows4(w.data<uint32_t>(), on_, words_, words_, kwp_, static_cast<uint32_t*>(wneg_.get()));
     has_wz_ = ctx.has_in(5);
+    i8_in_ = ctx.in(0).dtype() == DType::kI8;  // int8_full: thresholds in(4) = int32 [tge, tgt] (1 or k each)
+    i8_out_.parse(ctx);
+#if defined(__aarch64__)
+    // fp32 in / out, weights without zeros, 8-channel blocks: the weight signs interleaved by 8 channels (the 4x8
+    // tile's layout; same size). A 4-row tile whose rows have no zero input (popcount(nz) == K: x·w = K -
+    // 2 popcount(neg_x ^ neg_w), the binary dot product) runs popcount_4x8_u16; rows with zeros run one at a time
+    // (ternary_row8). BITINO_BCONV_T48=0 keeps the 4x4 tiles.
+    fast_ = !i8_in_ && !i8_out_.on && !has_wz_ && on_ % 8 == 0 && k_ <= 65535 && !opts_t48_off();
+#endif
+    wneg_ = aligned_alloc_shared(static_cast<size_t>(on_pad_ * kwp_ * 4));
+#if defined(__aarch64__)
+    if (fast_) interleave_rows8(w.data<uint32_t>(), on_, words_, kwp_, static_cast<uint32_t*>(wneg_.get()));
+    else
+#endif
+      interleave_rows4(w.data<uint32_t>(), on_, words_, words_, kwp_, static_cast<uint32_t*>(wneg_.get()));
     if (has_wz_) {
       // nz = NOT zero-mask on the k valid bits; padding bits stay 0.
       std::vector<uint32_t> nzw(static_cast<size_t>(on_ * words_));
@@ -2337,8 +2628,6 @@ class BDenseTernaryNeon : public Kernel {
     xnz_ = aligned_alloc_shared(static_cast<size_t>(rows_ * kwp_ * 4));  // padding words stay 0
     xneg_ = aligned_alloc_shared(static_cast<size_t>(rows_ * kwp_ * 4));
     pm_row_.assign(static_cast<size_t>(rows_), 0);
-    i8_in_ = ctx.in(0).dtype() == DType::kI8;  // int8_full: thresholds in(4) = int32 [tge, tgt] (1 or k each)
-    i8_out_.parse(ctx);
     mul_.assign(static_cast<size_t>(on_pad_), 1.f);
     add_.assign(static_cast<size_t>(on_pad_), -0.f);
   }
@@ -2375,6 +2664,22 @@ class BDenseTernaryNeon : public Kernel {
     const auto* ws = static_cast<const uint8_t*>(wneg_.get());
     const auto* wn = static_cast<const uint8_t*>(wnz_.get());
     void* y = ctx.out(0).raw();
+#if defined(__aarch64__)
+    if (fast_) {
+      const int64_t blocks8 = on_ / 8;
+      const int64_t grain8 = std::max<int64_t>(1, 8192 / std::max<int64_t>(1, 2 * steps * rows_));
+      ctx.pool->parallel_for(blocks8, grain8, [&](int64_t b0, int64_t b1) {
+        for (int64_t blk = b0; blk < b1; ++blk) {
+          switch (act_) {
+            case Activation::kNone: block8<Activation::kNone>(blk, ws, steps, static_cast<float*>(y)); break;
+            case Activation::kRelu: block8<Activation::kRelu>(blk, ws, steps, static_cast<float*>(y)); break;
+            case Activation::kRelu6: block8<Activation::kRelu6>(blk, ws, steps, static_cast<float*>(y)); break;
+          }
+        }
+      });
+      return;
+    }
+#endif
     const int64_t grain = std::max<int64_t>(1, 8192 / std::max<int64_t>(1, steps * rows_ * (has_wz_ ? 2 : 1)));
     ctx.pool->parallel_for(blocks, grain, [&](int64_t b0, int64_t b1) {
       if (i8_out_.on) {
@@ -2462,9 +2767,84 @@ class BDenseTernaryNeon : public Kernel {
     }
   }
 
+#if defined(__aarch64__)
+  // popcount(nz_x & (neg_x ^ neg_w)) of one row and 8 channels (fast_ layout): uint16 [ch 0..7]
+  static uint16x8_t ternary_row8(const uint8_t* n, const uint8_t* g, const uint8_t* b, int64_t steps) {
+    uint16x8_t acc = vdupq_n_u16(0);
+    for (int64_t s = 0; s < steps; ++s, n += 16, g += 16, b += 128) {
+      const uint8x16_t nz = vld1q_u8(n), ng = vld1q_u8(g);
+      const uint8x16x4_t w0 = vld1q_u8_x4(b), w1 = vld1q_u8_x4(b + 64);
+      auto pc = [&](uint8x16_t w) { return vcntq_u8(vandq_u8(nz, veorq_u8(ng, w))); };
+      const uint8x16_t p0 = vpaddq_u8(pc(w0.val[0]), pc(w0.val[1])), p1 = vpaddq_u8(pc(w0.val[2]), pc(w0.val[3]));
+      const uint8x16_t p2 = vpaddq_u8(pc(w1.val[0]), pc(w1.val[1])), p3 = vpaddq_u8(pc(w1.val[2]), pc(w1.val[3]));
+      acc = vpadalq_u8(acc, vpaddq_u8(vpaddq_u8(p0, p1), vpaddq_u8(p2, p3)));
+    }
+    return acc;
+  }
+  // The same for 4 rows (tiles with zero inputs), each step in two halves of 4 channels.
+  static void ternary_rows4x8(const uint8_t* const* n, const uint8_t* const* g, const uint8_t* b, int64_t steps, uint16x8_t out[4]) {
+    uint16x8_t acc[4] = {vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0), vdupq_n_u16(0)};
+    for (int64_t s = 0; s < steps; ++s, b += 128) {
+      uint8x16_t nz[4], ng[4], h[2][4];
+      for (int r = 0; r < 4; ++r) {
+        nz[r] = vld1q_u8(n[r] + 16 * s);
+        ng[r] = vld1q_u8(g[r] + 16 * s);
+      }
+      for (int hh = 0; hh < 2; ++hh) {
+        const uint8x16x4_t w = vld1q_u8_x4(b + 64 * hh);
+        for (int r = 0; r < 4; ++r) {
+          auto pc = [&](uint8x16_t wj) { return vcntq_u8(vandq_u8(nz[r], veorq_u8(ng[r], wj))); };
+          h[hh][r] = vpaddq_u8(vpaddq_u8(pc(w.val[0]), pc(w.val[1])), vpaddq_u8(pc(w.val[2]), pc(w.val[3])));
+        }
+      }
+      for (int r = 0; r < 4; ++r) acc[r] = vpadalq_u8(acc[r], vpaddq_u8(h[0][r], h[1][r]));
+    }
+    for (int r = 0; r < 4; ++r) out[r] = acc[r];
+  }
+  // Output channels [8 blk, 8 blk + 8) of every row (fast_): v = act(fp32(pm - 2 pd) * mul + add) as block().
+  template <Activation A>
+  void block8(int64_t blk, const uint8_t* ws, int64_t steps, float* y) const {
+    const int64_t o = blk * 8;
+    const uint8_t* b = ws + blk * steps * 128;
+    const float32x4_t mul0 = vld1q_f32(mul_.data() + o), mul1 = vld1q_f32(mul_.data() + o + 4);
+    const float32x4_t add0 = vld1q_f32(add_.data() + o), add1 = vld1q_f32(add_.data() + o + 4);
+    const auto* xa = static_cast<const uint8_t*>(xnz_.get());
+    const auto* xb = static_cast<const uint8_t*>(xneg_.get());
+    const int32_t* pmr = pm_row_.data();
+    const int64_t on = on_, rows = rows_, rb = kwp_ * 4, kfull = k_;
+    auto emit = [&](int64_t r, uint16x8_t pd) {
+      const int32x4_t pm = vdupq_n_s32(pmr[r]);
+      const int32x4_t d0 = vsubq_s32(pm, vshlq_n_s32(vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pd))), 1));
+      const int32x4_t d1 = vsubq_s32(pm, vshlq_n_s32(vreinterpretq_s32_u32(vmovl_high_u16(pd)), 1));
+      float* yp = y + r * on + o;
+      vst1q_f32(yp, activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d0), mul0), add0)));
+      vst1q_f32(yp + 4, activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d1), mul1), add1)));
+    };
+    auto row = [&](int64_t r) {
+      emit(r, pmr[r] == kfull ? popcount_1x8_u16(xb + r * rb, b, steps) : ternary_row8(xa + r * rb, xb + r * rb, b, steps));
+    };
+    int64_t r = 0;
+    for (; r + 4 <= rows; r += 4) {
+      if (pmr[r] == kfull && pmr[r + 1] == kfull && pmr[r + 2] == kfull && pmr[r + 3] == kfull) {
+        const uint8_t* a = xb + r * rb;
+        uint16x8_t t[4];
+        popcount_4x8_u16(a, a + rb, a + 2 * rb, a + 3 * rb, b, steps, t);
+        for (int i = 0; i < 4; ++i) emit(r + i, t[i]);
+      } else {
+        const uint8_t* n4[4] = {xa + r * rb, xa + (r + 1) * rb, xa + (r + 2) * rb, xa + (r + 3) * rb};
+        const uint8_t* g4[4] = {xb + r * rb, xb + (r + 1) * rb, xb + (r + 2) * rb, xb + (r + 3) * rb};
+        uint16x8_t t[4];
+        ternary_rows4x8(n4, g4, b, steps, t);
+        for (int i = 0; i < 4; ++i) emit(r + i, t[i]);
+      }
+    }
+    for (; r < rows; ++r) row(r);
+  }
+#endif
+
   Activation act_ = Activation::kNone;
   int64_t on_ = 0, k_ = 0, words_ = 0, kwp_ = 0, rows_ = 0, on_pad_ = 0;
-  bool has_wz_ = false, i8_in_ = false;
+  bool has_wz_ = false, i8_in_ = false, fast_ = false;
   I8Out i8_out_;
   std::shared_ptr<void> wneg_, wnz_, xnz_, xneg_;
   std::vector<int32_t> pm_row_;

@@ -35,6 +35,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "bitino/cpu_features.h"
 #include "kernels/float_opt/float_opt.h"
 #include "kernels/float_opt/float_opt_args.h"
 #include "kernels/float_opt/float_simd.h"
@@ -76,7 +77,7 @@ inline void rank1_lane(f32x4 (&acc)[MR][2], const f32x4 (&av)[MR], const float* 
 // valid row and are not stored; columns >= nvalid are computed on B's zero
 // padding and not stored. bias != nullptr: first K block (start from bias),
 // else accumulate onto C. last: apply the activation.
-template <int MR>
+template <int MR, bool kPipe = false>
 inline void micro_kernel(const float* a, int64_t lda, int mvalid, int64_t kc, const float* bp, float* c, int64_t ldc,
                          int nvalid, const float* bias, bool last, Activation act) {
   const float* ar[MR];
@@ -129,22 +130,63 @@ inline void micro_kernel(const float* a, int64_t lda, int mvalid, int64_t kc, co
   "fmla %[c50].4s, " BL ".4s, v21.s[" L "]\n fmla %[c51].4s, " BH ".4s, v21.s[" L "]\n"                   \
   "fmla %[c60].4s, " BL ".4s, v22.s[" L "]\n fmla %[c61].4s, " BH ".4s, v22.s[" L "]\n"                   \
   "fmla %[c70].4s, " BL ".4s, v23.s[" L "]\n fmla %[c71].4s, " BH ".4s, v23.s[" L "]\n"
+    if constexpr (!kPipe) {
+      asm volatile(
+          "1:\n"
+          "ldr q16, [%[ap]]\n ldr q17, [%[ap], %[o1]]\n ldr q18, [%[ap], %[o2]]\n ldr q19, [%[ap], %[o3]]\n"
+          "ldr q20, [%[ap], %[o4]]\n ldr q21, [%[ap], %[o5]]\n ldr q22, [%[ap], %[o6]]\n ldr q23, [%[ap], %[o7]]\n"
+          "ld1 {v24.4s, v25.4s, v26.4s, v27.4s}, [%[b]], #64\n"
+          "ld1 {v28.4s, v29.4s, v30.4s, v31.4s}, [%[b]], #64\n"
+          "add %[ap], %[ap], #16\n"
+          BF_FM("0", "v24", "v25") BF_FM("1", "v26", "v27") BF_FM("2", "v28", "v29") BF_FM("3", "v30", "v31")
+          "subs %[n], %[n], #1\n"
+          "b.ne 1b\n"
+          : [ap] "+r"(ap), [b] "+r"(b), [n] "+r"(n4), [c00] "+w"(c00), [c01] "+w"(c01), [c10] "+w"(c10), [c11] "+w"(c11),
+            [c20] "+w"(c20), [c21] "+w"(c21), [c30] "+w"(c30), [c31] "+w"(c31), [c40] "+w"(c40), [c41] "+w"(c41),
+            [c50] "+w"(c50), [c51] "+w"(c51), [c60] "+w"(c60), [c61] "+w"(c61), [c70] "+w"(c70), [c71] "+w"(c71)
+          : [o1] "r"(o1), [o2] "r"(o2), [o3] "r"(o3), [o4] "r"(o4), [o5] "r"(o5), [o6] "r"(o6), [o7] "r"(o7)
+          : "cc", "memory", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29",
+            "v30", "v31");
+    } else {
+    // kPipe: software pipelined (same FMLAs in the same order): the next 4 k's B pairs are loaded right after the
+    // group that last reads their registers, each A row right after its last FMLA, so the loads spread over the
+    // iteration; the last iteration loads nothing (no read past the K block). Cortex-A75: 1.35 -> 1.20 cycles per
+    // FMLA at kc = 147 (7x7 RGB stem), 1.12 -> 1.03 at kc = 28 (whole GEMMs -11..-14 %); the X3's 7x7 stem 1 %
+    // slower, so only on Cortex-A75 prime cores (gemm_block_simd4; ledger float_opt.md round 3).
+#define BF_FM3(R, BL, BH, AR, LD) "fmla %[" R "0].4s, " BL ".4s, " AR ".s[3]\n fmla %[" R "1].4s, " BH ".4s, " AR ".s[3]\n" LD
+#define BF_FM_LAST(LA0, LA1, LA2, LA3, LA4, LA5, LA6, LA7)                                              \
+  BF_FM3("c0", "v30", "v31", "v16", LA0) BF_FM3("c1", "v30", "v31", "v17", LA1)                          \
+  BF_FM3("c2", "v30", "v31", "v18", LA2) BF_FM3("c3", "v30", "v31", "v19", LA3)                          \
+  BF_FM3("c4", "v30", "v31", "v20", LA4) BF_FM3("c5", "v30", "v31", "v21", LA5)                          \
+  BF_FM3("c6", "v30", "v31", "v22", LA6) BF_FM3("c7", "v30", "v31", "v23", LA7)
     asm volatile(
-        "1:\n"
         "ldr q16, [%[ap]]\n ldr q17, [%[ap], %[o1]]\n ldr q18, [%[ap], %[o2]]\n ldr q19, [%[ap], %[o3]]\n"
         "ldr q20, [%[ap], %[o4]]\n ldr q21, [%[ap], %[o5]]\n ldr q22, [%[ap], %[o6]]\n ldr q23, [%[ap], %[o7]]\n"
-        "ld1 {v24.4s, v25.4s, v26.4s, v27.4s}, [%[b]], #64\n"
-        "ld1 {v28.4s, v29.4s, v30.4s, v31.4s}, [%[b]], #64\n"
-        "add %[ap], %[ap], #16\n"
-        BF_FM("0", "v24", "v25") BF_FM("1", "v26", "v27") BF_FM("2", "v28", "v29") BF_FM("3", "v30", "v31")
+        "ldp q24, q25, [%[b]]\n ldp q26, q27, [%[b], #32]\n ldp q28, q29, [%[b], #64]\n ldp q30, q31, [%[b], #96]\n"
+        "add %[ap], %[ap], #16\n add %[b], %[b], #128\n"
+        "subs %[n], %[n], #1\n"
+        "b.eq 2f\n"
+        "1:\n"
+        BF_FM("0", "v24", "v25") "ldp q24, q25, [%[b]]\n"
+        BF_FM("1", "v26", "v27") "ldp q26, q27, [%[b], #32]\n"
+        BF_FM("2", "v28", "v29") "ldp q28, q29, [%[b], #64]\n"
+        BF_FM_LAST("ldr q16, [%[ap]]\n", "ldr q17, [%[ap], %[o1]]\n", "ldr q18, [%[ap], %[o2]]\n", "ldr q19, [%[ap], %[o3]]\n",
+                   "ldr q20, [%[ap], %[o4]]\n", "ldr q21, [%[ap], %[o5]]\n", "ldr q22, [%[ap], %[o6]]\n", "ldr q23, [%[ap], %[o7]]\n")
+        "ldp q30, q31, [%[b], #96]\n"
+        "add %[ap], %[ap], #16\n add %[b], %[b], #128\n"
         "subs %[n], %[n], #1\n"
         "b.ne 1b\n"
+        "2:\n"
+        BF_FM("0", "v24", "v25") BF_FM("1", "v26", "v27") BF_FM("2", "v28", "v29") BF_FM_LAST("", "", "", "", "", "", "", "")
         : [ap] "+r"(ap), [b] "+r"(b), [n] "+r"(n4), [c00] "+w"(c00), [c01] "+w"(c01), [c10] "+w"(c10), [c11] "+w"(c11),
           [c20] "+w"(c20), [c21] "+w"(c21), [c30] "+w"(c30), [c31] "+w"(c31), [c40] "+w"(c40), [c41] "+w"(c41),
           [c50] "+w"(c50), [c51] "+w"(c51), [c60] "+w"(c60), [c61] "+w"(c61), [c70] "+w"(c70), [c71] "+w"(c71)
         : [o1] "r"(o1), [o2] "r"(o2), [o3] "r"(o3), [o4] "r"(o4), [o5] "r"(o5), [o6] "r"(o6), [o7] "r"(o7)
         : "cc", "memory", "v16", "v17", "v18", "v19", "v20", "v21", "v22", "v23", "v24", "v25", "v26", "v27", "v28", "v29",
           "v30", "v31");
+    }
+#undef BF_FM_LAST
+#undef BF_FM3
 #undef BF_FM
     acc[0][0] = c00, acc[0][1] = c01, acc[1][0] = c10, acc[1][1] = c11, acc[2][0] = c20, acc[2][1] = c21;
     acc[3][0] = c30, acc[3][1] = c31, acc[4][0] = c40, acc[4][1] = c41, acc[5][0] = c50, acc[5][1] = c51;
@@ -386,9 +428,9 @@ void gemm_block_simd4_n4(const GemmBlockArgs& g) {
   }
 }
 
-// One GEMM block on the Simd4 backend (GemmBlockArgs: float_opt_args.h).
-void gemm_block_simd4(const GemmBlockArgs& g) {
-  if (g.nr == 4) return gemm_block_simd4_n4(g);
+// One GEMM block on the Simd4 backend (GemmBlockArgs: float_opt_args.h), 8-column panels.
+template <bool kPipe>
+void gemm_block_simd4_t(const GemmBlockArgs& g) {
   const bool last = g.last != 0;
   const Activation act = static_cast<Activation>(g.act);
   for (int64_t p = g.p0; p < g.p1; ++p) {
@@ -399,14 +441,22 @@ void gemm_block_simd4(const GemmBlockArgs& g) {
     const int64_t rows = g.rows, lda = g.lda, ldc = g.ldc;
     int64_t m = 0;
     for (; m + kMR <= rows; m += kMR)
-      micro_kernel<kMR>(g.a + m * lda, lda, kMR, g.kc, bp, cp + m * ldc, ldc, nvalid, bias_p, last, act);
+      micro_kernel<kMR, kPipe>(g.a + m * lda, lda, kMR, g.kc, bp, cp + m * ldc, ldc, nvalid, bias_p, last, act);
     const int64_t rem = rows - m;
     if (rem >= 4) {
-      micro_kernel<kMR>(g.a + m * lda, lda, static_cast<int>(rem), g.kc, bp, cp + m * ldc, ldc, nvalid, bias_p, last, act);
+      micro_kernel<kMR, kPipe>(g.a + m * lda, lda, static_cast<int>(rem), g.kc, bp, cp + m * ldc, ldc, nvalid, bias_p, last, act);
     } else {
       for (; m < rows; ++m) gemv_kernel(g.a + m * lda, g.kc, bp, cp + m * ldc, nvalid, bias_p, last, act);
     }
   }
+}
+
+// One GEMM block on the Simd4 backend; the software-pipelined tile loop on Cortex-A75 prime cores (micro_kernel kPipe).
+void gemm_block_simd4(const GemmBlockArgs& g) {
+  if (g.nr == 4) return gemm_block_simd4_n4(g);
+  static const bool pipe = cpu_info().prime_part == kPartCortexA75;
+  if (pipe) gemm_block_simd4_t<true>(g);
+  else gemm_block_simd4_t<false>(g);
 }
 
 // ------------------------------------------------------------- backends
@@ -613,6 +663,29 @@ inline void copy_floats(float* d, const float* s, int64_t n) {
   }
 }
 
+// Copies N floats (compile-time N): whole vectors, then single floats.
+template <int N>
+inline void copy_floats_n(float* d, const float* s) {
+  int j = 0;
+  for (; j + 4 <= N; j += 4) store(d + j, load(s + j));
+  for (; j < N; ++j) d[j] = s[j];
+}
+
+// kh runs of kw * ic floats (row step `step` in the input) into consecutive patch columns; fixed-size copies for the
+// RGB stems (3x3x3: 9 floats a run, 7x7x3: 21), copy_floats otherwise.
+inline void copy_patch_runs(float* d, const float* s, int64_t kh, int64_t krun, int64_t step) {
+  switch (krun) {
+    case 9:
+      for (int64_t ky = 0; ky < kh; ++ky, s += step, d += 9) copy_floats_n<9>(d, s);
+      return;
+    case 21:
+      for (int64_t ky = 0; ky < kh; ++ky, s += step, d += 21) copy_floats_n<21>(d, s);
+      return;
+    default:
+      for (int64_t ky = 0; ky < kh; ++ky, s += step, d += krun) copy_floats(d, s, krun);
+  }
+}
+
 // ------------------------------------------------- narrow direct convolution
 // Convolutions with at most 4 output channels per group, stride 1, dilation 1 and a kh x kw > 1 kernel or groups > 1:
 // the RGB output layer of image restoration / super-resolution models, depthwise layers with a channel multiplier
@@ -756,6 +829,10 @@ class Conv2DGemm : public Kernel {
     // All divisions are hoisted out of the row loop: (n, oy, ox) advance
     // incrementally and the starting tap is the same for every row.
     const int64_t ohw = g.oh * g.ow, t0 = k0 / kic, c00 = k0 % kic, ky00 = t0 / g.kw, kx00 = t0 % g.kw;
+    // Whole patch rows (one K block) of pixels whose taps are all inside the image: kh copies of kw * ic floats
+    // without the per-tap bounds tests (a 3x3 RGB stem spent ~90 cycles per pixel in the general loop on the A75).
+    const bool whole = merge && k0 == 0 && kc == g.kh * g.kw * kic;
+    const int64_t krun = g.kw * kic, kstep = g.dh * g.iw * g.ic, ylast = (g.kh - 1) * g.dh, xlast = g.kw - 1;
     int64_t n = m0 / ohw, oy = (m0 % ohw) / g.ow, ox = m0 % g.ow;
     for (int64_t r = 0; r < rows; ++r) {
       const float* xn = x + n * g.ih * g.iw * g.ic + coff;
@@ -768,6 +845,10 @@ class Conv2DGemm : public Kernel {
         }
       }
       float* d = dst + r * ld;
+      if (whole && iy0 >= 0 && iy0 + ylast < g.ih && ix0 >= 0 && ix0 + xlast < g.iw) {
+        copy_patch_runs(d, xn + (iy0 * g.iw + ix0) * g.ic, g.kh, krun, kstep);
+        continue;
+      }
       int64_t left = kc, c0 = c00, ky = ky00, kx = kx00;
       while (left > 0) {
         const int64_t iy = iy0 + ky * g.dh, ix = ix0 + kx * g.dw;

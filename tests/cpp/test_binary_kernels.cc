@@ -289,7 +289,10 @@ BF_TEST(bdense_simd_matches_reference) {
                              // pair mode (1-2 words mod 4, >= 8 rows): odd row counts, partial words, row tiles
                              {37, 64, 20, true, false, "relu"},     {200, 64, 512, false, false, "none"},
                              {9, 40, 6, false, true, "none"},       {16, 160, 5, true, false, "relu6"},
-                             {300, 64, 70, false, false, "relu"}};
+                             {300, 64, 70, false, false, "relu"},
+                             // AArch64 4x8 tile (fp32, >= 8 rows, whole 128-bit steps, 16-channel units): row tails
+                             {13, 384, 32, false, false, "relu"},   {29, 96, 48, true, false, "none"},
+                             {66, 4096, 16, false, true, "relu6"},  {11, 1024, 64, true, false, "none"}};
   int idx = 0;
   for (const auto& c : cases) {
     std::mt19937 rng(20 + idx);
@@ -691,6 +694,30 @@ BF_TEST(bconv_grouped_bit_input_chain_matches_reference) {
       }
     }
   }
+}
+
+BF_TEST(bconv_tile_4x8_matches_reference) {
+  // AArch64 fp32 two-phase BConv2D on the 4x8 tile (rows of whole 128-bit steps, groups 1, oc % 8 == 0): step
+  // counts 1..72 (uint16 accumulators, no uint8 runs), row tails of 1-3 pixels (single-row path), several pixel
+  // tiles, 8-channel units and a unit tail of 8 channels, every pad value and activation.
+  struct Shape2 {
+    int64_t ic, k;
+  };
+  // 3x3: 36 words (9 steps), 27 (7), 63 (16), 72 (18), 144 (36), 288 (72); 1x1: 3 (1 step), 4 (1), 7 (2), 31 (8)
+  const std::vector<Shape2> shapes = {{128, 3}, {96, 3}, {224, 3}, {256, 3}, {512, 3}, {1024, 3},
+                                      {96, 1},  {128, 1}, {224, 1}, {992, 1}};
+  const int64_t ocs[] = {8, 16, 24, 40, 64};
+  const char* acts[] = {"none", "relu", "relu6"};
+  std::vector<GenConv> cases;
+  int i = 0;
+  for (const Shape2& s : shapes) {
+    const int64_t ih = i % 3 == 0 ? 11 : 5, iw = i % 3 == 0 ? 13 : (i % 3 == 1 ? 7 : 6), p = s.k / 2;  // 143, 35, 30 px
+    cases.push_back({1, ih, iw, s.ic, ocs[i % 5], s.k, s.k, 1, 1, 1, 1, p, p, p, p, i % 3 - 1, false, i % 4 == 1, acts[i % 3]});
+    ++i;
+  }
+  cases.push_back({1, 7, 7, 512, 64, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0, false, false, "relu"});    // 49 px: 1-row tail
+  cases.push_back({2, 9, 9, 256, 48, 3, 3, 2, 2, 1, 1, 1, 1, 1, 1, -1, false, false, "none"});   // batch 2, stride 2
+  check_grouped_cases(cases, 3100, {1, 3});
 }
 
 BF_TEST(bconv_step_classes_match_reference) {

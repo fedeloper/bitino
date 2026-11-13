@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "kernels/bitpack.h"
+#include "kernels/int8_full/bmm_i8_epilogue.h"
 #include "kernels/neon_a32.h"
 #include "ops/op_defs.h"
 #include "ops/transformer_common.h"
@@ -358,16 +359,37 @@ struct OpI8 {
   }
 };
 
+// The masks of OpI8::masks16 with the mode fixed at compile time and the thresholds in registers (2026-11-13: the
+// runtime mode tests per 16 codes made the int8 packing ~3x slower than the fp32 one).
+template <BMode M>
+struct OpI8M {
+  int8x16_t tn, tp;
+  bool neg_all, pos_none;
+  explicit OpI8M(const OpI8& op) : tn(vdupq_n_s8(op.tneg)), tp(vdupq_n_s8(op.tpos)), neg_all(op.neg_all), pos_none(op.pos_none) {}
+  inline __attribute__((always_inline)) void masks16(int8x16_t q, uint8x16_t* nz, uint8x16_t* neg) const {
+    const uint8x16_t ng = M == BMode::kGt0 ? vdupq_n_u8(0) : (neg_all ? vdupq_n_u8(0xFF) : vcltq_s8(q, tn));
+    if (M == BMode::kGe || M == BMode::kGt) {
+      *nz = vdupq_n_u8(0xFF);
+    } else {
+      const uint8x16_t ps = pos_none ? vdupq_n_u8(0) : vcgeq_s8(q, tp);
+      *nz = M == BMode::kGt0 ? ps : vorrq_u8(ps, ng);
+    }
+    *neg = ng;
+  }
+};
+
 // One int8 operand row (k codes) -> nz[w32], neg[w32]: 32 codes per word, byte masks folded with the bit
 // weights by pairwise adds (both planes at once); a partial last word bit by bit (padding bits 0).
-inline void pack_row32_i8(const OpI8& op, const int8_t* x, int64_t k, int64_t w32, uint32_t* nz, uint32_t* neg) {
+template <BMode M>
+inline void pack_row32_i8_m(const OpI8& op, const int8_t* x, int64_t k, int64_t w32, uint32_t* nz, uint32_t* neg) {
   static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
   const uint8x16_t bw = vld1q_u8(kW);
+  const OpI8M<M> om(op);
   int64_t w = 0;
   for (; 32 * w + 32 <= k; ++w) {
     uint8x16_t z0, n0, z1, n1;
-    op.masks16(vld1q_s8(x + 32 * w), &z0, &n0);
-    op.masks16(vld1q_s8(x + 32 * w + 16), &z1, &n1);
+    om.masks16(vld1q_s8(x + 32 * w), &z0, &n0);
+    om.masks16(vld1q_s8(x + 32 * w + 16), &z1, &n1);
     uint8x16_t r = vpaddq_u8(vpaddq_u8(vandq_u8(z0, bw), vandq_u8(z1, bw)), vpaddq_u8(vandq_u8(n0, bw), vandq_u8(n1, bw)));
     r = vpaddq_u8(r, r);  // u32 lanes: nz word, neg word
     nz[w] = vgetq_lane_u32(vreinterpretq_u32_u8(r), 0);
@@ -384,13 +406,22 @@ inline void pack_row32_i8(const OpI8& op, const int8_t* x, int64_t k, int64_t w3
     neg[w] = bs;
   }
 }
+inline void pack_row32_i8(const OpI8& op, const int8_t* x, int64_t k, int64_t w32, uint32_t* nz, uint32_t* neg) {
+  switch (op.mode) {
+    case BMode::kGe: return pack_row32_i8_m<BMode::kGe>(op, x, k, w32, nz, neg);
+    case BMode::kGt: return pack_row32_i8_m<BMode::kGt>(op, x, k, w32, nz, neg);
+    case BMode::kGt0: return pack_row32_i8_m<BMode::kGt0>(op, x, k, w32, nz, neg);
+    default: return pack_row32_i8_m<BMode::kSignZero>(op, x, k, w32, nz, neg);
+  }
+}
 
 // Full column blocks of a row-major int8 b[k][n] (b points at b[0][j0]): 16 columns (two blocks, blk0 and
 // blk1) or 8 columns (blk0). Per group of 8 rows, OR-ing each row's byte masks AND (1 << row) gives one byte
 // per column whose bit i is row i; four groups are zipped into the 32-bit column words (little-endian:
 // byte g holds rows 8g..8g+7). Rows past k contribute nothing.
-template <int kCols>
-inline void pack_block_cols_i8(const OpI8& op, const int8_t* b, int64_t n, int64_t k, int64_t w32, uint32_t* blk0, uint32_t* blk1) {
+template <BMode M, int kCols>
+inline void pack_block_cols_i8_m(const OpI8& op0, const int8_t* b, int64_t n, int64_t k, int64_t w32, uint32_t* blk0, uint32_t* blk1) {
+  const OpI8M<M> op(op0);
   for (int64_t w = 0; w < w32; ++w) {
     uint8x16_t gz[4], gs[4];
     for (int g = 0; g < 4; ++g) {
@@ -402,10 +433,8 @@ inline void pack_block_cols_i8(const OpI8& op, const int8_t* b, int64_t n, int64
         if (kCols == 16) {
           op.masks16(vld1q_s8(b + (rb + i) * n), &mz, &ms);
         } else {
-          uint8x8_t z8, s8;
-          op.masks8(vld1_s8(b + (rb + i) * n), &z8, &s8);
-          mz = vcombine_u8(z8, z8);
-          ms = vcombine_u8(s8, s8);
+          const int8x8_t q8 = vld1_s8(b + (rb + i) * n);
+          op.masks16(vcombine_s8(q8, q8), &mz, &ms);
         }
         const uint8x16_t bit = vdupq_n_u8(static_cast<uint8_t>(1u << i));
         az = vorrq_u8(az, vandq_u8(mz, bit));
@@ -437,6 +466,16 @@ inline void pack_block_cols_i8(const OpI8& op, const int8_t* b, int64_t n, int64
       vst1q_u32(o1 + 8, s[2]);
       vst1q_u32(o1 + 12, s[3]);
     }
+  }
+}
+
+template <int kCols>
+inline void pack_block_cols_i8(const OpI8& op, const int8_t* b, int64_t n, int64_t k, int64_t w32, uint32_t* blk0, uint32_t* blk1) {
+  switch (op.mode) {
+    case BMode::kGe: return pack_block_cols_i8_m<BMode::kGe, kCols>(op, b, n, k, w32, blk0, blk1);
+    case BMode::kGt: return pack_block_cols_i8_m<BMode::kGt, kCols>(op, b, n, k, w32, blk0, blk1);
+    case BMode::kGt0: return pack_block_cols_i8_m<BMode::kGt0, kCols>(op, b, n, k, w32, blk0, blk1);
+    default: return pack_block_cols_i8_m<BMode::kSignZero, kCols>(op, b, n, k, w32, blk0, blk1);
   }
 }
 
@@ -582,6 +621,7 @@ class BMatMulNeon : public Kernel {
     }
     w32_ = (g_.k + 31) / 32;
     nblk_ = (g_.n + bmmn::kNB - 1) / bmmn::kNB;
+    colpad_ = nblk_ * bmmn::kNB;
     const size_t bm = static_cast<size_t>(g_.batch * g_.m), bb = static_cast<size_t>(g_.batch * nblk_);
     apack_.assign(bm * 2 * w32_, 0u);
     rownz_.assign(bm, 0);
@@ -607,7 +647,7 @@ class BMatMulNeon : public Kernel {
     const void* a = ctx.in(0).raw();
     const float* b = i8_ ? nullptr : ctx.in(1).data<float>();
     const int8_t* b8 = i8_ ? ctx.in(1).data<int8_t>() : nullptr;
-    float* y = ctx.out(0).data<float>();
+    float* y = i8epi_ ? nullptr : ctx.out(0).data<float>();
     if (g_.batch == 0 || g_.m == 0 || g_.n == 0) return;
     ctx.pool->parallel_for(g_.batch, small_ ? g_.batch : 1, [&](int64_t b0, int64_t b1) {
       for (int64_t bi = b0; bi < b1; ++bi) {
@@ -616,6 +656,16 @@ class BMatMulNeon : public Kernel {
       }
     });
     const int64_t items = g_.batch * items_per_batch_;
+    if (i8epi_) {  // int8 output written by the tiles (y is the int8 tensor)
+      int8_t* y8 = ctx.out(0).data<int8_t>();
+      ctx.pool->parallel_for(items, small_ ? items : 1, [&](int64_t i0, int64_t i1) {
+        for (int64_t it = i0; it < i1; ++it) {
+          const int64_t bi = it / items_per_batch_, r0 = (it % items_per_batch_) * rows_per_item_;
+          rows_i8(a, y8, bi, r0, std::min(g_.m, r0 + rows_per_item_));
+        }
+      });
+      return;
+    }
     ctx.pool->parallel_for(items, small_ ? items : 1, [&](int64_t i0, int64_t i1) {
       for (int64_t it = i0; it < i1; ++it) {
         const int64_t bi = it / items_per_batch_, r0 = (it % items_per_batch_) * rows_per_item_;
@@ -623,6 +673,11 @@ class BMatMulNeon : public Kernel {
       }
     });
   }
+
+ public:
+  void set_i8_epilogue(const BmmI8Epilogue* e) { i8epi_ = e; }
+
+ private:
 
  private:
   void pack_b(const float* bb, int64_t bi) {
@@ -755,9 +810,119 @@ class BMatMulNeon : public Kernel {
       }
   }
 
+  // rows() for the int8 output (i8epi_): each group of (up to) 4 rows runs the same tiles as rows() into an fp32 scratch
+  // block of 4 x n counts (L1), then the int8 epilogue converts the block (BmmI8Epilogue; the counts are exact
+  // integers in fp32, |count| <= k <= 32767). Keeping the float tiles unchanged keeps their code generation: an int8
+  // store inside the tile made the compiler reload and spill around the counting loops (2.5x slower).
+  void rows_i8(const void* av, int8_t* y, int64_t bi, int64_t r0, int64_t r1) {
+    const int64_t k = g_.k, n = g_.n, W = w32_, row = 2 * W;
+    uint32_t* ap = apack_.data() + static_cast<size_t>(bi * g_.m) * row;
+    int32_t* rnz = rownz_.data() + bi * g_.m;
+    uint8_t* rfull = rowfull_.data() + bi * g_.m;
+    for (int64_t r = r0; r < r1; ++r) {
+      bmmn::pack_row32_i8(opa_, static_cast<const int8_t*>(av) + (bi * g_.m + r) * k, k, W, ap + r * row, ap + r * row + W);
+      bool full;
+      bmmn::nz_stats(ap + r * row, k, W, &rnz[r], &full);
+      rfull[r] = full;
+    }
+    const uint32_t* blk0 = bpack_.data() + static_cast<size_t>(bi * nblk_) * 16 * W;
+    const uint16_t* cz0 = colnz_.data() + bi * nblk_ * bmmn::kNB;
+    const uint8_t* bfull = blkfull_.data() + bi * nblk_;
+    const bool noneg = ma_ == BMode::kGt0 && mb_ == BMode::kGt0;
+    std::vector<float> f(static_cast<size_t>(4 * n));
+    for (int64_t r = r0; r < r1; r += 4) {
+      const int64_t nr = std::min<int64_t>(4, r1 - r);
+      if (nr == 4) {
+        const bool afull = rfull[r] && rfull[r + 1] && rfull[r + 2] && rfull[r + 3];
+        for (int64_t jb = 0; jb < nblk_; ++jb) {
+          const bmmn::Mode mode = noneg ? bmmn::kNoNeg
+                                        : afull ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
+          const int nc = static_cast<int>(std::min<int64_t>(bmmn::kNB, n - jb * bmmn::kNB));
+          bmmn::tile_any<4>(mode, ap + r * row, row, W, blk0 + jb * 16 * W, cz0 + jb * bmmn::kNB, rnz + r, 1.f, true,
+                            f.data() + jb * bmmn::kNB, n, nc);
+        }
+      } else {
+        for (int64_t q = 0; q < nr; ++q)
+          for (int64_t jb = 0; jb < nblk_; ++jb) {
+            const bmmn::Mode mode = noneg ? bmmn::kNoNeg
+                                          : rfull[r + q] ? (bfull[jb] ? bmmn::kBothFull : bmmn::kAFull) : (bfull[jb] ? bmmn::kBFull : bmmn::kGeneral);
+            const int nc = static_cast<int>(std::min<int64_t>(bmmn::kNB, n - jb * bmmn::kNB));
+            bmmn::tile_any<1>(mode, ap + (r + q) * row, row, W, blk0 + jb * 16 * W, cz0 + jb * bmmn::kNB, rnz + r + q, 1.f, true,
+                              f.data() + q * n + jb * bmmn::kNB, n, nc);
+          }
+      }
+      i8_epilogue_rows(f.data(), nr, bi, r, y + (bi * g_.m + r) * n);
+    }
+  }
+
+  // nr rows of fp32 counts (row stride n) -> int8 (BmmI8Epilogue), 8 columns per step, the last ones per element;
+  // the combination form fixed at compile time (kPlain, per-column mul, add: 0 none / 1 scalar / 2 per column)
+  void i8_epilogue_rows(const float* f, int64_t nr, int64_t bi, int64_t r, int8_t* y) const {
+    const BmmI8Epilogue& e = *i8epi_;
+    const int ka = e.add ? (e.add_vec ? 2 : 1) : 0;
+#define BF_BMM_EPI(P, MV)                                                \
+  do {                                                                   \
+    if (ka == 0) return i8_epi<P, MV, 0>(f, nr, bi, r, y);               \
+    if (ka == 1) return i8_epi<P, MV, 1>(f, nr, bi, r, y);               \
+    return i8_epi<P, MV, 2>(f, nr, bi, r, y);                            \
+  } while (0)
+    if (e.plain) {
+      if (e.mul_vec) BF_BMM_EPI(true, true);
+      BF_BMM_EPI(true, false);
+    }
+    if (e.mul_vec) BF_BMM_EPI(false, true);
+    BF_BMM_EPI(false, false);
+#undef BF_BMM_EPI
+  }
+  template <bool kPlain, bool kMulVec, int kAdd>
+  void i8_epi(const float* f, int64_t nr, int64_t bi, int64_t r, int8_t* y) const {
+    const BmmI8Epilogue& e = *i8epi_;
+    const int64_t n = g_.n;
+    const int32_t* ct = kPlain ? nullptr : e.colterm + bi * colpad_;
+    const float* mulp = e.mul;
+    const float* addp = e.add;
+    const int32_t cab = e.c_ab;
+    const float32x4_t ms = vdupq_n_f32(e.mul[0]), as = vdupq_n_f32(kAdd ? e.add[0] : 0.f);
+    const int16x8_t lo = vdupq_n_s16(static_cast<int16_t>(e.lo)), hi = vdupq_n_s16(static_cast<int16_t>(e.hi));
+    for (int64_t q = 0; q < nr; ++q) {
+      const float* fr = f + q * n;
+      int8_t* yr = y + q * n;
+      const int32_t rt0 = kPlain ? 0 : e.rowterm[bi * g_.m + r + q];
+      const int32x4_t rt = vdupq_n_s32(rt0);
+      int64_t j = 0;
+      for (; j + 8 <= n; j += 8) {
+        float32x4_t v[2];
+        for (int h = 0; h < 2; ++h) {
+          float32x4_t x = vld1q_f32(fr + j + 4 * h);
+          if (!kPlain) x = vcvtq_f32_s32(vmlaq_n_s32(vaddq_s32(rt, vld1q_s32(ct + j + 4 * h)), vcvtq_s32_f32(x), cab));
+          x = vmulq_f32(x, kMulVec ? vld1q_f32(mulp + j + 4 * h) : ms);
+          if (kAdd) x = vaddq_f32(x, kAdd == 2 ? vld1q_f32(addp + j + 4 * h) : as);
+          v[h] = x;
+        }
+        const int16x8_t h16 = vminq_s16(vmaxq_s16(vcombine_s16(vqmovn_s32(vcvtnq_s32_f32(v[0])), vqmovn_s32(vcvtnq_s32_f32(v[1]))), lo), hi);
+        vst1_s8(yr + j, vmovn_s16(h16));
+      }
+      for (; j < n; ++j) {
+        float x = fr[j];
+        if (!kPlain) x = static_cast<float>(cab * static_cast<int32_t>(x) + rt0 + ct[j]);
+        x = x * (kMulVec ? mulp[j] : mulp[0]);
+        if (kAdd) x = x + (kAdd == 2 ? addp[j] : addp[0]);
+        const float c = std::min(std::max(x, static_cast<float>(e.lo)), static_cast<float>(e.hi));
+        yr[j] = static_cast<int8_t>(std::nearbyint(c));
+      }
+    }
+  }
+
+ public:
+  // columns of the colterm / mul / add arrays the epilogue may read per batch entry (8-column blocks, padded)
+  int64_t i8_col_pad() const { return colpad_; }
+
+ private:
   MatMulGeom g_;
   BMode ma_ = BMode::kSignZero, mb_ = BMode::kSignZero;
   float scale_ = 1.f;
+  const BmmI8Epilogue* i8epi_ = nullptr;
+  int64_t colpad_ = 0;
   bool unit_ = true, small_ = true, i8_ = false;
   bmmn::OpI8 opa_, opb_;
   int64_t w32_ = 1, nblk_ = 0, rows_per_item_ = 4, items_per_batch_ = 1;
@@ -778,6 +943,15 @@ bool bmatmul_supported(const KernelContext& ctx) {
 #if defined(__aarch64__) || BF_NEON_A32
 // Factory for the int8_full NEON I8BMatMul kernel (kernels/int8_full/int8_full_neon.cc).
 std::unique_ptr<Kernel> make_bmatmul_neon_kernel() { return make_kernel<BMatMulNeon>(); }
+// The same kernel writing the int8 output through the epilogue e (owned by the caller, read in run(); int8 operands,
+// k <= 32767). Column arrays (colterm per batch entry at bi * bmatmul_i8_col_pad, mul / add when per column) must hold
+// bmatmul_i8_col_pad entries (whole 8-column blocks).
+std::unique_ptr<Kernel> make_bmatmul_neon_i8_kernel(const BmmI8Epilogue* e) {
+  auto k = std::make_unique<BMatMulNeon>();
+  k->set_i8_epilogue(e);
+  return k;
+}
+int64_t bmatmul_i8_col_pad(int64_t n) { return (n + 7) / 8 * 8; }
 #endif
 
 void register_bmatmul_kernels(OpRegistry& reg) {

@@ -165,6 +165,25 @@ class LutNRef : public Kernel {
   }
 };
 
+// I8PackBits: bit c = 1 (-1) iff lo[c] <= x <= hi[c] (bounds row 0 / row 1)
+class PackBitsRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = x.dim(-1), rows = x.size() / c, words = bit_words(c);
+    const int8_t* q = x.data<int8_t>();
+    const int8_t* lo = ctx.in(1).data<int8_t>();
+    const int8_t* hi = lo + c;
+    uint32_t* y = ctx.out(0).data<uint32_t>();
+    std::fill_n(y, rows * words, 0u);
+    for (int64_t r = 0; r < rows; ++r)
+      for (int64_t i = 0; i < c; ++i) {
+        const int v = q[r * c + i];
+        if (lo[i] <= v && v <= hi[i]) y[r * words + (i >> 5)] |= 1u << (i & 31);
+      }
+  }
+};
+
 class AddNRef : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override { bidx_ = bcast_index(ctx.in(0).shape(), ctx.in(1).shape()); }
@@ -316,18 +335,24 @@ class MatMulRef : public Kernel {
 };
 
 // ---------------------------------------------------------------- LayerNorm
+// I8LayerNorm; I8LayerNormN (internal twins): output j with G = in(1 + 2j), B = in(2 + 2j), qmins[j] / qmaxs[j]
 class LayerNormRef : public Kernel {
  public:
   void run(const KernelContext& ctx) override {
+    for (size_t j = 0; j < ctx.outputs.size(); ++j) run1(ctx, j);
+  }
+  void run1(const KernelContext& ctx, size_t j) {
     const Tensor& x = ctx.in(0);
     const int64_t d = x.dim(-1), rows = x.size() / d;
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
     const double xs = ctx.attrs().get_number("x_scale", 1.0), eps = ctx.attrs().get_number("eps", 1e-5);
-    const float* G = ctx.in(1).data<float>();
-    const float* B = ctx.in(2).data<float>();
-    const int lo = qmin_of(ctx), hi = qmax_of(ctx);
+    const float* G = ctx.in(1 + 2 * j).data<float>();
+    const float* B = ctx.in(2 + 2 * j).data<float>();
+    const bool multi = ctx.node->op == "I8LayerNormN";
+    const int lo = multi ? static_cast<int>(ctx.attrs().get_ints("qmins", {})[j]) : qmin_of(ctx);
+    const int hi = multi ? static_cast<int>(ctx.attrs().get_ints("qmaxs", {})[j]) : qmax_of(ctx);
     const int8_t* q = x.data<int8_t>();
-    int8_t* y = ctx.out(0).data<int8_t>();
+    int8_t* y = ctx.out(j).data<int8_t>();
     for (int64_t r = 0; r < rows; ++r) {
       const int8_t* qr = q + r * d;
       int64_t s1 = 0, s2 = 0;
@@ -596,7 +621,10 @@ class PadRef : public Kernel {
 // round to int8 (or store v for output f32).
 class BDenseRef : public Kernel {
  public:
-  void prepare(const KernelContext& ctx) override { bin_.prepare(ctx, ctx.in(1).dim(1)); }
+  void prepare(const KernelContext& ctx) override {
+    bit_in_ = ctx.in(0).dtype() == DType::kBit;
+    if (!bit_in_) bin_.prepare(ctx, ctx.in(1).dim(1));
+  }
   void run(const KernelContext& ctx) override {
     const Tensor& w = ctx.in(1);
     const int64_t k = w.dim(1), o = w.dim(0), rows = ctx.in(0).size() / k;
@@ -604,7 +632,10 @@ class BDenseRef : public Kernel {
     const uint32_t* wz = ctx.has_in(5) ? ctx.in(5).data<uint32_t>() : nullptr;
     const int64_t words = bit_words(k);
     for (int64_t r = 0; r < rows; ++r) {
-      bin_.row(ctx.in(0).data<int8_t>() + r * k, k, xb.data());
+      if (bit_in_)  // a bit tensor taken as is
+        for (int64_t i = 0; i < k; ++i) xb[i] = static_cast<int8_t>(bit_value(ctx.in(0).data<uint32_t>() + r * words, i));
+      else
+        bin_.row(ctx.in(0).data<int8_t>() + r * k, k, xb.data());
       for (int64_t j = 0; j < o; ++j) {
         const uint32_t* wr = w.data<uint32_t>() + j * words;
         int64_t acc = 0;
@@ -618,6 +649,7 @@ class BDenseRef : public Kernel {
   }
 
  private:
+  bool bit_in_ = false;
   int8_full::BinarizeI8 bin_;
 };
 
@@ -737,11 +769,13 @@ void register_int8_full_reference_kernels(OpRegistry& reg) {
   add("I8AffineSum", "i8affinesum.reference", make_kernel<AffineSumRef>);
   add("I8LutN", "i8lutn.reference", make_kernel<LutNRef>);
   add("I8AddN", "i8addn.reference", make_kernel<AddNRef>);
+  add("I8PackBits", "i8packbits.reference", make_kernel<PackBitsRef>);
   add("I8Conv2D", "i8conv2d.reference", make_kernel<Conv2DRef>);
   add("I8Conv2DN", "i8conv2dn.reference", make_kernel<Conv2DRef>);
   add("I8Dense", "i8dense.reference", make_kernel<DenseRef>);
   add("I8MatMul", "i8matmul.reference", make_kernel<MatMulRef>);
   add("I8LayerNorm", "i8layernorm.reference", make_kernel<LayerNormRef>);
+  add("I8LayerNormN", "i8layernormn.reference", make_kernel<LayerNormRef>);
   add("I8Softmax", "i8softmax.reference", make_kernel<SoftmaxRef>);
   add("I8Concat", "i8concat.reference", make_kernel<ConcatRef>);
   add("I8Transpose", "i8transpose.reference", make_kernel<TransposeRef>);
