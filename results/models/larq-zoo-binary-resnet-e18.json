@@ -481,6 +481,72 @@
    {
     "model_id": "larq-zoo-binary-resnet-e18",
     "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.4409895,
+    "median_range_ms": [
+     8.43684901,
+     8.4541925
+    ],
+    "p90_ms": 8.469328209,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13940,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:08:27Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "06e7bdff1a2bbdb3d38c9de8a893dcd73ca2abb5f12589b8162db15538ef9c47",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.0978905,
+    "median_range_ms": [
+     8.0945315,
+     8.1153125
+    ],
+    "p90_ms": 8.140786408999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14140,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:08:28Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0e0e93930174de3466bac0ff985b53dd57ad4c170ee03bfabcf78deb09c07cd2",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",

@@ -216,9 +216,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261112_2233",
-   "date": "2026-11-12",
-   "runtime_commit": "a62969e",
+   "suite": "20261113_0425",
+   "date": "2026-11-13",
+   "runtime_commit": "da471712",
    "stages": {
     "neon": {
      "pass": true,
@@ -477,6 +477,72 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T21:57:32Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e093bc75702a14e1722f683e0517793e868ee8b6c0b4ffb5d824519fe04587db",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.2584895,
+    "median_range_ms": [
+     8.2564065,
+     8.2658075
+    ],
+    "p90_ms": 8.281838801000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16092,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:11:37Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "3df6283f79704613e34b158ed8e6c1fee029c64e74de5a7c2aa8d9bf6bfedc98",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.8670575,
+    "median_range_ms": [
+     7.8609635,
+     7.901302
+    ],
+    "p90_ms": 7.916093309000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13292,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:11:38Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

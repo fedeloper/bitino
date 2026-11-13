@@ -450,6 +450,72 @@
    {
     "model_id": "rbonn-reactnet-resnet18-imagenet",
     "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.258828,
+    "median_range_ms": [
+     8.258307,
+     8.266901
+    ],
+    "p90_ms": 8.2894426,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16032,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:10:35Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "16c89dcf626d1d84cdc51459a779ddad44c7b73395cb6bd9dc4ea4bce18932b5",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "rbonn-reactnet-resnet18-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0819_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.1053125,
+    "median_range_ms": [
+     8.10276049,
+     8.1609115
+    ],
+    "p90_ms": 8.165561891,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14032,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T22:10:36Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cd285f7df20e2e59448406f1f79c0d9a222e85d7bcd63cc3c1cd438a81f2b701",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "rbonn-reactnet-resnet18-imagenet",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
