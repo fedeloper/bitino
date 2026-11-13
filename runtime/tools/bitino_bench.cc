@@ -390,7 +390,8 @@ int main(int argc, char** argv) {
                                              {"i8_removed_luts", Json(session.i8_rewrites()[2])},
                                              {"i8_lut_twins", Json(session.i8_rewrites()[3])},
                                              {"i8_add_twins", Json(session.i8_rewrites()[4])},
-                                             {"i8_merged_nodes", Json(session.i8_rewrites()[5])}});
+                                             {"i8_merged_nodes", Json(session.i8_rewrites()[5])},
+                                             {"i8_bit_outputs", Json(session.i8_rewrites()[7])}});
     cfg["spin_us"] = spin_us;
     cfg["spin_run"] = spin_run;
     cfg["nodes"] = static_cast<int64_t>(session.kernel_choices().size());

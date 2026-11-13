@@ -561,6 +561,240 @@ void merge_twins(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, I8Rew
   drop_removed(nodes, removed);
 }
 
+// ------------------------------------------------------------- bit outputs
+// The per-channel integer thresholds T[c] (+1 iff y[c] >= T[c]) of the binary layers reading y, when every reader
+// binarizes y (input 0, ge / gt) with the same thresholds and y is no graph output; empty otherwise.
+std::vector<int> reader_thresholds(const std::vector<Node>& nodes, const std::vector<TensorInfo>& infos, const UseInfo& u, int y) {
+  if (y < 0 || u.is_output[y] || infos[y].dtype != DType::kI8 || infos[y].shape.empty()) return {};
+  const int64_t c = infos[y].shape.back();
+  std::vector<int> ty;
+  int slots = 0;
+  for (const Node& cn : nodes) {
+    int uses = 0;
+    for (int id : cn.inputs) uses += id == y;
+    if (uses == 0) continue;
+    if (!binarizes_input0(cn, y)) return {};
+    const bool gt = cn.attrs.get_string("input_binarize", "ge") == "gt";
+    q8::Deq d;
+    d.l8 = cn.attrs.get_string("x_code", "linear") == "l8";
+    d.s = static_cast<float>(cn.attrs.get_number("x_scale", 1.0));
+    d.z = static_cast<int32_t>(cn.attrs.get_int("x_zero", 0));
+    d.e = static_cast<int>(cn.attrs.get_int("x_exp", 0));
+    const int thr_in = in_at(cn, 4);
+    if (thr_in >= 0 && (!infos[thr_in].is_constant || infos[thr_in].dtype != DType::kF32)) return {};
+    const int64_t nthr = thr_in >= 0 ? num_elements(infos[thr_in].shape) : 1;
+    if (nthr != 1 && nthr != c) return {};
+    std::vector<int> t(static_cast<size_t>(c));
+    for (int64_t ch = 0; ch < c; ++ch) {
+      const float v = thr_in >= 0 ? infos[thr_in].constant.data<float>()[nthr == 1 ? 0 : ch] : 0.f;
+      t[ch] = gt ? q8::qthr_gt(v, d) : q8::qthr_ge(v, d);
+    }
+    if (ty.empty()) ty = t;
+    else if (ty != t) return {};
+    ++slots;
+  }
+  if (slots == 0 || slots != u.count[y]) return {};
+  return ty;
+}
+
+// y(acc) = clamp(zy + requant(acc, m, s), lo, hi) is non-decreasing in acc for m > 0 (sat32, mulhi and rshr are):
+// y >= T <=> acc >= A = min{acc : y(acc) >= T}, i.e. bit -1 <=> acc <= A - 1. Returned as an int32 bound U for
+// accumulators with |acc| <= 2^31 - 1 (callers check it): A - 1 above int32 is "always" (U = INT32_MAX), below is
+// "never" (U = INT32_MIN, unreachable).
+int32_t acc_bound(int t, int64_t zy, int32_t m, int32_t s, int lo, int hi) {
+  auto y = [&](int64_t a) { return q8::clamp8(zy + q8::requant(a, m, s), lo, hi); };
+  int64_t l = -(int64_t(1) << 40), h = int64_t(1) << 40;
+  int64_t a;
+  if (y(h) < t) a = h + 1;
+  else if (y(l) >= t) a = l;
+  else {
+    while (h - l > 1) {  // y(l) < t <= y(h)
+      const int64_t mid = l + (h - l) / 2;
+      if (y(mid) >= t) h = mid;
+      else l = mid;
+    }
+    a = h;
+  }
+  return static_cast<int32_t>(std::min<int64_t>(std::max<int64_t>(a - 1, INT32_MIN), INT32_MAX));
+}
+
+// The readers of a tensor turned into bits read them as an already binarized input.
+void point_readers_to_bits(std::vector<Node>& nodes, int y, const std::string& from) {
+  for (Node& cn : nodes) {
+    if (in_at(cn, 0) != y) continue;
+    if (cn.inputs.size() > 4) cn.inputs[4] = -1;
+    Json attrs = cn.attrs;
+    attrs["input_binarize"] = "ge";
+    attrs["bits_from"] = from;
+    cn.attrs = attrs;
+  }
+}
+
+int add_bounds(std::vector<TensorInfo>& infos, const std::string& name, const std::vector<int32_t>& u) {
+  const bool same = std::all_of(u.begin(), u.end(), [&](int32_t v) { return v == u[0]; });
+  const int64_t n = same ? 1 : static_cast<int64_t>(u.size());
+  const int id = add_constant(infos, name, DType::kI32, Shape{n});
+  std::copy_n(u.data(), n, infos[id].constant.data<int32_t>());
+  return id;
+}
+
+// I8Add / I8AddN outputs and I8AffineSum nodes whose output only feeds binarizers (e.g. RBNN's mean centering, the
+// binarize-aware twins of Bi-Real / QuickNet / ReActNet) produce the bits themselves: bit -1 iff the integer value
+// before the output requantization (I8Add: xa + xb; I8AffineSum: B + sum (q - z) K) is <= U[c], with U from
+// acc_bound. Exact: y >= T <=> acc >= A for the monotone requantization (multiplier > 0), for every reachable acc.
+void bit_outputs(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& outputs, I8RewriteStats* st) {
+  UseInfo u = uses_of(nodes, infos.size(), outputs);
+  for (size_t n = 0; n < nodes.size(); ++n) {
+    Node& nd = nodes[n];
+    if (nd.op == "I8Add" || nd.op == "I8AddN") {
+      const bool twin = nd.op == "I8AddN";
+      if (nd.inputs.size() != 2 || nd.inputs[0] < 0 || nd.inputs[1] < 0) continue;
+      const Json& a = nd.attrs;
+      // |xa|, |xb| < 255 * 2^22 / 2 (input multipliers < 2^31, no left shifts): |xa + xb| < 2^31
+      if (a.get_int("left_shift", 20) > 22 || a.get_int("a_shift", 0) > 0 || a.get_int("b_shift", 0) > 0 || a.get_int("a_mult", 0) <= 0 ||
+          a.get_int("b_mult", 0) <= 0)
+        continue;
+      auto in8 = [](int64_t z) { return z >= -128 && z <= 127; };
+      if (!in8(a.get_int("a_zero", 0)) || !in8(a.get_int("b_zero", 0))) continue;
+      const Shape as = infos[nd.inputs[0]].shape;  // copies: add_bounds grows infos
+      const Shape bs = infos[nd.inputs[1]].shape;
+      const int64_t c = as.empty() ? 0 : as.back();
+      // same shapes, a scalar b, or (twins) a broadcast row of b
+      const bool row = bs.size() >= 1 && num_elements(bs) == c && bs.back() == c;
+      if (!(as == bs || num_elements(bs) == 1 || (twin && row)) || c == 0) continue;
+      const size_t k = nd.outputs.size();
+      std::vector<int64_t> om, os, zy, lo, hi;
+      if (twin) {
+        om = a.get_ints("out_mults", {});
+        os = a.get_ints("out_shifts", {});
+        zy = a.get_ints("y_zeros", {});
+        lo = a.get_ints("qmins", {});
+        hi = a.get_ints("qmaxs", {});
+      } else {
+        om = {a.get_int("out_mult", 0)};
+        os = {a.get_int("out_shift", 0)};
+        zy = {a.get_int("y_zero", 0)};
+        lo = {a.get_int("qmin", -128)};
+        hi = {a.get_int("qmax", 127)};
+      }
+      Json::Array bit_outs;
+      std::vector<int> bounds;
+      for (size_t j = 0; j < k; ++j) {
+        const int y = nd.outputs[j];
+        if (om[j] <= 0 || infos[y].shape != as) continue;
+        const std::vector<int> ty = reader_thresholds(nodes, infos, u, y);
+        if (ty.empty()) continue;
+        std::vector<int32_t> ub(ty.size());
+        for (size_t ch = 0; ch < ty.size(); ++ch)
+          ub[ch] = acc_bound(ty[ch], zy[j], static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j]), static_cast<int>(lo[j]), static_cast<int>(hi[j]));
+        bit_outs.push_back(Json(static_cast<int64_t>(j)));
+        bounds.push_back(add_bounds(infos, nd.name + "/bit_bound" + std::to_string(j), ub));
+        infos[y].dtype = DType::kBit;
+        point_readers_to_bits(nodes, y, nd.name);
+        ++st->bit_outputs;
+      }
+      if (bit_outs.empty()) continue;
+      Json attrs = nd.attrs;
+      if (twin) {
+        attrs["bit_outputs"] = Json(bit_outs);
+      } else {
+        nd.op = "I8AddB";
+      }
+      nd.attrs = attrs;
+      for (int b : bounds) nd.inputs.push_back(b);
+      continue;
+    }
+    // I8Conv2DN twins (x, w, bias, mult_0, shift_0, mult_1, shift_1) whose output 1 (or 0) only feeds binarizers ->
+    // I8Conv2D with the other output and the bit output of bit_thr (input 5): bit -1 iff acc < bit_thr[o], acc =
+    // sum (x - x_zero) w before the bias. y_bin = clamp(zy + requant(sat32(acc + bias), m, s)) >= T <=> sat32(acc + bias)
+    // >= A <=> acc >= A - bias for |acc| <= taps * 255 * 128 < 2^30 (sat32 is monotone; thresholds clamped to int32).
+    if (nd.op == "I8Conv2DN" && nd.outputs.size() == 2 && nd.inputs.size() == 7 && nd.inputs[0] >= 0 && nd.inputs[1] >= 0) {
+      const int w = nd.inputs[1];
+      const Shape ws = infos[w].shape;  // [O, kh, kw, kic]
+      if (ws.size() != 4 || num_elements(ws) / ws[0] * 255 * 128 >= (int64_t(1) << 30)) continue;
+      const auto zys = nd.attrs.get_ints("y_zeros", {}), los = nd.attrs.get_ints("qmins", {}), his = nd.attrs.get_ints("qmaxs", {});
+      int jb = -1;
+      std::vector<int> ty;
+      for (int j = 1; j >= 0 && jb < 0; --j) {
+        ty = reader_thresholds(nodes, infos, u, nd.outputs[j]);
+        if (!ty.empty()) jb = j;
+      }
+      if (jb < 0) continue;
+      const int mt = nd.inputs[3 + 2 * jb], stt = nd.inputs[4 + 2 * jb], bias = nd.inputs[2];
+      if (mt < 0 || stt < 0 || !infos[mt].is_constant || !infos[stt].is_constant || (bias >= 0 && !infos[bias].is_constant)) continue;
+      const int64_t oc = ws[0];
+      if (static_cast<int64_t>(ty.size()) != oc) continue;
+      bool pos = true;
+      for (int64_t o = 0; o < oc; ++o) pos = pos && infos[mt].constant.data<int32_t>()[o] > 0;
+      if (!pos) continue;
+      std::vector<int32_t> thr(static_cast<size_t>(oc));
+      for (int64_t o = 0; o < oc; ++o) {
+        const int32_t ub = acc_bound(ty[o], zys[jb], infos[mt].constant.data<int32_t>()[o], infos[stt].constant.data<int32_t>()[o],
+                                     static_cast<int>(los[jb]), static_cast<int>(his[jb]));
+        const int64_t b = bias >= 0 ? infos[bias].constant.data<int32_t>()[o] : 0;
+        // bit -1 iff sat32(acc + b) <= ub <=> acc + b <= ub (ub < INT32_MAX; ub == INT32_MAX: always) <=> acc < ub - b + 1
+        const int64_t t = ub == INT32_MAX ? (int64_t(1) << 40) : static_cast<int64_t>(ub) - b + 1;
+        thr[o] = static_cast<int32_t>(std::min<int64_t>(std::max<int64_t>(t, INT32_MIN), INT32_MAX));
+      }
+      const int jm = 1 - jb;
+      const int tid = add_constant(infos, nd.name + "/bit_thr", DType::kI32, Shape{oc});
+      std::copy(thr.begin(), thr.end(), infos[tid].constant.data<int32_t>());
+      const int ybits = nd.outputs[jb];
+      Node c;
+      c.op = "I8Conv2D";
+      c.name = nd.name + "/bits";
+      c.inputs = {nd.inputs[0], w, bias, nd.inputs[3 + 2 * jm], nd.inputs[4 + 2 * jm], tid};
+      c.outputs = {nd.outputs[jm], ybits};
+      Json attrs = Json::Object{};
+      for (const char* key : {"strides", "pads", "dilations", "groups", "x_zero", "pad_q"})
+        if (nd.attrs.contains(key)) attrs[key] = nd.attrs[key];
+      attrs["y_zero"] = zys[jm];
+      attrs["qmin"] = los[jm];
+      attrs["qmax"] = his[jm];
+      attrs["merged_nodes"] = nd.attrs.contains("merged_nodes") ? nd.attrs["merged_nodes"] : Json(Json::Array{});
+      c.attrs = attrs;
+      nodes[n] = std::move(c);
+      infos[ybits].dtype = DType::kBit;
+      point_readers_to_bits(nodes, ybits, nodes[n].name);
+      ++st->bit_outputs;
+      continue;
+    }
+    if (nd.op == "I8AffineSum" && nd.outputs.size() == 1 && nd.inputs.size() >= 3) {
+      const size_t nin = nd.inputs.size() - 2;
+      const int kt = nd.inputs[nin], bt = nd.inputs[nin + 1];
+      if (kt < 0 || bt < 0 || !infos[kt].is_constant || !infos[bt].is_constant) continue;
+      const int y = nd.outputs[0];
+      const Json& a = nd.attrs;
+      const int32_t m = static_cast<int32_t>(a.get_int("mult", 0)), s = static_cast<int32_t>(a.get_int("shift", 0));
+      if (m <= 0) continue;
+      const auto zs = a.get_ints("zeros", {});
+      if (zs.size() != nin) continue;
+      const int64_t c = infos[y].shape.empty() ? 0 : infos[y].shape.back();
+      const int64_t kc = infos[kt].shape[1];
+      const int32_t* K = infos[kt].constant.data<int32_t>();
+      const int32_t* B = infos[bt].constant.data<int32_t>();
+      // int32-exact accumulators: |B| + sum |K| (128 + |z|) < 2^31 per channel (|acc| <= 2^31 - 1)
+      bool fits = c > 0;
+      for (int64_t ch = 0; ch < c && fits; ++ch) {
+        int64_t bound = std::abs(static_cast<int64_t>(B[kc == 1 ? 0 : ch]));
+        for (size_t i = 0; i < nin; ++i) bound += std::abs(static_cast<int64_t>(K[i * kc + (kc == 1 ? 0 : ch)])) * (128 + std::abs(zs[i]));
+        fits = bound < (int64_t(1) << 31);
+      }
+      if (!fits) continue;
+      const std::vector<int> ty = reader_thresholds(nodes, infos, u, y);
+      if (ty.empty()) continue;
+      std::vector<int32_t> ub(ty.size());
+      for (size_t ch = 0; ch < ty.size(); ++ch)
+        ub[ch] = acc_bound(ty[ch], a.get_int("y_zero", 0), m, s, static_cast<int>(a.get_int("qmin", -128)), static_cast<int>(a.get_int("qmax", 127)));
+      nd.op = "I8AffineSumB";
+      nd.inputs.push_back(add_bounds(infos, nd.name + "/bit_bound", ub));
+      infos[y].dtype = DType::kBit;
+      point_readers_to_bits(nodes, y, nd.name);
+      ++st->bit_outputs;
+    }
+  }
+}
+
 }  // namespace
 
 I8RewriteStats rewrite_int8_luts(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& graph_outputs) {
@@ -575,6 +809,7 @@ I8RewriteStats rewrite_int8_luts(std::vector<Node>& nodes, std::vector<TensorInf
 I8RewriteStats rewrite_int8_twins(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& graph_outputs) {
   I8RewriteStats st;
   merge_twins(nodes, infos, &st);
+  bit_outputs(nodes, infos, graph_outputs, &st);
   return st;
 }
 

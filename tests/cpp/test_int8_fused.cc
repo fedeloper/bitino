@@ -1072,3 +1072,224 @@ BF_TEST(int8_full_matmul_a32_bit_exact) {
     }
   }
 }
+
+// bit_outputs (src/graph_rewrite_i8.cc, 2026-11-13): an I8Add (same shapes, or a one-element b: RBNN's mean centering),
+// one output of I8Add twins (I8AddN) and an I8AffineSum whose outputs are read only by binarizing I8BConv2D / I8BDense
+// (ge / gt, scalar and per-channel thresholds incl. never / always / ties, clamped outputs) produce the bits; readers
+// with different thresholds keep the int8 tensor. Channel counts with and without whole 16-channel units (the NEON bit
+// stores need c % 16 == 0; the others run the reference kernels). Also covers the 16 / 32-channel row packing of the
+// binary layers (rewrites off).
+BF_TEST(int8_full_rewrite_bit_outputs_bit_exact) {
+  Rng r(2014);
+  int k = 0;
+  for (int64_t c : {16, 32, 48, 64, 24, 7}) {
+    // 0 Add, 1 Add with a one-element b, 2 Add twins, 3 AffineSum, 4 AffineSum with 2 readers, 5 readers with other thresholds
+    for (int variant = 0; variant < 6; ++variant) {
+      for (const char* mode : {"ge", "gt"}) {
+        ++k;
+        const bool conv = (k % 2) == 0;
+        bftest::ModelBuilder mb;
+        const Shape xs = conv ? Shape{1, 5, 7, c} : Shape{29, c};
+        const int64_t n = num_elements(xs);
+        mb.input("a", DType::kI8, xs);
+        mb.input("b", DType::kI8, variant == 1 ? Shape{1, 1} : xs);
+        if (variant <= 2) {
+          auto ma = r.mult(0.05, 0.49), mbb = r.mult(0.05, 0.49);
+          const int half = k % 3;
+          Json at = Json::Object{{"a_zero", r.i(-128, 127)}, {"b_zero", r.i(-128, 127)}, {"left_shift", 20},
+                                 {"a_mult", half == 1 ? (1 << 30) : ma.first}, {"a_shift", half == 1 ? 0 : ma.second},
+                                 {"b_mult", half == 2 ? (1 << 30) : mbb.first}, {"b_shift", half == 2 ? 0 : mbb.second}};
+          auto mo = r.mult(1e-7, 1e-4);
+          at["out_mult"] = mo.first;
+          at["out_shift"] = mo.second;
+          at["y_zero"] = r.i(-60, 60);
+          if (k % 4 == 0) {
+            at["qmin"] = r.i(-128, -10);
+            at["qmax"] = r.i(10, 127);
+          }
+          mb.node("I8Add", {"a", "b"}, {"y"}, at);
+          if (variant == 2) {  // a twin with an int8 graph output
+            Json at2 = at;
+            auto m2 = r.mult(1e-7, 1e-4);
+            at2["out_mult"] = m2.first;
+            at2["out_shift"] = m2.second;
+            mb.node("I8Add", {"a", "b"}, {"y2"}, at2);
+            mb.output("y2");
+          }
+        } else {
+          std::vector<int32_t> kv(static_cast<size_t>(2 * c)), bv(static_cast<size_t>(c));
+          for (auto& v : kv) v = r.i(-40000, 40000);
+          for (auto& v : bv) v = r.i(-3000000, 3000000);
+          mb.constant("K", DType::kI32, {2, c}, kv.data());
+          mb.constant("B", DType::kI32, {c}, bv.data());
+          Json at = Json::Object{{"zeros", zeros_json({r.i(-128, 127), r.i(-128, 127)})}, {"mult", 1 << 30},
+                                 {"shift", k % 3 == 0 ? 1 : -r.i(0, 20)}, {"y_zero", r.i(-30, 30)}};
+          mb.node("I8AffineSum", {"a", "b", "K", "B"}, {"y"}, at);
+        }
+        const float s = r.f(0.01f, 0.1f);
+        const int z = r.i(-20, 20);
+        auto thr_vec = [&]() {
+          std::vector<float> thr(static_cast<size_t>(c));
+          for (auto& v : thr) v = r.f(-100 * s, 100 * s);
+          for (int64_t i = 0; i < c; i += 3) thr[i] = q8::deq(r.i(-128, 127), s, z);  // ties
+          thr[0] = 1e9f;                                                           // never
+          if (c > 1) thr[1] = -1e9f;                                               // always
+          return thr;
+        };
+        auto thr = thr_vec(), thr2 = thr_vec();
+        mb.constant("thr", DType::kF32, {c}, thr.data());
+        mb.constant("thr2", DType::kF32, {c}, thr2.data());
+        const int64_t o = 19;
+        std::vector<float> pm(o), pa(o);
+        for (auto& v : pm) v = r.f(-3.f, 3.f);
+        for (auto& v : pa) v = r.f(-50.f, 50.f);
+        mb.constant("pm", DType::kF32, {o}, pm.data());
+        mb.constant("pa", DType::kF32, {o}, pa.data());
+        Json bt = Json::Object{{"input_binarize", mode}, {"x_scale", static_cast<double>(s)}, {"x_zero", z}};
+        const bool scalar_thr = k % 3 == 1;
+        std::vector<int8_t> wv(static_cast<size_t>(o * (conv ? 9 : 1) * c));
+        for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+        auto wp = bftest::pack_pm1(wv, o * (conv ? 9 : 1), c);
+        if (conv) mb.constant("w", DType::kBit, {o, 3, 3, c}, wp.data());
+        else mb.constant("w", DType::kBit, {o, c}, wp.data());
+        auto reader = [&](const std::string& out, const char* t) {
+          std::vector<std::string> ins = {"y", "w", "pm", "pa"};
+          if (!scalar_thr) ins.push_back(t);
+          if (conv) {
+            Json at = bt;
+            Json::Array pads;
+            for (int i = 0; i < 4; ++i) pads.push_back(Json(1));
+            at["pads"] = Json(pads);
+            at["pad_value"] = (k % 3) - 1;
+            mb.node("I8BConv2D", ins, {out}, at);
+          } else {
+            mb.node("I8BDense", ins, {out}, bt);
+          }
+          mb.output(out);
+        };
+        reader("r1", "thr");
+        if (variant == 4) reader("r2", "thr");   // same thresholds: one bit tensor
+        if (variant == 5) reader("r2", "thr2");  // other thresholds: the int8 tensor stays (scalar thresholds: equal)
+        auto x = r.i8(n);
+        x[0] = 0x80;
+        x[1] = 0x7F;
+        auto xb = r.i8(variant == 1 ? 1 : n);
+        std::string kern;
+        if (c % 16 == 0 && variant != 5) kern = variant == 2 ? "i8addn.neon" : (variant <= 1 ? "i8addb.neon" : "i8affinesumb.neon");
+        compare(mb, {x, xb}, "bit outputs case " + std::to_string(k), kern);
+      }
+    }
+  }
+}
+
+// bit_outputs on I8Conv2D twins (2026-11-13): the binarize-aware twin of a stem / 1x1 convolution (same weights and bias,
+// own requantization) read only by a binarizing I8BConv2D -> one I8Conv2D with the bit output of bit_thr (the stem twins of
+// QuickNet / ReActNet / Bi-Real CIFAR); with and without bias, clamps, scalar / per-channel thresholds, ge / gt.
+BF_TEST(int8_full_rewrite_conv_twin_bits_bit_exact) {
+  Rng r(2016);
+  struct Geo {
+    int64_t h, w, ic, oc, k, s, p;
+  };
+  const Geo geos[] = {{17, 15, 3, 32, 3, 2, 1}, {9, 11, 16, 48, 1, 1, 0}, {8, 8, 8, 16, 3, 1, 1}, {13, 10, 5, 24, 5, 2, 2}};
+  int k = 0;
+  for (const Geo& g : geos) {
+    for (int bias = 0; bias < 2; ++bias) {
+      for (const char* mode : {"ge", "gt"}) {
+        ++k;
+        bftest::ModelBuilder mb;
+        mb.input("x", DType::kI8, {1, g.h, g.w, g.ic});
+        auto wv = r.i8(g.oc * g.k * g.k * g.ic);
+        mb.constant("w", DType::kI8, {g.oc, g.k, g.k, g.ic}, wv.data());
+        mb.constant("w2", DType::kI8, {g.oc, g.k, g.k, g.ic}, wv.data());
+        std::vector<int32_t> bv(static_cast<size_t>(g.oc));
+        for (auto& v : bv) v = r.i(-100000, 100000);
+        mb.constant("b", DType::kI32, {g.oc}, bv.data());
+        const int xz = r.i(-128, 127);
+        Json::Array pads;
+        for (int i = 0; i < 4; ++i) pads.push_back(Json(g.p));
+        Json::Array strides = {Json(g.s), Json(g.s)};
+        for (int j = 0; j < 2; ++j) {
+          std::vector<int32_t> mv(static_cast<size_t>(g.oc)), sv(static_cast<size_t>(g.oc));
+          for (int64_t o = 0; o < g.oc; ++o) {
+            auto m = j == 1 && o % 5 == 0 ? r.mult(1.5, 4.0) : r.mult(1e-6, 1e-3);
+            mv[o] = m.first;
+            sv[o] = m.second;
+          }
+          const std::string js = std::to_string(j);
+          mb.constant("m" + js, DType::kI32, {g.oc}, mv.data());
+          mb.constant("s" + js, DType::kI32, {g.oc}, sv.data());
+          Json at = Json::Object{{"x_zero", xz}, {"pad_q", xz}, {"pads", Json(pads)}, {"strides", Json(strides)}, {"y_zero", r.i(-60, 60)}};
+          if ((j + k) % 3 == 0) {
+            at["qmin"] = r.i(-128, -20);
+            at["qmax"] = r.i(0, 127);
+          }
+          mb.node("I8Conv2D", {"x", j ? "w2" : "w", bias ? "b" : "", "m" + js, "s" + js}, {"y" + js}, at);
+        }
+        mb.output("y0");
+        const int64_t c = g.oc, o = 13;
+        const float s = r.f(0.01f, 0.1f);
+        const int z = r.i(-20, 20);
+        std::vector<float> thr(static_cast<size_t>(c)), pm(o), pa(o);
+        for (auto& v : thr) v = r.f(-100 * s, 100 * s);
+        thr[0] = 1e9f;
+        thr[1] = -1e9f;
+        for (auto& v : pm) v = r.f(-3.f, 3.f);
+        for (auto& v : pa) v = r.f(-50.f, 50.f);
+        mb.constant("thr", DType::kF32, {c}, thr.data());
+        mb.constant("pm", DType::kF32, {o}, pm.data());
+        mb.constant("pa", DType::kF32, {o}, pa.data());
+        std::vector<int8_t> bw(static_cast<size_t>(o * 9 * c));
+        for (auto& v : bw) v = r.i(0, 1) ? 1 : -1;
+        auto wp = bftest::pack_pm1(bw, o * 9, c);
+        mb.constant("bw", DType::kBit, {o, 3, 3, c}, wp.data());
+        Json bt = Json::Object{{"input_binarize", mode}, {"x_scale", static_cast<double>(s)}, {"x_zero", z}};
+        Json::Array bp;
+        for (int i = 0; i < 4; ++i) bp.push_back(Json(1));
+        bt["pads"] = Json(bp);
+        bt["pad_value"] = (k % 3) - 1;
+        if (k % 3 == 0) mb.node("I8BConv2D", {"y1", "bw", "pm", "pa"}, {"r1"}, bt);  // threshold 0
+        else mb.node("I8BConv2D", {"y1", "bw", "pm", "pa", "thr"}, {"r1"}, bt);
+        mb.output("r1");
+        compare(mb, {r.i8(g.h * g.w * g.ic)}, "conv twin bits case " + std::to_string(k), "i8conv2d.neon_sdot");
+      }
+    }
+  }
+}
+
+// Depthwise rows with an 8-channel block (QuickNet-Small's 8-channel stem, C % 16 == 8; 2026-11-13)
+BF_TEST(int8_full_depthwise_c8_bit_exact) {
+  Rng r(2015);
+  int k = 0;
+  for (int64_t c : {8, 24, 40}) {
+    for (int s = 1; s <= 2; ++s) {
+      for (int variant = 0; variant < 2; ++variant) {
+        ++k;
+        const int64_t h = 13, w = 10;
+        bftest::ModelBuilder mb;
+        mb.input("x", DType::kI8, {1, h, w, c});
+        auto wv = r.i8(c * 9);
+        mb.constant("w", DType::kI8, {c, 3, 3, 1}, wv.data());
+        std::vector<int32_t> bv(static_cast<size_t>(c)), mv(static_cast<size_t>(c)), sv(static_cast<size_t>(c));
+        for (auto& v : bv) v = r.i(-200000, 200000);
+        for (int64_t o = 0; o < c; ++o) {
+          auto m = variant == 1 && o % 3 == 0 ? r.mult(1.5, 40.0) : r.mult(1e-5, 1e-2);
+          mv[o] = m.first;
+          sv[o] = m.second;
+        }
+        mb.constant("b", DType::kI32, {c}, bv.data());
+        mb.constant("m", DType::kI32, {c}, mv.data());
+        mb.constant("s", DType::kI32, {c}, sv.data());
+        Json::Array pads = {Json(0), Json(1), Json(variant), Json(1)}, strides = {Json(s), Json(s)}, dil = {Json(1), Json(1)};
+        Json at = Json::Object{{"x_zero", r.i(-128, 127)}, {"pad_q", r.i(-128, 127)}, {"pads", Json(pads)}, {"strides", Json(strides)},
+                               {"dilations", Json(dil)}, {"groups", c}, {"y_zero", r.i(-128, 127)}};
+        if (variant == 1) {
+          at["qmin"] = -100;
+          at["qmax"] = 90;
+        }
+        mb.node("I8Conv2D", {"x", "w", "b", "m", "s"}, {"y"}, at);
+        mb.output("y");
+        compare(mb, {r.i8(h * w * c)}, "depthwise c8 case " + std::to_string(k), "i8conv2d.neon_depthwise");
+      }
+    }
+  }
+}

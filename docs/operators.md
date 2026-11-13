@@ -117,7 +117,12 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   bit -1 iff `lo[c] <= x <= hi[c]`), and twin merging (nodes reading the same inputs: `I8Lut` -> internal `I8LutN`,
   `I8Add` with equal input parameters -> `I8AddN`, `I8Conv2D` with byte-identical weights / bias -> `I8Conv2DN`,
   `I8LayerNorm` with the same statistics attributes -> `I8LayerNormN`: one pass, one shared computation, one output
-  stage per twin). `I8BDense` also accepts a bit-tensor input (as `I8BConv2D`), used by `I8PackBits`.
+  stage per twin). `I8BDense` also accepts a bit-tensor input (as `I8BConv2D`), used by `I8PackBits`. Last,
+  `bit_outputs`: an `I8Add` (-> internal `I8AddB(a, b, U)`), an output of an `I8AddN`, an `I8AffineSum` (-> internal
+  `I8AffineSumB(x..., K, B, U)`) or the binarize-aware output of an `I8Conv2DN` (-> `I8Conv2D` with its `bit_thr`
+  output) whose output is read only by binary layers binarizing it (`ge` / `gt`, the same thresholds) writes the bits
+  itself: bit -1 iff the integer sum before the output requantization is `<= U[c]` (the requantization is
+  non-decreasing, so `y >= T` <=> `acc >= A`; `U` = `A - 1` clamped to int32).
 
 * **Bit-packed outputs.** Last rewrite (after fusion, so epilogue-fused outputs qualify): a `BConv2D`, or a
   `BDense` with a binary (`ge` / `gt`) input and no `w_zero`, whose f32 output (possibly the output of its hosted

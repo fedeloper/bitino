@@ -198,7 +198,22 @@ class AddNRef : public Kernel {
     const int8_t* qa = ctx.in(0).data<int8_t>();
     const int8_t* qb = ctx.in(1).data<int8_t>();
     const int64_t n = ctx.in(0).size();
+    const auto bits = a.get_ints("bit_outputs", {});
     for (size_t j = 0; j < ctx.outputs.size(); ++j) {
+      const auto bj = std::find(bits.begin(), bits.end(), static_cast<int64_t>(j));
+      if (bj != bits.end()) {  // bit output: bit -1 iff xa + xb <= U[c]
+        const Tensor& u = ctx.in(2 + static_cast<size_t>(bj - bits.begin()));
+        const int64_t c = ctx.in(0).dim(-1), words = bit_words(c);
+        uint32_t* yb = ctx.out(j).data<uint32_t>();
+        std::fill_n(yb, n / c * words, 0u);
+        for (int64_t i = 0; i < n; ++i) {
+          const int64_t xa = q8::requant((qa[i] - za) * (int64_t(1) << ls), am, as);
+          const int64_t xb = q8::requant((qb[bidx_[i]] - zb) * (int64_t(1) << ls), bm, bs);
+          const int64_t ch = i % c;
+          if (xa + xb <= u.data<int32_t>()[u.size() == 1 ? 0 : ch]) yb[i / c * words + (ch >> 5)] |= 1u << (ch & 31);
+        }
+        continue;
+      }
       int8_t* y = ctx.out(j).data<int8_t>();
       for (int64_t i = 0; i < n; ++i) {
         int64_t xa = q8::requant((qa[i] - za) * (int64_t(1) << ls), am, as);
@@ -206,6 +221,34 @@ class AddNRef : public Kernel {
         y[i] = clamp8(zy[j] + q8::requant(xa + xb, static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j])), static_cast<int>(lo[j]),
                       static_cast<int>(hi[j]));
       }
+    }
+  }
+
+ private:
+  std::vector<int64_t> bidx_;
+};
+
+// I8AddB (internal, bit_outputs): bit -1 iff xa + xb <= U[c] (xa, xb: I8Add's input stage)
+class AddBRef : public Kernel {
+ public:
+  void prepare(const KernelContext& ctx) override { bidx_ = bcast_index(ctx.in(0).shape(), ctx.in(1).shape()); }
+  void run(const KernelContext& ctx) override {
+    const Json& a = ctx.attrs();
+    const int64_t za = a.get_int("a_zero", 0), zb = a.get_int("b_zero", 0);
+    const int ls = static_cast<int>(a.get_int("left_shift", 20));
+    const int32_t am = static_cast<int32_t>(a.get_int("a_mult", 0)), as = static_cast<int32_t>(a.get_int("a_shift", 0));
+    const int32_t bm = static_cast<int32_t>(a.get_int("b_mult", 0)), bs = static_cast<int32_t>(a.get_int("b_shift", 0));
+    const int8_t* qa = ctx.in(0).data<int8_t>();
+    const int8_t* qb = ctx.in(1).data<int8_t>();
+    const Tensor& u = ctx.in(2);
+    const int64_t n = ctx.in(0).size(), c = ctx.in(0).dim(-1), words = bit_words(c);
+    uint32_t* yb = ctx.out(0).data<uint32_t>();
+    std::fill_n(yb, n / c * words, 0u);
+    for (int64_t i = 0; i < n; ++i) {
+      const int64_t xa = q8::requant((qa[i] - za) * (int64_t(1) << ls), am, as);
+      const int64_t xb = q8::requant((qb[bidx_[i]] - zb) * (int64_t(1) << ls), bm, bs);
+      const int64_t ch = i % c;
+      if (xa + xb <= u.data<int32_t>()[u.size() == 1 ? 0 : ch]) yb[i / c * words + (ch >> 5)] |= 1u << (ch & 31);
     }
   }
 
@@ -234,6 +277,27 @@ class AffineSumRef : public Kernel {
       int64_t acc = B[ch];
       for (size_t i = 0; i < nin; ++i) acc += (ctx.in(i).data<int8_t>()[e] - zs[i]) * static_cast<int64_t>(K[i * kc + ch]);
       y[e] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
+    }
+  }
+};
+// I8AffineSumB (internal, bit_outputs): bit -1 iff acc <= U[c]
+class AffineSumBRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const size_t nin = ctx.inputs.size() - 3;
+    const Tensor& k = ctx.in(nin);
+    const int32_t* K = k.data<int32_t>();
+    const int32_t* B = ctx.in(nin + 1).data<int32_t>();
+    const Tensor& u = ctx.in(nin + 2);
+    const int64_t kc = k.dim(1), c = ctx.in(0).dim(-1), n = ctx.in(0).size(), words = bit_words(c);
+    auto zs = ctx.attrs().get_ints("zeros", {});
+    uint32_t* yb = ctx.out(0).data<uint32_t>();
+    std::fill_n(yb, n / c * words, 0u);
+    for (int64_t e = 0; e < n; ++e) {
+      const int64_t cc = e % c, ch = kc == 1 ? 0 : cc;
+      int64_t acc = B[ch];
+      for (size_t i = 0; i < nin; ++i) acc += (ctx.in(i).data<int8_t>()[e] - zs[i]) * static_cast<int64_t>(K[i * kc + ch]);
+      if (acc <= u.data<int32_t>()[u.size() == 1 ? 0 : cc]) yb[e / c * words + (cc >> 5)] |= 1u << (cc & 31);
     }
   }
 };
@@ -769,6 +833,8 @@ void register_int8_full_reference_kernels(OpRegistry& reg) {
   add("I8AffineSum", "i8affinesum.reference", make_kernel<AffineSumRef>);
   add("I8LutN", "i8lutn.reference", make_kernel<LutNRef>);
   add("I8AddN", "i8addn.reference", make_kernel<AddNRef>);
+  add("I8AddB", "i8addb.reference", make_kernel<AddBRef>);
+  add("I8AffineSumB", "i8affinesumb.reference", make_kernel<AffineSumBRef>);
   add("I8PackBits", "i8packbits.reference", make_kernel<PackBitsRef>);
   add("I8Conv2D", "i8conv2d.reference", make_kernel<Conv2DRef>);
   add("I8Conv2DN", "i8conv2dn.reference", make_kernel<Conv2DRef>);

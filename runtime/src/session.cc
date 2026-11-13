@@ -113,7 +113,7 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
   auto check_rewritten = [&](const char* what) {
     for (const Node& node : nodes_) {
       if (node.op != "I8LutN" && node.op != "I8AddN" && node.op != "I8Conv2DN" && node.op != "I8Lut" && node.op != "I8BConv2D" && node.op != "I8BDense" &&
-          node.op != "I8PackBits" && node.op != "I8LayerNormN")
+          node.op != "I8PackBits" && node.op != "I8LayerNormN" && node.op != "I8AddB" && node.op != "I8AffineSumB" && node.op != "I8Conv2D")
         continue;
       std::vector<const TensorInfo*> ins;
       for (int id : node.inputs) ins.push_back(id >= 0 ? &infos_[id] : nullptr);
@@ -179,7 +179,8 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     i8_rewrites_[3] += st.lut_twins;
     i8_rewrites_[4] += st.add_twins + st.conv_twins + st.ln_twins;
     i8_rewrites_[5] += st.merged_nodes;
-    if (st.lut_twins || st.add_twins || st.conv_twins || st.ln_twins) check_rewritten("int8 twin rewrite");
+    i8_rewrites_[7] += st.bit_outputs;
+    if (st.lut_twins || st.add_twins || st.conv_twins || st.ln_twins || st.bit_outputs) check_rewritten("int8 twin rewrite");
   }
 
   // 2. Activation memory: constants are views into the model; graph inputs and

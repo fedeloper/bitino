@@ -108,9 +108,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261112_2233",
-   "date": "2026-11-12",
-   "runtime_commit": "a62969e",
+   "suite": "20261113_0425",
+   "date": "2026-11-13",
+   "runtime_commit": "da471712",
    "stages": {
     "neon": {
      "pass": true,
@@ -133,9 +133,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261112_2233",
-   "date": "2026-11-12",
-   "runtime_commit": "a62969e",
+   "suite": "20261113_0425",
+   "date": "2026-11-13",
+   "runtime_commit": "da471712",
    "stages": {
     "neon": {
      "pass": true,
@@ -719,6 +719,105 @@
     "kernels": "neon",
     "model_data_sha256": "5261cf6421bd31d5862e4ff6c1d55c073151edcb854a6264ec93f7f7cc72455c",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bhvit-small-somefp",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 46.262734,
+    "median_range_ms": [
+     46.1240625,
+     46.6163015
+    ],
+    "p90_ms": 47.0376871,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 54048,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T19:02:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5261cf6421bd31d5862e4ff6c1d55c073151edcb854a6264ec93f7f7cc72455c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bhvit-small-somefp",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 23.2307815,
+    "median_range_ms": [
+     23.1935415,
+     23.2508595
+    ],
+    "p90_ms": 23.3424171,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 57024,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T19:02:52Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5261cf6421bd31d5862e4ff6c1d55c073151edcb854a6264ec93f7f7cc72455c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bhvit-small-somefp",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 43.846667,
+    "median_range_ms": [
+     43.694974,
+     43.9934115
+    ],
+    "p90_ms": 44.20626,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 51704,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T19:02:57Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5261cf6421bd31d5862e4ff6c1d55c073151edcb854a6264ec93f7f7cc72455c",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [

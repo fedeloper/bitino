@@ -1043,11 +1043,12 @@ class BConv2DNeonOpt : public Kernel {
 #if defined(__aarch64__)
     // fp32 two-phase output, rows of whole 128-bit steps: the 4x8 tile (dots_unit_rows8), weights by 8 channels
     // (same size: oc_pad_ == oc). BITINO_BCONV_T48=0 keeps the 4x4 tile (tests and A/B).
-    t48_ = dot2_ && !i8_out_.on && !pair_ && g_.groups == 1 && g_.oc % 8 == 0 && !opts_t48_off();
+    // (int8_full, 2026-11-13: int8 output and the I8BConv2DRes two-phase epilogue as well; the same int16 dots)
+    t48_ = (dot2_ || res2_) && !pair_ && g_.groups == 1 && g_.oc % 8 == 0 && !opts_t48_off();
     // Pair mode: popcount_8x4_pair_u16 on the same weights, on a Cortex-A75 prime core only (A75 -5..-8 %, X3 +2..4 %
     // per layer: the X3's four NEON pipes run run_4x4's interleaved form faster; ledger float_opt.md round 3).
     // BITINO_BCONV_T48=0 also keeps run_4x4 there.
-    p84_ = dot2_ && !i8_out_.on && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();
+    p84_ = (dot2_ || res2_) && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();
     if (t48_) {
       wbuf_ = aligned_alloc_shared(static_cast<size_t>(oc_pad_ * steps_ * 16));
       interleave_rows8(padded.data(), oc_pad_, k_words_, kwp_, static_cast<uint32_t*>(wbuf_.get()));
@@ -2054,8 +2055,8 @@ class BDenseNeon : public Kernel {
 #if defined(__aarch64__)
     // fp32 two-phase rows of whole 128-bit steps, whole 16-channel units and no bit output: every output goes through
     // tile2, so the weights are interleaved by 8 channels only (the 4x8 tile, dots_unit_rows8; as BConv2DNeonOpt).
-    t48_ = two_ && !i8_out_.on && !pair_ && !bout_.active && on_ % 16 == 0 && !opts_t48_off();
-    p84_ = two_ && !i8_out_.on && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();  // as BConv2DNeonOpt
+    t48_ = two_ && !pair_ && !bout_.active && on_ % 16 == 0 && !opts_t48_off();  // int8 output too (int8_full, 2026-11-13)
+    p84_ = two_ && pair_ && cpu_info().prime_part == kPartCortexA75 && !opts_t48_off();  // as BConv2DNeonOpt
     if (t48_) {
       wbuf_ = aligned_alloc_shared(static_cast<size_t>(on_pad_ * steps_ * 16));
       interleave_rows8(ctx.in(1).data<uint32_t>(), on_, words_, kwp_, static_cast<uint32_t*>(wbuf_.get()));
@@ -2605,7 +2606,8 @@ class BDenseTernaryNeon : public Kernel {
     // tile's layout; same size). A 4-row tile whose rows have no zero input (popcount(nz) == K: x·w = K -
     // 2 popcount(neg_x ^ neg_w), the binary dot product) runs popcount_4x8_u16; rows with zeros run one at a time
     // (ternary_row8). BITINO_BCONV_T48=0 keeps the 4x4 tiles.
-    fast_ = !i8_in_ && !i8_out_.on && !has_wz_ && on_ % 8 == 0 && k_ <= 65535 && !opts_t48_off();
+    // (int8_full: int8 codes in and / or int8 out as well, 2026-11-13: the same integer dots and fp32 values)
+    fast_ = !has_wz_ && on_ % 8 == 0 && k_ <= 65535 && !opts_t48_off();
 #endif
     wneg_ = aligned_alloc_shared(static_cast<size_t>(on_pad_ * kwp_ * 4));
 #if defined(__aarch64__)
@@ -2670,6 +2672,14 @@ class BDenseTernaryNeon : public Kernel {
       const int64_t grain8 = std::max<int64_t>(1, 8192 / std::max<int64_t>(1, 2 * steps * rows_));
       ctx.pool->parallel_for(blocks8, grain8, [&](int64_t b0, int64_t b1) {
         for (int64_t blk = b0; blk < b1; ++blk) {
+          if (i8_out_.on) {
+            switch (act_) {
+              case Activation::kNone: block8<Activation::kNone>(blk, ws, steps, static_cast<int8_t*>(y)); break;
+              case Activation::kRelu: block8<Activation::kRelu>(blk, ws, steps, static_cast<int8_t*>(y)); break;
+              case Activation::kRelu6: block8<Activation::kRelu6>(blk, ws, steps, static_cast<int8_t*>(y)); break;
+            }
+            continue;
+          }
           switch (act_) {
             case Activation::kNone: block8<Activation::kNone>(blk, ws, steps, static_cast<float*>(y)); break;
             case Activation::kRelu: block8<Activation::kRelu>(blk, ws, steps, static_cast<float*>(y)); break;
@@ -2801,9 +2811,10 @@ class BDenseTernaryNeon : public Kernel {
     }
     for (int r = 0; r < 4; ++r) out[r] = acc[r];
   }
-  // Output channels [8 blk, 8 blk + 8) of every row (fast_): v = act(fp32(pm - 2 pd) * mul + add) as block().
-  template <Activation A>
-  void block8(int64_t blk, const uint8_t* ws, int64_t steps, float* y) const {
+  // Output channels [8 blk, 8 blk + 8) of every row (fast_): v = act(fp32(pm - 2 pd) * mul + add) as block(); int8
+  // output (int8_full): clamp(rne(v)) by i8_pack4's operations.
+  template <Activation A, typename T>
+  void block8(int64_t blk, const uint8_t* ws, int64_t steps, T* y) const {
     const int64_t o = blk * 8;
     const uint8_t* b = ws + blk * steps * 128;
     const float32x4_t mul0 = vld1q_f32(mul_.data() + o), mul1 = vld1q_f32(mul_.data() + o + 4);
@@ -2812,13 +2823,22 @@ class BDenseTernaryNeon : public Kernel {
     const auto* xb = static_cast<const uint8_t*>(xneg_.get());
     const int32_t* pmr = pm_row_.data();
     const int64_t on = on_, rows = rows_, rb = kwp_ * 4, kfull = k_;
+    const int16x8_t lo8 = vdupq_n_s16(static_cast<int16_t>(i8_out_.lo)), hi8 = vdupq_n_s16(static_cast<int16_t>(i8_out_.hi));
     auto emit = [&](int64_t r, uint16x8_t pd) {
       const int32x4_t pm = vdupq_n_s32(pmr[r]);
       const int32x4_t d0 = vsubq_s32(pm, vshlq_n_s32(vreinterpretq_s32_u32(vmovl_u16(vget_low_u16(pd))), 1));
       const int32x4_t d1 = vsubq_s32(pm, vshlq_n_s32(vreinterpretq_s32_u32(vmovl_high_u16(pd)), 1));
-      float* yp = y + r * on + o;
-      vst1q_f32(yp, activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d0), mul0), add0)));
-      vst1q_f32(yp + 4, activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d1), mul1), add1)));
+      T* yp = y + r * on + o;
+      const float32x4_t v0 = activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d0), mul0), add0));
+      const float32x4_t v1 = activate(A, vaddq_f32(vmulq_f32(vcvtq_f32_s32(d1), mul1), add1));
+      if constexpr (std::is_same<T, int8_t>::value) {
+        int16x8_t h = vcombine_s16(vqmovn_s32(vcvtnq_s32_f32(v0)), vqmovn_s32(vcvtnq_s32_f32(v1)));
+        h = vminq_s16(vmaxq_s16(h, lo8), hi8);
+        vst1_s8(yp, vmovn_s16(h));
+      } else {
+        vst1q_f32(yp, v0);
+        vst1q_f32(yp + 4, v1);
+      }
     };
     auto row = [&](int64_t r) {
       emit(r, pmr[r] == kfull ? popcount_1x8_u16(xb + r * rb, b, steps) : ternary_row8(xa + r * rb, xb + r * rb, b, steps));

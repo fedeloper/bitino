@@ -10,8 +10,18 @@
    "model_id": "ab-bnn-cifar10-reactneta",
    "check": "int8_full slower than float (all)",
    "ms": 1.68,
-   "float_ms": 1.591,
-   "ratio": 1.056,
+   "float_ms": 1.531,
+   "ratio": 1.097,
+   "file": "model_int8_full_log2.bitino",
+   "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "ab-bnn-cifar100-reactneta",
+   "check": "int8_full slower than float (all)",
+   "ms": 1.668,
+   "float_ms": 1.54,
+   "ratio": 1.083,
    "file": "model_int8_full_log2.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -21,7 +31,7 @@
    "check": "int8_full slower than float (all)",
    "ms": 1.022,
    "float_ms": 0.89,
-   "ratio": 1.149,
+   "ratio": 1.148,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -29,29 +39,29 @@
    "device": "oneplus-open",
    "model_id": "adabin-resnet20-cifar10",
    "check": "optimized_int8 slower than float (all)",
-   "ms": 0.988,
+   "ms": 0.999,
    "float_ms": 0.89,
-   "ratio": 1.11,
+   "ratio": 1.122,
    "file": "model.bitino",
-   "plan": "quick_20261112_2324_cph2551"
+   "plan": "quick_20261113_0515_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bbcu-sr-m-x4",
    "check": "optimized_int8 slower than float (all)",
-   "ms": 15.581,
-   "float_ms": 14.572,
-   "ratio": 1.069,
+   "ms": 15.616,
+   "float_ms": 14.537,
+   "ratio": 1.074,
    "file": "model.bitino",
-   "plan": "quick_20261112_2324_cph2551"
+   "plan": "quick_20261113_0515_cph2551"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-small-binary",
    "check": "int8_full slower than float (all)",
    "ms": 59.612,
-   "float_ms": 44.55,
-   "ratio": 1.338,
+   "float_ms": 43.874,
+   "ratio": 1.359,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -60,8 +70,8 @@
    "model_id": "bhvit-small-somefp",
    "check": "int8_full slower than float (all)",
    "ms": 59.019,
-   "float_ms": 46.626,
-   "ratio": 1.266,
+   "float_ms": 46.263,
+   "ratio": 1.276,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -70,8 +80,8 @@
    "model_id": "bhvit-tiny-binary",
    "check": "int8_full slower than float (all)",
    "ms": 38.542,
-   "float_ms": 29.011,
-   "ratio": 1.329,
+   "float_ms": 28.548,
+   "ratio": 1.35,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -80,8 +90,8 @@
    "model_id": "bhvit-tiny-somefp",
    "check": "int8_full slower than float (all)",
    "ms": 37.935,
-   "float_ms": 31.32,
-   "ratio": 1.211,
+   "float_ms": 30.977,
+   "ratio": 1.225,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -90,8 +100,8 @@
    "model_id": "bi-vit-deit-small",
    "check": "int8_full slower than float (all)",
    "ms": 39.715,
-   "float_ms": 35.14,
-   "ratio": 1.13,
+   "float_ms": 34.679,
+   "ratio": 1.145,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -100,8 +110,8 @@
    "model_id": "bi-vit-deit-tiny",
    "check": "int8_full slower than float (all)",
    "ms": 15.335,
-   "float_ms": 13.575,
-   "ratio": 1.13,
+   "float_ms": 13.518,
+   "ratio": 1.134,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -110,8 +120,8 @@
    "model_id": "bibert-bert-base-mnli",
    "check": "int8_full slower than float (all)",
    "ms": 69.52,
-   "float_ms": 59.439,
-   "ratio": 1.17,
+   "float_ms": 51.481,
+   "ratio": 1.35,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -120,8 +130,8 @@
    "model_id": "bibert-bert-base-mrpc",
    "check": "int8_full slower than float (all)",
    "ms": 68.962,
-   "float_ms": 57.501,
-   "ratio": 1.199,
+   "float_ms": 45.391,
+   "ratio": 1.519,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -130,8 +140,8 @@
    "model_id": "bibert-bert-base-qqp",
    "check": "int8_full slower than float (all)",
    "ms": 75.015,
-   "float_ms": 65.102,
-   "ratio": 1.152,
+   "float_ms": 57.511,
+   "ratio": 1.304,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -140,8 +150,8 @@
    "model_id": "bibert-bert-base-sst2",
    "check": "int8_full slower than float (all)",
    "ms": 34.899,
-   "float_ms": 30.554,
-   "ratio": 1.142,
+   "float_ms": 26.941,
+   "ratio": 1.295,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -150,8 +160,8 @@
    "model_id": "bimatting-bimobilenet-backbone",
    "check": "int8_full slower than float (all)",
    "ms": 10.67,
-   "float_ms": 8.831,
-   "ratio": 1.208,
+   "float_ms": 8.713,
+   "ratio": 1.225,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -160,8 +170,8 @@
    "model_id": "biper-resnet18-cifar10",
    "check": "int8_full slower than float (all)",
    "ms": 2.179,
-   "float_ms": 2.006,
-   "ratio": 1.086,
+   "float_ms": 1.974,
+   "ratio": 1.104,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
   },
@@ -170,10 +180,20 @@
    "model_id": "biper-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
    "ms": 0.571,
-   "float_ms": 0.468,
-   "ratio": 1.22,
+   "float_ms": 0.474,
+   "ratio": 1.206,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "oneplus-open",
+   "model_id": "biper-resnet20-cifar10",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 0.51,
+   "float_ms": 0.474,
+   "ratio": 1.076,
+   "file": "model.bitino",
+   "plan": "quick_20261113_0515_cph2551"
   },
   {
    "device": "oneplus-open",
@@ -454,6 +474,26 @@
    "ratio": 1.064,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0034_cph2551"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "adabin-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 4.875,
+   "float_ms": 4.147,
+   "ratio": 1.176,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "adabin-resnet20-cifar10",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 4.507,
+   "float_ms": 4.147,
+   "ratio": 1.087,
+   "file": "model.bitino",
+   "plan": "quick_20261113_0358_moto-e13"
   },
   {
    "device": "moto-e13",

@@ -529,10 +529,42 @@ inline int8x16_t afs_requant(int32x4_t* acc, const Rq& rq, int32x4_t vzy, int32x
   return kFull ? q : vminq_s8(vmaxq_s8(q, vlo8), vhi8);
 }
 
+// Bit outputs (I8AffineSumB / I8AddN / I8AddB, src/graph_rewrite_i8.h bit_outputs; 2026-11-13): bits of 16 consecutive
+// channels, bit 1 (= -1) iff v <= u (CMLE, narrows, AND with the bit weights, three pairwise-add levels), stored as two
+// bytes at dst (channel ch of a row: byte ch / 8 of the row's words; ch % 16 == 0, so dst is 2-byte aligned).
+inline void store_bits16(const int32x4_t* v, const int32_t* u, uint8_t* dst) {
+  static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+  const uint16x8_t m01 = vcombine_u16(vmovn_u32(vcleq_s32(v[0], vld1q_s32(u))), vmovn_u32(vcleq_s32(v[1], vld1q_s32(u + 4))));
+  const uint16x8_t m23 = vcombine_u16(vmovn_u32(vcleq_s32(v[2], vld1q_s32(u + 8))), vmovn_u32(vcleq_s32(v[3], vld1q_s32(u + 12))));
+  uint8x16_t m = vandq_u8(vcombine_u8(vmovn_u16(m01), vmovn_u16(m23)), vld1q_u8(kW));
+  m = vpaddq_u8(m, m);
+  m = vpaddq_u8(m, m);
+  m = vpaddq_u8(m, m);
+  vst1q_lane_u16(reinterpret_cast<uint16_t*>(dst), vreinterpretq_u16_u8(m), 0);  // dst is 2-byte aligned (ch % 16 == 0)
+}
+// The 16 bits of channels [ch, ch + 16) of row r of a bit tensor with c channels (c % 16 == 0); the upper half of the
+// row's last word is written 0 when c % 32 == 16.
+inline void store_row_bits16(const int32x4_t* v, const int32_t* u, uint32_t* yb, int64_t r, int64_t ch, int64_t c) {
+  uint8_t* row = reinterpret_cast<uint8_t*>(yb + r * bit_words(c));
+  store_bits16(v, u + ch, row + ch / 8);
+  if ((c & 31) == 16 && ch + 16 == c) {
+    const uint16_t z = 0;
+    std::memcpy(row + ch / 8 + 2, &z, 2);
+  }
+}
+// one bit (scalar tails): read-modify-write of its word
+inline void set_bit(uint32_t* yb, int64_t r, int64_t ch, int64_t c, bool v) {
+  uint32_t& w = yb[r * bit_words(c) + (ch >> 5)];
+  w = (w & ~(1u << (ch & 31))) | (static_cast<uint32_t>(v) << (ch & 31));
+}
+
+// I8AffineSumB (bits_): the accumulators of the fast path (exact int32 sums, folded bias, no shift requantization)
+// compared with U[c] (kMode 4 below; c % 16 == 0, affine_sum_neon_supported).
 class AffineSumNeon : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
-    nin_ = ctx.inputs.size() - 2;
+    bits_ = ctx.node->op == "I8AffineSumB";
+    nin_ = ctx.inputs.size() - (bits_ ? 3 : 2);
     const Tensor& k = ctx.in(nin_);
     c_ = ctx.in(0).dim(-1);
     // expand K and B to full channel vectors (one copy per input), padded to a multiple of 16
@@ -558,6 +590,11 @@ class AffineSumNeon : public Kernel {
       fast_ = bound < (int64_t(1) << 31);
       bfold_[ch] = static_cast<int32_t>(b);
     }
+    if (bits_) {
+      const Tensor& u = ctx.in(nin_ + 2);
+      ub_.assign(cp_, 0);
+      for (int64_t ch = 0; ch < c_; ++ch) ub_[ch] = u.data<int32_t>()[u.size() == 1 ? 0 : ch];
+    }
     // Shift requantization (2026-11-12): with mult = 2^30 and shift = -r <= 0 (nearly every I8AffineSum: the quantizer
     // folds the scales into K), requant(acc) = rshr(mulhi(acc, 2^30), r) = rshr(floor((acc + 1) / 2), r)
     //   = floor((acc + 1 + [r > 0] 2^r) / 2^(r+1))      (floor((floor(u) + m) / n) = floor((u + m) / n), m, n integers)
@@ -576,7 +613,7 @@ class AffineSumNeon : public Kernel {
     {
       const int32_t m = static_cast<int32_t>(ctx.attrs().get_int("mult", 0)), s = static_cast<int32_t>(ctx.attrs().get_int("shift", 0));
       const int64_t zy = ctx.attrs().get_int("y_zero", 0);
-      shr_ = fast_ && m == (int32_t(1) << 30) && s >= -30 && s <= 15;
+      shr_ = fast_ && !bits_ && m == (int32_t(1) << 30) && s >= -30 && s <= 15;
       if (shr_) {
         int64_t c0 = 0;
         if (s <= 0) {
@@ -668,7 +705,9 @@ class AffineSumNeon : public Kernel {
     // 2 or 4 inputs (nearly every I8AffineSum of the zoo): coefficients and bias in registers, rows inner
 #define BF_AFS(N16, N32)                                  \
   do {                                                    \
-    if (shr3_) {                                          \
+    if (bits_) {                                          \
+      run_tiled<N16, N32, 4, true>(ctx);                  \
+    } else if (shr3_) {                                   \
       if (full) run_tiled<N16, N32, 3, true>(ctx);        \
       else run_tiled<N16, N32, 3, false>(ctx);            \
     } else if (shr_) {                                    \
@@ -696,7 +735,9 @@ class AffineSumNeon : public Kernel {
     if (nin_ == 3 && n16_ == 0) BF_AFS(0, 3);
 #endif
 #undef BF_AFS
-    if (shr3_) {
+    if (bits_) {
+      run_fast<4, true>(ctx);
+    } else if (shr3_) {
       if (full) run_fast<3, true>(ctx);
       else run_fast<3, false>(ctx);
     } else if (shr_) {
@@ -726,9 +767,11 @@ class AffineSumNeon : public Kernel {
     const int lo = static_cast<int>(ctx.attrs().get_int("qmin", -128)), hi = static_cast<int>(ctx.attrs().get_int("qmax", 127));
     const int8_t* xp[N];
     for (int j = 0; j < N; ++j) xp[j] = ctx.in(order_[j]).data<int8_t>();
-    int8_t* y = ctx.out(0).data<int8_t>();
+    int8_t* y = kMode == 4 ? nullptr : ctx.out(0).data<int8_t>();
+    uint32_t* yb = kMode == 4 ? ctx.out(0).data<uint32_t>() : nullptr;
+    const int32_t* ub = ub_.data();
     const int64_t c = c_, cp = cp_;
-    const int32_t* bf = kMode >= 2 ? bshr_.data() : bfold_.data();
+    const int32_t* bf = kMode == 2 || kMode == 3 ? bshr_.data() : bfold_.data();
     const int32_t* k32 = k32_.data();
     const int16_t* kh = kh_.data();
     const int32_t sh = shr_s_;
@@ -770,8 +813,12 @@ class AffineSumNeon : public Kernel {
               acc[2] = vmlaq_s32(acc[2], vmovl_s16(vget_low_s16(h)), kw[i][2]);
               acc[3] = vmlaq_s32(acc[3], vmovl_high_s16(h), kw[i][3]);
             }
-            const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
-            vst1q_s8(y + off, yq);
+            if constexpr (kMode == 4) {
+              store_row_bits16(acc, ub, yb, r, ch, c);
+            } else {
+              const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
+              vst1q_s8(y + off, yq);
+            }
           }
         }
         for (; ch < c; ++ch)
@@ -779,7 +826,8 @@ class AffineSumNeon : public Kernel {
             const int64_t base = r * c;
             int64_t acc = bfull_[ch];
             for (size_t i = 0; i < nin_; ++i) acc += (ctx.in(i).data<int8_t>()[base + ch] - zs_[i]) * static_cast<int64_t>(kfull_[i * cp_ + ch]);
-            y[base + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
+            if (kMode == 4) set_bit(yb, r, ch, c, acc <= ub[ch]);
+            else y[base + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
           }
       }
     });
@@ -794,10 +842,12 @@ class AffineSumNeon : public Kernel {
     std::vector<const int8_t*> x(nin_), xo(nin_);
     for (size_t i = 0; i < nin_; ++i) x[i] = ctx.in(i).data<int8_t>();
     for (size_t j = 0; j < nin_; ++j) xo[j] = x[order_[j]];
-    int8_t* y = ctx.out(0).data<int8_t>();
+    int8_t* y = kMode == 4 ? nullptr : ctx.out(0).data<int8_t>();
+    uint32_t* yb = kMode == 4 ? ctx.out(0).data<uint32_t>() : nullptr;
+    const int32_t* ub = ub_.data();
     const size_t nin = nin_, n16 = n16_;
     const int64_t c = c_, cp = cp_;
-    const int32_t* bf = kMode >= 2 ? bshr_.data() : bfold_.data();
+    const int32_t* bf = kMode == 2 || kMode == 3 ? bshr_.data() : bfold_.data();
     const int32_t* k32 = k32_.data();
     const int16_t* kh = kh_.data();
     const int8_t* const* xp = xo.data();
@@ -845,16 +895,22 @@ class AffineSumNeon : public Kernel {
             a1[2] = vmlaq_s32(a1[2], vmovl_s16(vget_low_s16(h1)), k2);
             a1[3] = vmlaq_s32(a1[3], vmovl_high_s16(h1), k3);
           }
-          const int8x16_t y0 = afs_requant<kMode, kFull>(a0, rq, vzy, vsh, vlo8, vhi8);
-          vst1q_s8(y + o0, y0);
-          const int8x16_t y1 = afs_requant<kMode, kFull>(a1, rq, vzy, vsh, vlo8, vhi8);
-          vst1q_s8(y + o1, y1);
+          if constexpr (kMode == 4) {
+            store_row_bits16(a0, ub, yb, r, ch, c);
+            store_row_bits16(a1, ub, yb, r + 1, ch, c);
+          } else {
+            const int8x16_t y0 = afs_requant<kMode, kFull>(a0, rq, vzy, vsh, vlo8, vhi8);
+            vst1q_s8(y + o0, y0);
+            const int8x16_t y1 = afs_requant<kMode, kFull>(a1, rq, vzy, vsh, vlo8, vhi8);
+            vst1q_s8(y + o1, y1);
+          }
         }
         for (; ch < c; ++ch)
           for (int64_t rr = r; rr < r + 2; ++rr) {
             int64_t acc = bfull_[ch];
             for (size_t i = 0; i < nin; ++i) acc += (x[i][rr * c + ch] - zs_[i]) * static_cast<int64_t>(kfull_[i * cp_ + ch]);
-            y[rr * c + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
+            if (kMode == 4) set_bit(yb, rr, ch, c, acc <= ub[ch]);
+            else y[rr * c + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
           }
       }
       for (; r < r1; ++r) {
@@ -883,13 +939,18 @@ class AffineSumNeon : public Kernel {
             acc[2] = vmlaq_s32(acc[2], vmovl_s16(vget_low_s16(h)), vld1q_s32(kr + 8));
             acc[3] = vmlaq_s32(acc[3], vmovl_high_s16(h), vld1q_s32(kr + 12));
           }
-          const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
-          vst1q_s8(y + base + ch, yq);
+          if constexpr (kMode == 4) {
+            store_row_bits16(acc, ub, yb, r, ch, c);
+          } else {
+            const int8x16_t yq = afs_requant<kMode, kFull>(acc, rq, vzy, vsh, vlo8, vhi8);
+            vst1q_s8(y + base + ch, yq);
+          }
         }
         for (; ch < c; ++ch) {
           int64_t acc = bfull_[ch];
           for (size_t i = 0; i < nin; ++i) acc += (x[i][base + ch] - zs_[i]) * static_cast<int64_t>(kfull_[i * cp_ + ch]);
-          y[base + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
+          if (kMode == 4) set_bit(yb, r, ch, c, acc <= ub[ch]);
+          else y[base + ch] = clamp8(zy + q8::requant(acc, m, s), lo, hi);
         }
       }
     });
@@ -897,6 +958,16 @@ class AffineSumNeon : public Kernel {
 
   void run_general(const KernelContext& ctx) const {
     const int64_t rows = ctx.in(0).size() / c_;
+    if (bits_) {  // no int32 bound: the reference's int64 sums per element
+      uint32_t* yb = ctx.out(0).data<uint32_t>();
+      for (int64_t r = 0; r < rows; ++r)
+        for (int64_t ch = 0; ch < c_; ++ch) {
+          int64_t acc = bfull_[ch];
+          for (size_t i = 0; i < nin_; ++i) acc += (ctx.in(i).data<int8_t>()[r * c_ + ch] - zs_[i]) * static_cast<int64_t>(kfull_[i * cp_ + ch]);
+          set_bit(yb, r, ch, c_, acc <= ub_[ch]);
+        }
+      return;
+    }
     const int32_t m = static_cast<int32_t>(ctx.attrs().get_int("mult", 0)), s = static_cast<int32_t>(ctx.attrs().get_int("shift", 0));
     const int32_t zy = static_cast<int32_t>(ctx.attrs().get_int("y_zero", 0));
     const int lo = static_cast<int>(ctx.attrs().get_int("qmin", -128)), hi = static_cast<int>(ctx.attrs().get_int("qmax", 127));
@@ -937,6 +1008,8 @@ class AffineSumNeon : public Kernel {
 
   size_t nin_ = 0;
   int64_t c_ = 0, cp_ = 0;
+  bool bits_ = false;
+  std::vector<int32_t> ub_;
   bool fast_ = false, shr_ = false, shr3_ = false;
   int32_t shr_s_ = 1;
   std::vector<int32_t> bshr_;
@@ -951,7 +1024,8 @@ class AffineSumNeon : public Kernel {
 bool affine_sum_neon_supported(const KernelContext& ctx) {
   for (auto z : ctx.attrs().get_ints("zeros", {}))
     if (z < -32000 || z > 32000) return false;
-  return true;
+  // I8AffineSumB: whole 16-channel units per row (store_row_bits16)
+  return ctx.node->op != "I8AffineSumB" || ctx.in(0).dim(-1) % 16 == 0;
 }
 
 // ------------------------------------------------------------ I8LayerNorm
@@ -1240,6 +1314,33 @@ void pack_row_bits_i8x(const int8_t* q, int64_t c, const int8_t* t8, const int16
   else pack_row_bits_i8x_t<false>(q, c, t8, t, out);
 }
 
+// Rows [p0, p1) of C = 16 or 32 channels (one 32-bit word per row), 64 codes (4 or 2 rows) per step (2026-11-13; the
+// per-row packer spent most of its time on call and reduction overhead for such short rows): the same bits as
+// pack_row_bits_i8x, bit 1 iff q < T, T in int8 lanes (t64: the thresholds of 64 consecutive codes, i.e. the C
+// thresholds repeated; t16: the remaining rows one at a time).
+template <int kC>
+void pack_rows_bits_small(const int8_t* q, int64_t p0, int64_t p1, const int8_t* t64, const int16_t* t16, bool per_channel, uint32_t* out) {
+  static_assert(kC == 16 || kC == 32, "16 or 32 channels");
+  constexpr int64_t kRows = 64 / kC;
+  static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+  const uint8x16_t bitw = vld1q_u8(kW);
+  const int8x16_t ta = vld1q_s8(t64), tb = vld1q_s8(t64 + 16), tc = vld1q_s8(t64 + 32), td = vld1q_s8(t64 + 48);
+  int64_t p = p0;
+  for (; p + kRows <= p1; p += kRows) {
+    const int8_t* x = q + p * kC;
+    const uint8x16_t m0 = vandq_u8(vcltq_s8(vld1q_s8(x), ta), bitw), m1 = vandq_u8(vcltq_s8(vld1q_s8(x + 16), tb), bitw);
+    const uint8x16_t m2 = vandq_u8(vcltq_s8(vld1q_s8(x + 32), tc), bitw), m3 = vandq_u8(vcltq_s8(vld1q_s8(x + 48), td), bitw);
+    uint8x16_t r = vpaddq_u8(vpaddq_u8(m0, m1), vpaddq_u8(m2, m3));
+    r = vpaddq_u8(r, r);  // bytes 0..7: the bits of codes 0..63
+    if (kC == 32) {
+      vst1_u32(out + p, vreinterpret_u32_u8(vget_low_u8(r)));
+    } else {
+      vst1q_u32(out + p, vmovl_u16(vreinterpret_u16_u8(vget_low_u8(r))));  // 16 bits per row, upper halves 0
+    }
+  }
+  for (; p < p1; ++p) pack_row_bits_i8x(q + p * kC, kC, t64, t16, per_channel, out + p);
+}
+
 BinThr bin_thresholds(const std::string& mode, const q8::Deq& d, const float* thr, int64_t c) {
   BinThr b;
   b.mode = mode == "gt" ? q8::QBin::kGt : (mode == "sign_zero" ? q8::QBin::kSignZero : (mode == "gt0" ? q8::QBin::kGt0 : q8::QBin::kGe));
@@ -1301,7 +1402,16 @@ class PackBitsNeon : public Kernel {
         }
         if (i < c) {
           uint32_t b = 0;
-          for (int64_t j = i; j < c; ++j) b |= static_cast<uint32_t>(lo[j] <= x[j] && x[j] <= hi[j]) << (j & 31);
+          int64_t j = i;
+          if (c - i >= 16) {  // 16 channels (rows of 16 / 48 channels; 2026-11-13, was per channel)
+            uint8x16_t m = mask(i);
+            m = vpaddq_u8(m, m);
+            m = vpaddq_u8(m, m);
+            m = vpaddq_u8(m, m);
+            b = vgetq_lane_u16(vreinterpretq_u16_u8(m), 0);
+            j = i + 16;
+          }
+          for (; j < c; ++j) b |= static_cast<uint32_t>(lo[j] <= x[j] && x[j] <= hi[j]) << (j & 31);
           out[i >> 5] = b;
         }
       }
@@ -1381,6 +1491,9 @@ class BinaryLayerNeon : public Kernel {
       t8_.assign(t.size() + 64, 0);
       if (t8ok_)
         for (size_t i = 0; i < t.size(); ++i) t8_[i] = static_cast<int8_t>(t[i]);
+      t64_.assign(64, 0);  // 16 / 32-channel rows: the thresholds of 64 consecutive codes (pack_rows_bits_small)
+      if (t8ok_)
+        for (int64_t j = 0; j < 64; ++j) t64_[j] = t8_[t.size() > 1 ? static_cast<size_t>(j % c_) : 0];
     }
     sub_.node.op = conv_ ? "BConv2D" : "BDense";
     sub_.node.name = ctx.node->name + "/binary";
@@ -1443,7 +1556,11 @@ class BinaryLayerNeon : public Kernel {
       uint32_t* xb = sub_.owned[0].data<uint32_t>();
       const int64_t words = bit_words(c_);
       ctx.pool->parallel_for(pix_, std::max<int64_t>(1, kSerial / std::max<int64_t>(c_, 1)), [&](int64_t p0, int64_t p1) {
-        if (t8ok_)
+        if (t8ok_ && c_ == 16)
+          pack_rows_bits_small<16>(q, p0, p1, t64_.data(), tsel_.data(), pc, xb);
+        else if (t8ok_ && c_ == 32)
+          pack_rows_bits_small<32>(q, p0, p1, t64_.data(), tsel_.data(), pc, xb);
+        else if (t8ok_)
           for (int64_t p = p0; p < p1; ++p) pack_row_bits_i8x(q + p * c_, c_, t8_.data(), tsel_.data(), pc, xb + p * words);
         else
           for (int64_t p = p0; p < p1; ++p) pack_row_bits_i8(q + p * c_, c_, tsel_.data(), pc, xb + p * words);
@@ -1463,7 +1580,7 @@ class BinaryLayerNeon : public Kernel {
   int64_t c_ = 0, pix_ = 0;
   BinThr thr_;
   std::vector<int16_t> tsel_;
-  std::vector<int8_t> t8_;
+  std::vector<int8_t> t8_, t64_;
   bool t8ok_ = false;
   Sub sub_;
 };
@@ -2816,10 +2933,57 @@ bool lutn_neon_supported(const KernelContext& ctx) {
 // SQRDMULH terms) computed once per 16 elements, then every output's requantization, + zy, saturating narrows and
 // clamp. Same shapes or a broadcast row of b (a multiple of 16 channels); int8 zero points; left_shift 20; at most 4
 // outputs.
+// Bit outputs (2026-11-13; I8AddN attribute bit_outputs, and I8AddB: src/graph_rewrite_i8.h bit_outputs): bit -1 iff
+// s <= U[c] (store_row_bits16; c % 16 == 0). I8AddB with a one-element b (RBNN / SiMaN mean centering): xa is
+// non-decreasing in the code (a_mult > 0), so s <= U[c] <=> qa < Q[c] = -128 + #{q : xa(q) + xb <= U[c]}, found per run
+// on the 256 values of xa (prepare) by binary search; the codes are then packed as by the binary layers.
 class AddNNeon : public Kernel {
  public:
-  void prepare(const KernelContext& ctx) override { brow_ = ctx.in(0).shape() == ctx.in(1).shape() ? 0 : ctx.in(1).size(); }
+  void prepare(const KernelContext& ctx) override {
+    const Json& a = ctx.attrs();
+    addb_ = ctx.node->op == "I8AddB";
+    bscalar_ = addb_ && ctx.in(1).size() == 1 && ctx.in(0).size() > 1;
+    brow_ = ctx.in(0).shape() == ctx.in(1).shape() || bscalar_ ? 0 : ctx.in(1).size();
+    c_ = ctx.in(0).dim(-1);
+    const int64_t cp = (c_ + 15) / 16 * 16 + 16;
+    k_ = static_cast<int>(ctx.outputs.size());
+    outs_.assign(static_cast<size_t>(k_), Out{});
+    auto bound = [&](size_t in, Out& o) {
+      const Tensor& u = ctx.in(in);
+      o.bits = true;
+      o.pc = u.size() > 1;
+      o.u.assign(static_cast<size_t>(cp), 0);
+      for (int64_t ch = 0; ch < c_; ++ch) o.u[ch] = u.data<int32_t>()[u.size() == 1 ? 0 : ch];
+    };
+    if (addb_) {
+      bound(2, outs_[0]);
+    } else {
+      const auto om = a.get_ints("out_mults", {}), os = a.get_ints("out_shifts", {}), zys = a.get_ints("y_zeros", {});
+      const auto los = a.get_ints("qmins", {}), his = a.get_ints("qmaxs", {});
+      for (int j = 0; j < k_; ++j) {
+        Out& o = outs_[j];
+        o.om = static_cast<int32_t>(om[j]);
+        o.os = static_cast<int32_t>(os[j]);
+        o.zy = static_cast<int32_t>(zys[j]);
+        o.lo = static_cast<int>(los[j]);
+        o.hi = static_cast<int>(his[j]);
+      }
+      const auto bits = a.get_ints("bit_outputs", {});
+      for (size_t i = 0; i < bits.size(); ++i) bound(2 + i, outs_[static_cast<size_t>(bits[i])]);
+    }
+    if (bscalar_) {
+      const int ls = static_cast<int>(a.get_int("left_shift", 20));
+      const int32_t am = static_cast<int32_t>(a.get_int("a_mult", 0)), as = static_cast<int32_t>(a.get_int("a_shift", 0));
+      const int64_t za = a.get_int("a_zero", 0);
+      xa_.resize(256);
+      for (int q = -128; q <= 127; ++q) xa_[q + 128] = q8::requant((q - za) * (int64_t(1) << ls), am, as);
+      t16_.assign(static_cast<size_t>(cp), 0);
+      t8_.assign(static_cast<size_t>(cp + 64), 0);
+      t64_.assign(64, 0);
+    }
+  }
   void run(const KernelContext& ctx) override {
+    if (bscalar_) return run_scalar(ctx);
     const Json& a = ctx.attrs();
     const bool ah = a.get_int("a_mult", 0) == (int64_t(1) << 30) && a.get_int("a_shift", 0) == 0;
     const bool bh = a.get_int("b_mult", 0) == (int64_t(1) << 30) && a.get_int("b_shift", 0) == 0;
@@ -2829,6 +2993,53 @@ class AddNNeon : public Kernel {
   }
 
  private:
+  struct Out {
+    bool bits = false, pc = false;
+    int32_t om = 0, os = 0, zy = 0;
+    int lo = -128, hi = 127;
+    std::vector<int32_t> u;  // bit outputs: U per channel (padded)
+  };
+
+  // I8AddB, one-element b: per-channel code thresholds, then the binary layers' packers
+  void run_scalar(const KernelContext& ctx) {
+    const Json& a = ctx.attrs();
+    const int ls = static_cast<int>(a.get_int("left_shift", 20));
+    const int32_t bm = static_cast<int32_t>(a.get_int("b_mult", 0)), bs = static_cast<int32_t>(a.get_int("b_shift", 0));
+    const int64_t xb = q8::requant((ctx.in(1).data<int8_t>()[0] - a.get_int("b_zero", 0)) * (int64_t(1) << ls), bm, bs);
+    const Out& o = outs_[0];
+    const int64_t c = c_, nt = o.pc ? c : 1;
+    bool t8ok = true;
+    for (int64_t ch = 0; ch < nt; ++ch) {
+      // #{q : xa(q) + xb <= U}: xa_ is non-decreasing
+      const int64_t lim = o.u[ch] - xb;
+      int lo = 0, hi = 256;  // first index with xa > lim
+      while (lo < hi) {
+        const int mid = (lo + hi) / 2;
+        if (xa_[mid] <= lim) lo = mid + 1;
+        else hi = mid;
+      }
+      t16_[ch] = static_cast<int16_t>(lo - 128);
+      t8ok = t8ok && lo - 128 <= 127;
+      t8_[ch] = static_cast<int8_t>(std::min(lo - 128, 127));
+    }
+    for (int64_t j = 0; j < 64; ++j) t64_[j] = t8_[o.pc ? j % c : 0];
+    const int8_t* q = ctx.in(0).data<int8_t>();
+    uint32_t* yb = ctx.out(0).data<uint32_t>();
+    const int64_t pix = ctx.in(0).size() / c, words = bit_words(c);
+    const bool pc = o.pc;
+    const int8_t* t8 = t8_.data();
+    const int8_t* t64 = t64_.data();
+    const int16_t* t16 = t16_.data();
+    ctx.pool->parallel_for(pix, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [=](int64_t p0, int64_t p1) {
+      if (t8ok && c == 16) pack_rows_bits_small<16>(q, p0, p1, t64, t16, pc, yb);
+      else if (t8ok && c == 32) pack_rows_bits_small<32>(q, p0, p1, t64, t16, pc, yb);
+      else if (t8ok)
+        for (int64_t p = p0; p < p1; ++p) pack_row_bits_i8x(q + p * c, c, t8, t16, pc, yb + p * words);
+      else
+        for (int64_t p = p0; p < p1; ++p) pack_row_bits_i8(q + p * c, c, t16, pc, yb + p * words);
+    });
+  }
+
   // kHalf: 0 none, 1 a, 2 b is the 2^30 / 0 input (term (q - z) << 19 exactly, see AddNeon::run)
   template <int kHalf>
   void run_t(const KernelContext& ctx) const {
@@ -2836,14 +3047,17 @@ class AddNNeon : public Kernel {
     const int32_t za = static_cast<int32_t>(a.get_int("a_zero", 0)), zb = static_cast<int32_t>(a.get_int("b_zero", 0));
     const int32_t am = static_cast<int32_t>(a.get_int("a_mult", 0)), as = static_cast<int32_t>(a.get_int("a_shift", 0));
     const int32_t bm = static_cast<int32_t>(a.get_int("b_mult", 0)), bs = static_cast<int32_t>(a.get_int("b_shift", 0));
-    const auto om = a.get_ints("out_mults", {}), os = a.get_ints("out_shifts", {}), zys = a.get_ints("y_zeros", {});
-    const auto los = a.get_ints("qmins", {}), his = a.get_ints("qmaxs", {});
-    const int k = static_cast<int>(ctx.outputs.size());
+    const int k = k_;
+    const Out* outs = outs_.data();
     const int8_t* qa = ctx.in(0).data<int8_t>();
     const int8_t* qb = ctx.in(1).data<int8_t>();
     int8_t* ys[4] = {nullptr, nullptr, nullptr, nullptr};
-    for (int j = 0; j < k; ++j) ys[j] = ctx.out(j).data<int8_t>();
-    const int64_t n = ctx.in(0).size(), brow = brow_;
+    uint32_t* yb[4] = {nullptr, nullptr, nullptr, nullptr};
+    for (int j = 0; j < k; ++j) {
+      if (outs[j].bits) yb[j] = ctx.out(j).data<uint32_t>();
+      else ys[j] = ctx.out(j).data<int8_t>();
+    }
+    const int64_t n = ctx.in(0).size(), brow = brow_, c = c_;
     ctx.pool->parallel_for((n + 15) / 16, kSerial / 16, [&, k](int64_t b0, int64_t b1) {
       const int32x4_t vam = vdupq_n_s32(am), vbm = vdupq_n_s32(bm), nra = vdupq_n_s32(std::min(as, 0)), nrb = vdupq_n_s32(std::min(bs, 0));
       const int8x8_t za8 = vdup_n_s8(static_cast<int8_t>(za)), zb8 = vdup_n_s8(static_cast<int8_t>(zb));
@@ -2853,21 +3067,22 @@ class AddNNeon : public Kernel {
       int8x16_t lo8[4], hi8[4];
       bool full[4];
       for (int j = 0; j < k; ++j) {
-        ro[j] = Rq(static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j]));
-        vzy[j] = vdupq_n_s32(static_cast<int32_t>(zys[j]));
-        lo8[j] = vdupq_n_s8(static_cast<int8_t>(los[j]));
-        hi8[j] = vdupq_n_s8(static_cast<int8_t>(his[j]));
-        full[j] = los[j] == -128 && his[j] == 127;
+        ro[j] = Rq(outs[j].om, outs[j].os);
+        vzy[j] = vdupq_n_s32(outs[j].zy);
+        lo8[j] = vdupq_n_s8(static_cast<int8_t>(outs[j].lo));
+        hi8[j] = vdupq_n_s8(static_cast<int8_t>(outs[j].hi));
+        full[j] = outs[j].lo == -128 && outs[j].hi == 127;
       }
+      // row and channel of element b0 * 16 (bit outputs: c % 16 == 0, so a block never straddles two rows)
+      int64_t row = b0 * 16 / c, ch = b0 * 16 % c;
       for (int64_t b = b0; b < b1; ++b) {
         const int64_t i = b * 16;
-        if (i + 16 > n) {
+        if (i + 16 > n) {  // int8 outputs only (n % 16 == 0 with bit outputs)
           for (int64_t e = i; e < n; ++e) {
             const int64_t xa = q8::requant((qa[e] - za) * (int64_t(1) << 20), am, as);
             const int64_t xb = q8::requant((qb[brow ? e % brow : e] - zb) * (int64_t(1) << 20), bm, bs);
             for (int j = 0; j < k; ++j)
-              ys[j][e] = clamp8(zys[j] + q8::requant(xa + xb, static_cast<int32_t>(om[j]), static_cast<int32_t>(os[j])),
-                                static_cast<int>(los[j]), static_cast<int>(his[j]));
+              if (!outs[j].bits) ys[j][e] = clamp8(outs[j].zy + q8::requant(xa + xb, outs[j].om, outs[j].os), outs[j].lo, outs[j].hi);
           }
           continue;
         }
@@ -2886,6 +3101,10 @@ class AddNNeon : public Kernel {
           sum[kk] = vaddq_s32(wa, wb);
         }
         for (int j = 0; j < k; ++j) {
+          if (outs[j].bits) {
+            store_row_bits16(sum, outs[j].u.data(), yb[j], row, ch, c);
+            continue;
+          }
           int32x4_t r[4];
           for (int kk = 0; kk < 4; ++kk) r[kk] = vqaddq_s32(ro[j](sum[kk]), vzy[j]);
           const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(r[0]), r[1]), cd = vqmovn_high_s32(vqmovn_s32(r[2]), r[3]);
@@ -2893,20 +3112,36 @@ class AddNNeon : public Kernel {
           if (!full[j]) q = vminq_s8(vmaxq_s8(q, lo8[j]), hi8[j]);
           vst1q_s8(ys[j] + i, q);
         }
+        ch += 16;
+        if (ch == c) {
+          ch = 0;
+          ++row;
+        }
       }
     });
   }
 
-  int64_t brow_ = 0;
+  bool addb_ = false, bscalar_ = false;
+  int k_ = 0;
+  int64_t brow_ = 0, c_ = 0;
+  std::vector<Out> outs_;
+  std::vector<int64_t> xa_;
+  std::vector<int16_t> t16_;
+  std::vector<int8_t> t8_, t64_;
 };
 bool addn_neon_supported(const KernelContext& ctx) {
   const Json& a = ctx.attrs();
   auto in8 = [](int64_t z) { return z >= -128 && z <= 127; };
   const Tensor& ta = ctx.in(0);
   const Tensor& tb = ctx.in(1);
-  const bool row = tb.size() == ta.dim(-1) && tb.dim(-1) == ta.dim(-1) && ta.dim(-1) % 16 == 0;
-  return (ta.shape() == tb.shape() || row) && ctx.outputs.size() <= 4 && in8(a.get_int("a_zero", 0)) && in8(a.get_int("b_zero", 0)) &&
-         a.get_int("left_shift", 20) == 20 && a.get_int("a_shift", 0) <= 0 && a.get_int("b_shift", 0) <= 0;
+  const bool addb = ctx.node->op == "I8AddB";
+  const bool bits = addb || !a.get_ints("bit_outputs", {}).empty();
+  if (!in8(a.get_int("a_zero", 0)) || !in8(a.get_int("b_zero", 0)) || a.get_int("a_shift", 0) > 0 || a.get_int("b_shift", 0) > 0) return false;
+  if (addb && tb.size() == 1 && ta.size() > 1)  // code thresholds: needs xa non-decreasing
+    return a.get_int("a_mult", 0) > 0 && a.get_int("left_shift", 20) <= 22;
+  const bool row = !addb && tb.size() == ta.dim(-1) && tb.dim(-1) == ta.dim(-1) && ta.dim(-1) % 16 == 0;
+  return (ta.shape() == tb.shape() || row) && ctx.outputs.size() <= 4 && a.get_int("left_shift", 20) == 20 &&
+         (!bits || ta.dim(-1) % 16 == 0);
 }
 
 // ------------------------------------------------------------- I8Transpose
@@ -3628,6 +3863,12 @@ class DepthwiseNeon : public Kernel {
     const int8_t* x = ctx.in(0).data<int8_t>();
     if (mult_ch_ > 1) x = expand(ctx);
     if (vec_) {
+      // channels in 16-blocks plus at most one 8-block (2026-11-13: QuickNet-Small's 8-channel stem ran per element)
+      if (g_.oc % 8 == 0 && g_.kh <= 7) {
+        if (any_lsh_) run_rows<true>(ctx, x);
+        else run_rows<false>(ctx, x);
+        return;
+      }
       if (any_lsh_) run_s16<true>(ctx, x);
       else run_s16<false>(ctx, x);
       return;
@@ -3710,6 +3951,145 @@ class DepthwiseNeon : public Kernel {
       for (int64_t o = 0; o < oc; ++o) xe[p * oc + o] = x[p * ic + o / m];
     return xe;
   }
+  // run_s16 for C % 8 == 0 (2026-11-13), per output row and channel block (16 channels, or 8 for the last block when
+  // C % 16 == 8): the row pointers of the kh input rows once per unit (rows outside the input: padding taps), the
+  // interior pixels (every kx tap inside the input) without per-tap column tests, and the per-channel epilogue
+  // constants of the block loaded once. The same integer operations per channel as run_s16: SMLAL of (x - z) and w
+  // on int16 lanes in tap order (ky, kx), padding taps pad_q - z, sat32(acc + bias), SQSHL (kLsh), SQRDMULH, SRSHL,
+  // + zy, saturating narrows, clamp.
+  template <bool kLsh>
+  void run_rows(const KernelContext& ctx, const int8_t* x) const {
+    const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
+    const int32_t pz = static_cast<int32_t>(ctx.attrs().get_int("pad_q", xz)) - xz;
+    const int8_full::GemmEpilogue ep(ctx);
+    const Conv2DGeom& g = g_;
+    const int64_t C = g.oc, cp = (C + 15) / 16 * 16, nb16 = C / 16, nblk = (C + 15) / 16;
+    const int64_t taps = g.kh * g.kw;
+    // interior columns: ox * sw - pl >= 0 and ox * sw - pl + (kw - 1) dw <= iw - 1
+    const int64_t ox_lo = std::min(g.ow, (g.pl + g.sw - 1) / g.sw);
+    const int64_t lim = g.iw - 1 - (g.kw - 1) * g.dw + g.pl;
+    const int64_t ox_hi = lim < 0 ? ox_lo : std::max(ox_lo, std::min(g.ow, lim / g.sw + 1));
+    int8_t* y = ctx.out(0).data<int8_t>();
+    const int16_t* w16 = w16_.data();
+    const int32_t* biasp = bias_.data();
+    const int32_t* multp = mult_.data();
+    const int32_t* lshp = lsh_.data();
+    const int32_t* nrsp = nrs_.data();
+    const int64_t units = g.n * g.oh * nblk;
+    ctx.pool->parallel_for(units, std::max<int64_t>(1, kSerial / std::max<int64_t>(g.ow * 16 * taps, 1)), [&](int64_t u0, int64_t u1) {
+      const int8x8_t z8 = vdup_n_s8(static_cast<int8_t>(xz));
+      const int8x16_t z16 = vdupq_n_s8(static_cast<int8_t>(xz));
+      const int16x8_t pzv = vdupq_n_s16(static_cast<int16_t>(pz));
+      const int32x4_t vzy = vdupq_n_s32(static_cast<int32_t>(ep.zy));
+      const int8x16_t lo8 = vdupq_n_s8(static_cast<int8_t>(ep.lo)), hi8 = vdupq_n_s8(static_cast<int8_t>(ep.hi));
+      const bool full = ep.lo == -128 && ep.hi == 127;
+      const int8_t* rows[8];
+      for (int64_t u = u0; u < u1; ++u) {
+        const int64_t row = u / nblk, blk = u % nblk;
+        const int64_t n = row / g.oh, oy = row % g.oh, c0 = blk * 16;
+        const bool half = blk >= nb16;  // the 8-channel block
+        for (int64_t ky = 0; ky < g.kh; ++ky) {
+          const int64_t iy = oy * g.sh - g.pt + ky * g.dh;
+          rows[ky] = iy >= 0 && iy < g.ih ? x + ((n * g.ih + iy) * g.iw) * C + c0 : nullptr;
+        }
+        int32x4_t eb[4], em[4], en[4], el[4];
+        for (int k = 0; k < 4; ++k) {
+          eb[k] = vld1q_s32(biasp + c0 + 4 * k);
+          em[k] = vld1q_s32(multp + c0 + 4 * k);
+          en[k] = vld1q_s32(nrsp + c0 + 4 * k);
+          el[k] = kLsh ? vld1q_s32(lshp + c0 + 4 * k) : vdupq_n_s32(0);
+        }
+        int8_t* yrow = y + row * g.ow * C + c0;
+        auto store = [&](int64_t ox, const int32x4_t* acc) {
+          const int nk = half ? 2 : 4;
+          int32x4_t v[4];
+          for (int k = 0; k < nk; ++k) {
+            int32x4_t s = vqaddq_s32(acc[k], eb[k]);
+            if (kLsh) s = vqshlq_s32(s, el[k]);
+            v[k] = vqaddq_s32(vrshlq_s32(vqrdmulhq_s32(s, em[k]), en[k]), vzy);
+          }
+          int8_t* yp = yrow + ox * C;
+          if (half) {
+            int8x8_t q = vqmovn_s16(vqmovn_high_s32(vqmovn_s32(v[0]), v[1]));
+            if (!full) q = vmin_s8(vmax_s8(q, vget_low_s8(lo8)), vget_low_s8(hi8));
+            vst1_s8(yp, q);
+          } else {
+            const int16x8_t ab = vqmovn_high_s32(vqmovn_s32(v[0]), v[1]), cd = vqmovn_high_s32(vqmovn_s32(v[2]), v[3]);
+            int8x16_t q = vqmovn_high_s16(vqmovn_s16(ab), cd);
+            if (!full) q = vminq_s8(vmaxq_s8(q, lo8), hi8);
+            vst1q_s8(yp, q);
+          }
+        };
+        auto pixel = [&](int64_t ox, bool interior) {
+          const int64_t ix0 = ox * g.sw - g.pl;
+          int32x4_t acc[4] = {vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0)};
+          const int16_t* wp = w16 + c0;
+          for (int64_t ky = 0; ky < g.kh; ++ky) {
+            const int8_t* rp = rows[ky];
+            for (int64_t kx = 0; kx < g.kw; ++kx, wp += cp) {
+              const int64_t ix = ix0 + kx * g.dw;
+              int16x8_t xl, xh = pzv;
+              if (rp && (interior || (ix >= 0 && ix < g.iw))) {
+                if (half) {
+                  xl = vsubl_s8(vld1_s8(rp + ix * C), z8);
+                } else {
+                  const int8x16_t q = vld1q_s8(rp + ix * C);
+                  xl = vsubl_s8(vget_low_s8(q), z8);
+                  xh = vsubl_high_s8(q, z16);
+                }
+              } else {
+                xl = pzv;
+              }
+              const int16x8_t wl = vld1q_s16(wp);
+              acc[0] = vmlal_s16(acc[0], vget_low_s16(xl), vget_low_s16(wl));
+              acc[1] = vmlal_high_s16(acc[1], xl, wl);
+              if (!half) {
+                const int16x8_t wh = vld1q_s16(wp + 8);
+                acc[2] = vmlal_s16(acc[2], vget_low_s16(xh), vget_low_s16(wh));
+                acc[3] = vmlal_high_s16(acc[3], xh, wh);
+              }
+            }
+          }
+          store(ox, acc);
+        };
+        int64_t ox = 0;
+        if (!BF_NEON_A32 && !half && g.kh == 3 && g.kw == 3 && rows[0] && rows[1] && rows[2] && ox_hi > ox_lo) {  // AArch64: 18 q registers of weights
+          // 3x3 interior pixels of a 16-channel block: the 9 tap weights in registers, no tests (same SMLAL order)
+          int16x8_t wl[9], wh[9];
+          for (int t = 0; t < 9; ++t) {
+            wl[t] = vld1q_s16(w16 + t * cp + c0);
+            wh[t] = vld1q_s16(w16 + t * cp + c0 + 8);
+          }
+          for (; ox < ox_lo; ++ox) pixel(ox, false);
+          const int64_t sx = g.sw * C, dx = g.dw * C;
+          const int8_t* r0 = rows[0] + (ox * g.sw - g.pl) * C;
+          const int8_t* r1 = rows[1] + (ox * g.sw - g.pl) * C;
+          const int8_t* r2 = rows[2] + (ox * g.sw - g.pl) * C;
+          for (; ox < ox_hi; ++ox, r0 += sx, r1 += sx, r2 += sx) {
+            int32x4_t acc[4] = {vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0), vdupq_n_s32(0)};
+            const int8_t* rr[3] = {r0, r1, r2};
+            for (int ky = 0; ky < 3; ++ky)
+              for (int kx = 0; kx < 3; ++kx) {
+                const int8x16_t q = vld1q_s8(rr[ky] + kx * dx);
+                const int16x8_t xl = vsubl_s8(vget_low_s8(q), z8), xh = vsubl_high_s8(q, z16);
+                const int t = ky * 3 + kx;
+                acc[0] = vmlal_s16(acc[0], vget_low_s16(xl), vget_low_s16(wl[t]));
+                acc[1] = vmlal_high_s16(acc[1], xl, wl[t]);
+                acc[2] = vmlal_s16(acc[2], vget_low_s16(xh), vget_low_s16(wh[t]));
+                acc[3] = vmlal_high_s16(acc[3], xh, wh[t]);
+              }
+            store(ox, acc);
+          }
+          for (; ox < g.ow; ++ox) pixel(ox, false);
+          continue;
+        }
+        for (; ox < ox_lo; ++ox) pixel(ox, false);
+        for (; ox < ox_hi; ++ox) pixel(ox, true);
+        for (; ox < g.ow; ++ox) pixel(ox, false);
+      }
+    });
+  }
+
   template <bool kLsh>
   void run_s16(const KernelContext& ctx, const int8_t* x) const {
     const int32_t xz = static_cast<int32_t>(ctx.attrs().get_int("x_zero", 0));
@@ -4111,6 +4491,7 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Lut", "i8lut.neon", kFeatNeon, lut_neon_supported, make_kernel<LutNeon>);
   add("I8Add", "i8add.neon", kFeatNeon, add_neon_supported, make_kernel<AddNeon>);
   add("I8AffineSum", "i8affinesum.neon", kFeatNeon, affine_sum_neon_supported, make_kernel<AffineSumNeon>);
+  add("I8AffineSumB", "i8affinesumb.neon", kFeatNeon, affine_sum_neon_supported, make_kernel<AffineSumNeon>);
   add("I8LayerNorm", "i8layernorm.neon", kFeatNeon, nullptr, make_kernel<LayerNormNeon>);
   add("I8LayerNormN", "i8layernormn.neon", kFeatNeon, nullptr, make_kernel<LayerNormNeon>);
   add("I8Softmax", "i8softmax.neon", kFeatNeon, softmax_neon_supported, make_kernel<SoftmaxNeon>);
@@ -4134,6 +4515,7 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Lut", "i8lut.neon_rows", kFeatNeon, lut_rows_supported, make_kernel<LutRowsNeon>);
   add("I8LutN", "i8lutn.neon", kFeatNeon, lutn_neon_supported, make_kernel<LutNNeon>);
   add("I8AddN", "i8addn.neon", kFeatNeon, addn_neon_supported, make_kernel<AddNNeon>);
+  add("I8AddB", "i8addb.neon", kFeatNeon, addn_neon_supported, make_kernel<AddNNeon>);
   add("I8PackBits", "i8packbits.neon", kFeatNeon, nullptr, make_kernel<PackBitsNeon>);
   add("I8Transpose", "i8transpose.neon", kFeatNeon, nullptr, make_kernel<TransposeNeon>);
   add("I8ReduceMean", "i8reducemean.neon", kFeatNeon, mean_last_supported, make_kernel<MeanLastNeon>);

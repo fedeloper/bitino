@@ -22,6 +22,11 @@
 //    I8Conv2D nodes with the same input, byte-identical weights and bias and the same geometry -> one I8Conv2DN (the
 //    int32 accumulators computed once, one requantization per twin); I8LayerNorm nodes with the same x and statistics
 //    attributes -> one I8LayerNormN (row statistics and fp32(u) * r once).
+//  * bit_outputs (2026-11-13, after merge_twins): an I8Add (-> internal I8AddB), an output of an I8AddN, or an
+//    I8AffineSum (-> internal I8AffineSumB) whose output is read only by binary layers binarizing it (input 0, ge / gt,
+//    the same thresholds) produces the bit tensor itself: bit -1 iff the integer sum before the output requantization is
+//    <= U[c] (U: i32 [1 | C] constant input; I8AddN: one per output listed in attribute bit_outputs, after a and b). The
+//    output requantization is non-decreasing (multiplier > 0), so y >= T <=> acc >= A: the same bits.
 #pragma once
 
 #include <vector>
@@ -41,6 +46,7 @@ struct I8RewriteStats {
   int conv_twins = 0;      // I8Conv2DN nodes created
   int ln_twins = 0;        // I8LayerNormN nodes created
   int merged_nodes = 0;    // nodes replaced by the twin nodes
+  int bit_outputs = 0;     // I8Add / I8AddN / I8AffineSum outputs turned into bit tensors (bit_outputs)
 };
 
 // collapse_unary + compose_luts + fold_lut_thresholds (before Session's out_lut absorption into I8BConv2DRes)

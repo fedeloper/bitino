@@ -175,6 +175,8 @@ void infer_packbits(const Node& n, const Ins& ins, Outs& outs) {
   set_out(outs, DType::kBit, x.shape);
 }
 
+// Bit outputs (attribute bit_outputs, src/graph_rewrite_i8.h bit_outputs): output j listed there is a bit tensor, bit -1
+// iff xa + xb <= U_j[c], U_j = input 2 + (position of j in bit_outputs), i32 [1 | C].
 void infer_addn(const Node& n, const Ins& ins, Outs& outs) {
   const auto& a = req_i8(ins, 0, "a");
   const auto& b = req_i8(ins, 1, "b");
@@ -184,11 +186,30 @@ void infer_addn(const Node& n, const Ins& ins, Outs& outs) {
   for (const char* key : {"out_mults", "out_shifts", "y_zeros", "qmins", "qmaxs"})
     BF_CHECK(n.attrs.get_ints(key, {}).size() == k, "I8AddN: ", key, " needs one entry per output");
   const auto lo = n.attrs.get_ints("qmins", {}), hi = n.attrs.get_ints("qmaxs", {});
+  const auto bits = n.attrs.get_ints("bit_outputs", {});
+  BF_CHECK(ins.size() == 2 + bits.size(), "I8AddN: one bound input per bit output");
   for (size_t j = 0; j < k; ++j) {
     BF_CHECK(-128 <= lo[j] && lo[j] <= hi[j] && hi[j] <= 127, "I8AddN: qmin/qmax out of range");
     outs[j]->dtype = DType::kI8;
     outs[j]->shape = a.shape;
   }
+  for (size_t i = 0; i < bits.size(); ++i) {
+    BF_CHECK(bits[i] >= 0 && bits[i] < static_cast<int64_t>(k), "I8AddN: bit output index out of range");
+    const auto& u = req(ins, 2 + i, "bound");
+    BF_CHECK(u.dtype == DType::kI32 && (num_elements(u.shape) == 1 || num_elements(u.shape) == a.shape.back()), "I8AddN: bound must be i32 [1 | C]");
+    outs[static_cast<size_t>(bits[i])]->dtype = DType::kBit;
+  }
+}
+
+// I8AddB(a, b, U) -> bits (internal, src/graph_rewrite_i8.h bit_outputs): I8Add's input stage, bit -1 iff xa + xb <= U[c];
+// U i32 [1 | C]; b of a's shape or one element.
+void infer_addb(const Node& n, const Ins& ins, Outs& outs) {
+  const auto& a = req_i8(ins, 0, "a");
+  const auto& b = req_i8(ins, 1, "b");
+  const auto& u = req(ins, 2, "bound");
+  BF_CHECK(!a.shape.empty() && (b.shape == a.shape || num_elements(b.shape) == 1), n.op, ": b must have a's shape or one element");
+  BF_CHECK(u.dtype == DType::kI32 && (num_elements(u.shape) == 1 || num_elements(u.shape) == a.shape.back()), n.op, ": bound must be i32 [1 | C]");
+  set_out(outs, DType::kBit, a.shape);
 }
 
 // I8AffineSum(x_0..x_{N-1}, K i32[N, C'], B i32[C']), C' in {1, C}: same-shape int8 inputs.
@@ -207,6 +228,18 @@ void infer_affine_sum(const Node& n, const Ins& ins, Outs& outs) {
   BF_CHECK(n.attrs.get_ints("zeros", {}).size() == nin, "I8AffineSum needs one zero point per input");
   check_q(n);
   set_out(outs, DType::kI8, x0.shape);
+}
+
+// I8AffineSumB(x_0..x_{N-1}, K, B, U) -> bits (internal, src/graph_rewrite_i8.h bit_outputs): bit -1 iff
+// B[c] + sum_i (x_i - z_i) K[i][c] <= U[c]; U i32 [1 | C].
+void infer_affine_sum_b(const Node& n, const Ins& ins, Outs& outs) {
+  BF_CHECK(ins.size() >= 4, "I8AffineSumB needs at least one input plus K, B and U");
+  Ins head(ins.begin(), ins.end() - 1);
+  infer_affine_sum(n, head, outs);
+  const auto& u = req(ins, ins.size() - 1, "bound");
+  BF_CHECK(u.dtype == DType::kI32 && (num_elements(u.shape) == 1 || num_elements(u.shape) == outs[0]->shape.back()),
+           "I8AffineSumB: bound must be i32 [1 | C]");
+  outs[0]->dtype = DType::kBit;
 }
 
 // I8Conv2D: x, w, bias?, mult | scale, shift?, bit_thr i32[O]? ; outputs y, bits (bit, iff bit_thr is given):
@@ -503,6 +536,8 @@ void register_int8_full_op_defs(OpRegistry& reg) {
   reg.add_op({"I8AffineSum", infer_affine_sum});
   reg.add_op({"I8LutN", infer_lutn});
   reg.add_op({"I8AddN", infer_addn});
+  reg.add_op({"I8AddB", infer_addb});
+  reg.add_op({"I8AffineSumB", infer_affine_sum_b});
   reg.add_op({"I8PackBits", infer_packbits});
   reg.add_op({"I8Conv2DN", infer_conv2dn});
   reg.add_op({"I8Conv2D", infer_conv});
