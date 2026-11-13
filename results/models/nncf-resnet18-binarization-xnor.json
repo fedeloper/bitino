@@ -722,6 +722,70 @@
     "runtime": "development runtime as of 2026-11-12"
    }
   ],
+  "moto-e13": [
+   {
+    "model_id": "nncf-resnet18-binarization-xnor",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 49.190634,
+    "median_range_ms": [
+     49.0513265,
+     49.221615
+    ],
+    "p90_ms": 49.3539038,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13112,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T01:16:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "84fd7d14882acee082f0ec7b869e2fb20d7f72eaf9a9c84a7a34386198690de8",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "nncf-resnet18-binarization-xnor",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 48.9921535,
+    "median_range_ms": [
+     48.9891915,
+     49.0188075
+    ],
+    "p90_ms": 49.145319,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 12828,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T01:17:26Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "fa092d351a8dd5c4c9e0c3002ca63d1a1c0c27ae26aa745bddcc20fc79e98d4b",
+    "runtime": "development runtime as of 2026-11-13"
+   }
+  ],
   "x86": [
    {
     "model_id": "nncf-resnet18-binarization-xnor",

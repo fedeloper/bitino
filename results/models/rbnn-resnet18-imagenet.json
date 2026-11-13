@@ -620,6 +620,39 @@
     "runtime": "development runtime as of 2026-11-12"
    }
   ],
+  "moto-e13": [
+   {
+    "model_id": "rbnn-resnet18-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 54.9985765,
+    "median_range_ms": [
+     54.9773465,
+     55.0465
+    ],
+    "p90_ms": 55.1931701,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13272,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T01:33:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ce6177a6afa250721c258b97790c7f2c605cb6ea8e468fe769294a10cfbd759a",
+    "runtime": "development runtime as of 2026-11-13"
+   }
+  ],
   "x86": [
    {
     "model_id": "rbnn-resnet18-imagenet",

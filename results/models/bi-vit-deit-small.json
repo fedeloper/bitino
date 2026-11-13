@@ -187,15 +187,15 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261112_1359",
-   "date": "2026-11-12",
+   "suite": "20261113_0025",
+   "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
     "neon": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": true
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "all": {
      "pass": true,
@@ -1120,6 +1120,37 @@
    {
     "model_id": "bi-vit-deit-small",
     "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 164.1655,
+    "median_range_ms": [
+     163.968731,
+     164.216769
+    ],
+    "p90_ms": 164.55590370000002,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 42748,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:48:16Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "b6e031211a9e107b5b004fc997485403abaa6c16781e79c808b9392ed3da14d3",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
     "date": "2026-11-12",
     "timestamp_utc": null,
     "plan": "quick_20261112_1513_moto-e13",
@@ -1209,6 +1240,99 @@
     "kernels": "neon",
     "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 181.9758555,
+    "median_range_ms": [
+     181.841096,
+     182.110615
+    ],
+    "p90_ms": 183.0105614,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 35472,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:17:02Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 80.1709425,
+    "median_range_ms": [
+     80.064596,
+     80.277289
+    ],
+    "p90_ms": 81.56861930000001,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 35452,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:18:08Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-small",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 172.221028,
+    "median_range_ms": [
+     171.826576,
+     172.61548
+    ],
+    "p90_ms": 173.4103311,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 32780,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:19:41Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "aa421452e86765bd9759cfb4fd7ab58c6407426ad14c31fd1f1b4d1996da787a",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "x86": [

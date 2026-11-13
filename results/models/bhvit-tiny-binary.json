@@ -169,15 +169,15 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261112_1359",
-   "date": "2026-11-12",
+   "suite": "20261113_0025",
+   "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
     "neon": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": true
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "all": {
      "pass": true,
@@ -1498,6 +1498,37 @@
    {
     "model_id": "bhvit-tiny-binary",
     "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 198.609289,
+    "median_range_ms": [
+     198.590961,
+     200.781499
+    ],
+    "p90_ms": 201.0936187,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 53724,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:46:40Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "45581e88844598a58c775196b2754a9f6d397a74e5081f57eacfe496af55fad6",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "moto-e13",
     "date": "2026-11-12",
     "timestamp_utc": null,
     "plan": "quick_20261112_1204_moto-e13",
@@ -1680,6 +1711,99 @@
     "kernels": "neon",
     "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 147.5262305,
+    "median_range_ms": [
+     146.987173,
+     148.065288
+    ],
+    "p90_ms": 148.5938807,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 40508,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:07:38Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 67.55956775,
+    "median_range_ms": [
+     67.461039,
+     67.6580965
+    ],
+    "p90_ms": 69.9954577,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 42476,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:07:43Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bhvit-tiny-binary",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0056_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 145.270423,
+    "median_range_ms": [
+     145.233788,
+     145.307058
+    ],
+    "p90_ms": 146.0697613,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 39576,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:07:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "f3221b077f9821c93273a801dbda44a3cd092d38f5ca9d267b997d269a5da058",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "redmi-9a": [

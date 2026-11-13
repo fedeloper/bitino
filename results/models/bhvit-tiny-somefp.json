@@ -163,15 +163,15 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261112_1359",
-   "date": "2026-11-12",
+   "suite": "20261113_0025",
+   "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
     "neon": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": true
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "all": {
      "pass": true,
@@ -718,6 +718,39 @@
     "kernels": "neon",
     "model_data_sha256": "7b1737ac716dd558086761b8573a71ddde6d2375fe4407366de52d8d433a1052",
     "runtime": "development runtime as of 2026-11-12"
+   }
+  ],
+  "moto-e13": [
+   {
+    "model_id": "bhvit-tiny-somefp",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0121_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 196.081634,
+    "median_range_ms": [
+     195.197173,
+     196.980751
+    ],
+    "p90_ms": 197.8479532,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 53784,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-09T23:47:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ce7802faf5114c9ff985a3d62f29405dcff631b7ae86975306f69906fd24db5d",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "x86": [
