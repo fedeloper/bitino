@@ -109,21 +109,21 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261112_1359",
-   "date": "2026-11-12",
+   "suite": "20261113_0025",
+   "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
     "neon": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": true
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     },
     "all": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": null,
-     "exact_vs_numpy": false
+     "identical_to_emulated": true,
+     "exact_vs_numpy": null
     }
    }
   }
@@ -468,6 +468,105 @@
     "kernels": "neon",
     "model_data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "brillsson-quicknet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.973124497,
+    "median_range_ms": [
+     0.970181994,
+     0.974453002
+    ],
+    "p90_ms": 1.034296599,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15228,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T20:06:27Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "brillsson-quicknet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.678410999,
+    "median_range_ms": [
+     0.677604489,
+     0.681952499
+    ],
+    "p90_ms": 0.7302342951999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17656,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T20:06:40Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "brillsson-quicknet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.886666998,
+    "median_range_ms": [
+     0.883098997,
+     0.889088504
+    ],
+    "p90_ms": 0.9426456908999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13760,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T20:06:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "x86": [

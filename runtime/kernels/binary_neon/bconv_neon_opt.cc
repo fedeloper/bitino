@@ -321,6 +321,11 @@ inline bool opts_t48_off() {
   const char* e = std::getenv("BITINO_BCONV_T48");
   return e && std::string(e) == "0";
 }
+// BITINO_BCONV_DW1=0: binary depthwise 1x1 layers through the general grouped path (tests / A/B).
+inline bool opts_dw1_off() {
+  const char* e = std::getenv("BITINO_BCONV_DW1");
+  return e && std::string(e) == "0";
+}
 
 // ---- uint16 popcount tiles (I8BConv2DRes two-phase epilogue, compute_res2). The sums of a tile row fit uint16
 // (K <= 32767 bits). Per tile row the 4 accumulators fold into [c0 c0' c1 c1' c2 c2' c3 c3'] (two partial sums
@@ -1054,11 +1059,22 @@ class BConv2DNeonOpt : public Kernel {
       interleave_rows8(padded.data(), oc_pad_, k_words_, kwp_, static_cast<uint32_t*>(wbuf_.get()));
     }
 #endif
+    // Binary depthwise 1x1 (one input channel per group, no padding), float output: dot = 1 - 2 (x_bit ^ w_bit) is +-1,
+    // so every output is one of two per-channel values, act(+-1 * mul + add), chosen by x_bit ^ w_bit (run_dw1).
+    dw1_ = !bit_out_ && !i8_out_.on && !res_.on && g_.kh == 1 && g_.kw == 1 && g_.kic == 1 && ocg_ == 1 && k_bits_ == 1 &&
+           g_.pt == 0 && g_.pb == 0 && g_.pl == 0 && g_.pr == 0 && !opts_dw1_off();
+    if (dw1_) {
+      wsign_.assign(static_cast<size_t>(bit_words(g_.oc)), 0u);
+      for (int64_t o = 0; o < g_.oc; ++o) wsign_[o >> 5] |= (w[o * bit_words(1)] & 1u) << (o & 31);
+      vsel_.assign(static_cast<size_t>(2 * oc_pad4()), 0.f);
+    }
   }
+  int64_t oc_pad4() const { return (g_.oc + 3) / 4 * 4; }
   size_t prepacked_bytes() const override { return static_cast<size_t>(oc_pad_ * steps_ * 16 + tap_sum_.size() * 4); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
 
   void run(const KernelContext& ctx) override {
+    if (dw1_) return run_dw1(ctx);
     if (res_.gate) res_.bind_gate(ctx, g_.n, g_.oc);
     const uint32_t* xb;
     if (bit_in_ && !L_.regroup) {
@@ -1111,6 +1127,66 @@ class BConv2DNeonOpt : public Kernel {
   }
 
  private:
+  // Binary depthwise 1x1 (dw1_): per channel the float outputs of dot = +1 and dot = -1, computed with the general
+  // path's operations (activate(act, cvt(dot) * mul + add), compute_tile_a), then per pixel and 4 channels a select
+  // by the input bits XOR the weight bits (input bits: pack_row_f32_neon, the general path's binarization, or the
+  // bit input itself), and the fused epilogue per pixel tile as in run_task. larqface-binaryfacenet's two 56x56x64
+  // depthwise layers took 5 ms each on the Cortex-X3 through 64 groups of 4 padded channels.
+  void run_dw1(const KernelContext& ctx) {
+    const int64_t oc = g_.oc, oc4 = oc_pad4(), ic = g_.ic, words = bit_words(ic);
+    const float* m = opt_f32(ctx, 2);
+    const float* d = opt_f32(ctx, 3);
+    float* vpos = vsel_.data();
+    float* vneg = vsel_.data() + oc4;
+    for (int64_t c = 0; c < oc4; c += 4) {
+      float mv[4] = {1.f, 1.f, 1.f, 1.f}, av[4] = {-0.f, -0.f, -0.f, -0.f};
+      for (int64_t j = 0; j < 4 && c + j < oc; ++j) {
+        if (m) mv[j] = m[c + j];
+        if (d) av[j] = d[c + j];
+      }
+      const float32x4_t mul = vld1q_f32(mv), add = vld1q_f32(av);
+      vst1q_f32(vpos + c, activate(act_, vaddq_f32(vmulq_f32(vcvtq_f32_s32(vdupq_n_s32(1)), mul), add)));
+      vst1q_f32(vneg + c, activate(act_, vaddq_f32(vmulq_f32(vcvtq_f32_s32(vdupq_n_s32(-1)), mul), add)));
+    }
+    if (epi_.active()) epi_.begin(ctx);
+    const float* thr = opt_f32(ctx, 4);
+    const float* x = bit_in_ ? nullptr : ctx.in(0).data<float>();
+    const uint32_t* xin = bit_in_ ? ctx.in(0).data<uint32_t>() : nullptr;
+    float* y = ctx.out(0).data<float>();
+    const BinarizeMode mode = mode_;
+    static const uint32_t kBitW[4] = {1, 2, 4, 8};
+    const uint32x4_t bitw = vld1q_u32(kBitW);
+    ctx.pool->parallel_for(n_ptiles_, 1, [&](int64_t b0, int64_t b1) {
+      std::vector<uint32_t> row(static_cast<size_t>(words));
+      for (int64_t b = b0; b < b1; ++b) {
+        const int64_t q0 = b * mt_, q1 = std::min(pixels_, q0 + mt_);
+        int64_t ox = q0 % g_.ow, oy = (q0 / g_.ow) % g_.oh, n = q0 / (g_.ow * g_.oh);
+        for (int64_t q = q0; q < q1; ++q) {
+          const int64_t pix = (n * g_.ih + oy * g_.sh) * g_.iw + ox * g_.sw;
+          if (++ox == g_.ow) {
+            ox = 0;
+            if (++oy == g_.oh) {
+              oy = 0;
+              ++n;
+            }
+          }
+          const uint32_t* xb = row.data();
+          if (xin) xb = xin + pix * words;
+          else pack_row_f32_neon(x + pix * ic, ic, row.data(), mode, thr);
+          float* yq = y + q * oc;
+          int64_t c = 0;
+          for (; c + 4 <= oc; c += 4) {
+            const uint32_t s = (xb[c >> 5] ^ wsign_[c >> 5]) >> (c & 31);
+            const uint32x4_t neg = vtstq_u32(vdupq_n_u32(s), bitw);
+            vst1q_f32(yq + c, vbslq_f32(neg, vld1q_f32(vneg + c), vld1q_f32(vpos + c)));
+          }
+          for (; c < oc; ++c) yq[c] = (((xb[c >> 5] ^ wsign_[c >> 5]) >> (c & 31)) & 1u) ? vneg[c] : vpos[c];
+        }
+        if (epi_.active()) epi_.apply(y, q0, q1);
+      }
+    });
+  }
+
   // ---- bit output (kernels/bit_output.h). Without an epilogue the tile
   // epilogue binarizes each 4-channel block against the output threshold
   // (direct_bits_); with one, the float rows go to yf_, the epilogue runs on
@@ -1984,6 +2060,9 @@ class BConv2DNeonOpt : public Kernel {
   std::shared_ptr<void> wbuf_, xbits_, patches_;
   std::shared_ptr<void> dots_;  // compute_res2: per task, mt_ x 16 int16 dot products
   bool res2_ = false, dot2_ = false, unit16_ = false, t48_ = false, p84_ = false;
+  bool dw1_ = false;
+  std::vector<uint32_t> wsign_;  // dw1_: weight bit of each channel
+  std::vector<float> vsel_;      // dw1_: per run, outputs for dot = +1 [oc_pad4], then for dot = -1
   std::shared_ptr<void> yf_;  // [pixels][oc] float output before binarization (bit output + epilogue)
   std::vector<int32_t> tap_sum_;
   std::vector<uint64_t> masks_;

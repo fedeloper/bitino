@@ -264,6 +264,39 @@
    {
     "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
     "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0807_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.7019535,
+    "median_range_ms": [
+     7.68263,
+     7.721797
+    ],
+    "p90_ms": 7.791927101,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 30356,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T21:57:47Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "003d14a542170cfcf09ba519fb5e4bd2665a1afa37031c1db9e34d85a8019d1f",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -590,6 +623,105 @@
     "kernels": "neon",
     "model_data_sha256": "156d8ca9d2b47d34b20c4065da8a8904f8ebdb7009f1e744b5663b15c02a2089",
     "runtime": "development runtime as of 2026-11-12"
+   },
+   {
+    "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 11.357344,
+    "median_range_ms": [
+     11.2170315,
+     11.465234
+    ],
+    "p90_ms": 11.6182551,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 57212,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T21:46:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156d8ca9d2b47d34b20c4065da8a8904f8ebdb7009f1e744b5663b15c02a2089",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 5.8086195,
+    "median_range_ms": [
+     5.7489325,
+     5.8096615
+    ],
+    "p90_ms": 5.877932491,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 58524,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T21:46:47Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156d8ca9d2b47d34b20c4065da8a8904f8ebdb7009f1e744b5663b15c02a2089",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "tensorpack-dorefa-alexnet-w1a1-g32",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0515_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.72026051,
+    "median_range_ms": [
+     7.650781,
+     7.7429945
+    ],
+    "p90_ms": 7.7978022,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 50576,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T21:46:49Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156d8ca9d2b47d34b20c4065da8a8904f8ebdb7009f1e744b5663b15c02a2089",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [

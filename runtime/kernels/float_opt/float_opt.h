@@ -30,6 +30,7 @@ void register_float_opt_gemm_kernels(OpRegistry& reg);         // conv_gemm.cc: 
 void register_float_opt_depthwise_kernels(OpRegistry& reg);    // depthwise.cc: Conv2D (depthwise)
 void register_float_opt_elementwise_kernels(OpRegistry& reg);  // elementwise.cc: Add, ChannelAffine, Activation, pools
 void register_float_opt_transformer_kernels(OpRegistry& reg);  // transformer_opt.cc: transformer / BHViT ops, Concat, Gather
+void register_float_opt_avgpool_prelu_kernels(OpRegistry& reg);  // elementwise.cc: AvgPool2DPrelu (after its OpDef)
 
 namespace fopt {
 struct GemmBlockArgs;

@@ -200,6 +200,109 @@ BF_TEST(fused_elementwise_bit_exact_with_unfused_graph) {
   }
 }
 
+BF_TEST(fused_elementwise_global_avg_pool_bit_exact) {
+  // pool_fused_outputs: BNext's squeeze-excite input, mix = x * s + act * (1 - s) feeding only a GlobalAvgPool, runs as
+  // one FusedElementwise node computing the channel means (the mix is never stored). Must equal, bit for bit, the
+  // unpooled plan (the same fused program, then the float_opt GlobalAvgPool kernel: forcing a GlobalAvgPool kernel
+  // disables the rewrite), at 1 thread (rows streamed through an L1 block) and 3 (materialized, then the pool kernel's
+  // pass); keepdims 1 and 0, channel tails, batch 2, a gated program; the reference FusedElementwise kernel likewise.
+  for (Shape s : {Shape{1, 5, 7, 32}, Shape{2, 9, 11, 40}, Shape{1, 28, 28, 64}, Shape{2, 6, 7, 7}, Shape{1, 3, 3, 130}}) {
+    for (int keep : {1, 0}) {
+      const int64_t c = s.back(), n = s[0];
+      auto s1 = randn(c, 21), s2 = randn(c, 22), sl = randn(c, 23, 0.25f);
+      bftest::ModelBuilder m2;
+      m2.constant("s1", DType::kF32, {c}, s1.data());
+      m2.constant("s2", DType::kF32, {c}, s2.data());
+      m2.constant("sl", DType::kF32, {c}, sl.data());
+      m2.input("x", DType::kF32, s);
+      m2.input("r", DType::kF32, s);
+      m2.input("g", DType::kF32, {n, c});
+      m2.node("Activation", {"r", "sl"}, {"act"}, Json(Json::Object{{"type", "prelu"}}));
+      m2.node("ChannelAffine", {"x", "s1", ""}, {"a"});
+      m2.node("ChannelAffine", {"act", "s2", ""}, {"b"});
+      m2.node("Add", {"a", "b"}, {"mix"});
+      m2.node("ChannelGate", {"mix", "g"}, {"gm"}, Json(Json::Object{{"gate", "sigmoid"}}));
+      m2.node("GlobalAvgPool", {"gm"}, {"p"}, Json(Json::Object{{"keepdims", Json(keep)}}));
+      m2.output("p");
+      auto model = m2.build();
+      std::vector<std::vector<float>> in = {with_specials(randn(num_elements(s), 30), 31), with_specials(randn(num_elements(s), 32), 33),
+                                            randn(n * c, 34, 2.f)};
+      const std::string gap = variants("global_avg_pool.float_opt").back();
+      for (int threads : {1, 3}) {
+        const Out pooled = run(model, tiers(kOpt), in, threads);
+        EXPECT_EQ(pooled.fused, 1);
+        for (const auto& kv : pooled.kernels)
+          if (kv.second.rfind("global_avg_pool", 0) == 0) throw bftest::Failure{"GlobalAvgPool not pooled into the fused node"};
+        KernelPolicy unpooled = tiers(kOpt);
+        unpooled.force["GlobalAvgPool"] = gap;
+        const Out ref = run(model, unpooled, in, threads);
+        EXPECT_EQ(ref.fused, 1);
+        expect_identical(pooled.y, ref.y, "pooled fused GAP " + shape_str(s) + " keepdims " + std::to_string(keep) + " threads " +
+                                              std::to_string(threads));
+        for (const std::string& k : {std::string("fused_elementwise.reference"), std::string("fused_elementwise.float_opt"),
+                                     std::string("fused_elementwise.float_opt_avx2")}) {
+          if (!registered(k) || !available(k)) continue;
+          const Out f = run(model, force("FusedElementwise", k, kOpt), in, threads);
+          expect_identical(f.y, ref.y, k + " pooled " + shape_str(s));
+        }
+      }
+    }
+  }
+}
+
+BF_TEST(avgpool_prelu_bit_exact) {
+  // pool_prelu: BNext's downsampling, AvgPool2D(prelu(x)) and AvgPool2D(x) with the same attributes, runs as one
+  // AvgPool2DPrelu node with two outputs (one pass over x, prelu(x) never stored); without the plain pool, one output;
+  // a plain pool with other attributes stays separate. Bit for bit against the plan without the rewrite (forcing an
+  // AvgPool2D kernel disables it) at 1 and 3 threads; the reference AvgPool2DPrelu against the reference pools.
+  struct Case {
+    Shape s;
+    std::vector<int64_t> k, st, pd;
+    int inc;
+    int plain;  // 0: no plain pool, 1: same attributes, 2: other attributes
+  };
+  uint32_t seed = 40;
+  for (const Case& cs : {Case{{1, 8, 8, 32}, {2, 2}, {2, 2}, {0, 0, 0, 0}, 1, 1}, Case{{2, 10, 6, 37}, {2, 2}, {2, 2}, {0, 0, 0, 0}, 0, 1},
+                         Case{{1, 9, 9, 20}, {3, 3}, {2, 2}, {1, 1, 1, 1}, 0, 1}, Case{{1, 12, 12, 16}, {2, 2}, {2, 2}, {0, 0, 0, 0}, 1, 0},
+                         Case{{1, 7, 7, 12}, {3, 3}, {1, 1}, {1, 1, 1, 1}, 1, 2}}) {
+    const int64_t c = cs.s.back();
+    auto sl = randn(c, seed, 0.3f);
+    Json pa = Json::Object{{"kernel", Json(Json::Array{Json(cs.k[0]), Json(cs.k[1])})},
+                           {"strides", Json(Json::Array{Json(cs.st[0]), Json(cs.st[1])})},
+                           {"pads", Json(Json::Array{Json(cs.pd[0]), Json(cs.pd[1]), Json(cs.pd[2]), Json(cs.pd[3])})},
+                           {"count_include_pad", Json(cs.inc)}};
+    Json pb = pa;
+    if (cs.plain == 2) pb["count_include_pad"] = Json(1 - cs.inc);
+    bftest::ModelBuilder m2;
+    m2.constant("sl", DType::kF32, {c}, sl.data());
+    m2.input("x", DType::kF32, cs.s);
+    m2.node("Activation", {"x", "sl"}, {"a"}, Json(Json::Object{{"type", "prelu"}}));
+    m2.node("AvgPool2D", {"a"}, {"r"}, pa);
+    if (cs.plain) {
+      m2.node("AvgPool2D", {"x"}, {"i"}, pb);
+      m2.node("Concat", {"r", "i"}, {"y"}, Json(Json::Object{{"axis", Json(-1)}}));
+      m2.output("y");
+    } else {
+      m2.output("r");
+    }
+    auto model = m2.build();
+    std::vector<std::vector<float>> in = {with_specials(randn(num_elements(cs.s), seed + 1), seed + 2)};
+    for (int threads : {1, 3}) {
+      const Out fused = run(model, tiers(kOpt), in, threads);
+      bool used = false;
+      for (const auto& kv : fused.kernels) used = used || kv.second.rfind("avgpool2d_prelu", 0) == 0;
+      if (!used) throw bftest::Failure{"AvgPool2DPrelu not created for " + shape_str(cs.s)};
+      const Out ref = run(model, force("AvgPool2D", variants("avgpool2d.float_opt").back(), kOpt), in, threads);
+      expect_identical(fused.y, ref.y, "avgpool prelu " + shape_str(cs.s) + " threads " + std::to_string(threads));
+      if (cs.plain == 2) continue;  // the separate plain pool would run float_opt against the reference
+      const Out fref = run(model, force("AvgPool2DPrelu", "avgpool2d_prelu.reference", kOpt), in, threads);
+      const Out rref = run(model, tiers(kRef), in, threads);
+      expect_identical(fref.y, rref.y, "reference avgpool prelu " + shape_str(cs.s));
+    }
+    ++seed;
+  }
+}
+
 BF_TEST(fused_gather_and_tile_loads_bit_exact) {
   // BHViT patterns: roll as Reshape -> Gather(row ids) -> Reshape feeding an Add (rows of
   // C and of C/4 channels, with out-of-range ids), and Concat([h] * 4, -1) feeding an Add.

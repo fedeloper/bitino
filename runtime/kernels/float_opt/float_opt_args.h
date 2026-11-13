@@ -57,6 +57,9 @@ struct PoolArgs {
   float* y;
   int64_t ih, iw, c, oh, ow, kh, kw, sh, sw, pt, pl;
   int32_t is_max, include_pad;
+  // AvgPool2DPrelu (average pools only): y = avg(prelu(x, slope)), and y2 (if not null) = avg(x)
+  const float* slope = nullptr;
+  float* y2 = nullptr;
 };
 
 // Activation op types handled by the leaves.

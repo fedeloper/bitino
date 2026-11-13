@@ -107,6 +107,21 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   a kernel is forced for it (`SessionOptions::host_epilogues`, `bitino_bench --no-epilogues` keeps such trees
   as separate fused nodes).
 
+* **Pooled fused outputs.** After fusion: a `FusedElementwise` whose rank-4 output feeds only a `GlobalAvgPool`
+  computes the channel means itself (attribute `reduce: global_avg_pool`, `reduce_shape`; the pool node is removed):
+  BNext's (and the FTL detectors') squeeze-excite input `mix = x·s + act·(1 − s)` is never stored. At 1 thread the
+  `float_opt` kernel evaluates blocks of rows into an L1 buffer and adds them to the channel sums in pixel order
+  (`leaf_gap_add_rows`), with several threads it materializes the rows and runs the `GlobalAvgPool` kernel's pass;
+  either way each channel is summed in pixel order with the float operations of `global_avg_pool.float_opt` and
+  divided as it divides, so the means are bit-identical. Off when a `GlobalAvgPool` kernel is forced.
+* **PReLU pools.** An `Activation` prelu whose output feeds only an `AvgPool2D` becomes, with that pool, one internal
+  `AvgPool2DPrelu(x, slope)` node (`runtime/ops/op_defs_fused.cc`): the prelu is applied per window tap while
+  averaging (`avg_prelu_pixel`, the prelu kernel's operations per element); an `AvgPool2D` of `x` itself with the same
+  attributes becomes its second output. BNext's downsampling (`prelu(cat) -> avgpool` residual and `avgpool(cat)`
+  input branch) reads `cat` once instead of three times and never stores `prelu(cat)`. Average pools whose tap count
+  is a power of two multiply by its reciprocal instead of dividing (exact: both round the same real value). Off
+  when an `AvgPool2D` or `Activation` kernel is forced.
+
 * **int8_full rewrites** (`runtime/src/graph_rewrite_i8.cc`, with `SessionOptions::fuse`, at every stage; I8* graphs
   only, exact by construction, details in `docs/int8.md` § "int8_full latency"): `collapse_unary` (an `I8Mul` /
   `I8Add` / `I8AffineSum` whose operands are all `x` or `I8Lut(x)` of one tensor becomes one `I8Lut` of `x`, its table

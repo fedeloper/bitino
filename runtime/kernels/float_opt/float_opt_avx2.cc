@@ -352,6 +352,8 @@ void colmean_f64(const float* x, int64_t len, int64_t inner, double cnt, float* 
 void global_avg_pool(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1) {
   fopt::leaf_global_avg_pool<Simd8>(x, y, hw, c, t0, t1);
 }
+void gap_add_rows(float* acc, const float* x, int64_t rows, int64_t c) { fopt::leaf_gap_add_rows<Simd8>(acc, x, rows, c); }
+void gap_finish(const float* acc, float* y, int64_t c, int64_t hw) { fopt::leaf_gap_finish<Simd8>(acc, y, c, hw); }
 
 }  // namespace fopt_avx2
 }  // namespace bitino

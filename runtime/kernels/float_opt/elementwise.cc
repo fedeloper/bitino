@@ -171,6 +171,8 @@ bool activation_supported(const KernelContext& ctx) {
 }
 
 // ------------------------------------------------------------------ pools
+// AvgPool2DPrelu (internal, src/graph_rewrite.h pool_prelu): input 1 = the prelu slope, output 0 = the average of
+// prelu(x), output 1 (optional) = the average of x, in one pass over x.
 template <class B, bool kMax>
 class Pool2DOpt : public Kernel {
  public:
@@ -196,6 +198,10 @@ class Pool2DOpt : public Kernel {
     a.pl = g.pl;
     a.is_max = kMax;
     a.include_pad = include_pad_;
+    if (!kMax && ctx.has_in(1)) {  // AvgPool2DPrelu
+      a.slope = ctx.in(1).data<float>();
+      a.y2 = ctx.outputs.size() > 1 && ctx.outputs[1] ? ctx.out(1).data<float>() : nullptr;
+    }
     const int64_t rows = g.n * g.oh;
     ctx.pool->parallel_for(rows, parallel_grain(rows, rows * g.ow * g.c * g.kh * g.kw, 4 * kElemGrain),
                            [&](int64_t r0, int64_t r1) { B::pool_rows(a, r0, r1); });
@@ -291,6 +297,15 @@ void register_backend(OpRegistry& reg, const char* suffix, int priority, uint32_
 }
 
 }  // namespace
+
+void register_float_opt_avgpool_prelu_kernels(OpRegistry& reg) {
+  reg.add_kernel({"AvgPool2DPrelu", "avgpool2d_prelu.float_opt", "float_opt", 40, kFloatOptFeatures, nullptr,
+                  make_kernel<Pool2DOpt<Simd4Ew, false>>});
+#if defined(__x86_64__)
+  reg.add_kernel({"AvgPool2DPrelu", "avgpool2d_prelu.float_opt_avx2", "float_opt", kFloatOptAvx2Priority, kFloatOptAvx2Features, nullptr,
+                  make_kernel<Pool2DOpt<Avx2Ew, false>>});
+#endif
+}
 
 void register_float_opt_elementwise_kernels(OpRegistry& reg) {
   register_backend<Simd4Ew>(reg, "", 40, kFloatOptFeatures);

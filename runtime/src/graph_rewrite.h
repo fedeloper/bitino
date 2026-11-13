@@ -32,6 +32,16 @@
 //    "output_threshold_input"); the consumer reads the bits. Exact: the stored
 //    bit is pack_row_f32() of the float value the consumer would have read
 //    (kernels/bit_output.h). sign_zero consumers need three values: skipped.
+//  * pool_fused_outputs (with fuse_elementwise): a FusedElementwise whose output (rank 4) only feeds a GlobalAvgPool
+//    computes the per-channel means itself ("reduce": "global_avg_pool"); the elementwise result is never
+//    materialized (BNext / FTL: the mix of the squeeze-excite input). Exact: the kernels evaluate the program as before
+//    and sum each channel over the pixels in pixel order with the float operations of the GlobalAvgPool kernel of
+//    their backend (float_opt_leaf.h leaf_gap_add_rows / leaf_gap_finish), then divide by the pixel count.
+//  * pool_prelu (with fuse_elementwise): AvgPool2D(prelu(x)), the prelu used only there, becomes one AvgPool2DPrelu node
+//    (ops/op_defs_fused.cc) that applies the prelu per tap while it averages; an AvgPool2D of x itself with the same
+//    attributes becomes its second output (BNext's downsampling: one pass over x instead of three, prelu(x) never
+//    stored). Exact: per tap the prelu kernel's operations, per output the pool kernel's sum and division
+//    (float_opt_leaf.h avg_prelu_pixel).
 //  * shared_binarizations (with bit_outputs): an f32 tensor that two or more BDense nodes binarize identically
 //    (input 0, same ge / gt mode and threshold input, no w_zero) is packed once by an internal PackBits node
 //    (ops/op_defs_fused.cc) inserted before the first of them, which then read the bits. Exact: the packed bits
@@ -57,6 +67,10 @@ struct RewriteOptions {
   bool bit_outputs = true;
   bool bit_bconv2d = true;  // per op, as producer or consumer (false e.g. when a kernel is forced for it)
   bool bit_bdense = true;
+  // FusedElementwise -> GlobalAvgPool as one node (false e.g. when a GlobalAvgPool kernel is forced).
+  bool pool_fused = true;
+  // prelu -> AvgPool2D (and AvgPool2D of the prelu's input) as one AvgPool2DPrelu node (false when forced kernels).
+  bool pool_prelu = true;
 };
 
 struct RewriteStats {
@@ -66,6 +80,8 @@ struct RewriteStats {
   int hosted_epilogues = 0;   // fused trees moved into the BConv2D / BDense producing an operand
   int bit_outputs = 0;        // binary layers writing bit-packed output for the next binary layer
   int shared_binarizations = 0;  // PackBits nodes inserted (one packing shared by several BDense inputs)
+  int pooled_outputs = 0;        // GlobalAvgPool nodes computed by the FusedElementwise producing their input
+  int prelu_pools = 0;           // AvgPool2DPrelu nodes created
 };
 
 // `nodes` and `infos` are the session's copies with shapes already inferred;

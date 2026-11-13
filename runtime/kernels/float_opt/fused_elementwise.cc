@@ -56,6 +56,11 @@ struct FeSimd4 {
   }
   static void prelu_rows(const float* x, const float* sl, float* y, int64_t c, int64_t rows) { leaf_prelu_rows<Simd4>(x, sl, y, c, 0, rows); }
   static void sign(const float* x, float* y, int64_t n, int32_t zero) { leaf_sign<Simd4>(x, y, 0, n, zero); }
+  // the GlobalAvgPool kernel's sums (elementwise.cc, global_avg_pool.float_opt) for reduce programs
+  static constexpr int kGapLanes = 4;
+  static void gap(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1) { leaf_global_avg_pool<Simd4>(x, y, hw, c, t0, t1); }
+  static void gap_add_rows(float* acc, const float* x, int64_t rows, int64_t c) { leaf_gap_add_rows<Simd4>(acc, x, rows, c); }
+  static void gap_finish(const float* acc, float* y, int64_t c, int64_t hw) { leaf_gap_finish<Simd4>(acc, y, c, hw); }
 };
 
 #if defined(__x86_64__)
@@ -73,6 +78,10 @@ struct FeAvx2 {
   }
   static void prelu_rows(const float* x, const float* sl, float* y, int64_t c, int64_t rows) { fopt_avx2::prelu_rows(x, sl, y, c, 0, rows); }
   static void sign(const float* x, float* y, int64_t n, int32_t zero) { fopt_avx2::sign(x, y, 0, n, zero); }
+  static constexpr int kGapLanes = 8;
+  static void gap(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1) { fopt_avx2::global_avg_pool(x, y, hw, c, t0, t1); }
+  static void gap_add_rows(float* acc, const float* x, int64_t rows, int64_t c) { fopt_avx2::gap_add_rows(acc, x, rows, c); }
+  static void gap_finish(const float* acc, float* y, int64_t c, int64_t hw) { fopt_avx2::gap_finish(acc, y, c, hw); }
 };
 #endif
 
@@ -553,19 +562,65 @@ template <class B>
 class FusedElementwiseOpt : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
-    const Tensor& y = ctx.out(0);
-    const int64_t c = y.dim(-1), rows = c > 0 ? y.size() / c : 0;
-    core_.prepare(parse_fe_program(ctx.attrs()), ctx, c, rows, y.dim(0) > 0 ? rows / y.dim(0) : 1);
+    reduce_ = ctx.attrs().contains("reduce");
+    // the elementwise result's shape: the output's, or out_shape (reduce: the output holds its channel means)
+    const Shape s = reduce_ ? Shape(ctx.attrs().get_ints("out_shape", {})) : ctx.out(0).shape();
+    const int64_t n = s.empty() ? 0 : s[0], c = s.empty() ? 0 : s.back(), rows = c > 0 ? num_elements(s) / c : 0;
+    core_.prepare(parse_fe_program(ctx.attrs()), ctx, c, rows, n > 0 ? rows / n : 1);
+    if (!reduce_ || rows == 0) return;
+    BF_CHECK(s.size() == 4, "FusedElementwise reduce: rank 4");
+    batches_ = n;
+    if (ctx.pool->num_threads() > 1) {
+      full_.assign(static_cast<size_t>(rows * c), 0.f);  // threads: materialized, then the GlobalAvgPool kernel's passes
+    } else {
+      block_rows_ = std::max<int64_t>(1, kReduceBlockFloats / c);
+      block_.assign(static_cast<size_t>(block_rows_ * c), 0.f);
+      acc_.assign(static_cast<size_t>(c), 0.f);
+    }
   }
   void run(const KernelContext& ctx) override {
     if (core_.rows_ == 0) return;
     core_.begin(ctx);
     float* y = ctx.out(0).data<float>();
+    if (reduce_) return run_reduce(ctx, y);
     parallel_rows(ctx.pool, core_.rows_, core_.c_, [&](int64_t r0, int64_t r1) { core_.apply(y, r0, r1); });
   }
 
  private:
+  static constexpr int64_t kReduceBlockFloats = 4096;  // rows evaluated at a time (16 KB, L1) before they are summed
+
+  // reduce = global_avg_pool. One thread: per batch, blocks of rows evaluated into an L1 buffer and added to the
+  // channel sums in pixel order (B::gap_add_rows, the GlobalAvgPool kernel's per-channel operations), the result never
+  // written to memory. Several threads: the rows evaluated in parallel into full_, then the GlobalAvgPool kernel's
+  // pass over channel blocks (each channel summed by one thread in pixel order). Same sums either way.
+  void run_reduce(const KernelContext& ctx, float* y) {
+    const int64_t c = core_.c_, hw = core_.rows_ / batches_;
+    if (!full_.empty()) {
+      float* f = full_.data();
+      parallel_rows(ctx.pool, core_.rows_, c, [&](int64_t r0, int64_t r1) { core_.apply(f, r0, r1); });
+      const int64_t cblocks = (c + 4 * B::kGapLanes - 1) / (4 * B::kGapLanes);
+      const int64_t grain = std::max<int64_t>(1, kElemGrain / std::max<int64_t>(hw * 4 * B::kGapLanes, 1));
+      ctx.pool->parallel_for(batches_ * cblocks, grain, [&](int64_t t0, int64_t t1) { B::gap(f, y, hw, c, t0, t1); });
+      return;
+    }
+    float* acc = acc_.data();
+    const uintptr_t blk = reinterpret_cast<uintptr_t>(block_.data());
+    for (int64_t b = 0; b < batches_; ++b) {
+      std::fill(acc_.begin(), acc_.end(), 0.f);
+      for (int64_t r0 = b * hw; r0 < (b + 1) * hw; r0 += block_rows_) {
+        const int64_t r1 = std::min((b + 1) * hw, r0 + block_rows_);
+        // rows r0..r1 land at block_ (apply writes row r at y + r * c)
+        core_.apply(reinterpret_cast<float*>(blk - static_cast<uintptr_t>(r0 * c) * sizeof(float)), r0, r1);
+        B::gap_add_rows(acc, block_.data(), r1 - r0, c);
+      }
+      B::gap_finish(acc, y + b * c, c, hw);
+    }
+  }
+
   FeCore<B> core_;
+  bool reduce_ = false;
+  int64_t batches_ = 1, block_rows_ = 1;
+  std::vector<float> full_, block_, acc_;
 };
 
 bool fused_supported(const KernelContext& ctx) { return fe_stack_depth(parse_fe_program(ctx.attrs())) <= 16; }
@@ -667,6 +722,7 @@ bool EltwiseProgram::prepare_epilogue(const KernelContext& ctx, int64_t rows_per
 
 void register_float_opt_fused_kernels(OpRegistry& reg) {
   register_backend<FeSimd4>(reg, "", 40, kFloatOptFeatures);
+  register_float_opt_avgpool_prelu_kernels(reg);
 #if defined(__x86_64__)
   register_backend<FeAvx2>(reg, "_avx2", kFloatOptAvx2Priority, kFloatOptAvx2Features);
 #endif

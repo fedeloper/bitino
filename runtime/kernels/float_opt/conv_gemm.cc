@@ -33,6 +33,7 @@
 // block) items to feed the pool.
 #include <cstring>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "bitino/cpu_features.h"
@@ -692,12 +693,19 @@ inline void copy_patch_runs(float* d, const float* s, int64_t kh, int64_t krun, 
 // (BSRC: 64 -> 128 channels, groups 64) and the grouped 1x1 that folds them back. The GEMM spends most of its time
 // building im2col rows (each value used for <= 4 multiply-adds) or, for tiny groups, in per-tile overhead. Instead
 // the input is transposed once per run into padded channel rows xt[n][iy][c][ix] (pad_value around the image, as
-// im2col fills padding taps), and each vector lane is an output pixel: per group, 4 * kNarrowPV consecutive pixels
-// of an output row times its outputs, for every k = (ky, kx, c) of the group in ascending order
-// acc = madd(acc, x, w[k]) from the bias, the activation at the end. That is the GEMM's chain for every output
-// (8-row tiles and masked tiles; used only when the GEMM plan has no GEMV rows, whose four partial sums differ), so
-// the results are bit-identical to the GEMM path.
-constexpr int kNarrowPV = BF_FLOAT_OPT_NEON32 ? 2 : 4;  // pixel vectors per tile (AArch32: 16 q registers)
+// im2col fills padding taps), and each vector lane is an output pixel: per group, 4 * PV consecutive pixels of an
+// output row times its outputs, for every k = (ky, kx, c) of the group in ascending order acc = madd(acc, x, w[k])
+// from the bias, the activation at the end. That is the GEMM's chain for every output (8-row tiles and masked tiles;
+// used only when the GEMM plan has no GEMV rows, whose four partial sums differ), so the results are bit-identical
+// to the GEMM path.
+//
+// Stems (groups 1, 5..16 outputs, 2..4 input channels: the 3x3/2 3 -> 8 / 16 RGB stems of QuickNet, the 3x3
+// 3 -> 16 stems of the CIFAR ResNet-20s): the same scheme with up to 16 outputs per tile and any stride. For stride
+// sw each padded input row is split into sw phase rows (phase p holds padded columns p, p + sw, p + 2 sw, ...), so
+// the input pixels of 4 consecutive output pixels at tap kx are 4 consecutive floats of phase kx % sw, starting at
+// ox + kx / sw. Layout xt[n][iy][c][phase][wsp]; pixel vectors per tile and output blocks in prepare_narrow().
+constexpr int kNarrowPV = BF_FLOAT_OPT_NEON32 ? 2 : 4;  // pixel vectors per tile, <= 4 outputs (AArch32: 16 q registers)
+constexpr int64_t kMaxStemTaps = 256;                   // stems: kh * kw * ic limit
 
 // dst[c * ws + i] = x[i * ic + c] for i < iw, c < ic (one input row into its channel rows).
 inline void transpose_row(const float* x, int64_t iw, int64_t ic, float* dst, int64_t ws) {
@@ -714,41 +722,100 @@ inline void transpose_row(const float* x, int64_t iw, int64_t ic, float* dst, in
         vst1q_f32(d + 2 * ws, vcombine_f32(vget_high_f32(t0.val[0]), vget_high_f32(t1.val[0])));
         vst1q_f32(d + 3 * ws, vcombine_f32(vget_high_f32(t0.val[1]), vget_high_f32(t1.val[1])));
       }
+  if (ic == 3)
+    for (; i + 4 <= iw; i += 4) {
+      const float32x4x3_t a = vld3q_f32(x + i * 3);
+      vst1q_f32(dst + i, a.val[0]);
+      vst1q_f32(dst + ws + i, a.val[1]);
+      vst1q_f32(dst + 2 * ws + i, a.val[2]);
+    }
 #endif
   for (; i < iw; ++i)
     for (int64_t c = 0; c < ic; ++c) dst[c * ws + i] = x[i * ic + c];
 }
 
-template <int NO>
-inline __attribute__((always_inline)) void narrow_madd(f32x4 (&acc)[NO], f32x4 x, f32x4 w) {
-  acc[0] = madd_lane<0>(acc[0], x, w);
-  if constexpr (NO > 1) acc[1] = madd_lane<1>(acc[1], x, w);
-  if constexpr (NO > 2) acc[2] = madd_lane<2>(acc[2], x, w);
-  if constexpr (NO > 3) acc[3] = madd_lane<3>(acc[3], x, w);
+// One input row into its channel / phase rows: x[ix * ic + c] -> dst[(c * sw + px % sw) * wsp + px / sw] with
+// px = ix + pl (dst = the padded row's first phase row).
+inline void transpose_row_phases(const float* x, int64_t iw, int64_t ic, int64_t sw, int64_t pl, float* dst, int64_t wsp) {
+  if (sw == 1) return transpose_row(x, iw, ic, dst + pl, wsp);
+  int64_t ix = 0;
+#if BF_FLOAT_OPT_NEON || BF_FLOAT_OPT_NEON32
+  if (ic == 3 && sw == 2) {
+    for (; ix < iw && (ix + pl) % 2 != 0; ++ix)
+      for (int64_t c = 0; c < 3; ++c) dst[(c * 2 + 1) * wsp + (ix + pl) / 2] = x[ix * 3 + c];
+    // 8 pixels: channels deinterleaved (LD3), then even / odd padded columns (UZP)
+    for (; ix + 8 <= iw; ix += 8) {
+      const float32x4x3_t a = vld3q_f32(x + ix * 3), b = vld3q_f32(x + ix * 3 + 12);
+      float* d = dst + (ix + pl) / 2;
+      const float32x4x2_t u0 = vuzpq_f32(a.val[0], b.val[0]), u1 = vuzpq_f32(a.val[1], b.val[1]);
+      const float32x4x2_t u2 = vuzpq_f32(a.val[2], b.val[2]);
+      vst1q_f32(d, u0.val[0]);
+      vst1q_f32(d + wsp, u0.val[1]);
+      vst1q_f32(d + 2 * wsp, u1.val[0]);
+      vst1q_f32(d + 3 * wsp, u1.val[1]);
+      vst1q_f32(d + 4 * wsp, u2.val[0]);
+      vst1q_f32(d + 5 * wsp, u2.val[1]);
+    }
+  }
+#endif
+  for (; ix < iw; ++ix) {
+    const int64_t px = ix + pl;
+    for (int64_t c = 0; c < ic; ++c) dst[(c * sw + px % sw) * wsp + px / sw] = x[ix * ic + c];
+  }
 }
 
-// One tile of 4 * kNarrowPV output pixels of one group: xr = the channel row of the group's first input channel at the
-// tile's first input pixel (padded coordinates; kernel row ky is cs floats further), kic channel rows ws floats
-// apart, wn = the group's packed weights [kh * kw * kic][4], bias[4]; t[o * TP + p] = output o of pixel p.
-template <int NO>
-inline void narrow_conv_tile(const float* xr, int64_t cs, int64_t kic, int64_t ws, int64_t kh, int64_t kw, const float* wn,
-                             const float* bias, Activation act, float* t) {
-  constexpr int PV = kNarrowPV, TP = 4 * PV;
+// acc[o] = madd(acc[o], x, w[o]) for the outputs O... of a tile (the weights of 4 outputs a vector, by lane).
+template <int... O>
+inline __attribute__((always_inline)) void narrow_madd(f32x4* acc, f32x4 x, const f32x4* w, std::integer_sequence<int, O...>) {
+  ((acc[O] = madd_lane<O % 4>(acc[O], x, w[O / 4])), ...);
+}
+
+// One tile of 4 * PV output pixels times NO outputs: xr = the first input channel's first phase row of kernel row 0
+// at the tile's first output pixel (stride 1: kernel row ky is cs floats further, channel c c * chs, tap kx kx), kic
+// input channels, wn = packed weights [kh * kw * kic][4 * ceil(NO / 4)], bias[NO]; t[o * tp + p] = output o of pixel p.
+template <int NO, int PV>
+inline void narrow_conv_tile(const float* xr, int64_t cs, int64_t kic, int64_t chs, int64_t kh, int64_t kw,
+                             const float* wn, const float* bias, Activation act, float* t, int64_t tp) {
+  constexpr int NW = (NO + 3) / 4;
   f32x4 acc[PV][NO];
   for (int v = 0; v < PV; ++v)
     for (int o = 0; o < NO; ++o) acc[v][o] = dup(bias[o]);
   const float* wk = wn;
   for (int64_t ky = 0; ky < kh; ++ky) {
     const float* row = xr + ky * cs;
-    for (int64_t kx = 0; kx < kw; ++kx)
-      for (int64_t c = 0; c < kic; ++c, wk += 4) {
-        const f32x4 w = load(wk);
-        const float* q = row + c * ws + kx;
-        for (int v = 0; v < PV; ++v) narrow_madd<NO>(acc[v], load(q + 4 * v), w);
+    for (int64_t kx = 0; kx < kw; ++kx) {
+      const float* rk = row + kx;
+      for (int64_t c = 0; c < kic; ++c, wk += 4 * NW) {
+        f32x4 w[NW];
+        for (int j = 0; j < NW; ++j) w[j] = load(wk + 4 * j);
+        const float* q = rk + c * chs;
+        for (int v = 0; v < PV; ++v) narrow_madd(acc[v], load(q + 4 * v), w, std::make_integer_sequence<int, NO>{});
       }
+    }
   }
   for (int v = 0; v < PV; ++v)
-    for (int o = 0; o < NO; ++o) store(t + o * TP + 4 * v, activate(act, acc[v][o]));
+    for (int o = 0; o < NO; ++o) store(t + o * tp + 4 * v, activate(act, acc[v][o]));
+}
+
+// narrow_conv_tile for stems: the taps k = (ky, kx, c) in one loop over a table of their input rows (ptab[k] + ox0 = the
+// input of the tile's first output pixel at tap k; a 3x3 RGB stem: 27 iterations instead of 3 nested loops of 3,
+// whose exits the branch predictor misses).
+template <int NO, int PV>
+inline void narrow_conv_tile_flat(const float* const* ptab, int64_t ox0, int64_t nk, const float* wn, const float* bias, Activation act,
+                                  float* t, int64_t tp) {
+  constexpr int NW = (NO + 3) / 4;
+  f32x4 acc[PV][NO];
+  for (int v = 0; v < PV; ++v)
+    for (int o = 0; o < NO; ++o) acc[v][o] = dup(bias[o]);
+  const float* wk = wn;
+  for (int64_t k = 0; k < nk; ++k, wk += 4 * NW) {
+    f32x4 w[NW];
+    for (int j = 0; j < NW; ++j) w[j] = load(wk + 4 * j);
+    const float* q = ptab[k] + ox0;
+    for (int v = 0; v < PV; ++v) narrow_madd(acc[v], load(q + 4 * v), w, std::make_integer_sequence<int, NO>{});
+  }
+  for (int v = 0; v < PV; ++v)
+    for (int o = 0; o < NO; ++o) store(t + o * tp + 4 * v, activate(act, acc[v][o]));
 }
 
 // t[c * tp + p] (c < oc, p < np) -> y[p * oc + c]: 4x4 transposes for whole blocks, scalar otherwise.
@@ -796,7 +863,9 @@ class Conv2DGemm : public Kernel {
   void run(const KernelContext& ctx) override {
     const float* x = ctx.in(0).data<float>();
     float* y = ctx.out(0).data<float>();
-    if (narrow_) {
+    if (stem_) {
+      run_stem(ctx, x, y);
+    } else if (narrow_) {
       run_narrow(ctx, x, y);
     } else if (direct_) {
       const int64_t ic = g_.ic, kic = g_.kic;
@@ -818,6 +887,12 @@ class Conv2DGemm : public Kernel {
   }
 
  private:
+  // narrow: output block [o0, o0 + no) (no = outputs computed, a multiple of 4 for stems), its weights at wn_[woff]
+  // ([K / groups][round_up(no, 4)]) and bias at nbias_[boff]
+  struct NBlock {
+    int64_t o0, no, woff, boff = 0;
+  };
+
   // Patch rows of pixels [m0, m0+rows), columns [k0, k0+kc) of the group whose
   // input channels start at coff -> dst[rows][kc] with row stride ld.
   void im2col(const float* x, int64_t coff, int64_t m0, int64_t rows, int64_t k0, int64_t kc, float* dst, int64_t ld) const {
@@ -922,71 +997,191 @@ class Conv2DGemm : public Kernel {
     }
   }
 
-  // Narrow direct convolution (see narrow_conv_tile): Simd4 backend, <= 4 outputs per group, stride and dilation 1,
-  // kh * kw > 1 or groups > 1, and no GEMV rows in the GEMM plan (pixel blocks of plan_.mb rows: the last block's
-  // rows % 8 is 0 or >= 4).
+  // Narrow direct convolution (see narrow_conv_tile): Simd4 backend, stride and dilation 1, <= 4 outputs per group,
+  // kh * kw > 1 or groups > 1, or a stem (groups 1, 5..16 outputs, 2..4 input channels, kh * kw > 1, dilation 1, any
+  // stride); no GEMV rows in the GEMM plan (pixel blocks of plan_.mb rows: the last block's rows % 8 is 0 or >= 4).
   void prepare_narrow(const KernelContext& ctx) {
     const Conv2DGeom& g = g_;
     const int64_t ocg = g.oc / g.groups, m = g.n * g.oh * g.ow, r = m % plan_.mb % kMR;
-    narrow_ = std::is_same<B, Simd4Gemm>::value && ocg <= 4 && g.sh == 1 && g.sw == 1 && g.dh == 1 && g.dw == 1 &&
-              (g.kh * g.kw > 1 || g.groups > 1) && (r == 0 || r >= 4);
+    const bool simd4 = std::is_same<B, Simd4Gemm>::value && (r == 0 || r >= 4) && g.dh == 1 && g.dw == 1;
+    narrow_ = simd4 && ocg <= 4 && g.sh == 1 && g.sw == 1 && (g.kh * g.kw > 1 || g.groups > 1);
     // Cortex-A53 (AArch32): the per-run transposition of the input costs more than the im2col it saves for small
     // kernels (128x128 64->3 3x3: GEMM 38.5 ms, narrow 48.3 ms; 9x9: 347 -> 307 ms)
     if (BF_FLOAT_OPT_NEON32 && g.groups == 1 && g.kh * g.kw < 25) narrow_ = false;
-    if (!narrow_) return;
+    // (one input channel: brillsson-quicknet's 3x3/2 1 -> 16 log-mel stem, K = 9, was 1 % slower on the X3 than the GEMM)
+    const bool stem = simd4 && !narrow_ && g.groups == 1 && g.oc > 4 && g.oc <= 16 && g.ic >= 2 && g.ic <= 4 && g.kh * g.kw > 1 &&
+                      g.kh * g.kw * g.ic <= kMaxStemTaps;
+    if (!narrow_ && !stem) return;
+    narrow_ = true;
     const int64_t k = g.kh * g.kw * g.kic;
+    // tiles: pixel vectors per tile and output blocks [o0, o0 + no) (stems), else one block per group of ocg outputs
+    nblocks_.clear();
+    if (!stem) {
+      npv_ = kNarrowPV;
+      for (int64_t gi = 0; gi < g.groups; ++gi) nblocks_.push_back({gi * ocg, ocg, gi * k * 4});
+    } else {
+      // blocks of 8 outputs and a last one of <= 4 (outputs padded to a multiple of 4) x 8 pixels (AArch64: 16
+      // accumulators; 16 outputs x 4 pixels: X3 7 % slower, A75 level) or x 4 pixels (AArch32: 16 q registers)
+      const int64_t oc4 = round_up(g.oc, 4);
+      npv_ = BF_FLOAT_OPT_NEON32 ? 1 : 2;
+      const int64_t bw = 8;
+      for (int64_t o0 = 0, off = 0; o0 < g.oc; o0 += bw) {
+        const int64_t no = std::min(bw, oc4 - o0);
+        nblocks_.push_back({o0, no, off});
+        off += k * no;
+      }
+    }
+    const int64_t tp = 4 * npv_;
+    nsw_ = g.sw;
     hp_ = g.ih + g.pt + g.pb;
-    ws_ = round_up(std::max(g.iw + g.pl + g.pr, round_up(g.ow, 4 * kNarrowPV) + g.kw - 1), 4);
-    wn_.assign(static_cast<size_t>(g.groups * k * 4), 0.f);
-    nbias_.assign(static_cast<size_t>(g.groups * 4), 0.f);
+    // phase rows: every padded column, and the columns read by the last tile of an output row (pad_value)
+    wsp_ = round_up(std::max((g.iw + g.pl + g.pr + nsw_ - 1) / nsw_, round_up(g.ow, tp) + (g.kw - 1) / nsw_), 4);
+    koff_.resize(static_cast<size_t>(g.kw));
+    for (int64_t kx = 0; kx < g.kw; ++kx) koff_[kx] = (kx % nsw_) * wsp_ + kx / nsw_;
+    stem_ = stem;
+    toff_.clear();
+    if (stem)  // offset of tap (kx, c) in its kernel row's channel / phase rows, kh times
+      for (int64_t ky = 0; ky < g.kh; ++ky)
+        for (int64_t kx = 0; kx < g.kw; ++kx)
+          for (int64_t c = 0; c < g.ic; ++c) toff_.push_back(c * nsw_ * wsp_ + koff_[kx]);
+    const int64_t oc4 = round_up(g.oc, 4);
+    wn_.assign(static_cast<size_t>((stem ? oc4 : g.groups * 4) * k), 0.f);
+    nbias_.assign(static_cast<size_t>(stem ? oc4 : g.groups * 4), 0.f);
     const float* w = ctx.in(1).data<float>();
     const float* b = opt_f32(ctx, 2);
+    for (const NBlock& nb : nblocks_) {
+      const int64_t nw = round_up(nb.no, 4);
+      for (int64_t j = 0; j < nb.no && nb.o0 + j < g.oc; ++j) {
+        const int64_t o = nb.o0 + j;
+        for (int64_t kk = 0; kk < k; ++kk) wn_[nb.woff + kk * nw + j] = w[o * k + kk];
+      }
+    }
     for (int64_t gi = 0; gi < g.groups; ++gi)
       for (int64_t j = 0; j < ocg; ++j) {
         const int64_t o = gi * ocg + j;
-        for (int64_t kk = 0; kk < k; ++kk) wn_[(gi * k + kk) * 4 + j] = w[o * k + kk];
-        nbias_[gi * 4 + j] = b ? b[o] : 0.f;
+        nbias_[stem ? o : gi * 4 + j] = b ? b[o] : 0.f;
       }
-    // padded channel rows; the padding (and the columns past the image read by the last tile of a row) keep pad_value
-    const size_t floats = static_cast<size_t>(g.n * hp_ * g.ic * ws_);
+    if (!stem)
+      for (size_t i = 0; i < nblocks_.size(); ++i) nblocks_[i].boff = static_cast<int64_t>(i) * 4;
+    else
+      for (NBlock& nb : nblocks_) nb.boff = nb.o0;
+    nscratch_.init(ctx.pool->num_threads(), static_cast<size_t>(oc4 * tp));
+    if (stem) {
+      // per thread, kh padded input rows (slot py % kh holds padded row py); every position a transposed input row
+      // does not write (padding columns, the columns past the image) keeps pad_value from here on
+      const int64_t floats = g.kh * g.ic * nsw_ * wsp_;
+      ring_.init(ctx.pool->num_threads(), static_cast<size_t>(floats));
+      for (int i = 0; i < std::max(ctx.pool->num_threads(), 1); ++i) std::fill_n(ring_.get(i), floats, pad_value_);
+      return;
+    }
+    // padded channel / phase rows; the padding (and the columns past the image read by the last tile of a row) keep
+    // pad_value
+    const size_t floats = static_cast<size_t>(g.n * hp_ * g.ic * nsw_ * wsp_);
     xt_ = aligned_alloc_shared(floats * sizeof(float));
     std::fill_n(static_cast<float*>(xt_.get()), floats, pad_value_);
-    nscratch_.init(ctx.pool->num_threads(), static_cast<size_t>(g.oc * 4 * kNarrowPV));
   }
+
+  template <int NO, int PV>
+  void narrow_block(const float* xr, int64_t cs, int64_t chs, const NBlock& nb, Activation act, float* t) const {
+    narrow_conv_tile<NO, PV>(xr, cs, g_.kic, chs, g_.kh, g_.kw, wn_.data() + nb.woff, nbias_.data() + nb.boff, act,
+                             t + nb.o0 * 4 * PV, 4 * PV);
+  }
+  template <int NO, int PV>
+  void stem_block(const float* const* ptab, int64_t ox0, const NBlock& nb, Activation act, float* t) const {
+    narrow_conv_tile_flat<NO, PV>(ptab, ox0, static_cast<int64_t>(toff_.size()), wn_.data() + nb.woff, nbias_.data() + nb.boff, act,
+                                  t + nb.o0 * 4 * PV, 4 * PV);
+  }
+
+  // Stems: each thread transposes the input rows its output rows need into its ring of kh padded rows (L1 resident:
+  // a 224-wide RGB row is 2.7 KB) instead of the whole input up front (on the Cortex-A75 that pass alone moved 1.2 MB
+  // through DRAM: 0.21 ms of a 0.9 ms 3x3/2 stem).
+  void run_stem(const KernelContext& ctx, const float* x, float* y) {
+    const Conv2DGeom& g = g_;
+    const int64_t ic = g.ic, sw = nsw_, wsp = wsp_, cs = ic * sw * wsp, out_rows = g.n * g.oh;
+    const int64_t nk = static_cast<int64_t>(toff_.size()), taps_row = g.kw * ic;
+    const int64_t row_macs = g.ow * nk * g.oc, pv = npv_, tp = 4 * pv;
+    const Activation act = plan_.act;
+    ctx.pool->parallel_for(out_rows, parallel_grain(out_rows, out_rows * row_macs, kInlineMacs), [&](int64_t r0, int64_t r1) {
+      ScratchLease lease(nscratch_), rlease(ring_);
+      float* t = lease.data();  // [round_up(oc, 4)][tp]: one tile, all outputs
+      float* ring = rlease.data();
+      int64_t held[kMaxStemTaps];  // padded row (n * hp + py) in each slot
+      std::fill_n(held, g.kh, int64_t(-1));
+      const float* ptab[kMaxStemTaps];
+      for (int64_t r = r0; r < r1; ++r) {
+        const int64_t n = r / g.oh, oy = r % g.oh;
+        for (int64_t ky = 0; ky < g.kh; ++ky) {
+          const int64_t py = oy * g.sh + ky, slot = py % g.kh, iy = py - g.pt;
+          float* dst = ring + slot * cs;
+          if (held[slot] != n * hp_ + py) {
+            held[slot] = n * hp_ + py;
+            if (iy < 0 || iy >= g.ih) std::fill_n(dst, cs, pad_value_);
+            else transpose_row_phases(x + ((n * g.ih + iy) * g.iw) * ic, g.iw, ic, sw, g.pl, dst, wsp);
+          }
+          for (int64_t j = 0; j < taps_row; ++j) ptab[ky * taps_row + j] = dst + toff_[ky * taps_row + j];
+        }
+        float* yr = y + r * g.ow * g.oc;
+        for (int64_t ox0 = 0; ox0 < g.ow; ox0 += tp) {
+          for (const NBlock& nb : nblocks_) {
+            switch (nb.no * 4 + pv) {
+#if BF_FLOAT_OPT_NEON32
+              case 16 + 1: stem_block<4, 1>(ptab, ox0, nb, act, t); break;
+              case 32 + 1: stem_block<8, 1>(ptab, ox0, nb, act, t); break;
+#else
+              case 16 + 2: stem_block<4, 2>(ptab, ox0, nb, act, t); break;
+              case 32 + 2: stem_block<8, 2>(ptab, ox0, nb, act, t); break;
+#endif
+              default: break;  // not planned (prepare_narrow)
+            }
+          }
+          narrow_store(t, tp, g.oc, std::min<int64_t>(tp, g.ow - ox0), yr + ox0 * g.oc);
+        }
+      }
+    });
+  }
+
   void run_narrow(const KernelContext& ctx, const float* x, float* y) {
     const Conv2DGeom& g = g_;
     float* xt = static_cast<float*>(xt_.get());
-    const int64_t ic = g.ic, ws = ws_, hp = hp_;
+    const int64_t ic = g.ic, sw = nsw_, wsp = wsp_, hp = hp_, chs = sw * wsp, cs = ic * chs;
     const int64_t in_rows = g.n * g.ih, out_rows = g.n * g.oh;
     ctx.pool->parallel_for(in_rows, parallel_grain(in_rows, in_rows * g.iw * ic * 8, kInlineMacs), [&](int64_t r0, int64_t r1) {
       for (int64_t r = r0; r < r1; ++r) {
         const int64_t n = r / g.ih, iy = r % g.ih;
-        transpose_row(x + r * g.iw * ic, g.iw, ic, xt + ((n * hp + iy + g.pt) * ic) * ws + g.pl, ws);
+        transpose_row_phases(x + r * g.iw * ic, g.iw, ic, sw, g.pl, xt + (n * hp + iy + g.pt) * cs, wsp);
       }
     });
-    const int64_t kic = g.kic, ocg = g.oc / g.groups, kg = g.kh * g.kw * kic, row_macs = g.ow * kg * g.oc;
-    constexpr int64_t TP = 4 * kNarrowPV;
+    const int64_t kic = g.kic, kg = g.kh * g.kw * kic, row_macs = g.ow * kg * g.oc;
+    const int64_t pv = npv_, tp = 4 * pv;
     const Activation act = plan_.act;
     ctx.pool->parallel_for(out_rows, parallel_grain(out_rows, out_rows * row_macs, kInlineMacs), [&](int64_t r0, int64_t r1) {
       ScratchLease lease(nscratch_);
-      float* t = lease.data();  // [oc][TP]: one tile, all groups
+      float* t = lease.data();  // [round_up(oc, 4)][tp]: one tile, all outputs
       for (int64_t r = r0; r < r1; ++r) {
         const int64_t n = r / g.oh, oy = r % g.oh;
         float* yr = y + r * g.ow * g.oc;
-        for (int64_t ox0 = 0; ox0 < g.ow; ox0 += TP) {
-          for (int64_t gi = 0; gi < g.groups; ++gi) {
-            const float* xr = xt + ((n * hp + oy) * ic + gi * kic) * ws + ox0;
-            const float* wg = wn_.data() + gi * kg * 4;
-            const float* bg = nbias_.data() + gi * 4;
-            float* tg = t + gi * ocg * TP;
-            switch (ocg) {
-              case 1: narrow_conv_tile<1>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
-              case 2: narrow_conv_tile<2>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
-              case 3: narrow_conv_tile<3>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
-              default: narrow_conv_tile<4>(xr, ic * ws, kic, ws, g.kh, g.kw, wg, bg, act, tg); break;
+        const float* xrow = xt + (n * hp + oy * g.sh) * cs;
+        for (int64_t ox0 = 0; ox0 < g.ow; ox0 += tp) {
+          for (size_t bi = 0; bi < nblocks_.size(); ++bi) {
+            const NBlock& nb = nblocks_[bi];
+            // groups > 1: block bi is group bi, whose input channels start at bi * kic
+            const float* xr = xrow + static_cast<int64_t>(bi) * (g.groups > 1 ? kic * chs : 0) + ox0;
+            switch (nb.no * 4 + pv) {
+#if BF_FLOAT_OPT_NEON32
+              case 4 + 2: narrow_block<1, 2>(xr, cs, chs, nb, act, t); break;
+              case 8 + 2: narrow_block<2, 2>(xr, cs, chs, nb, act, t); break;
+              case 12 + 2: narrow_block<3, 2>(xr, cs, chs, nb, act, t); break;
+              case 16 + 2: narrow_block<4, 2>(xr, cs, chs, nb, act, t); break;
+#else
+              case 4 + 4: narrow_block<1, 4>(xr, cs, chs, nb, act, t); break;
+              case 8 + 4: narrow_block<2, 4>(xr, cs, chs, nb, act, t); break;
+              case 12 + 4: narrow_block<3, 4>(xr, cs, chs, nb, act, t); break;
+              case 16 + 4: narrow_block<4, 4>(xr, cs, chs, nb, act, t); break;
+#endif
+              default: break;  // not planned
             }
           }
-          narrow_store(t, TP, g.oc, std::min<int64_t>(TP, g.ow - ox0), yr + ox0 * g.oc);
+          narrow_store(t, tp, g.oc, std::min<int64_t>(tp, g.ow - ox0), yr + ox0 * g.oc);
         }
       }
     });
@@ -995,10 +1190,15 @@ class Conv2DGemm : public Kernel {
   Conv2DGeom g_;
   float pad_value_ = 0;
   bool direct_ = false, narrow_ = false;
-  int64_t hp_ = 0, ws_ = 0;
-  std::vector<float> wn_, nbias_;  // narrow: weights [groups][K / groups][4], bias [groups][4]
-  std::shared_ptr<void> xt_;       // narrow: padded channel rows [n][hp][ic][ws]
-  ScratchSlots nscratch_;          // narrow: per thread, one output tile [oc][4 * kNarrowPV]
+  std::vector<NBlock> nblocks_;
+  int64_t hp_ = 0, wsp_ = 0, nsw_ = 1, npv_ = kNarrowPV;
+  bool stem_ = false;
+  std::vector<int64_t> koff_;      // narrow: tap kx -> offset in the channel's phase rows
+  std::vector<int64_t> toff_;      // stems: tap k = (ky, kx, c) -> offset of (kx, c) in its kernel row's channel / phase rows
+  ScratchSlots ring_;              // stems: per thread, kh padded input rows [kh][ic][sw][wsp]
+  std::vector<float> wn_, nbias_;  // narrow: packed weights and biases of the blocks
+  std::shared_ptr<void> xt_;       // narrow: padded channel / phase rows [n][hp][ic][sw][wsp]
+  ScratchSlots nscratch_;          // narrow: per thread, one output tile [round_up(oc, 4)][4 * npv_]
   std::shared_ptr<void> padrow_;  // [ic] pad_value (grouped im2col)
   GemmPlan<B> plan_;
   ScratchSlots scratch_;

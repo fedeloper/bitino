@@ -417,6 +417,80 @@ BF_TEST(float_conv2d_narrow_grouped_chain_exact) {
   }
 }
 
+BF_TEST(float_conv2d_stem_chain_exact) {
+  // Stems (groups 1, 5..16 outputs, 2..4 input channels, kh * kw > 1) take the narrow direct path with phase rows for
+  // the stride (conv_gemm.cc narrow_conv_tile, transpose_row_phases), with the GEMM's arithmetic per output: acc =
+  // bias (0 without), then one madd per k = (ky, kx, c) in ascending order (NEON: fused; elsewhere rounded after the
+  // multiply and after the add), padding taps reading pad_value, then the activation. Checked bit for bit against
+  // that chain: QuickNet's 3x3/2 3 -> 8 / 16 with TF-same pads (0, 1), the CIFAR 3x3 3 -> 16, odd left pads (the
+  // first pixel of a stride-2 row in the odd phase), rows long enough for the 8-pixel LD3 path plus tails, 12 / 13 /
+  // 5 outputs (padded output blocks), 2 / 4 input channels (1: the GEMM, same chain), rect kernels and strides, batch 2; 1 and 3 threads.
+  struct Case {
+    int64_t n, h, w, ic, oc, kh, kw, sh, sw, pt, pl, pb, pr;
+    std::string act;
+    float pad_value;
+    bool bias;
+  };
+  uint32_t seed = 990;
+  for (const Case& c : {Case{1, 24, 24, 3, 8, 3, 3, 2, 2, 0, 0, 1, 1, "relu", 0.f, true},
+                        Case{1, 24, 40, 3, 16, 3, 3, 2, 2, 0, 0, 1, 1, "none", 0.f, true},
+                        Case{2, 8, 8, 3, 16, 3, 3, 1, 1, 1, 1, 1, 1, "relu", 0.f, false},
+                        Case{1, 19, 37, 3, 16, 3, 3, 2, 2, 1, 1, 1, 1, "none", 0.5f, true},
+                        Case{1, 9, 27, 3, 12, 3, 3, 1, 1, 0, 0, 0, 0, "relu6", 0.f, true},
+                        Case{1, 13, 21, 3, 13, 5, 3, 2, 1, 2, 1, 1, 0, "relu", -1.f, true},
+                        Case{1, 16, 30, 1, 16, 3, 3, 2, 2, 0, 0, 1, 1, "relu", 0.f, true},
+                        Case{2, 12, 19, 4, 5, 3, 5, 1, 2, 1, 3, 1, 2, "none", 0.25f, true},
+                        Case{1, 23, 23, 2, 9, 7, 7, 2, 2, 3, 3, 3, 3, "relu", 0.f, true},
+                        Case{1, 16, 33, 3, 6, 2, 2, 2, 2, 0, 1, 0, 0, "none", 0.f, false}}) {
+    const int64_t kk = c.kh * c.kw * c.ic;
+    const int64_t oh = (c.h + c.pt + c.pb - c.kh) / c.sh + 1, ow = (c.w + c.pl + c.pr - c.kw) / c.sw + 1;
+    const int64_t mrem = c.n * oh * ow % 32 % 8;
+    if (mrem >= 1 && mrem <= 3) throw bftest::Failure{"test case with GEMV rows (not the narrow path)"};
+    auto w = randn(static_cast<size_t>(c.oc * kk), seed, 0.4f);
+    auto b = randn(static_cast<size_t>(c.oc), seed + 1, 0.5f);
+    bftest::ModelBuilder mb;
+    mb.constant("w", DType::kF32, {c.oc, c.kh, c.kw, c.ic}, w.data());
+    if (c.bias) mb.constant("b", DType::kF32, {c.oc}, b.data());
+    mb.input("x", DType::kF32, {c.n, c.h, c.w, c.ic});
+    mb.node("Conv2D", {"x", "w", c.bias ? "b" : ""}, {"y"},
+            Json(Json::Object{{"strides", ints({c.sh, c.sw})}, {"pads", ints({c.pt, c.pb, c.pl, c.pr})},
+                              {"pad_value", Json(static_cast<double>(c.pad_value))}, {"activation", c.act}}));
+    mb.output("y");
+    auto m = mb.build();
+    const auto x = randn(static_cast<size_t>(c.n * c.h * c.w * c.ic), seed + 2);  // run_model's input
+    for (int threads : {1, 3}) {
+      const RunResult opt = run_model(m, forced(m, "conv2d.float_opt"), threads, seed + 2);
+      if (opt.out.size() != static_cast<size_t>(c.n * oh * ow * c.oc)) throw bftest::Failure{"stem output size"};
+      size_t i = 0;
+      for (int64_t n = 0; n < c.n; ++n)
+        for (int64_t oy = 0; oy < oh; ++oy)
+          for (int64_t ox = 0; ox < ow; ++ox)
+            for (int64_t o = 0; o < c.oc; ++o, ++i) {
+              float acc = c.bias ? b[o] : 0.f;
+              for (int64_t ky = 0; ky < c.kh; ++ky)
+                for (int64_t kx = 0; kx < c.kw; ++kx)
+                  for (int64_t ci = 0; ci < c.ic; ++ci) {
+                    const int64_t iy = oy * c.sh - c.pt + ky, ix = ox * c.sw - c.pl + kx;
+                    const float a = iy < 0 || iy >= c.h || ix < 0 || ix >= c.w ? c.pad_value : x[((n * c.h + iy) * c.w + ix) * c.ic + ci];
+                    const float wv = w[((o * c.kh + ky) * c.kw + kx) * c.ic + ci];
+#if defined(__aarch64__)
+                    acc = std::fmaf(a, wv, acc);
+#else
+                    acc = acc + a * wv;
+#endif
+                  }
+              if (c.act == "relu") acc = acc > 0.f ? acc : 0.f;
+              if (c.act == "relu6") acc = std::min(std::max(acc, 0.f), 6.f);
+              if (std::memcmp(&acc, &opt.out[i], 4) != 0)
+                throw bftest::Failure{"stem oc " + std::to_string(c.oc) + " ic " + std::to_string(c.ic) + " s" + std::to_string(c.sh) +
+                                      std::to_string(c.sw) + " element " + std::to_string(i) + ": " + std::to_string(opt.out[i]) +
+                                      " vs chain " + std::to_string(acc)};
+            }
+    }
+    seed += 3;
+  }
+}
+
 BF_TEST(float_conv2d_depthwise_matches_reference) {
   std::vector<ConvCase> cases;
   uint32_t i = 0;
@@ -678,6 +752,50 @@ BF_TEST(float_pools_match_reference) {
                               false, "avgpool2d.float_opt", seed++);
   }
   report_max_err("pools");
+}
+
+BF_TEST(float_avgpool_bit_exact_chain) {
+  // avgpool2d.float_opt per output: s = 0, s += x over the window taps in (ky, kx) order, then s / count; with a
+  // power-of-two count the division is a multiply by 1 / count (exact: both round the same real value). Bit for bit
+  // against that chain: 2x2 / 4x4 (count 4 / 16), 3x3 (count 9, division), border windows without padding counted
+  // (counts 1, 2, 3, 6), channel tails.
+  struct P {
+    Shape x;
+    std::vector<int64_t> k, st, pd;
+    int inc;
+  };
+  uint32_t seed = 760;
+  for (const P& p : {P{{1, 8, 8, 16}, {2, 2}, {2, 2}, {0, 0, 0, 0}, 1}, P{{2, 6, 10, 37}, {2, 2}, {2, 2}, {0, 0, 0, 0}, 0},
+                     P{{1, 9, 7, 21}, {3, 3}, {2, 2}, {1, 1, 1, 1}, 0}, P{{1, 12, 12, 8}, {4, 4}, {4, 4}, {0, 0, 0, 0}, 1},
+                     P{{1, 7, 7, 13}, {3, 3}, {1, 1}, {1, 1, 1, 1}, 1}}) {
+    auto m = pool_model("AvgPool2D", p.x, p.k, p.st, p.pd, p.inc);
+    const auto x = randn(static_cast<size_t>(num_elements(p.x)), seed);  // run_model's input
+    const int64_t n = p.x[0], ih = p.x[1], iw = p.x[2], c = p.x[3];
+    const int64_t oh = (ih + p.pd[0] + p.pd[1] - p.k[0]) / p.st[0] + 1, ow = (iw + p.pd[2] + p.pd[3] - p.k[1]) / p.st[1] + 1;
+    for (int threads : {1, 3}) {
+      const RunResult opt = run_model(m, forced(m, "avgpool2d.float_opt"), threads, seed);
+      size_t i = 0;
+      for (int64_t b = 0; b < n; ++b)
+        for (int64_t oy = 0; oy < oh; ++oy)
+          for (int64_t ox = 0; ox < ow; ++ox)
+            for (int64_t ch = 0; ch < c; ++ch, ++i) {
+              float s = 0.f;
+              int64_t cnt = 0;
+              for (int64_t ky = 0; ky < p.k[0]; ++ky)
+                for (int64_t kx = 0; kx < p.k[1]; ++kx) {
+                  const int64_t iy = oy * p.st[0] - p.pd[0] + ky, ix = ox * p.st[1] - p.pd[2] + kx;
+                  if (iy < 0 || iy >= ih || ix < 0 || ix >= iw) continue;
+                  s += x[((b * ih + iy) * iw + ix) * c + ch];
+                  ++cnt;
+                }
+              const float r = s / static_cast<float>(std::max<int64_t>(1, p.inc ? p.k[0] * p.k[1] : cnt));
+              if (std::memcmp(&r, &opt.out[i], 4) != 0)
+                throw bftest::Failure{"avgpool chain " + shape_str(p.x) + " element " + std::to_string(i) + ": " + std::to_string(opt.out[i]) +
+                                      " vs " + std::to_string(r)};
+            }
+    }
+    ++seed;
+  }
 }
 
 BF_TEST(float_global_avg_pool_matches_reference) {

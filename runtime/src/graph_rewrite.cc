@@ -575,6 +575,97 @@ class Fuser {
   bool ok_ = true;
 };
 
+// ------------------------------------------------- pooled fused outputs
+// GlobalAvgPool(t), t = FusedElementwise(...) of rank 4 used only there: the FusedElementwise node takes the pool's
+// output and computes the means itself (attribute "reduce"); the GlobalAvgPool node is removed.
+int pool_fused_outputs(std::vector<Node>& nodes, const std::vector<TensorInfo>& infos, const std::vector<int>& outputs) {
+  const Uses u = compute_uses(nodes, infos.size(), outputs);
+  std::vector<bool> removed(nodes.size(), false);
+  int done = 0;
+  for (size_t g = 0; g < nodes.size(); ++g) {
+    const Node& gn = nodes[g];
+    if (gn.op != "GlobalAvgPool" || gn.inputs.size() != 1 || gn.outputs.size() != 1) continue;
+    const int t = gn.inputs[0];
+    if (t < 0 || u.count[t] != 1 || u.is_output[t]) continue;
+    const int p = u.producer[t];
+    if (p < 0 || nodes[p].op != "FusedElementwise" || nodes[p].attrs.contains("reduce")) continue;
+    if (infos[t].dtype != DType::kF32 || infos[t].shape.size() != 4 || infos[gn.outputs[0]].dtype != DType::kF32) continue;
+    if (fe_stack_depth(parse_fe_program(nodes[p].attrs)) > 16) continue;
+    Node& f = nodes[p];
+    Json attrs = f.attrs;
+    attrs["reduce"] = "global_avg_pool";
+    Json::Array rs;
+    for (int64_t d : infos[gn.outputs[0]].shape) rs.push_back(Json(d));
+    attrs["reduce_shape"] = Json(rs);
+    f.attrs = attrs;
+    f.outputs = gn.outputs;
+    f.name += "+" + gn.name;
+    removed[g] = true;
+    ++done;
+  }
+  if (done) {
+    std::vector<Node> kept;
+    for (size_t n = 0; n < nodes.size(); ++n)
+      if (!removed[n]) kept.push_back(std::move(nodes[n]));
+    nodes.swap(kept);
+  }
+  return done;
+}
+
+// ------------------------------------------------------------ prelu pools
+bool same_pool_attrs(const Node& a, const Node& b) {
+  for (const char* k : {"kernel", "strides", "pads"})
+    if (a.attrs.get_ints(k, {}) != b.attrs.get_ints(k, {})) return false;
+  return a.attrs.get_int("count_include_pad", 0) == b.attrs.get_int("count_include_pad", 0);
+}
+
+// u = Activation prelu(x, slope) used only by AvgPool2D A2 (f32 NHWC): A2 becomes AvgPool2DPrelu(x, slope) at the
+// prelu's place (or at an AvgPool2D A1 of x with A2's attributes, if that comes first; A1's output becomes output
+// 1). The slope must exist at that place.
+int pool_prelu(std::vector<Node>& nodes, const std::vector<TensorInfo>& infos, const std::vector<int>& outputs) {
+  const Uses u = compute_uses(nodes, infos.size(), outputs);
+  std::vector<bool> removed(nodes.size(), false);
+  int done = 0;
+  for (size_t p = 0; p < nodes.size(); ++p) {
+    const Node& pn = nodes[p];
+    if (removed[p] || pn.op != "Activation" || pn.attrs.get_string("type", "") != "prelu" || pn.outputs.size() != 1) continue;
+    const int x = in_at(pn, 0), sl = in_at(pn, 1), t = pn.outputs[0];
+    if (x < 0 || sl < 0 || u.count[t] != 1 || u.is_output[t] || infos[x].dtype != DType::kF32 || infos[x].shape.size() != 4) continue;
+    if (infos[sl].shape != Shape{infos[x].shape[3]}) continue;
+    int a2 = -1, a1 = -1;
+    for (size_t c = p + 1; c < nodes.size(); ++c)
+      if (!removed[c] && nodes[c].op == "AvgPool2D" && in_at(nodes[c], 0) == t) a2 = static_cast<int>(c);
+    if (a2 < 0) continue;
+    for (size_t c = 0; c < nodes.size(); ++c)
+      if (!removed[c] && static_cast<int>(c) != a2 && nodes[c].op == "AvgPool2D" && in_at(nodes[c], 0) == x &&
+          same_pool_attrs(nodes[c], nodes[a2])) {
+        a1 = static_cast<int>(c);
+        break;
+      }
+    const size_t at = a1 >= 0 ? std::min(p, static_cast<size_t>(a1)) : p;
+    if (u.producer[sl] >= static_cast<int>(at)) continue;
+    Node f;
+    f.op = "AvgPool2DPrelu";
+    f.name = nodes[a2].name + "+" + pn.name + (a1 >= 0 ? "+" + nodes[a1].name : std::string());
+    f.inputs = {x, sl};
+    f.outputs = {nodes[a2].outputs[0]};
+    if (a1 >= 0) f.outputs.push_back(nodes[a1].outputs[0]);
+    f.attrs = nodes[a2].attrs;
+    removed[p] = removed[static_cast<size_t>(a2)] = true;
+    if (a1 >= 0) removed[static_cast<size_t>(a1)] = true;
+    nodes[at] = std::move(f);
+    removed[at] = false;
+    ++done;
+  }
+  if (done) {
+    std::vector<Node> kept;
+    for (size_t n = 0; n < nodes.size(); ++n)
+      if (!removed[n]) kept.push_back(std::move(nodes[n]));
+    nodes.swap(kept);
+  }
+  return done;
+}
+
 // ------------------------------------------------------- bit-packed outputs
 // Binary binarization modes a single bit can carry (sign_zero needs three values).
 bool one_bit_mode(const std::string& m) { return m == "ge" || m == "gt"; }
@@ -698,6 +789,8 @@ RewriteStats rewrite_graph(std::vector<Node>& nodes, std::vector<TensorInfo>& in
     st.fused_nodes = f.fused_nodes;
     st.absorbed_nodes = f.absorbed_nodes;
     st.hosted_epilogues = f.hosted_epilogues;
+    if (opts.pool_fused) st.pooled_outputs = pool_fused_outputs(nodes, infos, graph_outputs);
+    if (opts.pool_prelu) st.prelu_pools = pool_prelu(nodes, infos, graph_outputs);
   }
   if (opts.bit_outputs) st.bit_outputs = bit_outputs(nodes, infos, graph_outputs, opts);
   if (opts.bit_outputs) st.shared_binarizations = shared_binarizations(nodes, infos, opts);

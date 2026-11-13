@@ -750,9 +750,13 @@ struct Pool {
     }
   }
 
+  // kPow2: cnt is a power of two, so s / cnt == s * (1 / cnt) exactly (both round the same real value): a multiply
+  // instead of a division (2x2 average pools: the division bound the Cortex-X3's pass).
+  template <bool kPow2>
   void avg_pixel(const float* xn, int64_t off, int64_t ky0, int64_t ky1, int64_t kx0, int64_t kx1, float cnt, float* yp) const {
     const int64_t c = g.c, row = g.iw * c;
-    const T cv = V::dup(cnt);
+    const T cv = V::dup(cnt), rv = V::dup(1.f / cnt);
+    auto divc = [&](T v) { return kPow2 ? V::mul(v, rv) : V::div(v, cv); };
     int64_t ch = 0;
     for (; ch + 4 * W <= c; ch += 4 * W) {
       T s0 = V::dup(0.f), s1 = s0, s2 = s0, s3 = s0;
@@ -764,22 +768,78 @@ struct Pool {
           s2 = V::add(s2, V::load(p + 2 * W));
           s3 = V::add(s3, V::load(p + 3 * W));
         }
-      V::store(yp + ch, V::div(s0, cv));
-      V::store(yp + ch + W, V::div(s1, cv));
-      V::store(yp + ch + 2 * W, V::div(s2, cv));
-      V::store(yp + ch + 3 * W, V::div(s3, cv));
+      V::store(yp + ch, divc(s0));
+      V::store(yp + ch + W, divc(s1));
+      V::store(yp + ch + 2 * W, divc(s2));
+      V::store(yp + ch + 3 * W, divc(s3));
     }
     for (; ch + W <= c; ch += W) {
       T s = V::dup(0.f);
       for (int64_t ky = ky0; ky < ky1; ++ky)
         for (int64_t kx = kx0; kx < kx1; ++kx) s = V::add(s, V::load(xn + (off + ky * row + kx * c + ch)));
-      V::store(yp + ch, V::div(s, cv));
+      V::store(yp + ch, divc(s));
     }
     for (; ch < c; ++ch) {
       float s = 0.f;
       for (int64_t ky = ky0; ky < ky1; ++ky)
         for (int64_t kx = kx0; kx < kx1; ++kx) s += xn[off + ky * row + kx * c + ch];
-      yp[ch] = s / cnt;
+      yp[ch] = kPow2 ? s * (1.f / cnt) : s / cnt;
+    }
+  }
+
+  // AvgPool2DPrelu: avg_pixel of prelu(x) (leaf_prelu_rows' operations per tap: select_ge0(v, v * slope), the float
+  // expression for the tail channels), and with kPair also avg_pixel of x itself, in one pass over the window.
+  template <bool kPow2, bool kPair>
+  void avg_prelu_pixel(const float* xn, int64_t off, int64_t ky0, int64_t ky1, int64_t kx0, int64_t kx1, float cnt, float* yp,
+                       float* yp2) const {
+    const int64_t c = g.c, row = g.iw * c;
+    const float* sl = g.slope;
+    const T cv = V::dup(cnt), rv = V::dup(1.f / cnt);
+    auto divc = [&](T v) { return kPow2 ? V::mul(v, rv) : V::div(v, cv); };
+    int64_t ch = 0;
+    for (; ch + 2 * W <= c; ch += 2 * W) {
+      const T l0 = V::load(sl + ch), l1 = V::load(sl + ch + W);
+      T s0 = V::dup(0.f), s1 = s0, t0 = s0, t1 = s0;
+      for (int64_t ky = ky0; ky < ky1; ++ky)
+        for (int64_t kx = kx0; kx < kx1; ++kx) {
+          const float* p = xn + (off + ky * row + kx * c + ch);
+          const T v0 = V::load(p), v1 = V::load(p + W);
+          s0 = V::add(s0, V::select_ge0(v0, V::mul(v0, l0)));
+          s1 = V::add(s1, V::select_ge0(v1, V::mul(v1, l1)));
+          if (kPair) {
+            t0 = V::add(t0, v0);
+            t1 = V::add(t1, v1);
+          }
+        }
+      V::store(yp + ch, divc(s0));
+      V::store(yp + ch + W, divc(s1));
+      if (kPair) {
+        V::store(yp2 + ch, divc(t0));
+        V::store(yp2 + ch + W, divc(t1));
+      }
+    }
+    for (; ch + W <= c; ch += W) {
+      const T l0 = V::load(sl + ch);
+      T s0 = V::dup(0.f), t0 = s0;
+      for (int64_t ky = ky0; ky < ky1; ++ky)
+        for (int64_t kx = kx0; kx < kx1; ++kx) {
+          const T v0 = V::load(xn + (off + ky * row + kx * c + ch));
+          s0 = V::add(s0, V::select_ge0(v0, V::mul(v0, l0)));
+          if (kPair) t0 = V::add(t0, v0);
+        }
+      V::store(yp + ch, divc(s0));
+      if (kPair) V::store(yp2 + ch, divc(t0));
+    }
+    for (; ch < c; ++ch) {
+      float s = 0.f, t = 0.f;
+      for (int64_t ky = ky0; ky < ky1; ++ky)
+        for (int64_t kx = kx0; kx < kx1; ++kx) {
+          const float v = xn[off + ky * row + kx * c + ch];
+          s += v >= 0.f ? v : v * sl[ch];
+          t += v;
+        }
+      yp[ch] = kPow2 ? s * (1.f / cnt) : s / cnt;
+      if (kPair) yp2[ch] = kPow2 ? t * (1.f / cnt) : t / cnt;
     }
   }
 
@@ -800,8 +860,23 @@ struct Pool {
         if (g.is_max) {
           max_pixel(xn, off, ky0, ky1, kx0, kx1, yp);
         } else {
-          const int64_t cnt = g.include_pad ? g.kh * g.kw : (ky1 - ky0) * (kx1 - kx0);
-          avg_pixel(xn, off, ky0, ky1, kx0, kx1, static_cast<float>(leaf_max_i(cnt, 1)), yp);
+          const int64_t cnt = leaf_max_i(g.include_pad ? g.kh * g.kw : (ky1 - ky0) * (kx1 - kx0), 1);
+          const bool pow2 = (cnt & (cnt - 1)) == 0;
+          const float fc = static_cast<float>(cnt);
+          if (g.slope) {
+            float* yp2 = g.y2 ? g.y2 + (r * g.ow + ox) * g.c : nullptr;
+            if (pow2) {
+              if (yp2) avg_prelu_pixel<true, true>(xn, off, ky0, ky1, kx0, kx1, fc, yp, yp2);
+              else avg_prelu_pixel<true, false>(xn, off, ky0, ky1, kx0, kx1, fc, yp, yp2);
+            } else {
+              if (yp2) avg_prelu_pixel<false, true>(xn, off, ky0, ky1, kx0, kx1, fc, yp, yp2);
+              else avg_prelu_pixel<false, false>(xn, off, ky0, ky1, kx0, kx1, fc, yp, yp2);
+            }
+          } else if (pow2) {
+            avg_pixel<true>(xn, off, ky0, ky1, kx0, kx1, fc, yp);
+          } else {
+            avg_pixel<false>(xn, off, ky0, ky1, kx0, kx1, fc, yp);
+          }
         }
       }
     }
@@ -816,6 +891,52 @@ void leaf_pool_rows(const PoolArgs& g, int64_t r0, int64_t r1) {
 // GlobalAvgPool work items t in [t0, t1): (batch b, block of 4W channels);
 // each sums its channels over all hw pixels (4 vector accumulators) and
 // divides by hw.
+template <class V>
+void leaf_global_avg_pool(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1);
+
+// leaf_global_avg_pool over a block of rows (consecutive pixels): acc[ch] += x[r][ch] for r = 0..rows-1 in order, with
+// the same per-channel operations (vector adds for the channels below W * floor(c / W), float adds for the rest;
+// 4-vector channel blocks keep their sums in registers over the rows), then leaf_gap_finish divides as it does.
+template <class V>
+void leaf_gap_add_rows(float* acc, const float* x, int64_t rows, int64_t c) {
+  using T = typename V::T;
+  constexpr int W = V::W;
+  int64_t ch = 0;
+  for (; ch + 4 * W <= c; ch += 4 * W) {
+    T s0 = V::load(acc + ch), s1 = V::load(acc + ch + W), s2 = V::load(acc + ch + 2 * W), s3 = V::load(acc + ch + 3 * W);
+    for (int64_t r = 0; r < rows; ++r) {
+      const float* q = x + r * c + ch;
+      s0 = V::add(s0, V::load(q));
+      s1 = V::add(s1, V::load(q + W));
+      s2 = V::add(s2, V::load(q + 2 * W));
+      s3 = V::add(s3, V::load(q + 3 * W));
+    }
+    V::store(acc + ch, s0);
+    V::store(acc + ch + W, s1);
+    V::store(acc + ch + 2 * W, s2);
+    V::store(acc + ch + 3 * W, s3);
+  }
+  for (; ch + W <= c; ch += W) {
+    T s = V::load(acc + ch);
+    for (int64_t r = 0; r < rows; ++r) s = V::add(s, V::load(x + r * c + ch));
+    V::store(acc + ch, s);
+  }
+  for (; ch < c; ++ch) {
+    float s = acc[ch];
+    for (int64_t r = 0; r < rows; ++r) s += x[r * c + ch];
+    acc[ch] = s;
+  }
+}
+template <class V>
+void leaf_gap_finish(const float* acc, float* y, int64_t c, int64_t hw) {
+  constexpr int W = V::W;
+  const float count = static_cast<float>(hw);
+  const typename V::T hv = V::dup(count);
+  int64_t ch = 0;
+  for (; ch + W <= c; ch += W) V::store(y + ch, V::div(V::load(acc + ch), hv));
+  for (; ch < c; ++ch) y[ch] = acc[ch] / count;
+}
+
 template <class V>
 void leaf_global_avg_pool(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1) {
   using T = typename V::T;

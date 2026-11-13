@@ -36,6 +36,8 @@ void activation(int32_t type, const float* x, float* y, int64_t i0, int64_t i1, 
 void prelu_rows(const float* x, const float* slope, float* y, int64_t c, int64_t r0, int64_t r1);
 void pool_rows(const fopt::PoolArgs& g, int64_t r0, int64_t r1);
 void global_avg_pool(const float* x, float* y, int64_t hw, int64_t c, int64_t t0, int64_t t1);
+void gap_add_rows(float* acc, const float* x, int64_t rows, int64_t c);
+void gap_finish(const float* acc, float* y, int64_t c, int64_t hw);
 void mul(const float* a, const float* b, float* y, int64_t i0, int64_t i1);
 void mul_rows(const float* x, const float* g, float* y, int64_t c, int64_t r0, int64_t r1);
 void sign(const float* x, float* y, int64_t i0, int64_t i1, int32_t zero);

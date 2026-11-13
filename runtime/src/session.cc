@@ -89,6 +89,8 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     ro.bit_outputs = opts_.bit_outputs;
     ro.bit_bconv2d = ro.host_bconv2d;  // a forced kernel may lack bit-output / bit-input support
     ro.bit_bdense = ro.host_bdense;
+    ro.pool_fused = opts_.policy.force.count("GlobalAvgPool") == 0;  // a forced pool kernel would no longer run
+    ro.pool_prelu = opts_.policy.force.count("AvgPool2D") == 0 && opts_.policy.force.count("Activation") == 0;
     RewriteStats st = rewrite_graph(nodes_, infos_, g.outputs, ro);
     fused_nodes_ = st.fused_nodes;
     hosted_epilogues_ = st.hosted_epilogues;

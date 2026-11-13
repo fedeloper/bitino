@@ -2,6 +2,7 @@
 // created by the plan-time rewrite in src/graph_rewrite.cc.
 #include "ops/fused_elementwise.h"
 #include "ops/op_defs.h"
+#include "ops/ops_common.h"
 
 namespace bitino {
 namespace {
@@ -64,6 +65,12 @@ void infer_fused_elementwise(const Node& n, const std::vector<const TensorInfo*>
   }
   outs[0]->dtype = DType::kF32;
   outs[0]->shape = s;
+  if (n.attrs.contains("reduce")) {  // pool_fused_outputs (src/graph_rewrite.h): the GlobalAvgPool of the result
+    BF_CHECK(n.attrs.get_string("reduce", "") == "global_avg_pool" && s.size() == 4, "FusedElementwise: reduce global_avg_pool of rank 4");
+    const Shape rs = n.attrs.get_ints("reduce_shape", {});
+    BF_CHECK(num_elements(rs) == s[0] * c && !rs.empty() && rs.front() == s[0] && rs.back() == c, "FusedElementwise: reduce_shape");
+    outs[0]->shape = rs;
+  }
 }
 
 // PackBits (internal, created by the shared_binarizations rewrite, src/graph_rewrite.h): f32 [..., C]
@@ -79,10 +86,25 @@ void infer_pack_bits(const Node& node, const std::vector<const TensorInfo*>& ins
   outs[0]->shape = ins[0]->shape;
 }
 
+// AvgPool2DPrelu (internal, created by the pool_prelu rewrite, src/graph_rewrite.h): x f32 NHWC, slope f32 [C];
+// output 0 = AvgPool2D(prelu(x, slope)), optional output 1 = AvgPool2D(x), same pool attributes.
+void infer_avgpool_prelu(const Node& node, const std::vector<const TensorInfo*>& ins, std::vector<TensorInfo*>& outs) {
+  BF_CHECK(ins.size() >= 2 && ins[0] && ins[1] && ins[0]->dtype == DType::kF32 && ins[0]->shape.size() == 4,
+           "AvgPool2DPrelu: f32 NHWC input and a slope");
+  BF_CHECK(ins[1]->dtype == DType::kF32 && ins[1]->shape == Shape{ins[0]->shape[3]}, "AvgPool2DPrelu: slope must be f32[C]");
+  BF_CHECK(!outs.empty() && outs.size() <= 2, "AvgPool2DPrelu: one or two outputs");
+  const Pool2DGeom g = pool_geometry(node.attrs, ins[0]->shape);
+  for (TensorInfo* o : outs) {
+    o->dtype = DType::kF32;
+    o->shape = {g.n, g.oh, g.ow, g.c};
+  }
+}
+
 }  // namespace
 
 void register_fused_ops(OpRegistry& reg) {
   reg.add_op({"FusedElementwise", infer_fused_elementwise});
+  reg.add_op({"AvgPool2DPrelu", infer_avgpool_prelu});
   reg.add_op({"PackBits", infer_pack_bits});
 }
 

@@ -645,6 +645,11 @@ BF_TEST(bconv_grouped_matches_reference) {
       {1, 3, 3, 96, 96, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, -1, true, false, "none", 32},    // kic 3, 32 groups, bit
       {1, 10, 10, 32, 8, 8, 8, 1, 1, 1, 1, 4, 3, 4, 3, 0, false, false, "none", 2},    // 64 taps, kic 16
       {1, 2, 3, 40, 80, 3, 3, 1, 1, 1, 1, 1, 1, 1, 1, 0, true, false, "relu", 5},      // kic 8, ocg 16, 6 pixels
+      // binary depthwise 1x1 (bconv_neon_opt run_dw1: +-1 dot, per-channel select), channel tails, strides, thresholds
+      {1, 9, 11, 64, 64, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, false, false, "none", 64},   // larqface-binaryfacenet shape
+      {2, 5, 7, 20, 20, 1, 1, 2, 2, 1, 1, 0, 0, 0, 0, 0, false, true, "relu", 20},     // batch 2, stride 2, thr input
+      {1, 6, 6, 37, 37, 1, 1, 1, 3, 1, 1, 0, 0, 0, 0, 0, false, false, "relu6", 37},   // channel tail, stride 1x3
+      {1, 7, 5, 64, 64, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, true, false, "none", 64},     // bit output: general path
   };
   check_grouped_cases(cases, 1300, {1, 2, 3, 4});
 }
