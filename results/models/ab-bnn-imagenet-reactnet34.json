@@ -154,9 +154,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0425",
+   "suite": "20261113_0832",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "5a70c19a",
    "stages": {
     "neon": {
      "pass": true,
@@ -1140,6 +1140,68 @@
     "caps_seen": null,
     "notes": [
      "phone clock was wrong (it read 2023-09-09T23:31:55Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 84.7646345,
+    "median_range_ms": [
+     84.652558,
+     85.1117885
+    ],
+    "p90_ms": 85.1691885,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19112,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:23:43Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 77.512596,
+    "median_range_ms": [
+     77.4209035,
+     77.560231
+    ],
+    "p90_ms": 77.6660115,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16608,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:23:48Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

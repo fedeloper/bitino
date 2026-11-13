@@ -1,0 +1,163 @@
+{
+ "tag": "moto-e13",
+ "serial": "ZY22HWKBP4",
+ "device": {
+  "model": "moto e13",
+  "android": "13",
+  "sdk": "33",
+  "soc": "T606",
+  "platform": "ums9230",
+  "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+  "build": "motorola/sabahl_ge/sabahl:13/TLA33.105-257/105-257:user/release-keys",
+  "kernel": "Linux localhost 5.4.210-android12-9-g060e70f91dbd-ab654 #1 SMP PREEMPT Fri Sep 8 20:20:07 CST 2023 aarch64 Toybox",
+  "cpus": {
+   "0": "1612000 1612000 schedutil",
+   "1": "1612000 1612000 schedutil",
+   "2": "1612000 1612000 schedutil",
+   "3": "1612000 1612000 schedutil",
+   "4": "1612000 1612000 schedutil",
+   "5": "1612000 1612000 schedutil",
+   "6": "1612000 1612000 schedutil",
+   "7": "1612000 1612000 schedutil"
+  },
+  "cpu_parts": {
+   "0": "0xd05",
+   "1": "0xd05",
+   "2": "0xd05",
+   "3": "0xd05",
+   "4": "0xd05",
+   "5": "0xd05",
+   "6": "0xd0a",
+   "7": "0xd0a"
+  },
+  "pinned_cpu": "7",
+  "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  level: 100\n  temperature: 273",
+  "wakefulness": "mWakefulness=Dozing",
+  "core_ctl_cpu": ""
+ },
+ "binaries": {
+  "bitino": {
+   "local": "build/android-arm64/bitino_bench",
+   "sha256": "09d411a2327854acff92065a12190320cdb2028b544907c687ec420c5ed040b8"
+  },
+  "lce": {
+   "local": "<tmp>",
+   "sha256": "4068e0c40b3ef51d167be1ab2677304c3bf3fcb8ff2651ef81f8295e025d1c90"
+  },
+  "tflite": {
+   "local": "<tmp>",
+   "sha256": "5d45116eb86e3a23ea03318e93bfc8efb4dd0149d4692c127e7b0343faba1374"
+  }
+ },
+ "models": [
+  "larq-zoo-quicknet-small",
+  "larq-zoo-quicknet",
+  "larq-zoo-quicknet-large",
+  "larq-zoo-birealnet",
+  "larq-zoo-binary-resnet-e18",
+  "larq-zoo-xnornet",
+  "larq-zoo-binary-alexnet",
+  "larq-zoo-binary-densenet28",
+  "larq-zoo-binary-densenet37",
+  "larq-zoo-binary-densenet37-dilated",
+  "larq-zoo-binary-densenet45"
+ ],
+ "runtimes": [
+  "bitino_all",
+  "lce"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 5,
+ "cpu": "7",
+ "abi": "arm64",
+ "started_utc": "2026-11-13T09:16:26Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    1612000,
+    1612000
+   ],
+   "6": [
+    1612000,
+    1612000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": null
+ },
+ "invocations": [
+  {
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-alexnet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37",
+    "larq-zoo-binary-densenet37-dilated",
+    "larq-zoo-binary-densenet45"
+   ],
+   "repeats": 5,
+   "started_utc": "2026-11-13T08:34:30Z",
+   "finished_utc": "2026-11-13T09:16:10Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  }
+ ],
+ "reference_cap_khz": 1612000,
+ "throttle_gate": {
+  "max_wait_s": 600.0,
+  "poll_s": 2.0,
+  "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+  "reference_cap_khz": 1612000
+ },
+ "finished_utc": "2026-11-13T09:18:51Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    1612000,
+    1612000
+   ],
+   "6": [
+    1612000,
+    1612000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": null
+ }
+}

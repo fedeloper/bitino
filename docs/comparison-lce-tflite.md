@@ -33,28 +33,51 @@ The raw data are in `reports/h2h/2026-11-12/`:
 
 ## Results
 
-**Summary.**
+**Summary** (re-run 2026-11-13 with the current runtime for Bitino vs LCE; TFLite figures from the 2026-11-12 run,
+when Bitino was slower than now).
 
-* **Bitino vs LCE, same weights and core:**
-  * OnePlus Open (Cortex-X3): Bitino is faster on all 11 models, by 1.09–1.71× (geometric mean 1.29×). The
-    smallest margins are on the QuickNets; the largest are on Bi-Real/ResNet-E18 (1.47×) and XNOR-Net (1.71×).
-  * Redmi 9A (32-bit Cortex-A53): Bitino is faster on all 5 models run, by 1.06–1.17× (geometric mean 1.11×).
-  * Moto e13 (Cortex-A75): the two are about even (geometric mean 0.97×). LCE takes 6–10 % less time on the QuickNets,
-    Bi-Real, ResNet-E18 and AlexNet; on XNOR-Net LCE takes 12 % longer; the DenseNets are within ±2 %.
-* **Plain TFLite fp32**, what Android developers get by default, is 4.7–13× slower than Bitino on every phone
-  (geometric mean 7.3× OnePlus, 6.2× Moto, 10.2× Redmi).
-* **TFLite full-int8 PTQ** is 1.4–4.8× slower than Bitino, and it breaks accuracy: top-1 agreement with the
-  reference is 0.45–0.66, and 0 on the DenseNets.
+* **Bitino vs LCE, same weights and core (2026-11-13):**
+  * OnePlus Open (Cortex-X3): Bitino is faster on all 11 models, by 1.14–1.74× (geometric mean 1.35×; 1.29× on
+    2026-11-12). Smallest margins on the QuickNets (1.14–1.17×), largest on XNOR-Net (1.74×) and Bi-Real/ResNet-E18
+    (1.52×).
+  * Moto e13 (Cortex-A75): Bitino is faster on all 11 models, by 1.03–1.25× (geometric mean 1.12×). On 2026-11-12 the
+    two were about even (0.97×, LCE ahead by 6–10 % on the QuickNets, Bi-Real, ResNet-E18 and AlexNet); the A75 binary
+    tile and stem work of 2026-11-13 closed that gap.
+  * Redmi 9A (32-bit Cortex-A53, 2026-11-12 run, not re-run): Bitino is faster on all 5 models run, by 1.06–1.17×
+    (geometric mean 1.11×).
+* **Plain TFLite fp32**, what Android developers get by default, was 4.7–13× slower than Bitino on every phone on
+  2026-11-12 (geometric mean 7.3× OnePlus, 6.2× Moto, 10.2× Redmi).
+* **TFLite full-int8 PTQ** was 1.4–4.8× slower than Bitino on 2026-11-12, and it breaks accuracy: top-1 agreement with
+  the reference is 0.45–0.66, and 0 on the DenseNets.
 * **Model size:** Bitino and LCE files are within 1 % of each other, except XNOR-Net, where LCE's file is 89 MB vs
   Bitino's 24 MB. The TFLite fp32 files are 5–31× larger than Bitino's, and the int8 files 1.2–8× larger.
 * **Peak RSS:** Bitino 14–54 MB, LCE 17–189 MB, TFLite fp32 83–496 MB.
 
 One-sentence summary:
 
-> On the same Larq Zoo binary networks and weights, at 1 thread, Bitino is 1.29× faster than Larq Compute Engine on
-> a Cortex-X3 (all 11 models, up to 1.71×), 1.11× faster on a 32-bit Cortex-A53, and on par on a Cortex-A75 (LCE
-> 3 % ahead on average), while plain TensorFlow Lite is 6–10× slower than Bitino in fp32 and loses most of the
-> accuracy in int8.
+> On the same Larq Zoo binary networks and weights, at 1 thread, Bitino is faster than Larq Compute Engine on every
+> model on every phone measured: 1.35× on a Cortex-X3 (up to 1.74×), 1.12× on a Cortex-A75 and 1.11× on a 32-bit
+> Cortex-A53, while plain TensorFlow Lite is 5–13× slower than Bitino in fp32 and loses most of the accuracy in int8.
+
+**Re-run 2026-11-13** (current runtime; Bitino stage `all` and LCE only, same launcher, models, binaries and clock
+gate as below; 5 rounds per model, no throttled round; raw data `reports/h2h/2026-11-13/`), median ms:
+
+| model | OnePlus Bitino | OnePlus LCE | LCE ÷ Bitino | Moto Bitino | Moto LCE | LCE ÷ Bitino |
+|---|---:|---:|---:|---:|---:|---:|
+| quicknet-small | 4.66 | 5.33 | 1.14 | 23.35 | 23.96 | 1.03 |
+| quicknet | 7.34 | 8.57 | 1.17 | 38.87 | 40.11 | 1.03 |
+| quicknet-large | 13.21 | 15.21 | 1.15 | 66.20 | 68.55 | 1.04 |
+| birealnet | 10.31 | 15.66 | 1.52 | 59.28 | 63.05 | 1.06 |
+| binary-resnet-e18 | 10.37 | 15.75 | 1.52 | 59.27 | 63.59 | 1.07 |
+| xnornet | 7.82 | 13.60 | 1.74 | 41.90 | 52.50 | 1.25 |
+| binary-alexnet | 5.44 | 7.79 | 1.43 | 29.36 | 30.39 | 1.04 |
+| binary-densenet28 | 21.17 | 29.44 | 1.39 | 113.62 | 137.18 | 1.21 |
+| binary-densenet37 | 24.30 | 33.49 | 1.38 | 129.69 | 155.74 | 1.20 |
+| binary-densenet37-dilated | 44.29 | 56.58 | 1.28 | 239.65 | 280.02 | 1.17 |
+| binary-densenet45 | 32.83 | 42.75 | 1.30 | 172.03 | 208.15 | 1.21 |
+| geometric mean | | | 1.35 | | | 1.12 |
+
+The tables below are the original 2026-11-12 run (all five runtimes).
 
 **OnePlus Open (X3 @2.23 GHz cap)**, median ms (1 thread, batch 1); the last column is LCE ÷ Bitino (> 1: Bitino faster)
 

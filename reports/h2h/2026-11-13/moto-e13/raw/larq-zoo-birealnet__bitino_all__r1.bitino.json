@@ -1,0 +1,610 @@
+{
+ "bitino_version": "0.1.0",
+ "build": {
+  "compiler": "Android (12470979, +pgo, +bolt, +lto, +mlgo, based on r522817c) Clang 18.0.3 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+  "flags": "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -DNDEBUG  -Wall -Wextra -Wno-unused-parameter -ffp-contract=off -march=armv8.2-a+dotprod",
+  "type": "Release"
+ },
+ "config": {
+  "affinity": "",
+  "affinity_errors": 0,
+  "bit_outputs": true,
+  "fuse": true,
+  "host_epilogues": true,
+  "iterations": 50,
+  "nodes": 31,
+  "parallel_for_per_run": 46,
+  "plan_rewrites": {
+   "absorbed_nodes": 13,
+   "aliased_reshapes": 1,
+   "bit_outputs": 0,
+   "folded_thresholds": 0,
+   "fused_nodes": 0,
+   "hosted_epilogues": 13,
+   "i8_absorbed_luts": 0,
+   "i8_add_twins": 0,
+   "i8_bit_outputs": 0,
+   "i8_composed_luts": 0,
+   "i8_folded_luts": 0,
+   "i8_interval_folds": 0,
+   "i8_lut_twins": 0,
+   "i8_merged_nodes": 0,
+   "i8_removed_luts": 0,
+   "shared_binarizations": 0
+  },
+  "pool_dispatches_per_run": 0,
+  "pool_threads": 1,
+  "profile": false,
+  "reuse_memory": true,
+  "spin_run": true,
+  "spin_us": 0,
+  "stage": "all",
+  "threads": 1,
+  "unpinned_threads_after": 0,
+  "warmup": 9
+ },
+ "correctness_samples": 1,
+ "cpu_freq_after": [
+  {
+   "cpu": 0,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 1536000,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 1536000,
+   "max_khz": 1612000
+  }
+ ],
+ "cpu_freq_before": [
+  {
+   "cpu": 0,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 614400,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 1228800,
+   "max_khz": 1612000
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 1228800,
+   "max_khz": 1612000
+  }
+ ],
+ "device": {
+  "android_release": "13",
+  "api_level": "33",
+  "build_fingerprint": "motorola/sabahl_ge/sabahl:13/TLA33.105-257/105-257:user/release-keys",
+  "cpu_features": "aarch64: neon dotprod fp16",
+  "cpu_parts": "0xd05 0xd05 0xd05 0xd05 0xd05 0xd05 0xd0a 0xd0a ",
+  "kernel": "5.4.210-android12-9-g060e70f91dbd-ab654",
+  "model": "moto e13",
+  "online_cpus": "0-7",
+  "soc": "T606",
+  "thermal_status": "Thermal Status: 0"
+ },
+ "kernels": {
+  "add.float_opt": 3,
+  "avgpool2d.float_opt": 4,
+  "bconv2d.neon_opt": 16,
+  "conv2d.float_opt": 4,
+  "dense.float_opt": 1,
+  "maxpool2d.float_opt": 1,
+  "reshape.reference": 1,
+  "softmax.float_fast": 1
+ },
+ "label": "larq-zoo-birealnet__bitino_all__r1",
+ "latency": {
+  "load_ms": 62.081154,
+  "max_ms": 59.990115,
+  "mean_ms": 59.3234484,
+  "median_ms": 59.3736535,
+  "min_ms": 58.266346,
+  "n": 50,
+  "p90_ms": 59.890877,
+  "p95_ms": 59.9158345,
+  "samples_ms": [
+   59.953731,
+   59.890577,
+   59.1445,
+   59.416,
+   59.595269,
+   59.990115,
+   59.0545,
+   59.156077,
+   58.865154,
+   59.778923,
+   59.457846,
+   59.665424,
+   59.317615,
+   59.005385,
+   59.6905,
+   59.380423,
+   59.078846,
+   59.564423,
+   59.181077,
+   59.6305,
+   59.301807,
+   59.278499,
+   59.506808,
+   59.511885,
+   58.648385,
+   59.003115,
+   59.311192,
+   59.588308,
+   58.514269,
+   59.645577,
+   59.151653,
+   59.893577,
+   58.266346,
+   58.893308,
+   58.938577,
+   59.450808,
+   59.4825,
+   58.833077,
+   59.490154,
+   58.980769,
+   58.285538,
+   59.456308,
+   59.632884,
+   58.888462,
+   59.366884,
+   59.923692,
+   59.152731,
+   59.358115,
+   59.694077,
+   59.906231
+  ],
+  "session_prepare_ms": 16.712423,
+  "stddev_ms": 0.412628041,
+  "throughput_per_s": 16.8424872,
+  "timed_wall_ms": 2966.21273
+ },
+ "memory": {
+  "activation_bytes": 5025600,
+  "model_mapped": true,
+  "prepacked_bytes": 4320672,
+  "released_constant_bytes": 4063232,
+  "rss_after_load_kb": 8244,
+  "rss_after_run_kb": 15396,
+  "rss_after_session_kb": 15212,
+  "rss_start_kb": 3252,
+  "vm_hwm_kb": 19176
+ },
+ "model": {
+  "constant_bytes": 4185504,
+  "data_sha256": "4160cf568d937c9e6c47be2435ff9e7c8f39a4b17f058a4b6ca2eb55fe349195",
+  "file_bytes": 4208448,
+  "hash_verified": true,
+  "inputs": [
+   {
+    "dtype": "f32",
+    "name": "input",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   }
+  ],
+  "manifest": {
+   "conversion": {
+    "adapter": "bitino.adapters.keras_larq",
+    "date_utc": "2026-10-29T11:04:24.351455Z",
+    "larq": "0.13.3",
+    "larq_zoo": "2.4.0",
+    "passes": {
+     "fold_affine_into_conv": 20,
+     "fold_relu_into_producer": 0,
+     "prune_unused_constants": 60
+    },
+    "python": "3.11.18",
+    "tensorflow": "2.15.1",
+    "tool": "tools/convert_larq_zoo.py"
+   },
+   "input": {
+    "dtype": "f32",
+    "layout": "NHWC",
+    "name": "input",
+    "preprocessing": "larq_zoo.training.data.preprocess_image_bytes(is_training=False)",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   },
+   "layer_precision": [
+    {
+     "activations": "fp32",
+     "layer": "conv2d",
+     "op": "Conv2D",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_1",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_1",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_2",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_2",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_3",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_3",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_4",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_4",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "conv2d_1",
+     "op": "Conv2D",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_6",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_5",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_5",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_7",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_6",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_8",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_7",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_9",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_8",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "conv2d_2",
+     "op": "Conv2D",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_11",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_10",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_9",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_12",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_10",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_13",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_11",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_14",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_12",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "conv2d_3",
+     "op": "Conv2D",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_16",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_15",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_13",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_17",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_14",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_18",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "ApproxSign",
+     "kernel_quantizer": "MagnitudeAwareSign",
+     "layer": "quant_conv2d_15",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary (per-channel mean|W| scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_19",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "layer": "dense",
+     "op": "Dense",
+     "weights": "fp32"
+    }
+   ],
+   "model_id": "larq-zoo-birealnet",
+   "op_versions": {
+    "format": 1
+   },
+   "outputs": [
+    "logits",
+    "probabilities"
+   ],
+   "schema": "bitino.manifest.v1",
+   "source": {
+    "checkpoint_file": "birealnet_weights.h5",
+    "checkpoint_sha256": "6e6efac1584fcd60dd024198c87f42eb53b5ec719a5ca1f527e1fe7e8b997117",
+    "class": "literature.BiRealNet",
+    "framework": "larq_zoo"
+   },
+   "variant": "fused"
+  },
+  "path": "/data/local/tmp/h2h/m/larq-zoo-birealnet/model.bitino"
+ },
+ "schema": "bitino.benchmark.v1",
+ "thermal_after_c": {},
+ "thermal_before_c": {},
+ "timestamp_utc": "2023-09-10T08:00:26Z"
+}

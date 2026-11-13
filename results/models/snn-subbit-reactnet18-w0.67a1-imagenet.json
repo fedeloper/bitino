@@ -1041,6 +1041,99 @@
     "kernels": "neon",
     "model_data_sha256": "e093bc75702a14e1722f683e0517793e868ee8b6c0b4ffb5d824519fe04587db",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 60.967538250000004,
+    "median_range_ms": [
+     60.9544805,
+     60.980596
+    ],
+    "p90_ms": 61.350637899999995,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 19644,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:22:01Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5818873d8c7efce3006a468e4aedeeb928ccf3bc36de2577562eb3b9759c5c7a",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 22.739259750000002,
+    "median_range_ms": [
+     22.6737115,
+     22.804808
+    ],
+    "p90_ms": 23.6743005,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 23884,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:22:02Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5818873d8c7efce3006a468e4aedeeb928ccf3bc36de2577562eb3b9759c5c7a",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "snn-subbit-reactnet18-w0.67a1-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 48.358558,
+    "median_range_ms": [
+     48.295154,
+     48.421962
+    ],
+    "p90_ms": 48.886439,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 20016,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:22:04Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5818873d8c7efce3006a468e4aedeeb928ccf3bc36de2577562eb3b9759c5c7a",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "x86": [

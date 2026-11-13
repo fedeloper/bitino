@@ -337,63 +337,23 @@
   },
   {
    "device": "moto-e13",
-   "model_id": "ab-bnn-cifar10-reactnet18",
-   "check": "int8_full slower than float (all)",
-   "ms": 12.166,
-   "float_ms": 11.259,
-   "ratio": 1.081,
-   "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
-  },
-  {
-   "device": "moto-e13",
    "model_id": "ab-bnn-cifar10-reactneta",
    "check": "int8_full slower than float (all)",
-   "ms": 9.239,
+   "ms": 8.458,
    "float_ms": 7.975,
-   "ratio": 1.159,
+   "ratio": 1.061,
    "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
-  },
-  {
-   "device": "moto-e13",
-   "model_id": "ab-bnn-cifar100-reactnet18",
-   "check": "int8_full slower than float (all)",
-   "ms": 12.246,
-   "float_ms": 11.386,
-   "ratio": 1.076,
-   "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
+   "plan": "int8full_20261113_0916_moto-e13"
   },
   {
    "device": "moto-e13",
    "model_id": "ab-bnn-cifar100-reactneta",
    "check": "int8_full slower than float (all)",
-   "ms": 9.276,
+   "ms": 8.482,
    "float_ms": 8.022,
-   "ratio": 1.156,
-   "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
-  },
-  {
-   "device": "moto-e13",
-   "model_id": "ab-bnn-imagenet-reactneta",
-   "check": "int8_full slower than float (all)",
-   "ms": 101.341,
-   "float_ms": 95.888,
    "ratio": 1.057,
    "file": "model_int8_full_log2.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
-  },
-  {
-   "device": "moto-e13",
-   "model_id": "adabin-resnet20-cifar10",
-   "check": "int8_full slower than float (all)",
-   "ms": 4.875,
-   "float_ms": 4.039,
-   "ratio": 1.207,
-   "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
+   "plan": "int8full_20261113_0916_moto-e13"
   },
   {
    "device": "moto-e13",
@@ -409,19 +369,179 @@
    "device": "moto-e13",
    "model_id": "bhvit-small-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 311.115,
+   "ms": 273.972,
    "float_ms": 216.012,
-   "ratio": 1.44,
+   "ratio": 1.268,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0121_moto-e13"
+   "plan": "int8full_20261113_0916_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bhvit-small-somefp",
+   "check": "int8_full slower than float (all)",
+   "ms": 269.862,
+   "float_ms": 230.087,
+   "ratio": 1.173,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0916_moto-e13"
   },
   {
    "device": "moto-e13",
    "model_id": "bhvit-tiny-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 198.609,
-   "float_ms": 147.526,
-   "ratio": 1.346,
+   "ms": 172.702,
+   "float_ms": 140.823,
+   "ratio": 1.226,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0916_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bhvit-tiny-somefp",
+   "check": "int8_full slower than float (all)",
+   "ms": 170.728,
+   "float_ms": 154.233,
+   "ratio": 1.107,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0916_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "biper-resnet18-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 10.217,
+   "float_ms": 9.712,
+   "ratio": 1.052,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0916_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "biper-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 2.203,
+   "float_ms": 1.883,
+   "ratio": 1.17,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0916_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bnext-large",
+   "check": "int8_full slower than float (all)",
+   "ms": 1036.138,
+   "float_ms": 884.105,
+   "ratio": 1.172,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bnext-middle",
+   "check": "int8_full slower than float (all)",
+   "ms": 445.808,
+   "float_ms": 388.306,
+   "ratio": 1.148,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bnext-small",
+   "check": "int8_full slower than float (all)",
+   "ms": 253.955,
+   "float_ms": 223.079,
+   "ratio": 1.138,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "bnext-tiny",
+   "check": "int8_full slower than float (all)",
+   "ms": 133.447,
+   "float_ms": 116.522,
+   "ratio": 1.145,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "check": "int8_full slower than float (all)",
+   "ms": 2.247,
+   "float_ms": 1.865,
+   "ratio": 1.205,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "ftl-deepfake-bnext-m-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 395.214,
+   "float_ms": 6.162,
+   "ratio": 64.139,
+   "file": "model.bitino",
+   "plan": "quick_20261113_0826_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "ftl-deepfake-bnext-s-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 231.399,
+   "float_ms": 6.084,
+   "ratio": 38.035,
+   "file": "model.bitino",
+   "plan": "quick_20261113_0826_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "ftl-deepfake-bnext-t-cocofake-unfrozen",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 127.961,
+   "float_ms": 6.044,
+   "ratio": 21.172,
+   "file": "model.bitino",
+   "plan": "quick_20261113_0826_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "larq-zoo-binary-densenet45",
+   "check": "int8_full slower than float (all)",
+   "ms": 181.308,
+   "float_ms": 171.814,
+   "ratio": 1.055,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "larq-zoo-meliusnet22",
+   "check": "int8_full slower than float (all)",
+   "ms": 142.442,
+   "float_ms": 127.319,
+   "ratio": 1.119,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "larq-zoo-quicknet",
+   "check": "int8_full slower than float (all)",
+   "ms": 40.598,
+   "float_ms": 38.588,
+   "ratio": 1.052,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "larq-zoo-quicknet-large",
+   "check": "int8_full slower than float (all)",
+   "ms": 73.065,
+   "float_ms": 66.791,
+   "ratio": 1.094,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0121_moto-e13"
   },
@@ -430,8 +550,38 @@
    "model_id": "larq-zoo-quicknet-small",
    "check": "int8_full slower than float (all)",
    "ms": 29.349,
-   "float_ms": 26.595,
-   "ratio": 1.104,
+   "float_ms": 23.405,
+   "ratio": 1.254,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "larq-zoo-quicknet-xl-legacy",
+   "check": "int8_full slower than float (all)",
+   "ms": 76.226,
+   "float_ms": 67.6,
+   "ratio": 1.128,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "rbnn-resnet18-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 13.576,
+   "float_ms": 10.793,
+   "ratio": 1.258,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "rbnn-resnet20-bireal-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 3.067,
+   "float_ms": 2.063,
+   "ratio": 1.487,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0121_moto-e13"
   },
@@ -440,8 +590,78 @@
    "model_id": "rbnn-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
    "ms": 2.885,
-   "float_ms": 2.145,
-   "ratio": 1.345,
+   "float_ms": 2.031,
+   "ratio": 1.421,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "rbnn-vgg-small-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 11.791,
+   "float_ms": 10.912,
+   "ratio": 1.081,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "recu-resnet18-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 11.008,
+   "float_ms": 9.821,
+   "ratio": 1.121,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "recu-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 2.45,
+   "float_ms": 1.871,
+   "ratio": 1.309,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "shuaiz-bireal20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 2.415,
+   "float_ms": 1.659,
+   "ratio": 1.456,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "siman-resnet18-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 13.601,
+   "float_ms": 10.719,
+   "ratio": 1.269,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "siman-resnet20-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 3.196,
+   "float_ms": 2.026,
+   "ratio": 1.577,
+   "file": "model_int8_full.bitino",
+   "plan": "int8full_20261113_0121_moto-e13"
+  },
+  {
+   "device": "moto-e13",
+   "model_id": "siman-vgg-small-cifar10",
+   "check": "int8_full slower than float (all)",
+   "ms": 12.117,
+   "float_ms": 10.901,
+   "ratio": 1.112,
    "file": "model_int8_full.bitino",
    "plan": "int8full_20261113_0121_moto-e13"
   },

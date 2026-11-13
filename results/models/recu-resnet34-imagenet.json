@@ -102,9 +102,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0425",
+   "suite": "20261113_0832",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "5a70c19a",
    "stages": {
     "neon": {
      "pass": true,
@@ -787,6 +787,99 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "02e3763f71046e6d1d8496940069a373c1c486592b3a9285c4c6e2eec9ba0fc9",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet34-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 89.59035575,
+    "median_range_ms": [
+     89.3388845,
+     89.841827
+    ],
+    "p90_ms": 90.27825340000001,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 25280,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:20:17Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7f8ce2a9e548601a2b9c2ff403318ee6bea36471337b7d965a3341fe98d1715b",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet34-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 34.8533175,
+    "median_range_ms": [
+     34.787366,
+     34.919269
+    ],
+    "p90_ms": 35.8034148,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 34288,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:20:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7f8ce2a9e548601a2b9c2ff403318ee6bea36471337b7d965a3341fe98d1715b",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet34-imagenet",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 77.21931724999999,
+    "median_range_ms": [
+     76.907923,
+     77.5307115
+    ],
+    "p90_ms": 77.84468849999999,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 26060,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:20:21Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "7f8ce2a9e548601a2b9c2ff403318ee6bea36471337b7d965a3341fe98d1715b",
     "runtime": "development runtime as of 2026-11-13"
    }
   ],

@@ -103,9 +103,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0425",
+   "suite": "20261113_0832",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "5a70c19a",
    "stages": {
     "neon": {
      "pass": true,
@@ -788,6 +788,99 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "11fcec876548a950414588251c1d239ab70cc02193939e36badc085aadae5b90",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 417.0143165,
+    "median_range_ms": [
+     415.472057,
+     418.556576
+    ],
+    "p90_ms": 419.6310731,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 60056,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:10:29Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 188.10544199999998,
+    "median_range_ms": [
+     187.294634,
+     188.91625
+    ],
+    "p90_ms": 189.821569,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 60032,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:10:35Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "gsb-deit-s-cifar100-stage2",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 406.08036500000003,
+    "median_range_ms": [
+     404.093269,
+     408.067461
+    ],
+    "p90_ms": 409.0545881,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 59080,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:10:48Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0ee7874b8aa56cd1c6536b1079c3c8e18cfe7c2ce00a16fb1ea6159f32041488",
     "runtime": "development runtime as of 2026-11-13"
    }
   ],

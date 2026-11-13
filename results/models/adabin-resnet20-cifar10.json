@@ -108,9 +108,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0425",
+   "suite": "20261113_0832",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "5a70c19a",
    "stages": {
     "neon": {
      "pass": true,
@@ -885,6 +885,37 @@
     "caps_seen": null,
     "notes": [
      "phone clock was wrong (it read 2023-09-09T23:43:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a1a0bc16538ce66ab0ea7a83279ac3421bae4fe44943bb7e34d0f28921ad0d29",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "adabin-resnet20-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 4.1651925,
+    "median_range_ms": [
+     4.138615,
+     4.21784599
+    ],
+    "p90_ms": 4.3596535009999995,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 8068,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:24:53Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

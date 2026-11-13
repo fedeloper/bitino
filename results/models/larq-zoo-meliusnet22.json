@@ -165,9 +165,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_0425",
+   "suite": "20261113_0832",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "5a70c19a",
    "stages": {
     "neon": {
      "pass": true,
@@ -844,6 +844,99 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "b301ee720b36d1bd4aad2d3c3c99af1c535185474866307516f979f25bac0611",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 127.3185865,
+    "median_range_ms": [
+     127.008923,
+     127.62825
+    ],
+    "p90_ms": 129.48603440000002,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 29232,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:14:32Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 61.53485575,
+    "median_range_ms": [
+     61.3814615,
+     61.68825
+    ],
+    "p90_ms": 62.8557112,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 38724,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:14:34Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-meliusnet22",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0826_moto-e13",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 120.425615,
+    "median_range_ms": [
+     120.112711,
+     120.738519
+    ],
+    "p90_ms": 122.20435839999999,
+    "repeats": 2,
+    "iterations": 20,
+    "warmup": 10,
+    "peak_rss_kb": 28576,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:14:38Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
     "runtime": "development runtime as of 2026-11-13"
    }
   ],

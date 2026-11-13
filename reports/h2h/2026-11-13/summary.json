@@ -1,0 +1,2022 @@
+{
+ "rows": [
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 5.44392286,
+   "min_mean_ms": 5.42716768,
+   "max_mean_ms": 5.52298756,
+   "means_ms": [
+    5.44392286,
+    5.43532086,
+    5.45086662,
+    5.52298756,
+    5.42716768
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 28.73046875,
+   "cpu_hist": {
+    "7": 163
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 5.4340885
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 7.79144,
+   "min_mean_ms": 7.68898,
+   "max_mean_ms": 8.09764,
+   "means_ms": [
+    7.68898,
+    7.8453,
+    7.79144,
+    8.09764,
+    7.69702
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 33.96484375,
+   "cpu_hist": {
+    "7": 101
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 13,
+    "nodes_total": 25,
+    "partitions": 7
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 21.1704292,
+   "min_mean_ms": 21.077626,
+   "max_mean_ms": 21.2461552,
+   "means_ms": [
+    21.1318553,
+    21.077626,
+    21.2461552,
+    21.2035697,
+    21.1704292
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 28.34375,
+   "cpu_hist": {
+    "7": 302
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 21.170859
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 29.4373,
+   "min_mean_ms": 29.275599999999997,
+   "max_mean_ms": 29.5595,
+   "means_ms": [
+    29.5595,
+    29.4373,
+    29.4432,
+    29.275599999999997,
+    29.404
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 53.34765625,
+   "cpu_hist": {
+    "7": 352
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.061,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 88,
+    "nodes_total": 134,
+    "partitions": 47
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 24.3021885,
+   "min_mean_ms": 24.0484603,
+   "max_mean_ms": 24.6291917,
+   "means_ms": [
+    24.0484603,
+    24.2635687,
+    24.6291917,
+    24.3021885,
+    24.3539593
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 31.42578125,
+   "cpu_hist": {
+    "7": 343
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.08,
+   "median_of_medians_ms": 24.288541
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 33.4916,
+   "min_mean_ms": 32.1642,
+   "max_mean_ms": 33.5755,
+   "means_ms": [
+    32.1642,
+    33.5755,
+    33.5411,
+    33.1375,
+    33.4916
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 55.4140625,
+   "cpu_hist": {
+    "7": 399
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 115,
+    "nodes_total": 179,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 44.2886907,
+   "min_mean_ms": 44.0941468,
+   "max_mean_ms": 44.732574,
+   "means_ms": [
+    44.0941468,
+    44.1447009,
+    44.3511938,
+    44.2886907,
+    44.732574
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 32.2734375,
+   "cpu_hist": {
+    "7": 573
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.08,
+   "median_of_medians_ms": 44.2747655
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 56.5756,
+   "min_mean_ms": 56.1637,
+   "max_mean_ms": 56.844199999999994,
+   "means_ms": [
+    56.625800000000005,
+    56.5756,
+    56.844199999999994,
+    56.1637,
+    56.361
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 55.57421875,
+   "cpu_hist": {
+    "7": 671
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 113,
+    "nodes_total": 177,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 32.8298052,
+   "min_mean_ms": 32.1940469,
+   "max_mean_ms": 32.9631479,
+   "means_ms": [
+    32.6932146,
+    32.1940469,
+    32.8298052,
+    32.9631479,
+    32.8765156
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 37.3671875,
+   "cpu_hist": {
+    "7": 444
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 32.8170575
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 42.746,
+   "min_mean_ms": 42.241,
+   "max_mean_ms": 42.896699999999996,
+   "means_ms": [
+    42.896699999999996,
+    42.241,
+    42.6714,
+    42.746900000000004,
+    42.746
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 59.46484375,
+   "cpu_hist": {
+    "7": 507
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 139,
+    "nodes_total": 219,
+    "partitions": 81
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 10.3696572,
+   "min_mean_ms": 10.3439614,
+   "max_mean_ms": 10.7480011,
+   "means_ms": [
+    10.3742032,
+    10.3439614,
+    10.3569845,
+    10.3696572,
+    10.7480011
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 19.2109375,
+   "cpu_hist": {
+    "7": 178
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.081,
+   "median_of_medians_ms": 10.355703
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 15.7479,
+   "min_mean_ms": 15.7012,
+   "max_mean_ms": 15.7738,
+   "means_ms": [
+    15.7012,
+    15.752799999999999,
+    15.7143,
+    15.7738,
+    15.7479
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 34.3671875,
+   "cpu_hist": {
+    "7": 191
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 29,
+    "nodes_total": 61,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-birealnet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 10.3140791,
+   "min_mean_ms": 10.2859334,
+   "max_mean_ms": 10.4111677,
+   "means_ms": [
+    10.4111677,
+    10.3306844,
+    10.3140791,
+    10.2988968,
+    10.2859334
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 19.234375,
+   "cpu_hist": {
+    "7": 175
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 10.2958335
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-birealnet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 15.6584,
+   "min_mean_ms": 15.5961,
+   "max_mean_ms": 15.6685,
+   "means_ms": [
+    15.5965,
+    15.5961,
+    15.6685,
+    15.6584,
+    15.6603
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 33.625,
+   "cpu_hist": {
+    "7": 191
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 27,
+    "nodes_total": 59,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 7.3371114,
+   "min_mean_ms": 7.33225628,
+   "max_mean_ms": 7.4573938,
+   "means_ms": [
+    7.33225628,
+    7.4573938,
+    7.3371114,
+    7.33950838,
+    7.33624798
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 16.984375,
+   "cpu_hist": {
+    "7": 140
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 7.3408595
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 8.570780000000001,
+   "min_mean_ms": 8.553040000000001,
+   "max_mean_ms": 8.59418,
+   "means_ms": [
+    8.582799999999999,
+    8.59418,
+    8.553040000000001,
+    8.5689,
+    8.570780000000001
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 28.0,
+   "cpu_hist": {
+    "7": 109
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 31,
+    "nodes_total": 63,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 13.2060115,
+   "min_mean_ms": 13.1987916,
+   "max_mean_ms": 13.2355991,
+   "means_ms": [
+    13.2030573,
+    13.1987916,
+    13.2060115,
+    13.2355991,
+    13.218224
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 20.45703125,
+   "cpu_hist": {
+    "7": 214
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 13.2000265
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 15.2101,
+   "min_mean_ms": 15.1904,
+   "max_mean_ms": 15.2172,
+   "means_ms": [
+    15.2172,
+    15.1904,
+    15.213899999999999,
+    15.2101,
+    15.2084
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 30.75390625,
+   "cpu_hist": {
+    "7": 185
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.08,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 47,
+    "nodes_total": 111,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 4.65687184,
+   "min_mean_ms": 4.65485314,
+   "max_mean_ms": 4.67705626,
+   "means_ms": [
+    4.66377296,
+    4.65485314,
+    4.67705626,
+    4.65687184,
+    4.6559177
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 15.73046875,
+   "cpu_hist": {
+    "7": 109
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 4.655521
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 5.32782,
+   "min_mean_ms": 5.321140000000001,
+   "max_mean_ms": 5.34512,
+   "means_ms": [
+    5.34512,
+    5.321140000000001,
+    5.32782,
+    5.33354,
+    5.322979999999999
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 25.66796875,
+   "cpu_hist": {
+    "7": 70
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 31,
+    "nodes_total": 63,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-xnornet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 7.82322188,
+   "min_mean_ms": 7.80329584,
+   "max_mean_ms": 7.8291948,
+   "means_ms": [
+    7.8291948,
+    7.82322188,
+    7.80622914,
+    7.82593856,
+    7.80329584
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 53.9296875,
+   "cpu_hist": {
+    "7": 197
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "median_of_medians_ms": 7.783906
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-xnornet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 13.5964,
+   "min_mean_ms": 13.4846,
+   "max_mean_ms": 13.6775,
+   "means_ms": [
+    13.6652,
+    13.4846,
+    13.6775,
+    13.5721,
+    13.5964
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 189.1796875,
+   "cpu_hist": {
+    "7": 175
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.06,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 13,
+    "nodes_total": 24,
+    "partitions": 7
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 29.3640639,
+   "min_mean_ms": 29.2999799,
+   "max_mean_ms": 29.4193845,
+   "means_ms": [
+    29.2999799,
+    29.3706438,
+    29.3640639,
+    29.3037454,
+    29.4193845
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 28.515625,
+   "cpu_hist": {
+    "7": 553
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.001,
+   "median_of_medians_ms": 29.3679805
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 30.3882,
+   "min_mean_ms": 30.3402,
+   "max_mean_ms": 30.5205,
+   "means_ms": [
+    30.492900000000002,
+    30.5205,
+    30.3433,
+    30.3402,
+    30.3882
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 32.30859375,
+   "cpu_hist": {
+    "7": 367
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.001,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 13,
+    "nodes_total": 25,
+    "partitions": 7
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 113.615304,
+   "min_mean_ms": 113.054255,
+   "max_mean_ms": 113.693375,
+   "means_ms": [
+    113.625198,
+    113.054255,
+    113.693375,
+    113.613088,
+    113.615304
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 27.6171875,
+   "cpu_hist": {
+    "7": 1376
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 113.556538
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 137.182,
+   "min_mean_ms": 136.065,
+   "max_mean_ms": 137.334,
+   "means_ms": [
+    136.628,
+    137.188,
+    136.065,
+    137.334,
+    137.182
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 51.8046875,
+   "cpu_hist": {
+    "7": 1569
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 88,
+    "nodes_total": 134,
+    "partitions": 47
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 129.691076,
+   "min_mean_ms": 129.212672,
+   "max_mean_ms": 130.669385,
+   "means_ms": [
+    129.212672,
+    130.669385,
+    129.691076,
+    129.761642,
+    129.679977
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 30.84765625,
+   "cpu_hist": {
+    "7": 1570
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 129.539134
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 155.742,
+   "min_mean_ms": 155.16,
+   "max_mean_ms": 156.289,
+   "means_ms": [
+    155.742,
+    155.16,
+    156.289,
+    156.174,
+    155.461
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 53.80078125,
+   "cpu_hist": {
+    "7": 1792
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.001,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 115,
+    "nodes_total": 179,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 239.64653,
+   "min_mean_ms": 238.145687,
+   "max_mean_ms": 240.424755,
+   "means_ms": [
+    239.64653,
+    239.880404,
+    238.145687,
+    239.292615,
+    240.424755
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 31.62890625,
+   "cpu_hist": {
+    "7": 2821
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.007,
+   "median_of_medians_ms": 239.430884
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 280.022,
+   "min_mean_ms": 277.519,
+   "max_mean_ms": 284.815,
+   "means_ms": [
+    279.115,
+    283.583,
+    280.022,
+    284.815,
+    277.519
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 53.73828125,
+   "cpu_hist": {
+    "7": 3206
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 113,
+    "nodes_total": 177,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 172.031295,
+   "min_mean_ms": 171.612222,
+   "max_mean_ms": 172.360621,
+   "means_ms": [
+    172.031295,
+    172.057471,
+    171.612222,
+    172.360621,
+    171.81184
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 36.50390625,
+   "cpu_hist": {
+    "7": 2064
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 171.766731
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 208.146,
+   "min_mean_ms": 207.296,
+   "max_mean_ms": 209.291,
+   "means_ms": [
+    207.916,
+    208.649,
+    207.296,
+    209.291,
+    208.146
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 57.6796875,
+   "cpu_hist": {
+    "7": 2382
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.001,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 139,
+    "nodes_total": 219,
+    "partitions": 81
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 59.2745068,
+   "min_mean_ms": 59.0908846,
+   "max_mean_ms": 59.8319793,
+   "means_ms": [
+    59.0908846,
+    59.1454669,
+    59.8319793,
+    59.4853253,
+    59.2745068
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 18.78125,
+   "cpu_hist": {
+    "7": 754
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 59.3149805
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 63.5862,
+   "min_mean_ms": 63.2428,
+   "max_mean_ms": 63.805800000000005,
+   "means_ms": [
+    63.5552,
+    63.5862,
+    63.805800000000005,
+    63.2428,
+    63.665699999999994
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 32.80078125,
+   "cpu_hist": {
+    "7": 743
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 29,
+    "nodes_total": 61,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-birealnet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 59.2827862,
+   "min_mean_ms": 58.7950315,
+   "max_mean_ms": 59.5331523,
+   "means_ms": [
+    58.7950315,
+    59.3234484,
+    58.9790115,
+    59.2827862,
+    59.5331523
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 18.83984375,
+   "cpu_hist": {
+    "7": 752
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 59.2223655
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-birealnet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 63.047599999999996,
+   "min_mean_ms": 62.7947,
+   "max_mean_ms": 63.434400000000004,
+   "means_ms": [
+    62.831900000000005,
+    63.434400000000004,
+    63.114,
+    63.047599999999996,
+    62.7947
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 31.91015625,
+   "cpu_hist": {
+    "7": 740
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 27,
+    "nodes_total": 59,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 38.8709884,
+   "min_mean_ms": 37.7760022,
+   "max_mean_ms": 38.8794731,
+   "means_ms": [
+    38.8794731,
+    37.7760022,
+    38.8734346,
+    38.4001715,
+    38.8709884
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 16.45703125,
+   "cpu_hist": {
+    "7": 520
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 38.8827495
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 40.1141,
+   "min_mean_ms": 40.0456,
+   "max_mean_ms": 40.3797,
+   "means_ms": [
+    40.093199999999996,
+    40.0456,
+    40.2027,
+    40.1141,
+    40.3797
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 26.3671875,
+   "cpu_hist": {
+    "7": 476
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 31,
+    "nodes_total": 63,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 66.1960884,
+   "min_mean_ms": 65.6526569,
+   "max_mean_ms": 66.9461468,
+   "means_ms": [
+    66.0560876,
+    65.6526569,
+    66.1960884,
+    66.5001199,
+    66.9461468
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 19.953125,
+   "cpu_hist": {
+    "7": 839
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 66.121115
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 68.5535,
+   "min_mean_ms": 68.34219999999999,
+   "max_mean_ms": 68.6821,
+   "means_ms": [
+    68.34219999999999,
+    68.6821,
+    68.5425,
+    68.5535,
+    68.6573
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 29.0625,
+   "cpu_hist": {
+    "7": 802
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.001,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 47,
+    "nodes_total": 111,
+    "partitions": 65
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 23.3483608,
+   "min_mean_ms": 23.2003531,
+   "max_mean_ms": 23.4314777,
+   "means_ms": [
+    23.2003531,
+    23.3190454,
+    23.37238,
+    23.3483608,
+    23.4314777
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 15.19921875,
+   "cpu_hist": {
+    "7": 346
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.004,
+   "median_of_medians_ms": 23.393173
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 23.956599999999998,
+   "min_mean_ms": 23.6632,
+   "max_mean_ms": 24.0203,
+   "means_ms": [
+    23.6632,
+    23.989900000000002,
+    24.0203,
+    23.956599999999998,
+    23.9022
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 23.81640625,
+   "cpu_hist": {
+    "7": 297
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 31,
+    "nodes_total": 63,
+    "partitions": 33
+   }
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-xnornet",
+   "runtime": "bitino_all",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 41.9000677,
+   "min_mean_ms": 41.831923,
+   "max_mean_ms": 41.937753,
+   "means_ms": [
+    41.8983716,
+    41.831923,
+    41.917886,
+    41.937753,
+    41.9000677
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 53.51953125,
+   "cpu_hist": {
+    "7": 710
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "median_of_medians_ms": 41.9488075
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-xnornet",
+   "runtime": "lce",
+   "n_ok": 5,
+   "n_runs": 5,
+   "median_of_means_ms": 52.4965,
+   "min_mean_ms": 52.0511,
+   "max_mean_ms": 52.5402,
+   "means_ms": [
+    52.0511,
+    52.4965,
+    52.5402,
+    52.060199999999995,
+    52.5325
+   ],
+   "throttled_runs": 0,
+   "off_reference_runs_excluded": 0,
+   "maxrss_mb": 187.68359375,
+   "cpu_hist": {
+    "7": 657
+   },
+   "off_cpu_samples": 0,
+   "pin_wait_max_s": 0.0,
+   "delegate": {
+    "name": "TfLiteXNNPackDelegate",
+    "nodes_delegated": 13,
+    "nodes_total": 24,
+    "partitions": 7
+   }
+  }
+ ],
+ "agreement_sample0": [
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "bitino_all",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 5.960464477539063e-08,
+   "max_abs_vs_lce": 2.4586915969848633e-07
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "lce",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.2351741790771484e-07,
+   "max_abs_vs_host_same_model": 2.9802322387695312e-08,
+   "max_abs_vs_bitino_all": 2.4586915969848633e-07
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04258272051811218,
+   "max_abs_vs_lce": 0.009355142712593079
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.033227577805519104,
+   "max_abs_vs_host_same_model": 6.586313247680664e-06,
+   "max_abs_vs_bitino_all": 0.009355142712593079
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.05514240264892578,
+   "max_abs_vs_lce": 1.1101365089416504e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.05514219403266907,
+   "max_abs_vs_host_same_model": 8.195638656616211e-07,
+   "max_abs_vs_bitino_all": 1.1101365089416504e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.0850098729133606,
+   "max_abs_vs_lce": 0.0104408860206604
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.095450758934021,
+   "max_abs_vs_host_same_model": 7.636845111846924e-07,
+   "max_abs_vs_bitino_all": 0.0104408860206604
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04113249480724335,
+   "max_abs_vs_lce": 2.2649765014648438e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.041131168603897095,
+   "max_abs_vs_host_same_model": 1.996755599975586e-06,
+   "max_abs_vs_bitino_all": 2.2649765014648438e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "bitino_all",
+   "top1": 10,
+   "ref_top1": 10,
+   "max_abs_vs_reference_probs": 2.980232238769531e-07,
+   "max_abs_vs_lce": 3.0547380447387695e-07
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "lce",
+   "top1": 10,
+   "ref_top1": 10,
+   "max_abs_vs_reference_probs": 2.8312206268310547e-07,
+   "max_abs_vs_host_same_model": 4.172325134277344e-07,
+   "max_abs_vs_bitino_all": 3.0547380447387695e-07
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-birealnet",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 2.6673078536987305e-06,
+   "max_abs_vs_lce": 4.276633262634277e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-birealnet",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 1.6093254089355469e-06,
+   "max_abs_vs_host_same_model": 1.1026859283447266e-06,
+   "max_abs_vs_bitino_all": 4.276633262634277e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 5.662441253662109e-07,
+   "max_abs_vs_lce": 1.1771917343139648e-05
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 1.233816146850586e-05,
+   "max_abs_vs_host_same_model": 8.344650268554688e-07,
+   "max_abs_vs_bitino_all": 1.1771917343139648e-05
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 4.172325134277344e-07,
+   "max_abs_vs_lce": 0.15928146243095398
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.15928132832050323,
+   "max_abs_vs_host_same_model": 9.98377799987793e-07,
+   "max_abs_vs_bitino_all": 0.15928146243095398
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04316934198141098,
+   "max_abs_vs_lce": 0.13717129826545715
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.13872987031936646,
+   "max_abs_vs_host_same_model": 4.172325134277344e-07,
+   "max_abs_vs_bitino_all": 0.13717129826545715
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-xnornet",
+   "runtime": "bitino_all",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.384185791015625e-07,
+   "max_abs_vs_lce": 2.384185791015625e-06
+  },
+  {
+   "device": "cph2551",
+   "model": "larq-zoo-xnornet",
+   "runtime": "lce",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.6226043701171875e-06,
+   "max_abs_vs_host_same_model": 4.351139068603516e-06,
+   "max_abs_vs_bitino_all": 2.384185791015625e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "bitino_all",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 5.960464477539063e-08,
+   "max_abs_vs_lce": 2.4586915969848633e-07
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-alexnet",
+   "runtime": "lce",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.2351741790771484e-07,
+   "max_abs_vs_host_same_model": 2.9802322387695312e-08,
+   "max_abs_vs_bitino_all": 2.4586915969848633e-07
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04258272051811218,
+   "max_abs_vs_lce": 0.009355142712593079
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet28",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.033227577805519104,
+   "max_abs_vs_host_same_model": 6.586313247680664e-06,
+   "max_abs_vs_bitino_all": 0.009355142712593079
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.05514240264892578,
+   "max_abs_vs_lce": 1.1101365089416504e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.05514219403266907,
+   "max_abs_vs_host_same_model": 8.195638656616211e-07,
+   "max_abs_vs_bitino_all": 1.1101365089416504e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.0850098729133606,
+   "max_abs_vs_lce": 0.0104408860206604
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet37-dilated",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.095450758934021,
+   "max_abs_vs_host_same_model": 7.636845111846924e-07,
+   "max_abs_vs_bitino_all": 0.0104408860206604
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04113249480724335,
+   "max_abs_vs_lce": 2.2649765014648438e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-densenet45",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.041131168603897095,
+   "max_abs_vs_host_same_model": 1.996755599975586e-06,
+   "max_abs_vs_bitino_all": 2.2649765014648438e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "bitino_all",
+   "top1": 10,
+   "ref_top1": 10,
+   "max_abs_vs_reference_probs": 2.980232238769531e-07,
+   "max_abs_vs_lce": 3.0547380447387695e-07
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-binary-resnet-e18",
+   "runtime": "lce",
+   "top1": 10,
+   "ref_top1": 10,
+   "max_abs_vs_reference_probs": 2.8312206268310547e-07,
+   "max_abs_vs_host_same_model": 4.172325134277344e-07,
+   "max_abs_vs_bitino_all": 3.0547380447387695e-07
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-birealnet",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 2.6673078536987305e-06,
+   "max_abs_vs_lce": 4.276633262634277e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-birealnet",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 1.6093254089355469e-06,
+   "max_abs_vs_host_same_model": 1.1026859283447266e-06,
+   "max_abs_vs_bitino_all": 4.276633262634277e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 5.662441253662109e-07,
+   "max_abs_vs_lce": 1.1771917343139648e-05
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 1.233816146850586e-05,
+   "max_abs_vs_host_same_model": 8.344650268554688e-07,
+   "max_abs_vs_bitino_all": 1.1771917343139648e-05
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 4.172325134277344e-07,
+   "max_abs_vs_lce": 0.15928146243095398
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-large",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.15928132832050323,
+   "max_abs_vs_host_same_model": 9.98377799987793e-07,
+   "max_abs_vs_bitino_all": 0.15928146243095398
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "bitino_all",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.04316934198141098,
+   "max_abs_vs_lce": 0.13717129826545715
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-quicknet-small",
+   "runtime": "lce",
+   "top1": 15,
+   "ref_top1": 15,
+   "max_abs_vs_reference_probs": 0.13872987031936646,
+   "max_abs_vs_host_same_model": 4.172325134277344e-07,
+   "max_abs_vs_bitino_all": 0.13717129826545715
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-xnornet",
+   "runtime": "bitino_all",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.384185791015625e-07,
+   "max_abs_vs_lce": 2.384185791015625e-06
+  },
+  {
+   "device": "moto-e13",
+   "model": "larq-zoo-xnornet",
+   "runtime": "lce",
+   "top1": 330,
+   "ref_top1": 330,
+   "max_abs_vs_reference_probs": 2.6226043701171875e-06,
+   "max_abs_vs_host_same_model": 4.351139068603516e-06,
+   "max_abs_vs_bitino_all": 2.384185791015625e-06
+  }
+ ],
+ "plans": {
+  "cph2551": {
+   "tag": "cph2551",
+   "serial": "e3698ea7",
+   "device": {
+    "model": "CPH2551",
+    "android": "16",
+    "sdk": "36",
+    "soc": "SM8550",
+    "platform": "kalama",
+    "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+    "build": "OnePlus/CPH2551EEA/OP5973L1:16/BP2A.250605.015/T.R4T3.31ff4af-c33982-ca5214:user/release-keys",
+    "kernel": "Linux localhost 5.15.197-android13-8-o-01214-gbee5b6ef6244 #1 SMP PREEMPT Fri Aug 7 06:32:56 UTC 2026 aarch64 Toybox",
+    "cpus": {
+     "0": "2016000 2016000 uag",
+     "1": "2016000 2016000 uag",
+     "2": "2016000 2016000 uag",
+     "3": "2803200 1785600 uag",
+     "4": "2803200 1785600 uag",
+     "5": "2803200 1785600 uag",
+     "6": "2803200 1785600 uag",
+     "7": "3187200 2227200 uag"
+    },
+    "cpu_parts": {
+     "0": "0xd46",
+     "1": "0xd46",
+     "2": "0xd46",
+     "3": "0xd4d",
+     "4": "0xd4d",
+     "5": "0xd47",
+     "6": "0xd47",
+     "7": "0xd4e"
+    },
+    "pinned_cpu": "7",
+    "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  Dock powered: false\n  level: 100\n  temperature: 291\n  Capacity level: 3",
+    "wakefulness": "mWakefulness=Asleep",
+    "core_ctl_cpu": "1"
+   },
+   "binaries": {
+    "bitino": {
+     "local": "build/android-arm64/bitino_bench",
+     "sha256": "09d411a2327854acff92065a12190320cdb2028b544907c687ec420c5ed040b8"
+    },
+    "lce": {
+     "local": "<tmp>",
+     "sha256": "4068e0c40b3ef51d167be1ab2677304c3bf3fcb8ff2651ef81f8295e025d1c90"
+    },
+    "tflite": {
+     "local": "<tmp>",
+     "sha256": "5d45116eb86e3a23ea03318e93bfc8efb4dd0149d4692c127e7b0343faba1374"
+    }
+   },
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-alexnet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37",
+    "larq-zoo-binary-densenet37-dilated",
+    "larq-zoo-binary-densenet45"
+   ],
+   "runtimes": [
+    "bitino_all",
+    "lce"
+   ],
+   "warmup": 10,
+   "iterations": 50,
+   "repeats": 5,
+   "cpu": "7",
+   "abi": "arm64",
+   "started_utc": "2026-11-13T09:25:42Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "invocations": [
+    {
+     "models": [
+      "larq-zoo-quicknet-small",
+      "larq-zoo-quicknet",
+      "larq-zoo-quicknet-large",
+      "larq-zoo-birealnet",
+      "larq-zoo-binary-resnet-e18",
+      "larq-zoo-xnornet",
+      "larq-zoo-binary-alexnet",
+      "larq-zoo-binary-densenet28",
+      "larq-zoo-binary-densenet37",
+      "larq-zoo-binary-densenet37-dilated",
+      "larq-zoo-binary-densenet45"
+     ],
+     "repeats": 5,
+     "started_utc": "2026-11-13T09:19:10Z",
+     "finished_utc": "2026-11-13T09:25:37Z",
+     "caps_at_start": {
+      "policies": {
+       "0": [
+        2016000,
+        2016000
+       ],
+       "3": [
+        1785600,
+        2803200
+       ],
+       "7": [
+        2227200,
+        3187200
+       ]
+      },
+      "capped": true,
+      "thermal_status": 0,
+      "skin_c": null
+     },
+     "caps_at_end": {
+      "policies": {
+       "0": [
+        2016000,
+        2016000
+       ],
+       "3": [
+        1785600,
+        2803200
+       ],
+       "7": [
+        2227200,
+        3187200
+       ]
+      },
+      "capped": true,
+      "thermal_status": 0,
+      "skin_c": null
+     }
+    }
+   ],
+   "reference_cap_khz": 2227200,
+   "throttle_gate": {
+    "max_wait_s": 600.0,
+    "poll_s": 2.0,
+    "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+    "reference_cap_khz": 2227200
+   },
+   "finished_utc": "2026-11-13T09:25:56Z",
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  },
+  "moto-e13": {
+   "tag": "moto-e13",
+   "serial": "ZY22HWKBP4",
+   "device": {
+    "model": "moto e13",
+    "android": "13",
+    "sdk": "33",
+    "soc": "T606",
+    "platform": "ums9230",
+    "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+    "build": "motorola/sabahl_ge/sabahl:13/TLA33.105-257/105-257:user/release-keys",
+    "kernel": "Linux localhost 5.4.210-android12-9-g060e70f91dbd-ab654 #1 SMP PREEMPT Fri Sep 8 20:20:07 CST 2023 aarch64 Toybox",
+    "cpus": {
+     "0": "1612000 1612000 schedutil",
+     "1": "1612000 1612000 schedutil",
+     "2": "1612000 1612000 schedutil",
+     "3": "1612000 1612000 schedutil",
+     "4": "1612000 1612000 schedutil",
+     "5": "1612000 1612000 schedutil",
+     "6": "1612000 1612000 schedutil",
+     "7": "1612000 1612000 schedutil"
+    },
+    "cpu_parts": {
+     "0": "0xd05",
+     "1": "0xd05",
+     "2": "0xd05",
+     "3": "0xd05",
+     "4": "0xd05",
+     "5": "0xd05",
+     "6": "0xd0a",
+     "7": "0xd0a"
+    },
+    "pinned_cpu": "7",
+    "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  level: 100\n  temperature: 273",
+    "wakefulness": "mWakefulness=Dozing",
+    "core_ctl_cpu": ""
+   },
+   "binaries": {
+    "bitino": {
+     "local": "build/android-arm64/bitino_bench",
+     "sha256": "09d411a2327854acff92065a12190320cdb2028b544907c687ec420c5ed040b8"
+    },
+    "lce": {
+     "local": "<tmp>",
+     "sha256": "4068e0c40b3ef51d167be1ab2677304c3bf3fcb8ff2651ef81f8295e025d1c90"
+    },
+    "tflite": {
+     "local": "<tmp>",
+     "sha256": "5d45116eb86e3a23ea03318e93bfc8efb4dd0149d4692c127e7b0343faba1374"
+    }
+   },
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-alexnet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37",
+    "larq-zoo-binary-densenet37-dilated",
+    "larq-zoo-binary-densenet45"
+   ],
+   "runtimes": [
+    "bitino_all",
+    "lce"
+   ],
+   "warmup": 10,
+   "iterations": 50,
+   "repeats": 5,
+   "cpu": "7",
+   "abi": "arm64",
+   "started_utc": "2026-11-13T09:16:26Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "invocations": [
+    {
+     "models": [
+      "larq-zoo-quicknet-small",
+      "larq-zoo-quicknet",
+      "larq-zoo-quicknet-large",
+      "larq-zoo-birealnet",
+      "larq-zoo-binary-resnet-e18",
+      "larq-zoo-xnornet",
+      "larq-zoo-binary-alexnet",
+      "larq-zoo-binary-densenet28",
+      "larq-zoo-binary-densenet37",
+      "larq-zoo-binary-densenet37-dilated",
+      "larq-zoo-binary-densenet45"
+     ],
+     "repeats": 5,
+     "started_utc": "2026-11-13T08:34:30Z",
+     "finished_utc": "2026-11-13T09:16:10Z",
+     "caps_at_start": {
+      "policies": {
+       "0": [
+        1612000,
+        1612000
+       ],
+       "6": [
+        1612000,
+        1612000
+       ]
+      },
+      "capped": false,
+      "thermal_status": 0,
+      "skin_c": null
+     },
+     "caps_at_end": {
+      "policies": {
+       "0": [
+        1612000,
+        1612000
+       ],
+       "6": [
+        1612000,
+        1612000
+       ]
+      },
+      "capped": false,
+      "thermal_status": 0,
+      "skin_c": null
+     }
+    }
+   ],
+   "reference_cap_khz": 1612000,
+   "throttle_gate": {
+    "max_wait_s": 600.0,
+    "poll_s": 2.0,
+    "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+    "reference_cap_khz": 1612000
+   },
+   "finished_utc": "2026-11-13T09:18:51Z",
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      1612000,
+      1612000
+     ],
+     "6": [
+      1612000,
+      1612000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  }
+ }
+}
