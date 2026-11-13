@@ -951,6 +951,105 @@
     "kernels": "neon",
     "model_data_sha256": "cd151e30868279f29b524afaa7ed847b1b20f94906cc2695cf330f5abeaff43c",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "dabnn-bireal18-stem",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.96432249,
+    "median_range_ms": [
+     7.94875,
+     7.983672
+    ],
+    "p90_ms": 8.012974201,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 18188,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:54:47Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cd151e30868279f29b524afaa7ed847b1b20f94906cc2695cf330f5abeaff43c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "dabnn-bireal18-stem",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 4.2497915,
+    "median_range_ms": [
+     4.24796849,
+     4.377708
+    ],
+    "p90_ms": 9.3836305,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 22460,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:54:48Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cd151e30868279f29b524afaa7ed847b1b20f94906cc2695cf330f5abeaff43c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "dabnn-bireal18-stem",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.1810155,
+    "median_range_ms": [
+     7.157839,
+     7.197214
+    ],
+    "p90_ms": 7.218780799999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19124,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:54:50Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "cd151e30868279f29b524afaa7ed847b1b20f94906cc2695cf330f5abeaff43c",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [
@@ -1010,6 +1109,68 @@
     "caps_seen": null,
     "notes": [
      "phone clock was wrong (it read 2023-09-10T00:29:51Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "20f004ee562cb103e9948ba16c969ac14c31f92df738f3b0a9d9075d1c07621d",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "dabnn-bireal18-stem",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 39.1067695,
+    "median_range_ms": [
+     39.0926535,
+     39.115269
+    ],
+    "p90_ms": 39.194716199999995,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 12072,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T08:05:08Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "82aa20c86503cb13ea892b5d7688a5e8b918cc8c9837f81fcbce0d9020a35684",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "dabnn-bireal18-stem",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 39.3608655,
+    "median_range_ms": [
+     39.281962,
+     39.389808
+    ],
+    "p90_ms": 39.4870882,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 12188,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T08:05:24Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

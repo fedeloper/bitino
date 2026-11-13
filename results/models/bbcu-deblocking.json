@@ -102,9 +102,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_0425",
+   "suite": "20261113_1029",
    "date": "2026-11-13",
-   "runtime_commit": "da471712",
+   "runtime_commit": "1d054b95",
    "stages": {
     "neon": {
      "pass": true,
@@ -690,6 +690,105 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T19:00:11Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bbcu-deblocking",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 27.3702345,
+    "median_range_ms": [
+     27.3417705,
+     27.4341925
+    ],
+    "p90_ms": 27.467780899999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 15568,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:27:36Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bbcu-deblocking",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 13.3183075,
+    "median_range_ms": [
+     13.310599,
+     13.424687
+    ],
+    "p90_ms": 13.451094,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20132,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:27:37Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bbcu-deblocking",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 28.1701825,
+    "median_range_ms": [
+     28.1064325,
+     28.826432
+    ],
+    "p90_ms": 28.845286,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19004,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:27:40Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

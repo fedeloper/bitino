@@ -774,6 +774,105 @@
     "kernels": "neon",
     "model_data_sha256": "156acc2040dadf701d896620ec34d8d83c632e721769143e2834ba8e353f6610",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 27.2327865,
+    "median_range_ms": [
+     27.1599475,
+     27.460651
+    ],
+    "p90_ms": 27.503634599999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43084,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:38:18Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156acc2040dadf701d896620ec34d8d83c632e721769143e2834ba8e353f6610",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 13.674193,
+    "median_range_ms": [
+     13.6374735,
+     13.682916
+    ],
+    "p90_ms": 13.766015600000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 43028,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:38:21Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156acc2040dadf701d896620ec34d8d83c632e721769143e2834ba8e353f6610",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bibert-bert-base-sst2",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 27.127266,
+    "median_range_ms": [
+     27.0246615,
+     27.1804165
+    ],
+    "p90_ms": 27.2523067,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 42972,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:38:24Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "156acc2040dadf701d896620ec34d8d83c632e721769143e2834ba8e353f6610",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [

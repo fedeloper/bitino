@@ -1428,6 +1428,105 @@
     "kernels": "neon",
     "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 13.7483335,
+    "median_range_ms": [
+     13.7408855,
+     14.1092445
+    ],
+    "p90_ms": 14.1466925,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20256,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:35:10Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 8.0602605,
+    "median_range_ms": [
+     8.0586715,
+     8.0852605
+    ],
+    "p90_ms": 8.213624509,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 20300,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:35:12Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bi-vit-deit-tiny",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 12.9942195,
+    "median_range_ms": [
+     12.941172,
+     13.1997135
+    ],
+    "p90_ms": 13.2362766,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 19120,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:35:14Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "32e7e33cf2c990d66db5ef635d81c35e1bc3f0d507d04aa91310455913b94ea2",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [

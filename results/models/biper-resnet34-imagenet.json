@@ -795,6 +795,105 @@
     "kernels": "neon",
     "model_data_sha256": "86befff92b43cb228cf232ed1a1f171e5c0039a47f6f2f0055b073126d89aa55",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "biper-resnet34-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 17.3165625,
+    "median_range_ms": [
+     17.3034375,
+     17.3188795
+    ],
+    "p90_ms": 17.4844376,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 25772,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:02Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "86befff92b43cb228cf232ed1a1f171e5c0039a47f6f2f0055b073126d89aa55",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "biper-resnet34-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 9.107005,
+    "median_range_ms": [
+     9.09513,
+     9.14200551
+    ],
+    "p90_ms": 9.205124607999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 34700,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:04Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "86befff92b43cb228cf232ed1a1f171e5c0039a47f6f2f0055b073126d89aa55",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "biper-resnet34-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 14.286849,
+    "median_range_ms": [
+     14.239662,
+     14.5597395
+    ],
+    "p90_ms": 14.614457999999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 26428,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:06Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "86befff92b43cb228cf232ed1a1f171e5c0039a47f6f2f0055b073126d89aa55",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [

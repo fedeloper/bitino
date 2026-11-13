@@ -74,6 +74,25 @@
      "exact_vs_numpy": null
     }
    }
+  },
+  "redmi-9a": {
+   "suite": "20261113_0025",
+   "date": "2026-11-13",
+   "runtime_commit": null,
+   "stages": {
+    "neon": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": true
+    },
+    "all": {
+     "pass": true,
+     "pending": false,
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
+    }
+   }
   }
  },
  "instructions_M": null,
@@ -272,6 +291,105 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T21:10:13Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "dd9b97d5fc029ff55f16486f9fba9b16fadc493f4cb4b283c607582b3be09b2c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-dffd",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 48.013958,
+    "median_range_ms": [
+     47.9810415,
+     48.720391
+    ],
+    "p90_ms": 48.8041202,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 72112,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:04:56Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "dd9b97d5fc029ff55f16486f9fba9b16fadc493f4cb4b283c607582b3be09b2c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-dffd",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 23.9841145,
+    "median_range_ms": [
+     23.859688,
+     23.998776
+    ],
+    "p90_ms": 24.2259531,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 104804,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:05:00Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "dd9b97d5fc029ff55f16486f9fba9b16fadc493f4cb4b283c607582b3be09b2c",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ftl-deepfake-bnext-s-dffd",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 48.7157285,
+    "median_range_ms": [
+     48.5901045,
+     49.722604
+    ],
+    "p90_ms": 49.8209011,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 67828,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:05:05Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

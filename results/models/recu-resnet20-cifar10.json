@@ -855,6 +855,105 @@
     "kernels": "neon",
     "model_data_sha256": "eb6420273e8c3c8d687b2c056843c7f1948ab7666c20400c5e477ee7663c0b73",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.466627501,
+    "median_range_ms": [
+     0.452448003,
+     0.480806999
+    ],
+    "p90_ms": 0.49586480270000005,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 50,
+    "peak_rss_kb": 6840,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:17:07Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "eb6420273e8c3c8d687b2c056843c7f1948ab7666c20400c5e477ee7663c0b73",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.544426508,
+    "median_range_ms": [
+     0.458932489,
+     0.547265001
+    ],
+    "p90_ms": 0.8219274121999993,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 7396,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:17:08Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "eb6420273e8c3c8d687b2c056843c7f1948ab7666c20400c5e477ee7663c0b73",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet20-cifar10",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.489908751,
+    "median_range_ms": [
+     0.489739507,
+     0.490077995
+    ],
+    "p90_ms": 0.5182396113000001,
+    "repeats": 2,
+    "iterations": 50,
+    "warmup": 50,
+    "peak_rss_kb": 6884,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T00:17:09Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "eb6420273e8c3c8d687b2c056843c7f1948ab7666c20400c5e477ee7663c0b73",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [
@@ -883,6 +982,37 @@
     "caps_seen": null,
     "notes": [
      "phone clock was wrong (it read 2023-09-10T01:46:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0391ce224370247d2a81bf6c7580734e1c1847634101ed5d9837f3fc417a25c9",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "recu-resnet20-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 2.1810385,
+    "median_range_ms": [
+     2.17925,
+     2.19428799
+    ],
+    "p90_ms": 2.2293463019999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6680,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T08:32:51Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

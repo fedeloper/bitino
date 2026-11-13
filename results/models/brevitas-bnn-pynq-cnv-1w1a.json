@@ -587,6 +587,72 @@
     "kernels": "neon",
     "model_data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 0.281823002,
+    "median_range_ms": [
+     0.281823002,
+     0.281823002
+    ],
+    "p90_ms": 0.3044062944,
+    "repeats": 1,
+    "iterations": 50,
+    "warmup": 50,
+    "peak_rss_kb": 6984,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:50:58Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 0.214974001,
+    "median_range_ms": [
+     0.208099,
+     0.2292445
+    ],
+    "p90_ms": 0.30015620319999997,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 7712,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:50:53Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [
@@ -615,6 +681,37 @@
     "caps_seen": null,
     "notes": [
      "phone clock was wrong (it read 2023-09-10T00:24:50Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "ebe0ba9f5cf3e93c46a7719d3ac4549c20f0cd0de16d9c2880961264b1b36f73",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_0916_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.27124999,
+    "median_range_ms": [
+     1.27099951,
+     1.279846
+    ],
+    "p90_ms": 1.3395650080000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 6508,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T07:59:57Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

@@ -825,6 +825,105 @@
     "kernels": "neon",
     "model_data_sha256": "2cbf621ded3dd9a681822e12213067a5a4dcaffe05c5c962045c76890423a322",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bitorch-densenet28-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 22.5896095,
+    "median_range_ms": [
+     22.5523175,
+     22.6926045
+    ],
+    "p90_ms": 22.877754799999998,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 28820,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:33Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2cbf621ded3dd9a681822e12213067a5a4dcaffe05c5c962045c76890423a322",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bitorch-densenet28-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t4_unpinned",
+    "model_file": "model.bitino",
+    "stage": "all",
+    "threads": 4,
+    "affinity": "unpinned",
+    "median_ms": 11.797448,
+    "median_range_ms": [
+     11.7816665,
+     11.8584375
+    ],
+    "p90_ms": 11.9281978,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 35432,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:35Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2cbf621ded3dd9a681822e12213067a5a4dcaffe05c5c962045c76890423a322",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bitorch-densenet28-imagenet",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "quick_20261113_0945_cph2551",
+    "config": "t1_x2_int8",
+    "model_file": "model.bitino",
+    "stage": "optimized_int8",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 17.7715105,
+    "median_range_ms": [
+     17.760885,
+     17.778542
+    ],
+    "p90_ms": 18.089562,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 29600,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-26T23:40:37Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "2cbf621ded3dd9a681822e12213067a5a4dcaffe05c5c962045c76890423a322",
+    "runtime": "development runtime as of 2026-11-13"
    }
   ],
   "moto-e13": [
