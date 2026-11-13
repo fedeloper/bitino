@@ -211,9 +211,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1638",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "7d018a75",
    "stages": {
     "neon": {
      "pass": true,
@@ -224,14 +224,8 @@
     "optimized": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
-    },
-    "int8_full": {
-     "pass": true,
-     "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
     },
     "int8_full_log2": {
      "pass": true,
@@ -242,9 +236,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1654",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "1b97fe10",
    "stages": {
     "neon": {
      "pass": true,
@@ -569,6 +563,72 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T22:08:28Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0e0e93930174de3466bac0ff985b53dd57ad4c170ee03bfabcf78deb09c07cd2",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.35851549,
+    "median_range_ms": [
+     7.343984,
+     7.3692975
+    ],
+    "p90_ms": 7.39008849,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13952,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:36:14Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "91cc88df36b342037a70d6aaef409c2dfa5ee07b2fae1545ec7d37d36d228272",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-binary-resnet-e18",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 8.0771615,
+    "median_range_ms": [
+     8.0764845,
+     8.092838
+    ],
+    "p90_ms": 8.115526209,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 13828,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:36:15Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

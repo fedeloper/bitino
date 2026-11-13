@@ -234,9 +234,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1638",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "7d018a75",
    "stages": {
     "neon": {
      "pass": true,
@@ -251,12 +251,6 @@
      "exact_vs_numpy": null
     },
     "optimized_int8": {
-     "pass": true,
-     "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
-    },
-    "int8_full": {
      "pass": true,
      "pending": false,
      "identical_to_emulated": true,
@@ -290,9 +284,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1654",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "1b97fe10",
    "stages": {
     "neon": {
      "pass": true,
@@ -727,6 +721,72 @@
     ],
     "notes": [
      "phone clock was wrong (it read 2026-01-26T21:59:28Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "fa4bef98a7c0c5e01ac534fa1f22ee47eab70587043525bad0ff9b24f47fa972",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.488125,
+    "median_range_ms": [
+     1.488099,
+     1.488463
+    ],
+    "p90_ms": 1.5404632,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 18612,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:33:46Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "a784d03ed1993336dd92e05f9dd52e7d014d2c403a06d622db015852ba77de1e",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ab-bnn-cifar10-reactneta",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 1.623854,
+    "median_range_ms": [
+     1.61989599,
+     1.6240365
+    ],
+    "p90_ms": 1.6714212,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17864,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:33:47Z); date from the host clock"
     ],
     "abi": "arm64-v8a",
     "kernels": "neon",

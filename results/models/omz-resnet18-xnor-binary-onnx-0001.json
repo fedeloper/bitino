@@ -126,9 +126,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1638",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "7d018a75",
    "stages": {
     "neon": {
      "pass": true,
@@ -147,19 +147,13 @@
      "pending": false,
      "identical_to_emulated": true,
      "exact_vs_numpy": null
-    },
-    "int8_full": {
-     "pass": true,
-     "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
     }
    }
   },
   "moto-e13": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1654",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "1b97fe10",
    "stages": {
     "neon": {
      "pass": true,
@@ -349,6 +343,39 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "c259834e762b3ea0cb5449ceaa95024b4fbfdacbc98d983292000c248069dc89",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "omz-resnet18-xnor-binary-onnx-0001",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 7.593229,
+    "median_range_ms": [
+     7.575703,
+     7.59390601
+    ],
+    "p90_ms": 7.6064164,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 14860,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:36:53Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "0151ffd5540713a6c8a41645bca1620eb00ffab6cdc0f3679ae0b46d52ecd317",
     "runtime": "development runtime as of 2026-11-13"
    },
    {

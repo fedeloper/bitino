@@ -211,9 +211,9 @@
    }
   },
   "oneplus-open": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1638",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "7d018a75",
    "stages": {
     "neon": {
      "pass": true,
@@ -224,21 +224,15 @@
     "optimized": {
      "pass": true,
      "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
-    },
-    "int8_full": {
-     "pass": true,
-     "pending": false,
-     "identical_to_emulated": true,
-     "exact_vs_numpy": null
+     "identical_to_emulated": null,
+     "exact_vs_numpy": false
     }
    }
   },
   "moto-e13": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1654",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "1b97fe10",
    "stages": {
     "neon": {
      "pass": true,
@@ -1305,6 +1299,39 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "98c4eb6929592c4b3687b212915f9d33204129f8f05d06654ca4d434abd1cf25",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "larq-zoo-quicknet-small",
+    "device": "oneplus-open",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1653_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 4.6990885,
+    "median_range_ms": [
+     4.687526,
+     4.7112495
+    ],
+    "p90_ms": 4.732749800000001,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 12668,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": [
+     "phone clock was wrong (it read 2026-01-27T06:36:34Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "9d91b60fe9f22bae55f6a7e2573f55f632ecc8f4ec1765fda3df2bd76484f6bf",
     "runtime": "development runtime as of 2026-11-13"
    },
    {
