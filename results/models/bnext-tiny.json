@@ -185,7 +185,7 @@
    }
   },
   "redmi-9a": {
-   "suite": "20261113_0025",
+   "suite": "20261113_1407",
    "date": "2026-11-13",
    "runtime_commit": null,
    "stages": {
@@ -1106,6 +1106,37 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "85425580f6fb33904ed52512cc0b4fae080c884d229cce00da6682a57a71b537",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "bnext-tiny",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1910_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 101.818596,
+    "median_range_ms": [
+     101.527693,
+     102.239884
+    ],
+    "p90_ms": 102.8256845,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 27768,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T17:22:04Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "611d3f1adc10d04c2be6c2845f4eec5109db45ea5b67f4077136ab077a74e7d4",
     "runtime": "development runtime as of 2026-11-13"
    },
    {

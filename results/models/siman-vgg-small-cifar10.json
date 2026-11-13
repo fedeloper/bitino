@@ -148,9 +148,9 @@
    }
   },
   "moto-e13": {
-   "suite": "20261113_1407",
+   "suite": "20261113_1654",
    "date": "2026-11-13",
-   "runtime_commit": "709d853b",
+   "runtime_commit": "1b97fe10",
    "stages": {
     "neon": {
      "pass": true,
@@ -171,9 +171,9 @@
      "exact_vs_numpy": null
     },
     "int8_full": {
-     "pass": false,
+     "pass": true,
      "pending": false,
-     "identical_to_emulated": false,
+     "identical_to_emulated": true,
      "exact_vs_numpy": null
     }
    }
@@ -965,6 +965,37 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "ccd38554e1344f404d68715089e258dd4bf2d2dd9c486b91ea8ea0e09b9a2fc0",
+    "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "siman-vgg-small-cifar10",
+    "device": "moto-e13",
+    "date": "2026-11-13",
+    "timestamp_utc": null,
+    "plan": "int8full_20261113_1910_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 9.96476901,
+    "median_range_ms": [
+     9.93405749,
+     9.97694249
+    ],
+    "p90_ms": 10.025722799999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 8316,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-10T17:28:45Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "5f65437491b29ea88585d6d261bc7ab7d379b8360bb2e8679cd40b04672a0bf5",
     "runtime": "development runtime as of 2026-11-13"
    },
    {
