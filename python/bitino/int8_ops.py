@@ -364,6 +364,10 @@ def run_op(op: str, ins: list, a: dict, cache: dict, name: str) -> np.ndarray:
         return _bconv_res_i(ins, a)
     if op == "I8BConv2DResIX":
         return _bconv_res_ix(ins, a)
+    if op == "I8DctYuv420":
+        return _dct_yuv420(ins, a)
+    if op == "I8BConvBP":
+        return _bconv_bp(ins, a)
     if op == "I8ArgMax":
         x = np.asarray(ins[0], np.int64)
         return np.argmax(x.reshape(x.shape[0], -1), axis=1).astype(np.int32)
@@ -700,6 +704,60 @@ def _bconv_res_ix(ins, a):
     if isinstance(outs[0], tuple):
         return tuple(np.concatenate([r[k] for r in outs]) for k in range(len(outs[0])))
     return np.concatenate(outs)
+
+
+DCT_T = np.array([[2896, 2896, 2896, 2896, 2896, 2896, 2896, 2896], [4017, 3406, 2276, 799, -799, -2276, -3406, -4017],
+                  [3784, 1567, -1567, -3784, -3784, -1567, 1567, 3784], [3406, -799, -4017, -2276, 2276, 4017, 799, -3406],
+                  [2896, -2896, -2896, 2896, 2896, -2896, -2896, 2896], [2276, -4017, 799, 3406, -3406, -799, 4017, -2276],
+                  [1567, -3784, 3784, -1567, -1567, 3784, -3784, 1567], [799, -2276, 3406, -4017, 4017, -3406, 2276, -799]], np.int64)
+
+
+def _dct_blocks(p, sel, q, shifts):
+    """p int64 [N, BH, BW, 8, 8] (rows y, columns x) -> codes [N, BH, BW, len(sel)] (I8DctYuv420 per-block definition)"""
+    out = []
+    for k, n in enumerate(sel):
+        v, u = n // 8, n % 8
+        R = (np.einsum("...yx,x->...y", p, DCT_T[u]) + (1 << 10)) >> 11
+        F = np.einsum("...y,y->...", R, DCT_T[v])
+        D = int(q[n]) << (15 + int(shifts[k]))
+        r = (np.abs(F) + D // 2) // D
+        out.append(np.clip(np.sign(F) * r, -128, 127))
+    return np.stack(out, -1).astype(np.int8)
+
+
+def _dct_yuv420(ins, a):
+    """I8DctYuv420 (2026-11-14; kernels/int8_full/int8_full_dct.cc): Y i8 [N, H, W, 1] (Y - 128), C i8 [N, H/2, W/2, 2]
+    (Cb - 128, Cr - 128) -> i8 [N, H/8, W/8, |y_sel| + 2 |c_sel|]; per block R = (T_u . row + 2^10) >> 11, F = T_v . R,
+    code = clamp(sgn(F) floor((|F| + D/2) / D)), D = Q 2^(15 + shift); chroma blocks repeated 2 x 2."""
+    y = np.asarray(ins[0], np.int64)[..., 0]
+    c = np.asarray(ins[1], np.int64)
+    ys, cs = list(a["y_sel"]), list(a["c_sel"])
+    sh = list(a["shifts"])
+    n, h, w = y.shape
+
+    def blk(p):
+        nn, hh, ww = p.shape
+        return p.reshape(nn, hh // 8, 8, ww // 8, 8).transpose(0, 1, 3, 2, 4)
+    oy = _dct_blocks(blk(y), ys, a["qy"], sh[:len(ys)])
+    parts = [oy]
+    for comp in range(2):
+        oc = _dct_blocks(blk(c[..., comp]), cs, a["qc"], sh[len(ys) + comp * len(cs):len(ys) + (comp + 1) * len(cs)])
+        parts.append(np.repeat(np.repeat(oc, 2, axis=1), 2, axis=2))
+    return np.concatenate(parts, -1)
+
+
+def _bconv_bp(ins, a):
+    """I8BConvBP (2026-11-14): binary 1x1 conv on integer inputs (bit-serial in the kernels): acc = sum_c w[o, c] (q - x_zero),
+    v = acc m1[o] + b[o], y = clamp(rshr(v, shift) + y_zero); bit (+1 iff v >= bit_thr[o]) when in(4) is given."""
+    x = np.asarray(ins[0], np.int64) - int(a.get("x_zero", 0))
+    w = np.asarray(ins[1]).reshape(np.asarray(ins[1]).shape[0], -1).astype(np.int64)
+    m1, b = np.asarray(ins[2], np.int64), np.asarray(ins[3], np.int64)
+    acc = np.einsum("nhwc,oc->nhwo", x, w)
+    v = acc * m1 + b
+    y = clamp_q(rshr(v, int(a.get("shift", 0))) + int(a.get("y_zero", 0)), int(a.get("qmin", -128)), int(a.get("qmax", 127)))
+    if _opt_in(ins, 4) is not None:
+        return y, np.where(v >= np.asarray(ins[4], np.int64), 1.0, -1.0).astype(np.float32)
+    return y
 
 
 def gated_add_bound(kx, kp, b) -> int:

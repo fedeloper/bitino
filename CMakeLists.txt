@@ -67,6 +67,7 @@ set(BITINO_SOURCES
   runtime/kernels/reference/reference_kernels.cc
   runtime/kernels/reference/larq_reference.cc
   runtime/kernels/reference/glue_float_reference.cc
+  runtime/kernels/int8_full/int8_full_dct.cc
   runtime/kernels/binary_scalar/bconv_scalar.cc
   runtime/kernels/binary_neon/bconv_neon.cc
   runtime/kernels/binary_neon/bconv_neon_opt.cc
@@ -183,6 +184,14 @@ target_include_directories(bitino_deepfake PRIVATE runtime)
 add_executable(bitino_microbench runtime/tools/bitino_microbench.cc)
 target_link_libraries(bitino_microbench PRIVATE bitino)
 target_include_directories(bitino_microbench PRIVATE runtime)
+
+# Research microbenchmark: binary-weight x multi-bit-activation GEMM kernels (the research notes (not published)).
+add_executable(bitino_lutbench benchmarks/lut/lutbench.cc benchmarks/lut/lut_i8mm.cc)
+target_link_libraries(bitino_lutbench PRIVATE bitino)
+target_include_directories(bitino_lutbench PRIVATE runtime ${CMAKE_SOURCE_DIR})
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  set_source_files_properties(benchmarks/lut/lut_i8mm.cc PROPERTIES COMPILE_OPTIONS "-march=armv8.2-a+dotprod+i8mm")
+endif()
 
 add_executable(bitino_int8_quantbench runtime/tools/bitino_int8_quantbench.cc)
 target_link_libraries(bitino_int8_quantbench PRIVATE bitino)

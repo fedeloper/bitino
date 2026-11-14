@@ -45,6 +45,7 @@ void register_builtin_ops(OpRegistry& reg) {
   register_reference_kernels(reg);
   register_larq_kernels(reg);
   register_glue_float(reg);
+  register_int8_dct(reg);
   register_binary_scalar_kernels(reg);
   register_binary_neon_kernels(reg);
   register_binary_neon_opt_kernels(reg);

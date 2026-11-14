@@ -18,7 +18,8 @@ void register_int8_neon_kernels(OpRegistry& reg);
 void register_int8_avx2_kernels(OpRegistry& reg);  // kernels/int8_avx2 (x86-64; no-op elsewhere)
 void register_float_opt_kernels(OpRegistry& reg);
 void register_larq_kernels(OpRegistry& reg);  // reference/larq_reference.cc
-void register_glue_float(OpRegistry& reg);    // reference/glue_float_reference.cc (InstanceThreshold, ChannelShift)
+void register_glue_float(OpRegistry& reg);
+void register_int8_dct(OpRegistry& reg);          // kernels/int8_full/int8_full_dct.cc (I8DctYuv420, I8BConvBP)    // reference/glue_float_reference.cc (InstanceThreshold, ChannelShift)
 
 // Transformer operators (runtime/ops/transformer_op_defs.cc) and their kernels.
 void register_transformer_op_defs(OpRegistry& reg);

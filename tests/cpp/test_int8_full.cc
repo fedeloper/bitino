@@ -1660,6 +1660,55 @@ BF_TEST(int8_full_expert_bconv_equals_selected_conv) {
   }
 }
 
+// I8BConvBP (bit-serial binary 1x1 on integer inputs, 2026-11-14) and I8DctYuv420 (partial 8x8 DCT of a YUV 4:2:0 frame):
+// the NEON / fast kernels against the reference, channel counts below / above one 32-bit word, with and without bits.
+BF_TEST(int8_full_bconv_bp_and_dct_vs_reference) {
+  Rng r(9191);
+  struct G { int64_t n, h, w, c, o; bool bits; };
+  for (G g : std::vector<G>{{1, 28, 28, 24, 64, true}, {2, 5, 7, 40, 13, false}, {1, 6, 6, 7, 33, true}, {1, 4, 4, 64, 8, true}}) {
+    bftest::ModelBuilder mb;
+    mb.input("x", DType::kI8, {g.n, g.h, g.w, g.c});
+    std::vector<int8_t> wv(static_cast<size_t>(g.o * g.c));
+    for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+    auto wp = bftest::pack_pm1(wv, g.o, g.c);
+    mb.constant("w", DType::kBit, {g.o, 1, 1, g.c}, wp.data());
+    std::vector<int32_t> m1(static_cast<size_t>(g.o)), b(static_cast<size_t>(g.o)), t(static_cast<size_t>(g.o));
+    const int mx = static_cast<int>(std::min<int64_t>(30000, (int64_t(1) << 29) / (255 * g.c)));
+    for (int64_t k = 0; k < g.o; ++k) {
+      m1[k] = r.i(-mx, mx);
+      b[k] = r.i(-100000, 100000);
+      t[k] = k % 5 == 0 ? b[k] : r.i(-200000, 200000);
+    }
+    mb.constant("m1", DType::kI32, {g.o}, m1.data());
+    mb.constant("b", DType::kI32, {g.o}, b.data());
+    mb.constant("t", DType::kI32, {g.o}, t.data());
+    std::vector<std::string> ins = {"x", "w", "m1", "b"}, outs = {"y"};
+    if (g.bits) {
+      ins.push_back("t");
+      outs.push_back("yb");
+    }
+    mb.node("I8BConvBP", ins, outs, Json::Object{{"x_zero", r.i(-20, 20)}, {"shift", r.i(4, 14)}, {"y_zero", r.i(-30, 30)}});
+    for (auto& o : outs) mb.output(o);
+    compare_all(mb, {r.i8(g.n * g.h * g.w * g.c)}, "I8BConvBP " + std::to_string(g.c) + "x" + std::to_string(g.o), "i8bconvbp.neon");
+  }
+  for (int64_t hw : {16, 32, 224}) {
+    bftest::ModelBuilder mb;
+    mb.input("y", DType::kI8, {1, hw, hw, 1});
+    mb.input("c", DType::kI8, {1, hw / 2, hw / 2, 2});
+    std::vector<int64_t> qy(64), qc(64), sh;
+    for (int k = 0; k < 64; ++k) {
+      qy[k] = r.i(1, 40);
+      qc[k] = r.i(1, 40);
+    }
+    std::vector<int64_t> ysel = {0, 1, 8, 16, 9, 2, 3, 10, 17, 24, 32, 25, 18, 11}, csel = {0, 1, 8, 16, 9};
+    for (int k = 0; k < 24; ++k) sh.push_back(k % 7 == 0 ? 2 : r.i(0, 1));
+    mb.node("I8DctYuv420", {"y", "c"}, {"o"},
+            Json::Object{{"y_sel", ints(ysel)}, {"c_sel", ints(csel)}, {"qy", ints(qy)}, {"qc", ints(qc)}, {"shifts", ints(sh)}});
+    mb.output("o");
+    compare_all(mb, {r.i8(hw * hw), r.i8(hw * hw / 2)}, "I8DctYuv420 " + std::to_string(hw), "");
+  }
+}
+
 // I8GatedAdd (int8_full v2: BNext's x + k * sigmoid(se) * p): random constants within the bound, zero points far from 0,
 // 0 / 1 / 2 / 3 bit outputs, shifts 0..16 (fast form) and > 16, clamped ranges, channel counts with tails, batch 2.
 BF_TEST(int8_full_gated_add_bit_exact_vs_reference) {

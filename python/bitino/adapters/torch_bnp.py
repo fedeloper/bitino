@@ -138,6 +138,41 @@ def convert(model, model_id: str = "bnp", input_name: str = "input") -> tuple[Gr
             t = affine(t, f"{p}.bn2", s, b)
         return g.add_node("Add", [t, r], name=f"{p}.add")
 
+    def basic(u, x, p):
+        """BasicUnit: thr -> BConv3x3 (BN folded) [ELM: * PReLU(x), BN2] -> + r -> move1 -> PReLU -> move2 (the generator's
+        basic unit with glue rprelu; tools/hybrid_family.py Builder.unit / glue_out)"""
+        if u.down:
+            r = avgpool(x, f"{p}.pool") if u.stride == 2 else x
+            w = _np64(u.down_conv.weight)
+            s, b = _bn(u.down_bn)
+            for m in ("down_conv", "down_bn", "pool"):
+                mark(f"{p}.{m}")
+            r = g.add_node("Conv2D", [r, c32(f"{p}.down/kernel", _ohwi(w * s[:, None, None, None]), layout="OHWI"), c32(f"{p}.down/bias", b)],
+                           {"strides": [1, 1], "dilations": [1, 1], "pads": [0, 0, 0, 0], "groups": 1, "pad_value": 0.0,
+                            "activation": "none"}, name=f"{p}.down")
+        else:
+            r = x
+        t = bconv(u.conv, u.bn1, thr(u.thr, x, f"{p}.thr"), f"{p}.conv")
+        if getattr(u, "elmb", False):   # BNext-form ELM: PReLU2, product with PReLU1(x), BN2, + r; no RPReLU
+            t = prelu(u.act2, t, f"{p}.act2")
+            gt = prelu(u.act1, x, f"{p}.act1")
+            t = g.add_node("Mul", [t, gt], name=f"{p}.elm")
+            s, b = _bn(u.bn2)
+            mark(f"{p}.bn2")
+            return g.add_node("Add", [affine(t, f"{p}.bn2", s, b), r], name=f"{p}.add")
+        if u.elm:
+            gt = prelu(u.act1, x, f"{p}.act1")
+            t = g.add_node("Mul", [t, gt], name=f"{p}.elm")
+            s, b = _bn(u.bn2)
+            mark(f"{p}.bn2")
+            t = affine(t, f"{p}.bn2", s, b)
+        y = g.add_node("Add", [t, r], name=f"{p}.add")
+        mark(f"{p}.move1")
+        y = g.add_node("ChannelAffine", [y, "", c32(f"{p}.move1/bias", _np64(u.move1.bias))], name=f"{p}.move1")
+        y = prelu(u.act, y, f"{p}.act")
+        mark(f"{p}.move2")
+        return g.add_node("ChannelAffine", [y, "", c32(f"{p}.move2/bias", _np64(u.move2.bias))], name=f"{p}.move2")
+
     res = int(model.spec.get("res", 224))
     x = g.add_input(input_name, [1, res, res, 3])
     w = _np64(model.stem.weight)
@@ -151,10 +186,15 @@ def convert(model, model_id: str = "bnp", input_name: str = "input") -> tuple[Gr
     if model.stem_type == "c7pool":
         x = g.add_node("MaxPool2D", [x], {"kernel": [3, 3], "strides": [2, 2], "pads": [1, 1, 1, 1]}, name="stem.pool")
     for i, blk in enumerate(model.blocks):
+        if type(blk).__name__ == "BasicBlock":
+            x = basic(blk.u0, x, f"blocks.{i}.u0")
+            x = basic(blk.u1, x, f"blocks.{i}.u1")
+            continue
         x = unit(blk.A, x, f"blocks.{i}.A")
         if blk.F is not None:
             x = unit(blk.F, x, f"blocks.{i}.F")
-    x = prelu(model.head_act, x, "head_act")
+    if model.head_act is not None:
+        x = prelu(model.head_act, x, "head_act")
     x = g.add_node("GlobalAvgPool", [x], {"keepdims": 0}, name="pool")
     mark("fc")
     x = g.add_node("Dense", [x, c32("fc/kernel", _np64(model.fc.weight)), c32("fc/bias", _np64(model.fc.bias))], {"activation": "none"}, name="fc")
