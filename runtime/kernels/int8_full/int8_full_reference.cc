@@ -14,6 +14,7 @@
 
 #include "kernels/bitpack.h"
 #include "kernels/int8_full/int8_full.h"
+#include "kernels/int8_full/expert_conv.h"
 #include "kernels/int8_full/q8_math.h"
 #include "ops/op_defs.h"
 #include "ops/ops_common.h"
@@ -190,7 +191,7 @@ class GatedAddRef : public Kernel {
     for (int64_t r = 0; r < rows; ++r)
       for (int64_t ch = 0; ch < c; ++ch) {
         const int64_t i = r * c + ch;
-        const int64_t a = p.acc(qx[i], qp[i], qg[(r / per) * c + ch], ch);
+        const int64_t a = p.acc(qx[i], qp[i], qg[p.full ? i : (r / per) * c + ch], ch);
         y[i] = p.y(a);
         for (int64_t j = 0; j < p.nb; ++j)
           if (!(a >= p.thr[j * c + ch])) ctx.out(1 + j).data<uint32_t>()[r * words + (ch >> 5)] |= 1u << (ch & 31);
@@ -772,6 +773,24 @@ class BDenseRef : public Kernel {
 // I8BConv2D, I8BConv2DRes (residual + PReLU epilogue, l8 / linear output, optional bit output) and I8BConv2DResI (the
 // integer residual epilogue, int8_full::ResIEpilogue).
 // x: int8 codes binarized with integer thresholds, or a bit tensor taken as is.
+// I8ArgMax (int8_ops run_op; 2026-11-14, the expert gate of I8BConv2DResIX): x i8 [N, ..., E] -> i32 [N], the index of
+// the first maximum of each sample's E codes.
+class ArgMaxRef : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const Tensor& x = ctx.in(0);
+    const int64_t n = x.dim(0), e = x.size() / n;
+    const int8_t* q = x.data<int8_t>();
+    int32_t* y = ctx.out(0).data<int32_t>();
+    for (int64_t b = 0; b < n; ++b) {
+      int64_t k = 0;
+      for (int64_t j = 1; j < e; ++j)
+        if (q[b * e + j] > q[b * e + k]) k = j;
+      y[b] = static_cast<int32_t>(k);
+    }
+  }
+};
+
 class BConv2DRef : public Kernel {
  public:
   void prepare(const KernelContext& ctx) override {
@@ -921,6 +940,8 @@ void register_int8_full_reference_kernels(OpRegistry& reg) {
   add("I8BConv2DRes", "i8bconv2dres.reference", make_kernel<BConv2DRef>);
   add("I8BConv2DResI", "i8bconv2dresi.reference", make_kernel<BConv2DRef>);
   add("I8GatedAdd", "i8gatedadd.reference", make_kernel<GatedAddRef>);
+  add("I8BConv2DResIX", "i8bconv2dresix.reference", make_kernel<int8_full::ExpertConv<BConv2DRef>>);
+  add("I8ArgMax", "i8argmax.reference", make_kernel<ArgMaxRef>);
   add("I8GapAffine", "i8gapaffine.reference", make_kernel<GapAffineRef>);
   add("I8BMatMul", "i8bmatmul.reference", make_kernel<BMatMulRef>);
 }

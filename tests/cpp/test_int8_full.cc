@@ -1196,7 +1196,7 @@ struct ResCfg {
   bool r_l8, bias, bits, gt;
   int r_exp;
   bool bit_out = false;  // bit_src "out": the bits binarize w (the block output) instead of u
-  int pre = 0;           // pre stage inputs (bit mask): 1 pre_slope, 2 pre_mul, 4 pre_add, 8 gate [N, 1, 1, O]
+  int pre = 0;           // pre stage inputs (bit mask): 1 pre_slope, 2 pre_mul, 4 pre_add, 8 gate [N, 1, 1, O], 16 gate_add
   Json extra = Json::Object{};  // attributes set last (int8_full v2: output "i8", y_zero, qmin / qmax)
 };
 
@@ -1291,6 +1291,13 @@ void add_res_node(bftest::ModelBuilder& mb, Rng& r, const ResCfg& c, const std::
       ins.push_back(p + "g");
       at["g_scale"] = 1.0 / 255.0;
       at["g_zero"] = -128;
+    }
+    if (c.pre & 16) {  // gate_add after the gate (2026-11-14)
+      while (ins.size() < 14) ins.push_back("");
+      std::vector<float> ga(static_cast<size_t>(c.oc));
+      for (int64_t o = 0; o < c.oc; ++o) ga[o] = o % 5 == 2 ? -0.f : r.f(-0.4f, 0.4f);
+      mb.constant(p + "ga", DType::kF32, {c.oc}, ga.data());
+      ins.push_back(p + "ga");
     }
   }
   while (!ins.empty() && ins.back().empty()) ins.pop_back();
@@ -1388,7 +1395,7 @@ BF_TEST(int8_full_bconv_res_pre_bit_exact_vs_reference) {
                             {2, 6, 7, 128, 40, 3, 1, 1},    // oc 40: last unit of 8 channels (scalar tail)
                             {1, 8, 8, 64, 21, 3, 2, -1},    // stride 2, channel tail
                             {2, 5, 6, 130, 16, 1, 1, 0}}) { // 1x1, K tail
-    for (int pre : {1, 7, 8, 15, 6, 9}) {
+    for (int pre : {1, 7, 8, 15, 6, 9, 24, 31}) {
       for (int variant = 0; variant < 3; ++variant, ++idx) {
         ResCfg c{g.n, g.h, g.w, g.ic, g.oc, g.k, g.s, g.pad_value, variant % 2, variant != 1, variant != 2, true, variant == 1,
                  r.i(-3, 3)};
@@ -1448,7 +1455,7 @@ BF_TEST(int8_full_bconv_resi_bit_exact_vs_reference) {
   struct G { int64_t n, h, w, ic, oc, k, s, pad_value; };
   int idx = 0;
   auto add_node = [&](bftest::ModelBuilder& mb, const G& g, int variant, const std::string& x, const std::string& res,
-                      const std::string& p, bool bit_in, std::vector<std::string>& outs) {
+                      const std::string& p, bool bit_in, std::vector<std::string>& outs, int pmode = 0) {
     const int64_t K = g.k * g.k * g.ic;
     std::vector<int8_t> wv(static_cast<size_t>(g.oc * K));
     for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
@@ -1523,6 +1530,13 @@ BF_TEST(int8_full_bconv_resi_bit_exact_vs_reference) {
       ins.push_back(p + "pb");
       ins.push_back(p + "plo");
       ins.push_back(p + "phi");
+      if (pmode) {  // PReLU pre stage (2026-11-14): 1 slopes in [0, 1) (max form), 2 signed / > 1 with a shift (select form)
+        std::vector<int32_t> ps(static_cast<size_t>(g.oc));
+        for (int64_t o = 0; o < g.oc; ++o) ps[o] = o % 7 == 3 ? 0 : (pmode == 1 ? r.i(0, 2147483647) : r.i(-2147483647, 2147483647));
+        mb.constant(p + "ps", DType::kI32, {g.oc}, ps.data());
+        ins.push_back(p + "ps");
+        at["pre_slope_shift"] = pmode == 2 ? 1 : 0;
+      }
     }
     while (!ins.empty() && ins.back().empty()) ins.pop_back();
     mb.node("I8BConv2DResI", ins, outs, at);
@@ -1544,6 +1558,23 @@ BF_TEST(int8_full_bconv_resi_bit_exact_vs_reference) {
                   "I8BConv2DResI config " + std::to_string(idx), "i8bconv2dresi.neon");
     }
   }
+  // PReLU pre stage (in(15)): variants with the max(., 0) / min(., 0) pre stage (2, 6), both slope forms
+  for (G g : std::vector<G>{{1, 9, 11, 64, 64, 3, 1, 0}, {2, 7, 6, 128, 40, 3, 1, 0}, {1, 8, 7, 64, 21, 3, 2, 1},
+                            {1, 6, 6, 130, 16, 1, 1, -1}}) {
+    for (int variant : {2, 6}) {
+      for (int pmode : {1, 2}) {
+        const int64_t oh = (g.h + 2 * (g.k / 2) - g.k) / g.s + 1, ow = (g.w + 2 * (g.k / 2) - g.k) / g.s + 1;
+        bftest::ModelBuilder mb;
+        mb.input("x", DType::kI8, {g.n, g.h, g.w, g.ic});
+        mb.input("res", DType::kI8, {g.n, oh, ow, g.oc});
+        std::vector<std::string> outs;
+        add_node(mb, g, variant, "x", "res", "a", false, outs, pmode);
+        for (auto& o : outs) mb.output(o);
+        compare_all(mb, {r.i8(g.n * g.h * g.w * g.ic), res_codes(r, g.n * oh * ow * g.oc)},
+                    "I8BConv2DResI PReLU pre " + std::to_string(variant) + "/" + std::to_string(pmode), "i8bconv2dresi.neon");
+      }
+    }
+  }
   // chain: block b reads block a's bits (x) and int8 output (residual)
   for (int variant : {0, 1, 2, 5}) {
     const G g{1, 9, 10, 64, 64, 3, 1, 0};
@@ -1557,6 +1588,75 @@ BF_TEST(int8_full_bconv_resi_bit_exact_vs_reference) {
     for (auto& o : o2) mb.output(o);
     compare_all(mb, {r.i8(g.h * g.w * g.ic), res_codes(r, g.h * g.w * g.oc)}, "I8BConv2DResI chain " + std::to_string(variant),
                 "i8bconv2dresi.neon");
+  }
+}
+
+// I8BConv2DResIX (EBN expert binary convolution, 2026-11-14): with expert index e it must give the bytes of the
+// I8BConv2DResI with the e-th weight set, on every tier (NEON: E prepared instances of the base kernel, a pointer select per
+// run), with and without the bit output and the residual; I8ArgMax picks the first maximum.
+BF_TEST(int8_full_expert_bconv_equals_selected_conv) {
+  Rng r(8181);
+  struct G { int64_t h, w, ic, oc, k, s; };
+  for (G g : std::vector<G>{{9, 11, 64, 64, 3, 1}, {8, 7, 64, 48, 3, 2}, {6, 6, 128, 32, 1, 1}}) {
+    const int64_t E = 3, K = g.k * g.k * g.ic;
+    const int64_t oh = (g.h + 2 * (g.k / 2) - g.k) / g.s + 1, ow = (g.w + 2 * (g.k / 2) - g.k) / g.s + 1;
+    std::vector<int8_t> wv(static_cast<size_t>(E * g.oc * K));
+    for (auto& v : wv) v = r.i(0, 1) ? 1 : -1;
+    std::vector<int32_t> m1(static_cast<size_t>(g.oc)), b(static_cast<size_t>(g.oc)), m2(static_cast<size_t>(g.oc)), thr(static_cast<size_t>(g.oc));
+    for (int64_t o = 0; o < g.oc; ++o) {
+      m1[o] = r.i(-2000, 2000);
+      m2[o] = r.i(-3000, 3000);
+      b[o] = r.i(-100000, 100000);
+      thr[o] = r.i(-50000, 50000);
+    }
+    auto xin = r.i8(g.h * g.w * g.ic), rin = res_codes(r, oh * ow * g.oc);
+    for (int bits = 0; bits < 2; ++bits)
+      for (int64_t e = 0; e < E; ++e) {
+        auto build = [&](bool expert) {
+          bftest::ModelBuilder mb;
+          mb.input("x", DType::kI8, {1, g.h, g.w, g.ic});
+          mb.input("res", DType::kI8, {1, oh, ow, g.oc});
+          std::vector<int8_t> ws = expert ? wv : std::vector<int8_t>(wv.begin() + e * g.oc * K, wv.begin() + (e + 1) * g.oc * K);
+          const int64_t rows = expert ? E * g.oc : g.oc;
+          auto wp = bftest::pack_pm1(ws, rows * g.k * g.k, g.ic);
+          mb.constant("w", DType::kBit, {rows, g.k, g.k, g.ic}, wp.data());
+          auto t = r.f32(g.ic, -0.01f, 0.01f);
+          mb.constant("t", DType::kF32, {g.ic}, t.data());
+          mb.constant("m1", DType::kI32, {g.oc}, m1.data());
+          mb.constant("b", DType::kI32, {g.oc}, b.data());
+          mb.constant("m2", DType::kI32, {g.oc}, m2.data());
+          mb.constant("bt", DType::kI32, {g.oc}, thr.data());
+          std::vector<std::string> ins = {"x", "w", "", "", "t", "res", "m1", "b", "m2", bits ? "bt" : ""};
+          Json at = Json::Object{{"strides", ints({g.s, g.s})}, {"pads", ints({g.k / 2, g.k / 2, g.k / 2, g.k / 2})}, {"pad_value", 0},
+                                 {"shift", 10}, {"y_zero", 3}, {"input_binarize", "ge"}, {"x_scale", 0.002}, {"x_zero", 3}};
+          std::vector<std::string> outs = {"y"};
+          if (bits) outs.push_back("yb");
+          if (expert) {
+            const int32_t ev = static_cast<int32_t>(e);
+            mb.constant("ix", DType::kI32, {1}, &ev);
+            while (ins.size() < 16) ins.push_back("");
+            ins.push_back("ix");
+            at["experts"] = E;
+            mb.node("I8BConv2DResIX", ins, outs, at);
+          } else {
+            while (!ins.empty() && ins.back().empty()) ins.pop_back();
+            mb.node("I8BConv2DResI", ins, outs, at);
+          }
+          for (auto& o : outs) mb.output(o);
+          return mb;
+        };
+        // same thresholds in both builds: reseed the threshold draw
+        Rng keep = r;
+        auto mx = build(true);
+        r = keep;
+        auto mp = build(false);
+        for (const char* tiers : {kRef, kFull}) {
+          for (int t : {1, 4}) {
+            auto a = run_model_all(mx, tiers, t, {xin, rin}), c = run_model_all(mp, tiers, t, {xin, rin});
+            if (a != c) throw bftest::Failure{"I8BConv2DResIX differs from the selected I8BConv2DResI (expert " + std::to_string(e) + ")"};
+          }
+        }
+      }
   }
 }
 

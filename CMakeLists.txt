@@ -66,6 +66,7 @@ set(BITINO_SOURCES
   runtime/ops/op_defs_larq.cc
   runtime/kernels/reference/reference_kernels.cc
   runtime/kernels/reference/larq_reference.cc
+  runtime/kernels/reference/glue_float_reference.cc
   runtime/kernels/binary_scalar/bconv_scalar.cc
   runtime/kernels/binary_neon/bconv_neon.cc
   runtime/kernels/binary_neon/bconv_neon_opt.cc
@@ -97,6 +98,8 @@ set(BITINO_SOURCES
   runtime/kernels/int8_full/int8_full_neon.cc
   runtime/kernels/int8_full/int8_full_gemm_i8mm.cc
   runtime/kernels/int8_full/int8_full_portable.cc
+  runtime/ops/op_defs_int8_glue.cc
+  runtime/kernels/int8_full/int8_full_glue.cc
   runtime/ops/op_defs_image_features.cc
   runtime/kernels/reference/image_features_reference.cc
   runtime/kernels/image_features_opt.cc
@@ -200,6 +203,7 @@ if(BITINO_BUILD_TESTS)
     tests/cpp/test_int8_kernels.cc tests/cpp/test_float_kernels.cc tests/cpp/test_transformer_ops.cc
     tests/cpp/test_bhvit_ops.cc tests/cpp/test_brevitas_ops.cc tests/cpp/test_larq_ops.cc
     tests/cpp/test_torch_cnn.cc tests/cpp/test_int8_full.cc tests/cpp/test_int8_fused.cc)
+  target_sources(bitino_tests PRIVATE tests/cpp/test_int8_glue.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_binary_avx2.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_transformer_opt.cc)
   target_sources(bitino_tests PRIVATE tests/cpp/test_bit_outputs.cc)

@@ -587,6 +587,10 @@ struct I8Res {
   // the fast form's pre stage: every channel's clamp is max(., 0) (sigma 1) or min(., 0) = -max(-., 0) (sigma -1), so
   // acc = b + sigma * max(dot * (sigma m1) + sigma pb, 0) + q * m2 (MLA by sigma); fewer live registers than lo / hi
   bool isigma = false;
+  // PReLU pre stage (in(15) pre_slope, attribute pre_slope_shift; 2026-11-14): t = sigma (dot m1 + pb), t = t >= 0 ? t :
+  // SQRDMULH(t, P) << pk, then acc = b + sigma t + q m2. ippre: 0 ReLU (clamp), 1 max form (pk 0, every P >= 0), 2 select
+  int ippre = 0, ipk = 0;
+  std::vector<int32_t> ipsl;
   std::vector<int16_t> sm1;
   std::vector<int32_t> spb, ssig;
   bool has_lut = false;            // in(9) out_lut: the l8 codes are remapped by apply_out_lut after the tile
@@ -602,6 +606,8 @@ struct I8Res {
   // the l8 code nor the bit compares see. Two-phase epilogue only (compute_res2).
   bool pre = false, gate = false;
   std::vector<float> pslope, pmul, padd;  // by channel, padded to oc_pad + 4
+  bool gadd_on = false;                   // in(14) gate_add: v + gate_add[o] after the gate (2026-11-14)
+  std::vector<float> gadd;                // by channel, padded to oc_pad + 4
   std::vector<float> gval;                // G per sample [n][oc_pad + 4] (bind_gate, each run)
   float g_scale = 1.f;
   int32_t g_zero = 0;
@@ -633,6 +639,9 @@ struct I8Res {
       if (ep.pre_slope) std::copy_n(ep.pre_slope, oc, pslope.data());
       if (ep.pre_mul) std::copy_n(ep.pre_mul, oc, pmul.data());
       if (ep.pre_add) std::copy_n(ep.pre_add, oc, padd.data());
+      gadd_on = ep.gate_add != nullptr;
+      gadd.assign(static_cast<size_t>(oc_pad + 4), -0.f);
+      if (ep.gate_add) std::copy_n(ep.gate_add, oc, gadd.data());
     }
     l8 = ep.r_l8;
     ylin = ctx.attrs().get_int("i8_res_lin", 0) != 0;
@@ -706,6 +715,8 @@ struct I8Res {
     i32(13, &iplo);
     i32(14, &iphi);
     isigma = ipre;
+    i32(15, &ipsl);
+    ipk = static_cast<int>(a.get_int("pre_slope_shift", 0));
     sm1.assign(n, 0);
     spb.assign(n, 0);
     ssig.assign(n, 1);
@@ -725,15 +736,21 @@ struct I8Res {
       mo = std::max<int64_t>(mo, std::llabs(iob[i]));
       mp = std::max<int64_t>(mp, std::llabs(ipb[i]));
     }
-    int64_t m1x = 0, m2x = 0, slx = 0;
-    bool pos = true;
+    int64_t m1x = 0, m2x = 0, slx = 0, psx = 0;
+    bool pos = true, ppos = true;
     for (int64_t i = 0; i < oc; ++i) {
       m1x = std::max<int64_t>(m1x, std::abs(im1[i]));
       m2x = std::max<int64_t>(m2x, std::abs(im2[i]));
       slx = std::max<int64_t>(slx, std::llabs(islope[i]));
+      psx = std::max<int64_t>(psx, std::llabs(ipsl[i]));
       pos = pos && islope[i] >= 0;
+      ppos = ppos && ipsl[i] >= 0;
     }
-    const int64_t acc = K * m1x + mp + 128 * m2x + mb;
+    const bool has_ps = ipre && ctx.has_in(15);
+    const int64_t pre0 = K * m1x + mp;
+    const int64_t prem = has_ps ? std::max(pre0, (((pre0 * psx) >> 31) + 1) << ipk) : pre0;
+    ippre = !has_ps ? 0 : (ipk == 0 && ppos ? 1 : 2);
+    const int64_t acc = prem + 128 * m2x + mb;
     const int64_t w = std::max(acc, ri_slope ? (((acc * slx) >> 31) + 1) << ik : acc) + mo;
     ifast = ishift <= 16 && std::max(acc, w) + std::llabs(c) < (int64_t(1) << 31) - 1 && (!ipre || isigma) &&
             (rtile == 1 || (oc / rtile) % 16 == 0);
@@ -755,7 +772,14 @@ struct I8Res {
   // scalar integer epilogue (tails), int8_full::ResIEpilogue::finish
   int8_t finish_int(int32_t dot, int64_t o, int8_t r, bool* bit) const {  // r: 0 without a residual (im2 = 0)
     int64_t pre = static_cast<int64_t>(dot) * im1[o];
-    if (ipre) pre = std::min<int64_t>(std::max<int64_t>(pre + ipb[o], iplo[o]), iphi[o]);
+    if (ipre && ippre) {
+      const int64_t sg = iplo[o] == 0 ? 1 : -1;
+      int64_t t = sg * (pre + ipb[o]);
+      if (t < 0) t = q8::mulhi(t, ipsl[o]) * (int64_t(1) << ipk);
+      pre = sg * t;
+    } else if (ipre) {
+      pre = std::min<int64_t>(std::max<int64_t>(pre + ipb[o], iplo[o]), iphi[o]);
+    }
     const int64_t acc = pre + static_cast<int64_t>(r) * im2[o] + ib[o];
     int64_t w = acc;
     if (ri_slope && acc < 0) w = q8::mulhi(acc, islope[o]) * (int64_t(1) << ik);
@@ -768,7 +792,8 @@ struct I8Res {
     v = v >= 0.f ? v : v * pslope[o];
     v = v * pmul[o];
     v = v + padd[o];
-    return gate ? v * gval[b * oc_row + o] : v;
+    if (gate) v = v * gval[b * oc_row + o];
+    return gadd_on ? v + gadd[o] : v;
   }
   // scalar form of one value (tails)
   int8_t finish(float v, int64_t o, int8_t r, bool* bit) const {
@@ -1665,6 +1690,10 @@ class BConv2DNeonOpt : public Kernel {
       res2_epilogue_tail(ctx, mask, p0, np, u, 16, db);
       return;
     }
+    if (res_.ifast && res_.ipre && res_.ippre) {  // PReLU pre stage (BNext's PReLU(BN(BConv)) + r), out of line
+      res2_epilogue_int_prelu_dispatch(ctx, mask, p0, np, u, db);
+      return;
+    }
     if (res_.ifast && res_.ipre) {
 #define BF_RES2F(S, K) res2_epilogue_int_fast<S, K, true>(ctx, mask, p0, np, u, db)
 #define BF_RES2F_K(S)                                   \
@@ -1717,6 +1746,28 @@ class BConv2DNeonOpt : public Kernel {
 #undef BF_RES2I
   }
 
+  __attribute__((noinline)) void res2_epilogue_int_prelu_dispatch(const KernelContext& ctx, const uint64_t* mask, int64_t p0,
+                                                                   int64_t np, int64_t u, int16_t* db) const {
+#define BF_RES2F(S, K, P) res2_epilogue_int_fast<S, K, P>(ctx, mask, p0, np, u, db)
+#define BF_RES2F_K(S, P)                                \
+  do {                                                  \
+    if (!res_.bits) BF_RES2F(S, kBitsNone, P);          \
+    else if (res_.bit_out) BF_RES2F(S, kBitsOut, P);    \
+    else BF_RES2F(S, kBitsSum, P);                      \
+  } while (0)
+#define BF_RES2F_S(P)                                   \
+  do {                                                  \
+    if (res_.islope_mode == 0) BF_RES2F_K(0, P);        \
+    else if (res_.islope_mode == 1) BF_RES2F_K(1, P);   \
+    else BF_RES2F_K(2, P);                              \
+  } while (0)
+    if (res_.ippre == 1) BF_RES2F_S(2);
+    else BF_RES2F_S(3);
+#undef BF_RES2F_S
+#undef BF_RES2F_K
+#undef BF_RES2F
+  }
+
   // Fast integer epilogue (shift S <= 16). The rounding constant and the zero point are folded into the constants at
   // prepare time (I8Res::parse_int): c = 2^(S-1) + y_zero 2^S joins b (no PReLU; then w' = acc' = acc + c, and the
   // bit thresholds are T + c) or the out_bias (PReLU; w' = w + c, thresholds of w are T + c, of acc T). Then
@@ -1724,7 +1775,7 @@ class BConv2DNeonOpt : public Kernel {
   // (no saturation: equal; saturation: |w' 2^(16 - S)| >= 2^31, so both sides clamp to the same qmin / qmax), taken by UZP2.
   // PReLU (kSlope): 0 none; 1 max form w = SMAX(acc, SQRDMULH(acc, P)) (slope_shift 0, every P >= 0: mulhi(acc, P) <= acc
   // for acc >= 0 and >= acc for acc < 0, so this is the select); 2 select form with the slope shift.
-  template <int kSlope, int kBits, bool kPre = false, bool kRes = true>
+  template <int kSlope, int kBits, int kPre = 0, bool kRes = true>
   void res2_epilogue_int_fast(const KernelContext& ctx, const uint64_t* mask, int64_t p0, int64_t np, int64_t u, int16_t* db) const {
     const int64_t oc = g_.oc;
     int8_t* y = ctx.out(0).data<int8_t>() + p0 * oc + u;
@@ -1735,8 +1786,9 @@ class BConv2DNeonOpt : public Kernel {
     const bool whole_word = (u & 31) == 0 && u + 16 >= oc;  // the word's upper half holds no channel: write it as 0
     const int16x8_t m1a = vld1q_s16(res_.im1.data() + u), m1b = vld1q_s16(res_.im1.data() + u + 8);
     const int16x8_t m2a = vld1q_s16(res_.im2.data() + u), m2b = vld1q_s16(res_.im2.data() + u + 8);
-    int32x4_t b[4], thr[4], sl[4], ob[4], pb[4], sg[4];
+    int32x4_t b[4], thr[4], sl[4], ob[4], pb[4], sg[4], ps[4];
     for (int k = 0; k < 4; ++k) {
+      if (kPre >= 2) ps[k] = vld1q_s32(res_.ipsl.data() + u + 4 * k);
       b[k] = vld1q_s32(res_.fb.data() + u + 4 * k);
       if (kBits) thr[k] = vld1q_s32(res_.fthr.data() + u + 4 * k);
       if (kSlope) sl[k] = vld1q_s32(res_.islope.data() + u + 4 * k);
@@ -1747,7 +1799,7 @@ class BConv2DNeonOpt : public Kernel {
       }
     }
     const int16x8_t pm1a = kPre ? vld1q_s16(res_.sm1.data() + u) : m1a, pm1b = kPre ? vld1q_s16(res_.sm1.data() + u + 8) : m1b;
-    const int32x4_t kv = vdupq_n_s32(res_.ik), up = vdupq_n_s32(16 - res_.ishift);
+    const int32x4_t kv = vdupq_n_s32(res_.ik), up = vdupq_n_s32(16 - res_.ishift), pkv = vdupq_n_s32(res_.ipk);
     const int8x16_t lo = vdupq_n_s8(static_cast<int8_t>(res_.ylo)), hi = vdupq_n_s8(static_cast<int8_t>(res_.yhi));
     static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
     const uint8x16_t bw = vld1q_u8(kW);
@@ -1770,7 +1822,13 @@ class BConv2DNeonOpt : public Kernel {
         a[2] = vmlal_s16(pb[2], vget_low_s16(d1), vget_low_s16(pm1b));
         a[3] = vmlal_high_s16(pb[3], d1, pm1b);
         const int32x4_t z = vdupq_n_s32(0);
-        for (int k = 0; k < 4; ++k) a[k] = vmlaq_s32(b[k], vmaxq_s32(a[k], z), sg[k]);
+        for (int k = 0; k < 4; ++k) {
+          int32x4_t t;
+          if constexpr (kPre == 1) t = vmaxq_s32(a[k], z);
+          if constexpr (kPre == 2) t = vmaxq_s32(a[k], vqrdmulhq_s32(a[k], ps[k]));
+          if constexpr (kPre == 3) t = vbslq_s32(vcltzq_s32(a[k]), vshlq_s32(vqrdmulhq_s32(a[k], ps[k]), pkv), a[k]);
+          a[k] = vmlaq_s32(b[k], t, sg[k]);
+        }
         a[0] = vmlal_s16(a[0], vget_low_s16(q0), vget_low_s16(m2a));
         a[1] = vmlal_high_s16(a[1], q0, m2a);
         a[2] = vmlal_s16(a[2], vget_low_s16(q1), vget_low_s16(m2b));
@@ -2070,6 +2128,7 @@ class BConv2DNeonOpt : public Kernel {
           v = vbslq_f32(vcgeq_f32(v, zero), v, vmulq_f32(v, ps[k]));
           v = vaddq_f32(vmulq_f32(v, pm[k]), pa[k]);
           if (gv) v = vmulq_f32(v, vld1q_f32(gv + 4 * k));
+          if (res_.gadd_on) v = vaddq_f32(v, vld1q_f32(res_.gadd.data() + u + 4 * k));
           vst1q_f32(ub + r * 16 + 4 * k, vaddq_f32(v, rr[k]));
         }
       }

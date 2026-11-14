@@ -219,6 +219,62 @@ def _fake_quant(x: np.ndarray, scale: np.ndarray, zp: np.ndarray, attrs: dict, f
     return (r * s).astype(ft)
 
 
+def shift_groups(groups) -> list:
+    """ChannelShift groups as [(c0, c1, dy, dx), ...] from [[c0, c1, dy, dx], ...] or the flat list."""
+    g = list(groups)
+    if g and not isinstance(g[0], (list, tuple)):
+        g = [g[k:k + 4] for k in range(0, len(g), 4)]
+    return [tuple(int(v) for v in t) for t in g]
+
+
+def channel_shift(x: np.ndarray, groups, fill) -> np.ndarray:
+    """ChannelShift (ShiftViT; docs/int8.md "int8_full ops for accuracy-carrying glue"): y[n, h, w, c] = x[n, h - dy,
+    w - dx, c] for c in [c0, c1) of a group when inside the map, else fill (0); other channels copied."""
+    y = np.array(x, copy=True)
+    _, h, w, _ = x.shape
+    for c0, c1, dy, dx in shift_groups(groups):
+        part = np.full(x[..., c0:c1].shape, fill, x.dtype)
+        hs, he, ws, we = max(0, dy), min(h, h + dy), max(0, dx), min(w, w + dx)
+        if hs < he and ws < we:
+            part[:, hs:he, ws:we, :] = x[:, hs - dy:he - dy, ws - dx:we - dx, c0:c1]
+        y[..., c0:c1] = part
+    return y
+
+
+def instance_threshold(x, t0, a, b, off, ft) -> np.ndarray:
+    """InstanceThreshold (INSTA-BNN, arXiv 2204.07439): y = x - (t0 + a * mean_hw(x) + b * std_hw(x) [+ off]) per (n, c),
+    population std; read only by binary layers. Exact definition (2026-11-14; the C++ float kernel
+    runtime/kernels/reference/glue_float_reference.cc is bit-identical): in double, s1 / s2 the sums of x and x * x over
+    the H x W positions in row-major order, mu = s1 / HW, var = s2 / HW - mu * mu, sd = sqrt(max(var, 0)),
+    th = t0 + a * mu + b * sd (+ off), y = float(double(x) - th)."""
+    x64 = np.asarray(x, np.float64)
+    n, h, w, c = x64.shape
+    xs = x64.reshape(n, h * w, c)
+    s1 = np.zeros((n, c))
+    s2 = np.zeros((n, c))
+    for p in range(h * w):   # sequential sums, as the C++ kernel
+        v = xs[:, p, :]
+        s1 = s1 + v
+        s2 = s2 + v * v
+    mu = s1 / (h * w)
+    var = s2 / (h * w) - mu * mu
+    sd = np.sqrt(np.maximum(var, 0.0))
+    th = np.asarray(t0, np.float64) + np.asarray(a, np.float64) * mu + np.asarray(b, np.float64) * sd
+    if off is not None:
+        th = th + np.asarray(off, np.float64).reshape(n, c)
+    return (x64 - th.reshape(n, 1, 1, c)).astype(ft)
+
+
+def simam(x, lam: float, ft) -> np.ndarray:
+    """SimAM (parameter-free attention): y = x * sigmoid((x - mu)^2 / (4 (var + lambda)) + 0.5), mu / var per (n, c) over
+    H, W (population variance), in float64, rounded once."""
+    x64 = np.asarray(x, np.float64)
+    mu = x64.mean(axis=(1, 2), keepdims=True)
+    var = ((x64 - mu) ** 2).mean(axis=(1, 2), keepdims=True)
+    e = (x64 - mu) ** 2 / (4.0 * (var + lam)) + 0.5
+    return (x64 / (1.0 + np.exp(-e))).astype(ft)
+
+
 def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = False,
         float_dtype=np.float32, post_hook=None) -> dict[str, np.ndarray]:
     """float_dtype=np.float64 keeps all intermediates in float64 (semantic check against a
@@ -414,6 +470,12 @@ def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = F
         elif op == "Pad":
             p = a["pads"]
             y = np.pad(ins[0], [(p[2 * d], p[2 * d + 1]) for d in range(ins[0].ndim)], constant_values=a.get("value", 0.0))
+        elif op == "ChannelShift":
+            y = channel_shift(ins[0], a.get("groups", []), 0.0)
+        elif op == "InstanceThreshold":
+            y = instance_threshold(ins[0], ins[1], ins[2], ins[3], ins[4] if len(ins) > 4 else None, ft)
+        elif op == "SimAM":
+            y = simam(ins[0], float(a.get("lambda", 1e-4)), ft)
         else:
             raise NotImplementedError(f"numpy executor: op {op}")
         if post_hook is not None:  # diagnostics (e.g. simulated quantization of selected tensors)

@@ -133,6 +133,7 @@ struct ResEpilogue {
     pre_mul = ctx.has_in(11) ? ctx.in(11).data<float>() : nullptr;
     pre_add = ctx.has_in(12) ? ctx.in(12).data<float>() : nullptr;
     gate = ctx.has_in(13);
+    gate_add = ctx.has_in(14) ? ctx.in(14).data<float>() : nullptr;
     g_scale = static_cast<float>(a.get_number("g_scale", 1.0));
     g_zero = static_cast<int32_t>(a.get_int("g_zero", 0));
   }
@@ -143,10 +144,11 @@ struct ResEpilogue {
   const float* pre_mul = nullptr;
   const float* pre_add = nullptr;
   bool gate = false;
+  const float* gate_add = nullptr;  // in(14): v = v + gate_add[o] after the gate (2026-11-14)
   float g_scale = 1.f;
   int32_t g_zero = 0;
   std::vector<float> gval;  // G of the current run, [N * O] (bind_gate)
-  bool pre_on() const { return pre_slope || pre_mul || pre_add || gate; }
+  bool pre_on() const { return pre_slope || pre_mul || pre_add || gate || gate_add; }
   void bind_gate(const KernelContext& ctx) {
     if (!gate) return;
     const Tensor& t = ctx.in(13);
@@ -159,6 +161,7 @@ struct ResEpilogue {
     if (pre_mul) v = v * pre_mul[o];
     if (pre_add) v = v + pre_add[o];
     if (gate) v = v * gval[n * oc + o];
+    if (gate_add) v = v + gate_add[o];
     return v;
   }
   int8_t finish(float v, int64_t o, int8_t res) const {
@@ -187,6 +190,8 @@ struct ResEpilogue {
 struct ResIEpilogue {
   const int32_t *m1 = nullptr, *b = nullptr, *m2 = nullptr, *bthr = nullptr, *slope = nullptr, *ob = nullptr;
   const int32_t *pb = nullptr, *plo = nullptr, *phi = nullptr;  // pre stage: clamp(dot * m1 + pb, plo, phi)
+  const int32_t* pslope = nullptr;  // in(15): PReLU pre stage (sigma = +1 for (0, MAX), -1 for (MIN, 0)), shift pk
+  int pk = 0;
   int shift = 0, k = 0;
   int32_t y_zero = 0, qmin = -128, qmax = 127;
   bool bit_out = false;  // bit_src "out": the bits compare w instead of acc
@@ -203,7 +208,15 @@ struct ResIEpilogue {
       pb = ctx.in(12).data<int32_t>();
       plo = ctx.in(13).data<int32_t>();
       phi = ctx.in(14).data<int32_t>();
+      if (ctx.has_in(15)) {
+        pslope = ctx.in(15).data<int32_t>();
+        const int64_t oc = ctx.in(6).size();
+        for (int64_t c = 0; c < oc; ++c)
+          BF_CHECK((plo[c] == 0 && phi[c] == INT32_MAX) || (plo[c] == INT32_MIN && phi[c] == 0),
+                   "I8BConv2DResI: a PReLU pre stage needs (pre_lo, pre_hi) = (0, INT32_MAX) or (INT32_MIN, 0)");
+      }
     }
+    pk = static_cast<int>(a.get_int("pre_slope_shift", 0));
     shift = static_cast<int>(a.get_int("shift", 0));
     k = static_cast<int>(a.get_int("slope_shift", 0));
     y_zero = static_cast<int32_t>(a.get_int("y_zero", 0));
@@ -224,7 +237,11 @@ struct ResIEpilogue {
       return v;
     };
     const int k = static_cast<int>(ctx.attrs().get_int("slope_shift", 0));
-    const int64_t acc = K * mx(6) + mx(12) + 128 * mx(8) + mx(7);
+    const int pk = static_cast<int>(ctx.attrs().get_int("pre_slope_shift", 0));
+    const int64_t pre0 = K * mx(6) + mx(12);
+    const int64_t pre = ctx.has_in(15) ? std::max(pre0, (((pre0 * mx(15)) >> 31) + 1) << pk) : pre0;
+    if (pre >= (int64_t(1) << 31)) return false;
+    const int64_t acc = pre + 128 * mx(8) + mx(7);
     int64_t w = acc;
     if (ctx.has_in(10)) w = std::max(acc, (((acc * mx(10)) >> 31) + 1) << k);
     w += mx(11);
@@ -233,7 +250,14 @@ struct ResIEpilogue {
   // y of one value; *bit = true iff the bit is -1 (!(s >= bit_thr))
   int8_t finish(int64_t dot, int64_t o, int8_t res, bool* bit) const {
     int64_t pre = dot * m1[o];
-    if (pb) pre = std::min<int64_t>(std::max<int64_t>(pre + pb[o], plo[o]), phi[o]);
+    if (pslope) {
+      const int64_t sg = plo[o] == 0 ? 1 : -1;
+      int64_t t = sg * (pre + pb[o]);
+      if (t < 0) t = q8::mulhi(t, pslope[o]) * (int64_t(1) << pk);
+      pre = sg * t;
+    } else if (pb) {
+      pre = std::min<int64_t>(std::max<int64_t>(pre + pb[o], plo[o]), phi[o]);
+    }
     const int64_t acc = pre + (m2 ? static_cast<int64_t>(res) * m2[o] : 0) + b[o];
     int64_t w = acc;
     if (slope && acc < 0) w = q8::mulhi(acc, slope[o]) * (int64_t(1) << k);
@@ -245,8 +269,12 @@ struct ResIEpilogue {
 
 // I8GatedAdd (int8_ops._gated_add; int8_full v2) constants and the bound check: 256 max|kx| + 65280 max|kp| + max|b| < 2^31
 // (also covers the folded form q_x kx + q_p gk + b' with gk = (g - z_g) kp, b' = b - z_x kx - z_p gk the kernels use).
+// g is [N, 1, 1, C] (squeeze-excitation gate) or [N, H, W, C] (full: star / GLU gating, 2026-11-13); optional in(7) g_lut
+// i8 [1, 256]: the gate code is g_lut[g + 128] (a fused sigmoid I8Lut).
 struct GatedAddParams {
   const int32_t *kx = nullptr, *kp = nullptr, *b = nullptr, *thr = nullptr;
+  const int8_t* lut = nullptr;
+  bool full = false;
   int64_t c = 0, nb = 0;
   int32_t zx = 0, zp = 0, zg = 0, zy = 0, qmin = -128, qmax = 127;
   int shift = 0;
@@ -260,6 +288,8 @@ struct GatedAddParams {
       thr = ctx.in(6).data<int32_t>();
       nb = ctx.in(6).dim(0);
     }
+    if (ctx.has_in(7)) lut = ctx.in(7).data<int8_t>();
+    full = ctx.in(2).size() == ctx.in(0).size() && ctx.in(2).size() != ctx.in(0).dim(0) * c;
     zx = static_cast<int32_t>(a.get_int("x_zero", 0));
     zp = static_cast<int32_t>(a.get_int("p_zero", 0));
     zg = static_cast<int32_t>(a.get_int("g_zero", 0));
@@ -277,8 +307,9 @@ struct GatedAddParams {
     BF_CHECK(bound < (int64_t(1) << 31), "I8GatedAdd: constants exceed the int32 bound");
   }
   int64_t bound = 0;
+  int8_t gv(int8_t g) const { return lut ? lut[static_cast<int>(g) + 128] : g; }
   int64_t acc(int8_t x, int8_t p, int8_t g, int64_t ch) const {
-    return (int64_t(x) - zx) * kx[ch] + (int64_t(p) - zp) * (int64_t(g) - zg) * kp[ch] + b[ch];
+    return (int64_t(x) - zx) * kx[ch] + (int64_t(p) - zp) * (int64_t(gv(g)) - zg) * kp[ch] + b[ch];
   }
   int8_t y(int64_t acc) const { return q8::clamp8(q8::rshr(acc, shift) + zy, qmin, qmax); }
 };
@@ -378,6 +409,7 @@ inline bool res_epilogue_normal(const KernelContext& ctx) {
     g.mul_const(&gs, 1);
     v.mul(g);
   }
+  if (cvec(14, &c, &n)) v.add_const(c, n);  // gate_add
   FtzBound r;  // R(res)
   if (a.get_string("r_code", "l8") == "l8") {
     const int e = static_cast<int>(a.get_int("r_exp", 0));

@@ -29,10 +29,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
+#include <type_traits>
 #include <string>
 #include <vector>
 
 #include "kernels/int8_full/int8_full.h"
+#include "kernels/int8_full/expert_conv.h"
 #include "kernels/int8_full/bmm_i8_epilogue.h"
 #include "kernels/int8_full/l8_neon.h"
 #include "kernels/int8_full/q8_math.h"
@@ -3642,9 +3644,14 @@ class GatedAddNeon : public Kernel {
     const int64_t cst = p.shift > 0 ? (int64_t(1) << (p.shift - 1)) + int64_t(p.zy) * (int64_t(1) << p.shift) : p.zy;
     const int64_t tot = 128 * mx + 128 * 255 * mp + mb + std::llabs(p.zx) * mx + std::llabs(p.zp) * 255 * mp + std::llabs(cst);
     fast_ = p.shift <= 16 && mx <= 32767 && tot < (int64_t(1) << 31) - 1;
+    // full-resolution gate: acc' = b - z_x kx + c + q_x kx + ((q_p - z_p) (g - z_g)) kp, the product of two int16 lanes
+    // (|z_p|, |z_g| <= 128: |q - z| <= 256) exact in int32, |.| <= 65536 max|kp|
+    full_fast_ = p.full && p.shift <= 16 && mx <= 32767 && std::llabs(p.zp) <= 128 && std::llabs(p.zg) <= 128 &&
+                 128 * mx + 65536 * mp + mb + std::llabs(p.zx) * mx + std::llabs(cst) < (int64_t(1) << 31) - 1;
   }
   void run(const KernelContext& ctx) override {
     const int8_full::GatedAddParams p(ctx);
+    if (p.full) return run_full(ctx, p);
     const Tensor& x = ctx.in(0);
     const int64_t c = p.c, rows = x.size() / c, per = rows / x.dim(0), words = bit_words(c), nb = p.nb;
     const int8_t *qx = x.data<int8_t>(), *qp = ctx.in(1).data<int8_t>(), *qg = ctx.in(2).data<int8_t>();
@@ -3665,7 +3672,7 @@ class GatedAddNeon : public Kernel {
     std::vector<int32_t> gk(static_cast<size_t>(ns * cpad), 0), bb(static_cast<size_t>(ns * cpad), 0);
     for (int64_t n = 0; n < ns; ++n)
       for (int64_t i = 0; i < c; ++i) {
-        const int64_t g = (int64_t(qg[n * c + i]) - p.zg) * p.kp[i];
+        const int64_t g = (int64_t(p.gv(qg[n * c + i])) - p.zg) * p.kp[i];
         gk[n * cpad + i] = static_cast<int32_t>(g);
         bb[n * cpad + i] = static_cast<int32_t>(p.b[i] - int64_t(p.zx) * p.kx[i] - int64_t(p.zp) * g + cst);
       }
@@ -3749,7 +3756,126 @@ class GatedAddNeon : public Kernel {
       vst1q_s8(y + r * c + u, vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(h0), vqmovn_s16(h1)), hi), lo));
     }
   }
-  bool fast_ = false;
+  // Full-resolution gate (star / GLU gating at a residual; 2026-11-13): per 16 channels of a pixel, the gate row (through
+  // g_lut by TBL when given) and acc' = SMLAL(b', q_x, kx) + SMULL(q_p - z_p, g - z_g) * kp; bits and output as unit().
+  void run_full(const KernelContext& ctx, const int8_full::GatedAddParams& p) const {
+    const Tensor& x = ctx.in(0);
+    const int64_t c = p.c, rows = x.size() / c, words = bit_words(c), nb = p.nb;
+    const int8_t *qx = x.data<int8_t>(), *qp = ctx.in(1).data<int8_t>(), *qg = ctx.in(2).data<int8_t>();
+    int8_t* y = ctx.out(0).data<int8_t>();
+    const int64_t cpad = (c + 15) / 16 * 16;
+    const int64_t cf = full_fast_ && nb <= 2 ? c / 16 * 16 : 0;
+    const int64_t cst = p.shift > 0 ? (int64_t(1) << (p.shift - 1)) + int64_t(p.zy) * (int64_t(1) << p.shift) : p.zy;
+    std::vector<int16_t> kx16(static_cast<size_t>(cpad), 0);
+    std::vector<int32_t> kp32(static_cast<size_t>(cpad), 0), bb(static_cast<size_t>(cpad), 0),
+        thr(static_cast<size_t>(std::max<int64_t>(nb, 1) * cpad), 0);
+    for (int64_t i = 0; i < c; ++i) {
+      kx16[i] = static_cast<int16_t>(std::min<int64_t>(32767, std::max<int64_t>(-32768, p.kx[i])));
+      kp32[i] = p.kp[i];
+      bb[i] = static_cast<int32_t>(std::min<int64_t>(INT32_MAX, std::max<int64_t>(INT32_MIN, p.b[i] - int64_t(p.zx) * p.kx[i] + cst)));
+    }
+    for (int64_t j = 0; j < nb; ++j)
+      for (int64_t i = 0; i < c; ++i)
+        thr[j * cpad + i] = static_cast<int32_t>(std::min<int64_t>(INT32_MAX, std::max<int64_t>(INT32_MIN, int64_t(p.thr[j * c + i]) + cst)));
+    const int up = 16 - p.shift;
+    ctx.pool->parallel_for(rows, std::max<int64_t>(1, kSerial / std::max<int64_t>(c, 1)), [&](int64_t r0, int64_t r1) {
+      static const uint8_t kW[16] = {1, 2, 4, 8, 16, 32, 64, 128, 1, 2, 4, 8, 16, 32, 64, 128};
+      const uint8x16_t bw = vld1q_u8(kW);
+      const int32x4_t upv = vdupq_n_s32(up);
+      const int8x16_t lo = vdupq_n_s8(static_cast<int8_t>(p.qmin)), hi = vdupq_n_s8(static_cast<int8_t>(p.qmax));
+      uint8_t* bitp[2] = {nb > 0 ? reinterpret_cast<uint8_t*>(ctx.out(1).data<uint32_t>()) : nullptr,
+                          nb > 1 ? reinterpret_cast<uint8_t*>(ctx.out(2).data<uint32_t>()) : nullptr};
+      // row blocks of <= 8 KB of gate codes (L1): the gate rows through the table (or the input itself), then the vector
+      // units of the block, then its channel tail
+      const int64_t rbs = std::max<int64_t>(1, 8192 / c);
+      std::unique_ptr<int8_t[]> gbuf(p.lut ? new int8_t[static_cast<size_t>(rbs * c)] : nullptr);
+      const int16x8_t zpv = vdupq_n_s16(static_cast<int16_t>(p.zp)), zgv = vdupq_n_s16(static_cast<int16_t>(p.zg));
+      const int64_t bstep = words * 4;
+      for (int64_t b0 = r0; b0 < r1; b0 += rbs) {
+        const int64_t b1 = std::min<int64_t>(r1, b0 + rbs);
+        const int8_t* gr = qg + b0 * c;
+        if (p.lut) {
+          const uint8_t* tab = reinterpret_cast<const uint8_t*>(p.lut);
+          const uint8x16x4_t t0 = vld1q_u8_x4(tab), t1 = vld1q_u8_x4(tab + 64), t2 = vld1q_u8_x4(tab + 128), t3 = vld1q_u8_x4(tab + 192);
+          const uint8x16_t k64 = vdupq_n_u8(64), k80 = vdupq_n_u8(0x80), k128 = vdupq_n_u8(128), k192 = vdupq_n_u8(192);
+          const uint8_t* src = reinterpret_cast<const uint8_t*>(gr);
+          uint8_t* dst = reinterpret_cast<uint8_t*>(gbuf.get());
+          const int64_t m = (b1 - b0) * c;
+          int64_t i = 0;
+          for (; i + 16 <= m; i += 16) {
+            const uint8x16_t idx = veorq_u8(vld1q_u8(src + i), k80);
+            uint8x16_t v = vqtbl4q_u8(t0, idx);
+            v = vqtbx4q_u8(v, t1, vsubq_u8(idx, k64));
+            v = vqtbx4q_u8(v, t2, vsubq_u8(idx, k128));
+            v = vqtbx4q_u8(v, t3, vsubq_u8(idx, k192));
+            vst1q_u8(dst + i, v);
+          }
+          for (; i < m; ++i) dst[i] = tab[static_cast<uint8_t>(src[i] ^ 0x80)];
+          gr = gbuf.get();
+        }
+        auto units = [&](auto nbc) {
+          constexpr int kNb = decltype(nbc)::value;
+          for (int64_t u = 0; u < cf; u += 16) {
+            const bool top0 = (u & 31) == 0 && u + 16 >= c;
+            const int16x8_t ka = vld1q_s16(kx16.data() + u), kb = vld1q_s16(kx16.data() + u + 8);
+            int32x4_t k4[4], b4[4], t0[4], t1[4];
+            for (int k = 0; k < 4; ++k) {
+              k4[k] = vld1q_s32(kp32.data() + u + 4 * k);
+              b4[k] = vld1q_s32(bb.data() + u + 4 * k);
+              t0[k] = vld1q_s32(thr.data() + u + 4 * k);
+              t1[k] = kNb > 1 ? vld1q_s32(thr.data() + cpad + u + 4 * k) : t0[k];
+            }
+            auto pack = [&](const int32x4_t* a, const int32x4_t* t, uint8_t* yb) {
+              uint32x4_t ge[4];
+              for (int k = 0; k < 4; ++k) ge[k] = vcgeq_s32(a[k], t[k]);
+              const uint16x8_t m01 = vuzp1q_u16(vreinterpretq_u16_u32(ge[0]), vreinterpretq_u16_u32(ge[1]));
+              const uint16x8_t m23 = vuzp1q_u16(vreinterpretq_u16_u32(ge[2]), vreinterpretq_u16_u32(ge[3]));
+              uint8x16_t sb = vbicq_u8(bw, vuzp1q_u8(vreinterpretq_u8_u16(m01), vreinterpretq_u8_u16(m23)));
+              sb = vpaddq_u8(sb, sb);
+              sb = vpaddq_u8(sb, sb);
+              sb = vpaddq_u8(sb, sb);
+              if (top0) vst1q_lane_u32(reinterpret_cast<uint32_t*>(yb), vreinterpretq_u32_u16(vmovl_u16(vget_low_u16(vreinterpretq_u16_u8(sb)))), 0);
+              else vst1q_lane_u16(reinterpret_cast<uint16_t*>(yb), vreinterpretq_u16_u8(sb), 0);
+            };
+            for (int64_t r = b0; r < b1; ++r) {
+              const int8x16_t vx = vld1q_s8(qx + r * c + u), vp = vld1q_s8(qp + r * c + u), vg = vld1q_s8(gr + (r - b0) * c + u);
+              const int16x8_t x0 = vmovl_s8(vget_low_s8(vx)), x1 = vmovl_high_s8(vx);
+              const int16x8_t p0 = vsubq_s16(vmovl_s8(vget_low_s8(vp)), zpv), p1 = vsubq_s16(vmovl_high_s8(vp), zpv);
+              const int16x8_t g0 = vsubq_s16(vmovl_s8(vget_low_s8(vg)), zgv), g1 = vsubq_s16(vmovl_high_s8(vg), zgv);
+              int32x4_t a[4];
+              a[0] = vmlaq_s32(vmlal_s16(b4[0], vget_low_s16(x0), vget_low_s16(ka)), vmull_s16(vget_low_s16(p0), vget_low_s16(g0)), k4[0]);
+              a[1] = vmlaq_s32(vmlal_high_s16(b4[1], x0, ka), vmull_high_s16(p0, g0), k4[1]);
+              a[2] = vmlaq_s32(vmlal_s16(b4[2], vget_low_s16(x1), vget_low_s16(kb)), vmull_s16(vget_low_s16(p1), vget_low_s16(g1)), k4[2]);
+              a[3] = vmlaq_s32(vmlal_high_s16(b4[3], x1, kb), vmull_high_s16(p1, g1), k4[3]);
+              if (kNb > 0) pack(a, t0, bitp[0] + r * bstep + u / 8);
+              if (kNb > 1) pack(a, t1, bitp[1] + r * bstep + u / 8);
+              for (int k = 0; k < 4; ++k) a[k] = vqshlq_s32(a[k], upv);
+              const int16x8_t h0 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(a[0]), vreinterpretq_u16_s32(a[1])));
+              const int16x8_t h1 = vreinterpretq_s16_u16(vuzp2q_u16(vreinterpretq_u16_s32(a[2]), vreinterpretq_u16_s32(a[3])));
+              vst1q_s8(y + r * c + u, vmaxq_s8(vminq_s8(vcombine_s8(vqmovn_s16(h0), vqmovn_s16(h1)), hi), lo));
+            }
+          }
+        };
+        if (nb == 0) units(std::integral_constant<int, 0>());
+        else if (nb == 1) units(std::integral_constant<int, 1>());
+        else units(std::integral_constant<int, 2>());
+        if (cf < c)
+          for (int64_t r = b0; r < b1; ++r)
+            for (int64_t ch = cf; ch < c; ++ch) {
+              const int64_t i = r * c + ch;
+              const int64_t gq = gr[(r - b0) * c + ch];  // already through the table
+              const int64_t a = (int64_t(qx[i]) - p.zx) * p.kx[ch] + (int64_t(qp[i]) - p.zp) * (gq - p.zg) * p.kp[ch] + p.b[ch];
+              y[i] = p.y(a);
+              for (int64_t j = 0; j < nb; ++j) {
+                uint32_t* w = ctx.out(1 + j).data<uint32_t>() + r * words + (ch >> 5);
+                if ((ch & 31) == 0 || ch == cf) *w &= (ch & 31) ? ((1u << (ch & 31)) - 1u) : 0u;  // clear the word's rest
+                if (!(a >= p.thr[j * c + ch])) *w |= 1u << (ch & 31);
+              }
+            }
+      }
+    });
+  }
+  bool fast_ = false, full_fast_ = false;
 };
 
 // I8GapAffine (int8_ops._gap_affine): per sample, the channel sums of each input in int32 lanes (pairs of int8 widened and
@@ -4733,6 +4859,7 @@ void register_int8_full_neon_kernels(OpRegistry& reg) {
   add("I8Mul", "i8mul.neon", kFeatNeon, mul_neon_supported, make_kernel<MulNeon>);
   add("I8GatedAdd", "i8gatedadd.neon", kFeatNeon, nullptr, make_kernel<GatedAddNeon>);
   add("I8GapAffine", "i8gapaffine.neon", kFeatNeon, gap_affine_neon_supported, make_kernel<GapAffineNeon>);
+  add("I8BConv2DResIX", "i8bconv2dresix.neon", kFeatNeon, nullptr, make_kernel<int8_full::ExpertConv<BinaryLayerNeon>>);
   add("I8MaxPool2D", "i8maxpool2d.neon", kFeatNeon, pool_neon_supported, make_kernel<PoolNeon>);
   add("I8AvgPool2D", "i8avgpool2d.neon", kFeatNeon, nullptr, make_kernel<PoolNeon>);
   add("I8Conv2D", "i8conv2d.neon_depthwise", kFeatNeon, depthwise_neon_supported, make_kernel<DepthwiseNeon>);

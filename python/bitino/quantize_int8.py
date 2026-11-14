@@ -36,7 +36,7 @@ from . import executor, int8_ops
 from .ir import Constant, Graph, Node, pack_bits
 
 UNARY = {"ChannelAffine", "Activation", "FakeQuant"}
-PASS_THROUGH = {"Reshape", "Transpose", "Gather", "MaxPool2D"}
+PASS_THROUGH = {"Reshape", "Transpose", "Gather", "MaxPool2D", "ChannelShift"}
 
 
 # ============================================================================ calibration
@@ -962,7 +962,7 @@ class _Emitter:
                     th.append(0.0)
             elif u.op == "_BMatMulQ" and j in (0, 1):
                 th.append(float(u.attrs.get("_a_thr" if j == 0 else "_b_thr", 0.0) or 0.0))
-            elif u.op in ("Reshape", "Transpose", "Concat") or (u.op == "Gather" and j == 0):
+            elif u.op in ("Reshape", "Transpose", "Concat", "ChannelShift") or (u.op == "Gather" and j == 0):
                 sub = self._bt_memo.get(u.outputs[0], 0)
                 if sub == 0:
                     sub = self.binarize_thresholds(u.outputs[0], cons, prod)
@@ -1030,7 +1030,7 @@ class _Emitter:
                     th.append(0.0)
             elif u.op == "_BMatMulQ" and j in (0, 1):
                 th.append(float(u.attrs.get("_a_thr" if j == 0 else "_b_thr", 0.0) or 0.0))
-            elif u.op in ("Reshape", "Transpose", "Concat") or (u.op == "Gather" and j == 0):
+            elif u.op in ("Reshape", "Transpose", "Concat", "ChannelShift") or (u.op == "Gather" and j == 0):
                 th.extend(self.partial_thresholds(u.outputs[0], seen))
         return sorted(set(th))
 
@@ -1308,7 +1308,7 @@ class _Emitter:
 
     SPLITTABLE = {"_Unary", "Add", "AddBroadcast", "_AffineSum", "Conv2D", "Dense", "MatMul", "LayerNorm", "BDense", "BConv2D",
                   "_BMatMulQ", "Mul"}
-    SPLIT_PASS = {"MaxPool2D", "Reshape", "Transpose", "Gather"}
+    SPLIT_PASS = {"MaxPool2D", "Reshape", "Transpose", "Gather", "ChannelShift"}
 
     def plan_splits(self):
         """Tensors read both by binarizations and by other operators ("mixed") get a second int8 version on a
@@ -1617,8 +1617,93 @@ class _Emitter:
             self.params[y] = (sx, zx)
             self.node("I8Pad", [self.T(n.inputs[0])], [yo], {"pads": a["pads"], "pad_q": int(quantize_const(np.array([a.get("value", 0.0)]), sx, zx)[0])},
                       n.name)
+        elif op == "ChannelShift":
+            sx, zx = self.p(n.inputs[0])
+            self.params[y] = (sx, zx)
+            gs = [v for t in executor.shift_groups(a.get("groups", [])) for v in t]
+            self.node("I8ChannelShift", [self.T(n.inputs[0])], [yo],
+                      {"groups": gs, "fill_q": int(quantize_const(np.array([0.0]), sx, zx)[0])}, n.name)
+        elif op == "InstanceThreshold":
+            self.emit_instance_threshold(n)
+        elif op == "SimAM":
+            self.emit_simam(n, yo, sy, zy)
         else:
             self.emit_float_fallback(n, f"no int8 lowering for {op}")
+
+    # ---------------------------------------------------------------- glue ops (docs/int8.md "int8_full ops for accuracy-carrying glue")
+    def emit_instance_threshold(self, n):
+        """InstanceThreshold(x, t0, a, b[, off]) read only by binary layers: one I8BinarizeDyn per distinct binarization
+        (mode, thresholds) of its readers, writing the bit tensor they read (emit_binary, self.dyn_in). bit = +1 iff
+        x - (t0 + a mean + b std + off) >= t (gt: >), with x = s (q - z): (q - z) HW 2^F >= T0 + A S1 + B isqrt(V 4^G) + Ko (o - z_o),
+        T0 = (t0 + t) HW 2^F / s (+1 for gt, the integer form of >), A = a 2^F, B = b 2^(F - G), Ko = s_o HW 2^F / s."""
+        Q = self.Q
+        x, y = n.inputs[0], n.outputs[0]
+        sx, zx = self.p(x)
+        shp = Q._shape(x)
+        hw, c = int(shp[1] * shp[2]), int(shp[3])
+        vec = lambda t: np.zeros(c) + (np.asarray(Q.const_f(t), np.float64).reshape(-1) if t else 0.0)  # noqa: E731
+        t0, av, bv = vec(n.inputs[1]), vec(n.inputs[2]), vec(n.inputs[3])
+        off = n.inputs[4] if len(n.inputs) > 4 and n.inputs[4] else ""
+        if off:
+            so, zo = self.p(off)
+        readers = self.cons.get(y, [])
+        if not readers or y in Q.g.outputs or any(not (u.op in ("BConv2D", "BDense") and j == 0) for u, j in readers):
+            raise NotImplementedError("InstanceThreshold must be read only by binary layers (input 0)")
+        G = 0
+        while G < 20 and hw * hw * 65025 << (2 * (G + 1)) < 1 << 61:
+            G += 1
+        G = min(G, 16)
+        self.dyn_in = getattr(self, "dyn_in", {})
+        groups = []
+        for u, _ in readers:
+            mode = u.attrs.get("input_binarize", "ge")
+            if mode not in ("ge", "gt"):
+                raise NotImplementedError("InstanceThreshold read by a binarization " + mode)
+            tr = vec(u.inputs[4] if len(u.inputs) > 4 and u.inputs[4] else "")
+            key = (mode, tr.tobytes())
+            k = next((i for i, g in enumerate(groups) if g[0] == key), None)
+            if k is None:
+                groups.append((key, mode, tr))
+                k = len(groups) - 1
+            self.dyn_in[u.name] = f"{y}:dyn{k}"
+        for k, (_, mode, tr) in enumerate(groups):
+            for F in range(40, -1, -1):
+                sc = float(hw) * 2.0 ** F / sx
+                T0 = np.rint((t0 + tr) * sc) + (1 if mode == "gt" else 0)
+                A = np.rint(av * 2.0 ** F)
+                B = np.rint(bv * 2.0 ** (F - G))
+                Ko = np.rint(np.full(c, so * sc)) if off else None
+                big = max(np.abs(T0).max(), np.abs(A).max(), np.abs(B).max(), np.abs(Ko).max() if off else 0.0)
+                if big < 2 ** 31 - 1 and int8_ops.binarize_dyn_bound_ok(hw, T0.astype(np.int64), A.astype(np.int64), B.astype(np.int64),
+                                                                       Ko.astype(np.int64) if off else None, F, G):
+                    break
+            else:
+                raise NotImplementedError("InstanceThreshold: constants do not fit")
+            base = f"{n.name}/dyn{k}"
+            ins = [self.T(x), self.const(base + "/T0", T0.astype(np.int32), "i32"), self.const(base + "/A", A.astype(np.int32), "i32"),
+                   self.const(base + "/B", B.astype(np.int32), "i32")]
+            at = {"x_zero": int(zx), "shift": int(F), "sqrt_shift": int(G)}
+            if off:
+                ins += [self.T(off), self.const(base + "/Ko", Ko.astype(np.int32), "i32")]
+                at["o_zero"] = int(zo)
+            self.node("I8BinarizeDyn", ins, [f"{y}:dyn{k}"], at, base)
+
+    def emit_simam(self, n, yo, sy, zy):
+        """SimAM(x): I8SimAM with the gate table tab[k] = sigmoid(1/2 + (k + 1/2) / 16) on the grid (1/255, -128),
+        lam_q = round(lambda HW^2 / s^2) and the output requantization s / (255 s_y)."""
+        x = n.inputs[0]
+        sx, zx = self.p(x)
+        shp = self.Q._shape(x)
+        hw = int(shp[1] * shp[2])
+        k = np.arange(256, dtype=np.float64)
+        gate = 1.0 / (1.0 + np.exp(-(0.5 + (k + 0.5) / 16.0)))
+        gate[255] = 1.0
+        tab = (np.clip(np.rint(gate * 255.0), 0, 255) - 128).astype(np.int8)[None, :]
+        lam = float(n.attrs.get("lambda", 1e-4))
+        L = int(min(max(1, round(lam * hw * hw / (sx * sx))), 1 << 40))
+        m, sh = int8_ops.quantize_multiplier(sx / (255.0 * sy))
+        self.node("I8SimAM", [self.T(x), self.const(n.name + "/gate_tab", tab, "i8")], [yo],
+                  {"x_zero": int(zx), "lam_q": L, "g_zero": -128, "mult": m, "shift": sh, "y_zero": int(zy)}, n.name)
 
     def emit_float_fallback(self, n, why):
         """Dequantize -> float op -> Quantize (recorded in the report as left in float)."""
@@ -1885,6 +1970,12 @@ class _Emitter:
             at.update(qmin=lo, qmax=hi)
         ins = [self.T(n.inputs[0]), w, pmn, pan]
         thr = n.inputs[4] if len(n.inputs) > 4 and n.inputs[4] else ""
+        dyn = getattr(self, "dyn_in", {}).get(n.name)
+        if dyn is not None:   # reads the bit tensor of an I8BinarizeDyn (InstanceThreshold): its thresholds are folded there
+            ins[0] = dyn
+            thr, pc_thr = "", None
+            for k in ("x_scale", "x_zero", "input_binarize"):
+                at.pop(k, None)
         if pc_thr is not None:
             ins.append(pc_thr)
         else:

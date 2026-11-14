@@ -93,15 +93,28 @@ def acc_thresholds(t, mode: str, b, s) -> np.ndarray:
     return np.clip(T, -(2 ** 31), 2 ** 31 - 1).astype(np.int32)
 
 
+def _q31_slope(slope, o):
+    """(P, k): a per-channel slope as Q31 / 2^k (k = 0 when every |slope| < 1), or (None, 0) for slope None."""
+    if slope is None:
+        return None, 0
+    slope = np.zeros(o) + np.asarray(slope, np.float64)
+    mx = float(np.max(np.abs(slope)))
+    k = 0 if mx < 1.0 else int(math.floor(math.log2(mx))) + 1
+    return np.clip(np.round(slope * 2.0 ** (31 - k)), -(2 ** 31 - 1), 2 ** 31 - 1).astype(np.int64), k
+
+
 def _int_epilogue(node: Node, K: int, d, beta_u, ratio_r: float, z_r: int, slope, ob_u, thr_u, const, base: str,
-                  pb_u=None, pmul=None):
+                  pb_u=None, pmul=None, pslope=None):
     """I8BConv2DResI of a lin8 I8BConv2DRes block (output units = the output step): u = dot * d[o] + q * ratio_r +
     (beta_u[o] - z_r * ratio_r), w = PReLU(u, slope) + ob_u, y = round(w) + y_zero, bits of u (or w) against thr_u. In integer
     units 2^-S: m1 = round(d 2^S), m2 = round(ratio_r 2^S), b = round(beta_u 2^S) - z_r m2, PReLU slope as Q31 / 2^k, S the
     largest shift (<= 16) with |m1|, |m2| <= 32767 and every value below 2^31 (int8_ops.bconv_res_i_bound). None if S < 8.
     Pre stage (pb_u given: a ReLU between the binary convolution and an affine with per-channel multiplier pmul, QuickNet's
     BConv[relu] -> BatchNorm): d and pb_u are already multiplied by pmul, so relu(x) * pmul = max(pmul x, 0) for pmul >= 0
-    and min(pmul x, 0) for pmul < 0, i.e. clamp(dot * m1 + pre_b, pre_lo, pre_hi) with (0, +inf) or (-inf, 0)."""
+    and min(pmul x, 0) for pmul < 0, i.e. clamp(dot * m1 + pre_b, pre_lo, pre_hi) with (0, +inf) or (-inf, 0).
+    PReLU pre stage (pslope given, 2026-11-14: BNext's PReLU(BN(BConv)) + r, opts["int_pre_prelu"]): prelu(x) * pmul =
+    sigma prelu(sigma pmul x) with sigma the sign of pmul, i.e. the integer pre stage t = sigma (dot m1 + pre_b),
+    t = t >= 0 ? t : mulhi(t, P) << kp, pre = sigma t (int8_ops._bconv_res_i, in(15))."""
     a = dict(node.attrs)
     if int(a.get("groups", 1)) != 1:   # the integer epilogue runs in the two-phase NEON path of groups 1 only
         return None
@@ -114,6 +127,7 @@ def _int_epilogue(node: Node, K: int, d, beta_u, ratio_r: float, z_r: int, slope
         k = 0 if mx < 1.0 else int(math.floor(math.log2(mx))) + 1
         P = np.clip(np.round(slope * 2.0 ** (31 - k)), -(2 ** 31 - 1), 2 ** 31 - 1).astype(np.int64)
     has_res = len(node.inputs) > 5 and bool(node.inputs[5])
+    PP, kp = _q31_slope(pslope, o) if pb_u is not None else (None, 0)
     for S in range(16, 7, -1):
         m1 = np.round(np.asarray(d, np.float64) * 2.0 ** S).astype(np.int64)
         m2v = int(round(ratio_r * 2.0 ** S)) if has_res else 0
@@ -123,7 +137,7 @@ def _int_epilogue(node: Node, K: int, d, beta_u, ratio_r: float, z_r: int, slope
         bb = np.round(np.asarray(beta_u, np.float64) * 2.0 ** S).astype(np.int64) - z_r * m2v
         ob = None if ob_u is None else np.round(np.asarray(ob_u, np.float64) * 2.0 ** S).astype(np.int64)
         pb = None if pb_u is None else np.round(np.asarray(pb_u, np.float64) * 2.0 ** S).astype(np.int64)
-        if int8_ops.bconv_res_i_bound(K, m1, m2, bb, P, k, ob, pb) >= 2 ** 30:
+        if int8_ops.bconv_res_i_bound(K, m1, m2, bb, P, k, ob, pb, PP, kp) >= 2 ** 30:
             continue
         break
     else:
@@ -151,6 +165,9 @@ def _int_epilogue(node: Node, K: int, d, beta_u, ratio_r: float, z_r: int, slope
         ins.append(const(base + "/pre_b_i", pb.astype(np.int32), "i32"))
         ins.append(const(base + "/pre_lo_i", np.where(neg, -(2 ** 31), 0).astype(np.int32), "i32"))
         ins.append(const(base + "/pre_hi_i", np.where(neg, 0, 2 ** 31 - 1).astype(np.int32), "i32"))
+        if PP is not None:
+            ins.append(const(base + "/pre_slope_i", PP.astype(np.int32), "i32"))
+            at["pre_slope_shift"] = kp
     while ins and ins[-1] == "":
         ins.pop()
     return Node("I8BConv2DResI", ins, list(node.outputs), at, node.name)
@@ -309,6 +326,8 @@ def fuse_gated(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
                         for kk in ("x_scale", "x_zero", "input_binarize", "x_code", "x_exp"):
                             nn.attrs.pop(kk, None)
         report["gated_adds"].append(name)
+    if (opts or {}).get("star", False):   # opt-in (tools/quantize_int8_full.py --star): BNext's ELM Mul + add has this shape too
+        _fuse_star(qg, Q, E, qn, qprod, qcons, fprod, fcons, const, replace, remove, report)
     # GlobalAvgPool(AffineSum(x_1..x_n)) with the sum read only by the pool (BNext's GAP(mix)): one I8GapAffine, the pool of
     # the exact sum (no rounding of the full-resolution sum, no pass writing it)
     report["gap_affines"] = []
@@ -379,6 +398,127 @@ def fuse_gated(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
             ops[n.op] += 1
     report["int8_ops"] = dict(ops)
     return out, report
+
+
+def _sigmoid_unary(Q, U) -> bool:
+    return U is not None and U.op == "_Unary" and len(U.attrs.get("ops", [])) == 1 and U.attrs["ops"][0][0] == "Activation" and \
+        U.attrs["ops"][0][1].get("type") == "sigmoid"
+
+
+def _fuse_star(qg, Q, E, qn, qprod, qcons, fprod, fcons, const, replace, remove, report):
+    """fuse_gated, star / GLU gating at a residual (2026-11-13; docs/int8.md "int8_full ops for accuracy-carrying glue"):
+
+        m = Mul(p, g), g = sigmoid(q) (an I8Lut, fused as the table g_lut) or any tensor (pure star),
+        y = x + k * m + bias                          I8Mul + I8AffineSum / I8Add (+ /bin)  =>  I8GatedAdd (g full-resolution)
+
+    p and g [N, H, W, C] of one shape; the product read only by the add. Bits for the binarizing readers of the add's
+    binarize-aware twin as in fuse_gated. report["star_adds"] lists the fused adds."""
+    for M in Q.nodes:
+        if M.op != "Mul" or M.name not in qn or qn[M.name].op != "I8Mul" or qn[M.name].name in replace:
+            continue
+        a0, a1 = M.inputs[:2]
+        if Q.is_const(a0) or Q.is_const(a1) or len(Q._shape(a0)) != 4 or Q._shape(a0) != Q._shape(a1):
+            continue
+        mt = M.outputs[0]
+        if mt in Q.g.outputs or len(fcons[mt]) != 1:
+            continue
+        A, ja = fcons[mt][0]
+        if A.op not in ("_AffineSum", "Add") or len(A.inputs) != 2 or A.attrs.get("activation", "none") != "none" or \
+                A.name not in qn or qn[A.name].op not in ("I8AffineSum", "I8Add") or qn[A.name].name in replace:
+            continue
+        qA, qM = qn[A.name], qn[M.name]
+        t_add = A.outputs[0]
+        tw = qprod.get(t_add + ":bin")
+        if t_add in Q.g.outputs or any(u.name not in (qA.name, tw.name if tw is not None else None) for u, _ in qcons[qM.outputs[0]]):
+            continue
+        # the gate: the input produced by a sigmoid I8Lut (its table fused), else input 1
+        ig = next((i for i, t in enumerate((a0, a1)) if _sigmoid_unary(Q, fprod.get(t)) and fprod[t].name in qn and
+                   qn[fprod[t].name].op == "I8Lut"), 1)
+        gt, pt = (a0, a1) if ig == 0 else (a1, a0)
+        g_lut, g_in = "", qM.inputs[ig]
+        U = fprod.get(gt)
+        if _sigmoid_unary(Q, U) and U.name in qn and qn[U.name].op == "I8Lut":
+            qL = qn[U.name]
+            tab = np.asarray(qg.constants[qL.inputs[1]].data) if qL.inputs[1] in qg.constants else None
+            if tab is not None and tab.size == 256 and len(qL.inputs) == 2 and not qL.attrs:
+                g_in = qL.inputs[0]
+                g_lut = const(A.name + "+star/g_lut", tab.reshape(1, 256).astype(np.int8), "i8")
+                if len(qcons[qL.outputs[0]]) == 1:   # the gate tensor read only by the product
+                    remove.add(qL.name)
+        s_p, z_p = E.params[pt]
+        s_g, z_g = E.params[gt]
+        if abs(int(z_g)) > 128 or abs(int(z_p)) > 128:
+            continue
+        x = A.inputs[1] if A.inputs[0] == mt else A.inputs[0]
+        if A.op == "_AffineSum":
+            coef = dict(zip(A.inputs, A.attrs["coef"]))
+            cx, cm, bias = coef[x], coef[mt], A.attrs["bias"]
+        else:
+            cx, cm, bias = 1.0, 1.0, 0.0
+        xq = qA.inputs[A.inputs.index(x)]
+        s_x, z_x = E.params[xq]
+        s_y, z_y = E.params[t_add]
+        c = int(Q._shape(t_add)[-1])
+        kx_r = np.zeros(c) + np.asarray(cx, np.float64) * s_x / s_y
+        kp_r = np.zeros(c) + np.asarray(cm, np.float64) * s_p * s_g / s_y
+        b_r = np.zeros(c) + np.asarray(bias, np.float64) / s_y
+        for S in range(16, 7, -1):
+            kx = np.round(kx_r * 2.0 ** S).astype(np.int64)
+            kp = np.round(kp_r * 2.0 ** S).astype(np.int64)
+            bb = np.round(b_r * 2.0 ** S).astype(np.int64)
+            if np.abs(kx).max() <= 32767 and int8_ops.gated_add_bound(kx, kp, bb) < 2 ** 30:
+                break
+        else:
+            continue
+        groups, readers, ok = [], [], True
+        if tw is not None:
+            for u, j in qcons[t_add + ":bin"]:
+                if u.op not in ("I8BConv2D", "I8BDense", "I8BConv2DRes", "I8BConv2DResI") or j != 0 or \
+                        any(nn.inputs[0] != t_add + ":bin" for nn in replace.get(u.name, [])[:1]):   # rewritten readers: re-pointed below
+                    ok = False
+                    break
+                mode = u.attrs.get("input_binarize", "ge")
+                if mode not in ("ge", "gt"):
+                    ok = False
+                    break
+                tq = np.zeros(c) + (np.asarray(qg.constants[u.inputs[4]].data, np.float64) if len(u.inputs) > 4 and u.inputs[4] else 0.0)
+                T = acc_thresholds(tq / s_y, mode, np.zeros(c), np.full(c, 2.0 ** -S))
+                k = next((i for i, gg in enumerate(groups) if np.array_equal(gg, T)), None)
+                if k is None:
+                    groups.append(T)
+                    k = len(groups) - 1
+                readers.append((u, k))
+        if not ok:
+            if g_lut:
+                remove.discard(qn[U.name].name)
+            continue
+        name = A.name + "+star"
+        ins = [xq, qM.inputs[1 - ig], g_in, const(name + "/kx", kx.astype(np.int32), "i32"), const(name + "/kp", kp.astype(np.int32), "i32"),
+               const(name + "/b", bb.astype(np.int32), "i32")]
+        outs = [t_add]
+        if groups:
+            ins.append(const(name + "/bit_thr", np.stack(groups).astype(np.int32), "i32"))
+            outs += [f"{t_add}:bits{k}" for k in range(len(groups))]
+        if g_lut:
+            if not groups:
+                ins.append("")
+            ins.append(g_lut)
+        replace[qA.name] = [Node("I8GatedAdd", ins, outs, {"x_zero": int(z_x), "p_zero": int(z_p), "g_zero": int(z_g), "shift": S,
+                                                           "y_zero": int(z_y), "qmin": -128, "qmax": 127}, name)]
+        remove.add(qM.name)
+        if tw is not None:
+            remove.add(tw.name)
+        for u, k in readers:
+            for m in replace.get(u.name) or [Node(u.op, list(u.inputs), list(u.outputs), dict(u.attrs), u.name)]:
+                m.inputs[0] = f"{t_add}:bits{k}"
+                for kk in ("x_scale", "x_zero", "input_binarize", "x_code", "x_exp"):
+                    m.attrs.pop(kk, None)
+                if len(m.inputs) > 4:
+                    m.inputs[4] = ""
+                while m.inputs and m.inputs[-1] == "":
+                    m.inputs.pop()
+                replace[u.name] = [m]
+        report.setdefault("star_adds", []).append(name)   # key only when used: existing files keep their manifests
 
 
 def _assemble(qg: Graph, replace: dict, remove: set, new_consts: dict, what: str) -> Graph:
@@ -1038,7 +1178,14 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
             # v = v * mul' + add'; v = v * G; u = v + R. The sum's coefficient c0 multiplies mul / add (or post_mul / post_add
             # when there is no activation); its bias and beta follow the gate only when there is none.
             if b["cat"] is not None:
-                raise NotImplementedError("pre stage of a merged pair")
+                # merged pair (BNext's FFN_1 / FFN_2 doubling, ReActNet-A pair): the parts' pre stages side by side
+                p2 = pre_of.get(b["parts"][1][1].name)
+                if p2 is None or (pre["gate"] is None) != (p2["gate"] is None) or pre["gate"] is not None or \
+                        (pre["slope"] is None) != (p2["slope"] is None):
+                    raise NotImplementedError("pre stage of a merged pair (parts differ or are gated)")
+                pre = dict(pre, **{kk: np.concatenate([pre[kk], p2[kk]]) for kk in ("post_s", "post_b", "mul", "add")},
+                           slope=None if pre["slope"] is None else np.concatenate([pre["slope"], p2["slope"]]),
+                           chain=list(pre["chain"]) + list(p2["chain"]))
             c0, bb = b["c0"], b["bias"] + beta
             pm1, pa1 = pm * pre["post_s"], pa * pre["post_s"] + pre["post_b"]
             if pre["slope"] is None:
@@ -1046,8 +1193,9 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
                 mul, add = None, None
             else:
                 mul, add = c0 * pre["mul"], c0 * pre["add"]
+            gate_add = None
             if pre["gate"] is not None and np.any(bb != 0):
-                raise NotImplementedError("bias after a squeeze-excitation gate")
+                gate_add = bb   # the sum's bias / the RPReLU shift after the gate: in(14) of I8BConv2DRes (2026-11-14)
             if pre["gate"] is None:
                 if add is None:
                     pa1 = pa1 + bb
@@ -1064,6 +1212,8 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
                 assert gq.op == "I8Mul" and int(gq.attrs["b_zero"]) == -128, gq
                 pre_ins.append(gq.inputs[1])
                 remove.add(gq.name)
+                if gate_add is not None:
+                    pre_ins.append(const(B.name + "/gate_add", (gate_add * sc).astype(np.float32)))
             for nm in pre["chain"]:
                 if nm in qn:
                     remove.add(nm)
@@ -1132,7 +1282,9 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
             ins.pop()
         name = B.name + "+res"
         node = Node("I8BConv2DRes", ins, outs, at, name)
-        int_ok = lin and int_epi and (pre is None or (pre["gate"] is None and (pre["slope"] is None or np.all(pre["slope"] == 0))))
+        int_pre_prelu = bool((opts or {}).get("int_pre_prelu", False))
+        int_ok = lin and int_epi and (pre is None or (pre["gate"] is None and (pre["slope"] is None or np.all(pre["slope"] == 0) or
+                                                                               int_pre_prelu)))
         if int_ok:
             # integer epilogue (I8BConv2DResI, int8_ops._bconv_res_i): the same block in integer units 2^-S of the output
             # step; None when the constants do not fit (the float form above is kept). Pre stages: an affine only (folded),
@@ -1145,10 +1297,11 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
                 d_u, beta_u = pm1 * sc, pa1 * sc
             else:
                 d_u, pb_u, pmul, beta_u = pm1 * mul * sc, pa1 * mul * sc, mul, add * sc
+            psl = pre["slope"] if pre is not None and pre["slope"] is not None and np.any(pre["slope"] != 0) else None
             ni = _int_epilogue(node, int(np.prod(ws[1:])), d_u, beta_u,
                                float(s_r) * sc, int(z_r), slope, (b2 * sc) if b2 is not None else None,
                                ((tn + beta) * sc if b["src"] == "sum" else tn * sc) if b["nxt"] is not None else None,
-                               const, B.name, pb_u, pmul)
+                               const, B.name, pb_u, pmul, psl)
             if ni is not None:
                 node = ni
                 report.setdefault("int_epilogue", []).append(name)
@@ -1163,7 +1316,19 @@ def fuse(qg: Graph, Q, E, opts: dict | None = None) -> tuple[Graph, dict]:
             tab = int8_ops.quantize(dec, sb, zb).reshape(1, 256)
             replace[tw.name] = [Node("I8Lut", [y, const(tw.name + ("/from_l8" if not lin else "/from_lin8"), tab.astype(np.int8), "i8")],
                                      list(tw.outputs), {}, tw.name)]
-        remove.update({B.name, A.name + "/bin"} | ({U.name} if U is not None else set()))
+        tws = qprod.get(t + ":bin")
+        if U is None and lin and tws is not None and tws.name == A.name + "/bin" and \
+                any(u.op not in ("I8BConv2D", "I8BDense", "I8BConv2DRes", "I8BConv2DResI") for u, _ in qcons[t + ":bin"]):
+            # (2026-11-14) the identity block's binarize-aware copy of the sum is also read by a non-binarizing operator
+            # (e.g. a ChannelShift copy feeding the next block's binarization): the copy becomes an I8Lut from y's linear
+            # grid (y == t) to the copy's grid; previously the fusion left that reader without its input
+            sb, zb = E.params[t + ":bin"]
+            dec = int8_ops.deq(np.arange(-128, 128).astype(np.int8), float(s_y), int(z_y))
+            tab = int8_ops.quantize(dec, sb, zb).reshape(1, 256)
+            replace[tws.name] = [Node("I8Lut", [y, const(tws.name + "/from_lin8", tab.astype(np.int8), "i8")], list(tws.outputs), {}, tws.name)]
+            remove.update({B.name} | ({U.name} if U is not None else set()))
+        else:
+            remove.update({B.name, A.name + "/bin"} | ({U.name} if U is not None else set()))
         for part in b["parts"][1:] if b["cat"] is not None else []:
             remove.add(part[1].name)
         if b["cat"] is not None:

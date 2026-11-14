@@ -501,6 +501,7 @@ void infer_bconv_res(const Node& n, const Ins& ins, Outs& outs) {
     BF_CHECK(gt.shape == Shape({g.n, 1, 1, g.oc}), "I8BConv2DRes gate shape ", shape_str(gt.shape));
     BF_CHECK(n.attrs.get_number("g_scale", 0) > 0, "I8BConv2DRes gate needs g_scale > 0");
   }
+  if (has(ins, 14)) check_vec(ins, 14, DType::kF32, g.oc, "gate_add");  // v + gate_add[o] after the gate (2026-11-14)
   set_out(outs, DType::kI8, {g.n, g.oh, g.ow, g.oc});
   if (has(ins, 8)) {
     check_vec(ins, 8, DType::kF32, g.oc, "bit_thr");
@@ -518,7 +519,7 @@ void infer_bconv_res(const Node& n, const Ins& ins, Outs& outs) {
 
 // I8BConv2DResI (int8_ops._bconv_res_i; int8_full v2): the I8BConv2DRes block with an integer epilogue. Inputs x, w, -, -,
 // threshold?, residual i8 [N,OH,OW,O], m1 i32[O], b i32[O], m2 i32[O], bit_thr i32[O]?, slope i32[O]?, out_bias i32[O]?,
-// pre_b / pre_lo / pre_hi i32[O]? (pre stage);
+// pre_b / pre_lo / pre_hi i32[O]? (pre stage), pre_slope i32[O]? (PReLU pre stage, attribute pre_slope_shift);
 // attributes shift, slope_shift, y_zero, qmin, qmax, bit_src; outputs y (i8), bits (bit, iff bit_thr is given).
 void infer_bconv_res_i(const Node& n, const Ins& ins, Outs& outs) {
   const auto& x = req(ins, 0, "x");
@@ -547,6 +548,11 @@ void infer_bconv_res_i(const Node& n, const Ins& ins, Outs& outs) {
     check_vec(ins, 12, DType::kI32, g.oc, "pre_b");
     check_vec(ins, 13, DType::kI32, g.oc, "pre_lo");
     check_vec(ins, 14, DType::kI32, g.oc, "pre_hi");
+    if (has(ins, 15)) check_vec(ins, 15, DType::kI32, g.oc, "pre_slope");  // PReLU pre stage (2026-11-14)
+    const int64_t pk = n.attrs.get_int("pre_slope_shift", 0);
+    BF_CHECK(pk >= 0 && pk <= 30, "I8BConv2DResI pre_slope_shift out of range");
+  } else {
+    BF_CHECK(!has(ins, 15), "I8BConv2DResI: pre_slope needs pre_b / pre_lo / pre_hi");
   }
   const int64_t sh = n.attrs.get_int("shift", 0), k = n.attrs.get_int("slope_shift", 0);
   BF_CHECK(sh >= 0 && sh <= 30 && k >= 0 && k <= 30, "I8BConv2DResI shift / slope_shift out of range");
@@ -567,7 +573,32 @@ void infer_bconv_res_i(const Node& n, const Ins& ins, Outs& outs) {
   }
 }
 
-// I8GatedAdd (int8_ops._gated_add; int8_full v2): x, p i8 [N,H,W,C], g i8 [N,1,1,C], kx / kp / b i32[C], bit_thr i32[nb,C]?;
+// I8BConv2DResIX (kernels/int8_full/expert_conv.h, int8_ops._bconv_res_ix): I8BConv2DResI with E weight sets stacked on
+// the output channels of in(1) ([E * O, KH, KW, I]) and the per-sample expert index in(16) i32 [N]; attribute experts.
+void infer_bconv_res_ix(const Node& n, const Ins& ins, Outs& outs) {
+  const int64_t e = n.attrs.get_int("experts", 1);
+  BF_CHECK(e >= 1, "I8BConv2DResIX: experts must be >= 1");
+  const auto& w = req(ins, 1, "w");
+  BF_CHECK(w.dtype == DType::kBit && w.shape.size() == 4 && w.shape[0] % e == 0, "I8BConv2DResIX: w must be bit [E * O, KH, KW, I]");
+  BF_CHECK(has(ins, 16), "I8BConv2DResIX: missing the expert index (input 16)");
+  const auto& ix = *ins[16];
+  BF_CHECK(ix.dtype == DType::kI32 && num_elements(ix.shape) == req(ins, 0, "x").shape[0], "I8BConv2DResIX: the expert index must be i32 [N]");
+  TensorInfo w1 = w;
+  w1.shape[0] /= e;
+  Ins b(ins.begin(), ins.begin() + std::min<size_t>(ins.size(), 16));
+  b[1] = &w1;
+  infer_bconv_res_i(n, b, outs);
+}
+
+// I8ArgMax: x i8 [N, ...] -> i32 [N], the index of the first maximum of each sample's codes.
+void infer_argmax(const Node&, const Ins& ins, Outs& outs) {
+  const auto& x = req_i8(ins, 0, "x");
+  BF_CHECK(!x.shape.empty() && x.shape[0] >= 1, "I8ArgMax: x must be [N, ...]");
+  set_out(outs, DType::kI32, {x.shape[0]});
+}
+
+// I8GatedAdd (int8_ops._gated_add; int8_full v2): x, p i8 [N,H,W,C], g i8 [N,1,1,C] or [N,H,W,C], kx / kp / b i32[C],
+// bit_thr i32[nb,C]?, g_lut i8[1,256]?;
 // attributes x_zero, p_zero, g_zero, shift, y_zero, qmin, qmax; outputs y (i8) and nb bit tensors.
 void infer_gated_add(const Node& n, const Ins& ins, Outs& outs) {
   const auto& x = req_i8(ins, 0, "x");
@@ -575,7 +606,11 @@ void infer_gated_add(const Node& n, const Ins& ins, Outs& outs) {
   const auto& g = req_i8(ins, 2, "g");
   BF_CHECK(x.shape.size() == 4 && p.shape == x.shape, "I8GatedAdd: x and p must be [N, H, W, C] of one shape");
   const int64_t c = x.shape[3];
-  BF_CHECK(g.shape == Shape({x.shape[0], 1, 1, c}), "I8GatedAdd: g must be [N, 1, 1, C], got ", shape_str(g.shape));
+  BF_CHECK(g.shape == Shape({x.shape[0], 1, 1, c}) || g.shape == x.shape, "I8GatedAdd: g must be [N, 1, 1, C] or [N, H, W, C], got ",
+           shape_str(g.shape));
+  if (has(ins, 7)) {  // g_lut (2026-11-13): the gate code through a per-tensor table
+    BF_CHECK(ins[7]->dtype == DType::kI8 && ins[7]->shape == Shape({1, 256}), "I8GatedAdd: g_lut must be i8 [1, 256]");
+  }
   check_vec(ins, 3, DType::kI32, c, "kx");
   check_vec(ins, 4, DType::kI32, c, "kp");
   check_vec(ins, 5, DType::kI32, c, "b");
@@ -672,6 +707,8 @@ void register_int8_full_op_defs(OpRegistry& reg) {
   reg.add_op({"I8BConv2D", infer_bconv});
   reg.add_op({"I8BConv2DRes", infer_bconv_res});
   reg.add_op({"I8BConv2DResI", infer_bconv_res_i});
+  reg.add_op({"I8BConv2DResIX", infer_bconv_res_ix});
+  reg.add_op({"I8ArgMax", infer_argmax});
   reg.add_op({"I8GatedAdd", infer_gated_add});
   reg.add_op({"I8GapAffine", infer_gap_affine});
   reg.add_op({"I8BMatMul", infer_bmatmul});

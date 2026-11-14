@@ -18,6 +18,7 @@ void register_int8_neon_kernels(OpRegistry& reg);
 void register_int8_avx2_kernels(OpRegistry& reg);  // kernels/int8_avx2 (x86-64; no-op elsewhere)
 void register_float_opt_kernels(OpRegistry& reg);
 void register_larq_kernels(OpRegistry& reg);  // reference/larq_reference.cc
+void register_glue_float(OpRegistry& reg);    // reference/glue_float_reference.cc (InstanceThreshold, ChannelShift)
 
 // Transformer operators (runtime/ops/transformer_op_defs.cc) and their kernels.
 void register_transformer_op_defs(OpRegistry& reg);
@@ -52,5 +53,7 @@ void register_int8_full_op_defs(OpRegistry& reg);           // ops/op_defs_int8_
 void register_int8_full_reference_kernels(OpRegistry& reg); // kernels/int8_full/int8_full_reference.cc
 void register_int8_full_neon_kernels(OpRegistry& reg);      // kernels/int8_full/int8_full_neon.cc
 void register_int8_full_portable_kernels(OpRegistry& reg);  // kernels/int8_full/int8_full_portable.cc (tier int8_full_opt)
+void register_int8_glue_op_defs(OpRegistry& reg);           // ops/op_defs_int8_glue.cc (I8ChannelShift, I8BinarizeDyn, I8SimAM)
+void register_int8_glue_kernels(OpRegistry& reg);           // kernels/int8_full/int8_full_glue.cc
 
 }  // namespace bitino

@@ -11,6 +11,7 @@
 
 #include "bitino/session.h"
 #include "kernels/int8_full/int8_full.h"
+#include "kernels/int8_full/expert_conv.h"
 #include "kernels/int8_full/q8_math.h"
 #include "ops/op_defs.h"
 #include "ops/ops_common.h"
@@ -285,6 +286,8 @@ void register_int8_full_portable_kernels(OpRegistry& reg) {
   reg.add_kernel({"I8BConv2D", "i8bconv2d.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
   reg.add_kernel({"I8BConv2DRes", "i8bconv2dres.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
   reg.add_kernel({"I8BConv2DResI", "i8bconv2dresi.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BinaryLayerPortable>});
+  reg.add_kernel({"I8BConv2DResIX", "i8bconv2dresix.portable", "int8_full_opt", 50, 0, nullptr,
+                  make_kernel<int8_full::ExpertConv<BinaryLayerPortable>>});
   reg.add_kernel({"I8BMatMul", "i8bmatmul.portable", "int8_full_opt", 50, 0, nullptr, make_kernel<BMatMulPortable>});
 }
 

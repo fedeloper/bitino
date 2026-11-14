@@ -179,9 +179,16 @@ def main() -> int:
     ap.add_argument("--gated", action="store_true",
                     help="with --residual-code lin8: BNext blocks, BConv -> PReLU as I8BConv2DResI and the squeeze-excitation "
                          "gated residual add as I8GatedAdd (quantize_l8.fuse_gated)")
+    ap.add_argument("--star", action="store_true",
+                    help="with --gated: star / GLU gating at a residual, x + k * p * sigmoid(q) (or p * q), as one I8GatedAdd with a "
+                         "full-resolution gate and the sigmoid table fused (quantize_l8._fuse_star; off by default: BNext's ELM "
+                         "product has the same shape)")
     ap.add_argument("--int-epilogue", action="store_true",
                     help="with --residual-code lin8: fused blocks without a pre stage use the integer epilogue (I8BConv2DResI, "
                          "int8_ops._bconv_res_i) instead of the fp32 one")
+    ap.add_argument("--int-pre-prelu", action="store_true",
+                    help="with --int-epilogue: blocks with a PReLU pre stage (BNext's PReLU(BN(BConv)) + r) use the integer epilogue "
+                         "too (I8BConv2DResI in(15) pre_slope; off by default so that shipped files keep their bytes)")
     a = ap.parse_args()
 
     g = F.read(a.model)
@@ -235,8 +242,12 @@ def main() -> int:
             l8o["code"] = "lin8"
             if a.int_epilogue:
                 l8o["int_epilogue"] = True
+            if a.int_pre_prelu:
+                l8o["int_pre_prelu"] = True
         if a.res_pre:
             l8o["res_pre"] = True
+        if a.star:
+            l8o["star"] = True
         qg, l8rep = QL.fuse(qg, Q, E, l8o)
         if a.residual_code == "lin8" and a.dense:   # BHViT: token-wise BDense residual blocks as 1x1 I8BConv2DResI
             qg, drep = QL.fuse_dense(qg, Q, E, l8o)
@@ -254,7 +265,7 @@ def main() -> int:
             if crep["cse_removed"]:
                 from collections import Counter
                 l8rep["int8_ops"] = dict(Counter(n.op for n in qg.nodes if n.op.startswith("I8")))
-        if not l8rep.get("fused_blocks") and not l8rep.get("gated", {}).get("prelu_convs") and \
+        if not l8rep.get("fused_blocks") and not l8rep.get("gated", {}).get("prelu_convs") and not l8rep.get("gated", {}).get("star_adds") and \
                 not l8rep.get("dense", {}).get("dense_blocks"):
             # e.g. MeliusNet: no BConv2D -> Add(residual) block (the improvement adds are padded)
             raise SystemExit("--residual-code l8: no residual block to fuse (quantize_l8.fuse: fused_blocks 0); no file written")

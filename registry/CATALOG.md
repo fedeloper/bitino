@@ -1,6 +1,6 @@
 # Bitino model catalog
 
-Generated 2026-11-12T20:33:20Z by `tools/build_registry.py` from `registry/models.json`. Do not edit by hand.
+Generated 2026-11-13T23:37:13Z by `tools/build_registry.py` from `registry/models.json`. Do not edit by hand.
 
 Status meanings: **verified-pretrained**: checkpoint downloaded and SHA-256 re-verified locally. **download-failed**: documented link is dead or blocked. **no-public-weights**: none published. **unverified**: link known but not downloaded. *strict BNN* = binary weights AND activations in the body (W1A1 / W1A1+FP / W1A1+INT8).
 

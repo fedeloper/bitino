@@ -44,6 +44,7 @@ void register_builtin_ops(OpRegistry& reg) {
   register_larq_ops(reg);
   register_reference_kernels(reg);
   register_larq_kernels(reg);
+  register_glue_float(reg);
   register_binary_scalar_kernels(reg);
   register_binary_neon_kernels(reg);
   register_binary_neon_opt_kernels(reg);
@@ -68,6 +69,8 @@ void register_builtin_ops(OpRegistry& reg) {
   register_int8_full_reference_kernels(reg);
   register_int8_full_neon_kernels(reg);
   register_int8_full_portable_kernels(reg);
+  register_int8_glue_op_defs(reg);
+  register_int8_glue_kernels(reg);
   register_image_feature_ops(reg);
   register_image_feature_reference_kernels(reg);
   register_image_feature_opt_kernels(reg);
