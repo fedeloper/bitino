@@ -55,10 +55,11 @@ internal class AlertOverlay(context: Context) {
     }
 
     /** Main thread only. */
-    fun setAlert(on: Boolean, pFake: Float = 0f) {
-        if (on != view.alert || (on && pFake != view.alertP)) {
+    fun setAlert(on: Boolean, pFake: Float = 0f, scale: Int = 0) {
+        if (on != view.alert || (on && (pFake != view.alertP || scale != view.alertScale))) {
             view.alert = on
             view.alertP = pFake
+            view.alertScale = scale
             view.invalidate()
         }
     }
@@ -67,6 +68,7 @@ internal class AlertOverlay(context: Context) {
         var badge = ""
         var alert = false
         var alertP = 0f
+        var alertScale = 0
         private val dp = context.resources.displayMetrics.density
         private val loc = IntArray(2)
         private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -79,6 +81,16 @@ internal class AlertOverlay(context: Context) {
             color = Color.WHITE
             textSize = 12f * dp
             typeface = Typeface.MONOSPACE
+        }
+        private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 2f * dp
+            color = Color.argb(200, 255, 255, 255)
+        }
+        private val hitOutline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 4f * dp
+            color = Color.WHITE
         }
         private val red = Paint().apply { color = Color.argb(150, 255, 0, 0) }
         private val alertText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -104,13 +116,30 @@ internal class AlertOverlay(context: Context) {
             val top = (sh - side) / 2f - loc[1]
             val sq = RectF(left, top, left + side, top + side)
             if (alert) {
+                // frames are not analysed while the alert is up: it may cover the squares
                 canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), red)
+                val f = Geometry.FRACTIONS[alertScale]
+                val h = side * f / 2f
+                canvas.drawRect(sq.centerX() - h, sq.centerY() - h, sq.centerX() + h, sq.centerY() + h, hitOutline)
                 alertText.textSize = side / 6f
                 canvas.drawText("FAKE", sq.centerX(), sq.centerY(), alertText)
-                alertText.textSize = side / 14f
-                canvas.drawText("P(fake) %.2f".format(alertP), sq.centerX(), sq.centerY() + side / 8f, alertText)
+                alertText.textSize = side / 16f
+                canvas.drawText("P(fake) %.2f · %d%% square".format(alertP, (f * 100).toInt()), sq.centerX(), sq.centerY() + side / 8f, alertText)
             }
             canvas.drawRect(sq, outline)
+            // the smaller squares: ticks outside the largest one (outside every analysed square)
+            val len = 10f * dp
+            for (i in 1 until Geometry.SCALES) {
+                val h = side * Geometry.FRACTIONS[i] / 2f
+                for (x in floatArrayOf(sq.centerX() - h, sq.centerX() + h)) {
+                    canvas.drawLine(x, sq.top - len, x, sq.top - 1f * dp, tick)
+                    canvas.drawLine(x, sq.bottom + 1f * dp, x, sq.bottom + len, tick)
+                }
+                for (y in floatArrayOf(sq.centerY() - h, sq.centerY() + h)) {
+                    canvas.drawLine(sq.left - len, y, sq.left - 1f * dp, y, tick)
+                    canvas.drawLine(sq.right + 1f * dp, y, sq.right + len, y, tick)
+                }
+            }
             if (badge.isNotEmpty()) {
                 val lines = badge.split('\n')
                 val pad = 6f * dp

@@ -77,8 +77,9 @@ class MainActivity : ComponentActivity() {
         col.addView(text("Deepfake screen detector", 22f))
         col.addView(text(
             "Runs a Faster Than Lies binary detector (BNext backbone, CVPRW 2024) with Bitino on this phone's CPU. " +
-                "It analyses the centre square of the screen (outlined) on every new frame and flashes the screen red " +
-                "while the image there looks generated or manipulated. Nothing leaves the device.\n\n" +
+                "On every new frame it analyses the centre of the screen at three sizes: the largest centred square " +
+                "(outlined) and the squares at 2/3 and 1/3 of it (ticks), each resized to the model input. It flashes the " +
+                "screen red while one of them looks generated or manipulated. Nothing leaves the device.\n\n" +
                 "When Android asks what to share, choose the entire screen.", 14f))
         col.addView(text("Detector"))
         modelSpinner = Spinner(this)
@@ -95,14 +96,14 @@ class MainActivity : ComponentActivity() {
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(s: SeekBar, v: Int, fromUser: Boolean) {
                     if (v < 50) { s.progress = 50; return }
-                    thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", v / 100f)
+                    thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row (any of the 3 squares)", v / 100f)
                     prefs.edit().putInt("threshold", v).apply()
                 }
                 override fun onStartTrackingTouch(s: SeekBar) {}
                 override fun onStopTrackingTouch(s: SeekBar) {}
             })
         }
-        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", thresholdBar.progress / 100f)
+        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row (any of the 3 squares)", thresholdBar.progress / 100f)
         col.addView(thresholdBar)
         col.addView(text("Threads per inference"))
         threadsSpinner = Spinner(this).apply {

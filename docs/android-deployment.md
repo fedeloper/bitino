@@ -194,13 +194,17 @@ takes several minutes.
 
 A second app runs a "Faster Than Lies" binary deepfake detector (Lanzino et al., CVPRW 2024; BNext backbone with the
 FFT and LBP features computed inside the model, converted by `tools/convert_ftl_deepfake.py`) on whatever the phone
-shows. A foreground service mirrors the screen with MediaProjection into a small virtual display, takes the largest
-centred square (outlined on screen), and reproduces the authors' test preprocessing on it: the virtual display is
-scaled so that the square is 252·k pixels, a k×k box filter brings it to 252, and the centre 224×224 crop is the model
-input (u8 / 255). On every new frame it computes P(fake) = 1 / (1 + exp(logit)). After 3 frames in a row at or above
-the threshold (50–99 %, default 70 %), it flashes the whole screen red for 0.9 s. The red frames are not analysed, and
-the alert comes back as long as the image stays fake. A badge in the corner shows the model, P(fake), the time per
-frame and the frames analysed per second. Everything runs on the phone.
+shows. A foreground service mirrors the screen with MediaProjection into a small virtual display. On every new frame it
+analyses the centre of the screen at three sizes: the largest centred square (outlined on screen) and the centred
+squares at 2/3 and 1/3 of its side (ticks outside the outline). A fake image that fills only the middle of the screen
+then also gets a close-up. Each square goes through the authors' test preprocessing: the virtual display is scaled so
+that the largest square is 3·252 = 756 pixels, box filters of 3×3, 2×2 and 1×1 bring the three squares to 252, and
+the centre 224×224 crop of each is a model input (u8 / 255). The detector runs on each, P(fake) = 1 / (1 + exp(logit)).
+After 3 frames in a row at or above the threshold (50–99 %, default 70 %) on any of the squares, the whole screen
+flashes red for 0.9 s with the square that fired. The red frames are not analysed, and the alert comes back as long as
+the image stays fake. A badge in the corner shows the model, the three P(fake), the time per frame (three crops and
+three detector runs: 77.8 ms on the OnePlus Open at 1 thread, of which 4.3 ms for the crops, about 13 frames per second; more threads lower it) and the frames analysed
+per second. Everything runs on the phone.
 
 ```bash
 # local build with detectors bundled (the weights have no redistribution licence yet: do not distribute this APK)
@@ -215,7 +219,7 @@ On start Android asks for "Display over other apps" (once) and for screen-captur
 entire screen). The service stops from its notification or the app.
 
 Tests:
-- `:deepfake:testDebugUnitTest` (JVM): capture geometry, box-filter crop, alert logic.
+- `:deepfake:testDebugUnitTest` (JVM): capture geometry of the three squares, box-filter crops, alert logic.
 - On a phone, without using its screen (`python3 android/tools/make_deepfake_testdata.py`, then
   `:deepfake:assembleDebug :deepfake:assembleDebugAndroidTest` with the same `-Pbitino.deepfakeModels`, install both
   APKs and `adb shell am instrument -w io.github.fedeloper.bitino.deepfake.test/androidx.test.runner.AndroidJUnitRunner`):

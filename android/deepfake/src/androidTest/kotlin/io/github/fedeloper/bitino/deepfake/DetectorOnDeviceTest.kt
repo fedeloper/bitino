@@ -67,4 +67,39 @@ class DetectorOnDeviceTest {
         }
         assertTrue("no detector had reference outputs", compared > 0)
     }
+
+    @Test
+    fun threeSquaresPerFrameTiming() {
+        val bundled = app.assets.list("models")?.filter { it.endsWith(".bitino") }.orEmpty()
+        assumeTrue("no bundled detector", bundled.isNotEmpty())
+        val g = Geometry(1116, 2484, 420)                     // OnePlus Open cover screen, portrait
+        val rowStride = g.vw * 4
+        val frame = ByteBuffer.allocateDirect(rowStride * g.vh)
+        val rnd = java.util.Random(1)
+        for (i in 0 until rowStride * g.vh) frame.put(i, rnd.nextInt(256).toByte())
+        val input = FloatArray(224 * 224 * 3)
+        val row = ByteArray(ScreenCrop.rowBytes(3, 4))
+        val out = FloatArray(2)
+        Bitino.load(app, "models/${bundled.first()}", threads = 1).use { m ->
+            var crop = 0.0
+            var total = 0.0
+            val reps = 10
+            for (r in 0 until reps + 2) {
+                var c = 0L
+                val t0 = SystemClock.elapsedRealtimeNanos()
+                for (sc in 0 until Geometry.SCALES) {
+                    val a = SystemClock.elapsedRealtimeNanos()
+                    ScreenCrop.toInput(frame, rowStride, 4, g, sc, input, row)
+                    c += SystemClock.elapsedRealtimeNanos() - a
+                    m.run(input, out)
+                    assertTrue(out[1].isFinite())
+                }
+                if (r >= 2) {
+                    total += (SystemClock.elapsedRealtimeNanos() - t0) / 1e6
+                    crop += c / 1e6
+                }
+            }
+            Log.i("BitinoDeepfakeTest", "3 squares per frame: ${"%.1f".format(total / reps)} ms (crops ${"%.1f".format(crop / reps)} ms), 1 thread, unpinned")
+        }
+    }
 }

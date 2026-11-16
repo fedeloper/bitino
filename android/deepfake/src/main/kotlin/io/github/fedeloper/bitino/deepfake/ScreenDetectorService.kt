@@ -73,13 +73,13 @@ class ScreenDetectorService : Service() {
     private val input = FloatArray(Geometry.CROP * Geometry.CROP * 3)
     private val output = FloatArray(2)
     private var row = ByteArray(0)
-    private val alert = AlertState()
+    private val alerts = Array(Geometry.SCALES) { AlertState() }
+    private val pScale = FloatArray(Geometry.SCALES)
     private var threshold = 0.7f
     private var modelName = ""
     @Volatile private var resumeAtNs = 0L
     private var frames = 0
     private var windowStart = 0L
-    private var lastP = 0f
     private var lastMs = 0.0
     private var fps = 0.0
     private var lastBadgeNs = 0L   // badge redraws are frames too: at most 4 per second
@@ -164,7 +164,7 @@ class ScreenDetectorService : Service() {
         val old = reader
         work.post {
             geometry = g
-            alert.reset()
+            alerts.forEach { it.reset() }
         }
         val vd = display
         if (vd == null) {
@@ -176,7 +176,7 @@ class ScreenDetectorService : Service() {
         }
         reader = r
         old?.let { o -> work.post { o.close() } }
-        Log.i(TAG, "capture ${g.vw}x${g.vh} for screen ${g.screenW}x${g.screenH}: square ${g.side} px, box filter ${g.k}")
+        Log.i(TAG, "capture ${g.vw}x${g.vh} for screen ${g.screenW}x${g.screenH}: squares ${g.side} px x ${Geometry.FRACTIONS.joinToString("/")}")
     }
 
     /** Worker thread. */
@@ -188,15 +188,21 @@ class ScreenDetectorService : Service() {
             if (img.width != g.vw || img.height != g.vh) return
             if (img.timestamp < resumeAtNs) return     // composed while the red alert was (still) on screen
             val pl = img.planes[0]
-            val need = ScreenCrop.rowBytes(g, pl.pixelStride)
+            val need = ScreenCrop.rowBytes(Geometry.KS[0], pl.pixelStride)
             if (row.size < need) row = ByteArray(need)
             val t0 = SystemClock.elapsedRealtimeNanos()
-            ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, input, row)
-            m.run(input, output)
+            var hit = -1
+            for (i in 0 until Geometry.SCALES) {
+                ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, i, input, row)
+                m.run(input, output)
+                // output 0 = [constant 0, logit of "real"]: P(fake) = 1 / (1 + exp(logit))
+                pScale[i] = (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
+            }
+            // every square's streak advances on every frame; the alert names the most confident square that fired
+            for (i in 0 until Geometry.SCALES) {
+                if (alerts[i].update(pScale[i], threshold) && (hit < 0 || pScale[i] > pScale[hit])) hit = i
+            }
             val t1 = SystemClock.elapsedRealtimeNanos()
-            // output 0 = [constant 0, logit of "real"]: P(fake) = 1 / (1 + exp(logit))
-            val pFake = (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
-            lastP = pFake
             lastMs = (t1 - t0) / 1e6
             frames++
             if (windowStart == 0L) windowStart = t0
@@ -204,14 +210,17 @@ class ScreenDetectorService : Service() {
                 fps = frames * 1e9 / (t1 - windowStart)
                 frames = 0
                 windowStart = t1
-                Log.i(TAG, String.format(Locale.US, "P(fake) %.3f  %.1f ms/frame (crop + detector)  %.1f frames/s analysed", pFake, lastMs, fps))
+                Log.i(TAG, String.format(Locale.US, "P(fake) %.3f / %.3f / %.3f (100/67/33 %%)  %.1f ms/frame (3 crops + 3 detector runs)  %.1f frames/s",
+                    pScale[0], pScale[1], pScale[2], lastMs, fps))
             }
-            val badge = String.format(Locale.US, "%s\nP(fake) %.2f  thr %.2f\n%.1f ms  %.0f fps", modelName, pFake, threshold, lastMs, fps)
-            if (alert.update(pFake, threshold)) {
+            val badge = String.format(Locale.US, "%s  thr %.2f\nP(fake) %.2f %.2f %.2f\n(squares 100/67/33%%)\n%.0f ms  %.1f fps",
+                modelName.removePrefix("ftl-deepfake-"), threshold, pScale[0], pScale[1], pScale[2], lastMs, fps)
+            if (hit >= 0) {
+                val p = pScale[hit]
                 resumeAtNs = System.nanoTime() + (ALERT_MS + SETTLE_MS) * 1_000_000L
                 main.post {
                     overlay?.setBadge(badge)
-                    overlay?.setAlert(true, pFake)
+                    overlay?.setAlert(true, p, hit)
                     main.postDelayed({ overlay?.setAlert(false) }, ALERT_MS)
                 }
             } else if (t1 - lastBadgeNs >= 250_000_000L) {
