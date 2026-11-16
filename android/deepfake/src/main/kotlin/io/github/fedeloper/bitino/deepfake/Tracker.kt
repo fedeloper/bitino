@@ -11,9 +11,9 @@ import kotlin.math.abs
  *   instance after a scroll: its state is reset and it is analysed again.
  * - An image not found for more than [maxMissed] frames in a row is gone.
  */
-internal class Tracker(private val tol: Int, private val maxMissed: Int = 2) {
-    class Track(var rect: IntArray) {
-        val alert = AlertState()
+internal class Tracker(private val tol: Int, private val maxMissed: Int = 2, private val frames: Int = 3) {
+    class Track(var rect: IntArray, frames: Int = 3) {
+        val alert = AlertState(frames)
         /** Last P(fake) (classification mode: top-1 probability); < 0 = not analysed yet. */
         var pFake = -1f
         /** Classification mode: top-1 label. */
@@ -40,7 +40,7 @@ internal class Tracker(private val tol: Int, private val maxMissed: Int = 2) {
         for (rc in rects) {
             val t = tracks.filter { !it.seen }.maxByOrNull { iou(it.rect, rc) }?.takeIf { same(it.rect, rc) || iou(it.rect, rc) >= 0.5f }
             if (t == null) {
-                tracks += Track(rc)
+                tracks += Track(rc, frames)
                 changed = true
                 continue
             }

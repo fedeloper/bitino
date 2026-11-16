@@ -20,24 +20,29 @@ class ScreenCropTest {
     fun geometryPortraitAndLandscape() {
         val p = Geometry(1116, 2484, 420)        // OnePlus Open cover screen, portrait
         assertEquals(1116, p.side)
-        assertEquals(756, p.vw)                   // centre square = 3 x 252
-        assertEquals(1683, p.vh)
-        assertEquals(3, p.k(0))
-        assertEquals(42, p.cropX(0))
-        assertEquals((1683 - 756) / 2 + 42, p.cropY(0))
-        assertEquals(1116f / 756f, p.toScreen, 1e-6f)
+        assertEquals(4, p.k0)                     // centre square = 4 x 252 = 1008 (largest multiple of 252 that fits)
+        assertEquals(1008, p.vw)
+        assertEquals(2244, p.vh)
+        assertEquals(56, p.cropX(0))
+        assertEquals((2244 - 1008) / 2 + 56, p.cropY(0))
+        assertEquals(1116f / 1008f, p.toScreen, 1e-6f)
+        val inner = Geometry(2268, 2440, 520)    // inner screen: 2268 = 9 x 252, captured 1:1
+        assertEquals(9, inner.k0)
+        assertEquals(2268, inner.vw)
+        assertEquals(2440, inner.vh)
+        assertEquals(1f, inner.toScreen, 0f)
         val l = Geometry(2484, 1116, 420)
-        assertEquals(1683, l.vw)
-        assertEquals(756, l.vh)
-        for (g in listOf(p, l, Geometry(720, 1600, 320), Geometry(2268, 2440, 400))) {
-            assertTrue(g.cropX(0) >= 0 && g.cropX(0) + 224 * 3 <= g.vw)
-            assertTrue(g.cropY(0) >= 0 && g.cropY(0) + 224 * 3 <= g.vh)
+        assertEquals(2244, l.vw)
+        assertEquals(1008, l.vh)
+        for (g in listOf(p, l, inner, Geometry(720, 1600, 320), Geometry(200, 400, 160))) {
+            assertTrue(g.cropX(0) >= 0 && g.cropX(0) + 224 * g.k0 <= g.vw)
+            assertTrue(g.cropY(0) >= 0 && g.cropY(0) + 224 * g.k0 <= g.vh)
         }
     }
 
     @Test
-    fun centreSquareIsA3x3Average() {
-        val g = Geometry(1116, 2484, 420)
+    fun centreSquareIsABoxAverage() {
+        val g = Geometry(756, 1683, 420)          // 756 = 3 x 252: a 3x3 box
         val rowStride = g.vw * 4 + 32               // padded rows, as ImageReader may deliver
         val buf = frame(g.vw, g.vh, rowStride) { x, y, c -> (x * 5 + y * 11 + c * 31) % 241 }
         val out = FloatArray(224 * 224 * 3)

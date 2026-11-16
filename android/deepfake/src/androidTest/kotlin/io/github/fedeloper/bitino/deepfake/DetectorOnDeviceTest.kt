@@ -72,21 +72,21 @@ class DetectorOnDeviceTest {
     fun perFrameTimingWithImagesOnScreen() {
         val bundled = app.assets.list("models")?.filter { it.endsWith(".bitino") }.orEmpty()
         assumeTrue("no bundled detector", bundled.isNotEmpty())
-        val g = Geometry(1116, 2484, 420)                     // OnePlus Open cover screen, portrait
+        val g = Geometry(2268, 2440, 520)                     // OnePlus Open inner screen: captured 1:1
         val rowStride = g.vw * 4
         val frame = ByteBuffer.allocateDirect(rowStride * g.vh)
         for (i in 0 until rowStride * g.vh) frame.put(i, (-1).toByte())   // white UI background
         val rnd = java.util.Random(1)
-        // three "photos" (noise) on the white page: full width, inset, thumbnail
-        val photos = listOf(intArrayOf(0, 100, g.vw, 520), intArrayOf(40, 600, 700, 1000), intArrayOf(40, 1100, 300, 1360))
+        // three "photos" (noise) on the white page: full width, inset, a grid-tile-sized one (360 px)
+        val photos = listOf(intArrayOf(0, 150, g.vw, 1000), intArrayOf(120, 1080, 1500, 1900), intArrayOf(120, 1980, 480, 2340))
         for (p in photos) for (y in p[1] until p[3]) for (x in p[0] until p[2]) for (c in 0 until 3) {
             frame.put(y * rowStride + x * 4 + c, rnd.nextInt(256).toByte())
         }
         val input = FloatArray(224 * 224 * 3)
-        val row = ByteArray(ScreenCrop.rowBytes(3, 4))
+        val row = ByteArray(ScreenCrop.rowBytes(g.k0, 4))
         val out = FloatArray(2)
-        val finder = RectFinder(maxRects = 4)
-        val detector = bundled.firstOrNull { it.startsWith("ftl-deepfake") }
+        val finder = RectFinder(maxRects = 4, minSide = 96)
+        val detector = bundled.firstOrNull { it.startsWith("ftl-deepfake-bnext-t-cocofake-unfrozen") } ?: bundled.firstOrNull { it.startsWith("ftl-deepfake") }
         assumeTrue("no bundled deepfake detector", detector != null)
         Bitino.load(app, "models/$detector", threads = 1).use { m ->
             var find = 0.0
@@ -105,7 +105,7 @@ class DetectorOnDeviceTest {
                 m.run(input, out)
                 for (rc in rects) {
                     a = SystemClock.elapsedRealtimeNanos()
-                    Resample.toInput(frame, rowStride, 4, rc[0], rc[1], rc[2], rc[3], input)
+                    Resample.toInput(frame, rowStride, 4, rc[0], rc[1], rc[2], rc[3], input, 224)
                     p += SystemClock.elapsedRealtimeNanos() - a
                     m.run(input, out)
                     assertTrue(out[1].isFinite())
@@ -118,7 +118,7 @@ class DetectorOnDeviceTest {
                 found = rects.size
             }
             assertEquals(3, found)
-            Log.i("BitinoDeepfakeTest", "per frame with 3 images on screen: ${"%.1f".format(total / reps)} ms " +
+            Log.i("BitinoDeepfakeTest", "per frame with 3 images on the inner screen (full-resolution capture, Resize 224, $detector): ${"%.1f".format(total / reps)} ms " +
                 "(find ${"%.1f".format(find / reps)}, crops ${"%.1f".format(prep / reps)}, 4 detector runs), 1 thread, unpinned")
         }
     }

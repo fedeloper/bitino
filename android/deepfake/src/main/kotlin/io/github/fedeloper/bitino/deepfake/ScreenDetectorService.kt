@@ -46,6 +46,8 @@ class ScreenDetectorService : Service() {
         const val EXTRA_THRESHOLD = "threshold"    // P(fake) threshold in [0, 1]
         const val EXTRA_THREADS = "threads"
         const val EXTRA_SHOW_BOXES = "showBoxes"    // outline the found images
+        const val EXTRA_FRAMES = "frames"           // frames in a row at or above the threshold to flag an image
+        const val EXTRA_RESIZE = "resize"           // 252 (the authors' Resize 252 + CenterCrop 224) or 224
         private const val TAG = "BitinoDeepfake"
         private const val CHANNEL = "detector"
         private const val NOTIFICATION_ID = 1
@@ -81,8 +83,11 @@ class ScreenDetectorService : Service() {
     /** Whole-view label in classification mode (banner). */
     private var wholeLabel: String? = null
     private var row = ByteArray(0)
-    private val finder = RectFinder(maxRects = MAX_IMAGES)
-    private val wholeAlert = AlertState()
+    private var finder = RectFinder(maxRects = MAX_IMAGES)
+    /** Preprocessing of the images found: Resize(resize) + CenterCrop 224 ([Tuning]: 252 = the authors', or 224). */
+    private var resize = 252
+    private var framesInARow = 3
+    private var wholeAlert = AlertState(framesInARow)
     /** Whole view flagged as fake: the banner stays until the screen changes ([wholeSig] = the centre when flagged). */
     private var wholeFake = false
     private var wholeSig = IntArray(64)
@@ -113,6 +118,10 @@ class ScreenDetectorService : Service() {
         threshold = intent.getFloatExtra(EXTRA_THRESHOLD, 0.7f)
         val threads = intent.getIntExtra(EXTRA_THREADS, 1)
         showBoxes = intent.getBooleanExtra(EXTRA_SHOW_BOXES, true)
+        framesInARow = intent.getIntExtra(EXTRA_FRAMES, 3).coerceIn(1, 10)
+        resize = intent.getIntExtra(EXTRA_RESIZE, 252)
+        wholeAlert = AlertState(framesInARow)
+        tracker = Tracker(tol = 8, frames = framesInARow)
         val source = intent.getStringExtra(EXTRA_MODEL) ?: ""
         try {
             model = loadModel(source, threads)
@@ -193,7 +202,9 @@ class ScreenDetectorService : Service() {
             geometry = g
             wholeAlert.reset()
             wholeFake = false
-            tracker = Tracker(tol = maxOf(8, g.vw / 100))
+            tracker = Tracker(tol = maxOf(8, g.vw / 100), frames = framesInARow)
+            // the smallest image analysed stays ~190 screen pixels whatever the capture scale (64 capture px at 1/3)
+            finder = RectFinder(maxRects = MAX_IMAGES, minSide = maxOf(RectFinder.MIN_SIDE, kotlin.math.ceil(96f / g.toScreen).toInt()))
         }
         val vd = display
         if (vd == null) {
@@ -238,7 +249,7 @@ class ScreenDetectorService : Service() {
         val m = model ?: return
         run {
             val pl = img.planes[0]
-            val need = ScreenCrop.rowBytes(Geometry.KS[0], pl.pixelStride)
+            val need = ScreenCrop.rowBytes(g.k0, pl.pixelStride)
             if (row.size < need) row = ByteArray(need)
             val t0 = SystemClock.elapsedRealtimeNanos()
             // 1. the images on screen (classical layout analysis)
@@ -259,7 +270,7 @@ class ScreenDetectorService : Service() {
             }
             if (classify) {
                 wholeLabel = if (tracks.none { it.seen }) {
-                    val side = Geometry.RESIZE * Geometry.KS[0]
+                    val side = Geometry.RESIZE * g.k0
                     val x0 = (g.vw - side) / 2
                     // the banner (36 dp at the top of the screen) is never part of the input, even when the square reaches it
                     val bannerCap = kotlin.math.ceil(36f * resources.displayMetrics.density / g.toScreen).toInt() + 2
@@ -296,7 +307,7 @@ class ScreenDetectorService : Service() {
                     t.lastRun = frameNo
                     continue
                 }
-                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm, input)
+                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm, input, resize)
                 t.pFake = pFake(m)
                 t.lastRun = frameNo
                 if (t.alert.update(t.pFake, threshold)) t.fake = true
@@ -347,7 +358,7 @@ class ScreenDetectorService : Service() {
         }
         heldPasses++
         val open = tracker.tracks.count { it.seen && !it.fake }
-        val passes = (if (classify) 1 else 3) * maxOf(1, (open + PER_FRAME - 1) / PER_FRAME)
+        val passes = (if (classify) 1 else framesInARow) * maxOf(1, (open + PER_FRAME - 1) / PER_FRAME)
         if (heldPasses < passes) work.post(repass)
     }
 

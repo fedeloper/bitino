@@ -5,11 +5,11 @@ import java.nio.ByteBuffer
 /**
  * The detectors' preprocessing on any rectangle of an RGBA frame, as the authors' test loader does it with torchvision
  * on a PIL image: Resize(252) (shorter side to 252, longer side int(252·long/short), PIL bilinear with antialiasing,
+ * or Resize(224) for detectors tuned that way, see [Tuning]),
  * each pass rounded to u8), CenterCrop(224) (offsets rounded half to even, like Python's round), then u8 / 255.
  * Only the 224×224 output window is computed.
  */
 internal object Resample {
-    private const val RESIZE = 252
     private const val CROP = 224
     private const val INV255 = 1f / 255f
 
@@ -52,18 +52,18 @@ internal object Resample {
     }
 
     /** Resized size (width, height) of a w×h image by torchvision's Resize(252). */
-    internal fun resized(w: Int, h: Int): IntArray =
-        if (w <= h) intArrayOf(RESIZE, (RESIZE.toLong() * h / w).toInt()) else intArrayOf((RESIZE.toLong() * w / h).toInt(), RESIZE)
+    internal fun resized(w: Int, h: Int, size: Int = 252): IntArray =
+        if (w <= h) intArrayOf(size, (size.toLong() * h / w).toInt()) else intArrayOf((size.toLong() * w / h).toInt(), size)
 
     private var tmp = FloatArray(0)
     private var row = ByteArray(0)
 
     /** Writes the model input (224×224×3, NHWC) for the rectangle [x0, x1) × [y0, y1) of the frame. Not thread-safe. */
-    fun toInput(buf: ByteBuffer, rowStride: Int, ps: Int, x0: Int, y0: Int, x1: Int, y1: Int, out: FloatArray) {
+    fun toInput(buf: ByteBuffer, rowStride: Int, ps: Int, x0: Int, y0: Int, x1: Int, y1: Int, out: FloatArray, size: Int = 252) {
         val w = x1 - x0
         val h = y1 - y0
         require(w > 0 && h > 0) { "empty rectangle" }
-        val (ow, oh) = resized(w, h).let { it[0] to it[1] }
+        val (ow, oh) = resized(w, h, size).let { it[0] to it[1] }
         val left = halfEven(ow - CROP)
         val top = halfEven(oh - CROP)
         val cx = coeffs(w, ow, left, CROP)

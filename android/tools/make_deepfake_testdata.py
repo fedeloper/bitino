@@ -20,7 +20,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("models", nargs="*", default=["ftl-deepfake-bnext-t-cocofake", "ftl-deepfake-bnext-t-dffd"])
+    ap.add_argument("models", nargs="*", default=["ftl-deepfake-bnext-t-cocofake", "ftl-deepfake-bnext-t-cocofake-unfrozen", "ftl-deepfake-bnext-t-dffd"])
     ap.add_argument("--n", type=int, default=8)
     a = ap.parse_args()
     ev = os.path.join(ROOT, ".cache/data/eval128_cifake_ftl")

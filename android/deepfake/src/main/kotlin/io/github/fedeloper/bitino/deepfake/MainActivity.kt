@@ -61,6 +61,8 @@ class MainActivity : ComponentActivity() {
             .putExtra(ScreenDetectorService.EXTRA_RESULT_DATA, data)
             .putExtra(ScreenDetectorService.EXTRA_MODEL, models.getOrNull(modelSpinner.selectedItemPosition)?.source)
             .putExtra(ScreenDetectorService.EXTRA_THRESHOLD, thresholdBar.progress / 100f)
+            .putExtra(ScreenDetectorService.EXTRA_FRAMES, currentRec().frames)
+            .putExtra(ScreenDetectorService.EXTRA_RESIZE, currentRec().resize)
             .putExtra(ScreenDetectorService.EXTRA_THREADS, threadsSpinner.selectedItem.toString().toInt())
             .putExtra(ScreenDetectorService.EXTRA_SHOW_BOXES, showBoxes.isChecked)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(i) else startService(i)
@@ -97,19 +99,25 @@ class MainActivity : ComponentActivity() {
         col.addView(thresholdLabel)
         thresholdBar = SeekBar(this).apply {
             max = 99
-            progress = prefs.getInt("threshold", 70)
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(s: SeekBar, v: Int, fromUser: Boolean) {
                     if (v < 50) { s.progress = 50; return }
-                    thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", v / 100f)
-                    prefs.edit().putInt("threshold", v).apply()
+                    updateThresholdLabel()
+                    // a value the user set is kept for this detector; otherwise its recommended value applies
+                    if (fromUser) prefs.edit().putInt("threshold:" + currentModelName(), v).apply()
                 }
                 override fun onStartTrackingTouch(s: SeekBar) {}
                 override fun onStopTrackingTouch(s: SeekBar) {}
             })
         }
-        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", thresholdBar.progress / 100f)
         col.addView(thresholdBar)
+        col.addView(Button(this).apply {
+            text = "Use the recommended threshold for this detector"
+            setOnClickListener {
+                prefs.edit().remove("threshold:" + currentModelName()).apply()
+                applyThresholdForModel()
+            }
+        })
         col.addView(text("Threads per inference"))
         threadsSpinner = Spinner(this).apply {
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item, listOf("1", "2", "4"))
@@ -166,17 +174,39 @@ class MainActivity : ComponentActivity() {
         modelSpinner.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, labels)
         val saved = prefs.getString("model", null)
         val idx = list.indexOfFirst { it.source == saved }.takeIf { it >= 0 }
-            ?: list.indexOfFirst { "cocofake" in it.label && "unfrozen" !in it.label }.takeIf { it >= 0 } ?: 0
+            ?: list.indexOfFirst { "cocofake-unfrozen" in it.label }.takeIf { it >= 0 }
+            ?: list.indexOfFirst { "cocofake" in it.label }.takeIf { it >= 0 } ?: 0
         modelSpinner.setSelection(idx)
         modelSpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(p: AdapterView<*>?, v: View?, pos: Int, id: Long) {
                 models.getOrNull(pos)?.let { prefs.edit().putString("model", it.source).apply() }
+                applyThresholdForModel()
             }
             override fun onNothingSelected(p: AdapterView<*>?) {}
         }
     }
 
     private fun modelDir() = File(filesDir, "models").apply { mkdirs() }
+
+    /** File name of the selected model without extension (the key of [Tuning]). */
+    private fun currentModelName(): String =
+        models.getOrNull(modelSpinner.selectedItemPosition)?.source?.substringAfterLast('/')?.substringBeforeLast('.') ?: ""
+
+    private fun currentRec(): Tuning.Rec = Tuning.forModel(currentModelName())
+
+    /** The slider shows the user's value for this detector if they set one, else the recommended threshold. */
+    private fun applyThresholdForModel() {
+        val rec = currentRec()
+        thresholdBar.progress = prefs.getInt("threshold:" + currentModelName(), Math.round(rec.threshold * 100))
+        updateThresholdLabel()
+    }
+
+    private fun updateThresholdLabel() {
+        val rec = currentRec()
+        val v = thresholdBar.progress / 100f
+        val mark = if (Math.round(rec.threshold * 100) == thresholdBar.progress) "recommended, ${rec.note}" else "recommended ${"%.2f".format(Locale.US, rec.threshold)}, ${rec.note}"
+        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on %d frame%s in a row (%s)", v, rec.frames, if (rec.frames == 1) "" else "s", mark)
+    }
 
     private fun importModel(uri: Uri) {
         val name = contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->

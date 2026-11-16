@@ -10,27 +10,32 @@ import kotlin.math.roundToInt
  *
  * The detectors expect the authors' test preprocessing: Resize(252, antialiased) -> CenterCrop(224) -> u8 / 255,
  * NHWC RGB. The virtual display that mirrors the screen is scaled so that the largest centred square of the screen
- * (side [side] screen pixels) is 3·252 = 756 pixels; a 3×3 box filter (the antialiasing) brings it to 252, and its
- * centre 224×224 is the "whole view" model input. The images found on screen ([RectFinder]) are cut from the same
+ * (side [side] screen pixels) is 252·[k0] pixels, with k0 the largest integer that fits: the capture is at (or just
+ * under) the screen's own resolution (OnePlus Open inner screen: 2268 = 9·252, exactly 1:1; cover screen: 1008 of 1116).
+ * tools/screen_threshold_study.py: at a 1/3 capture images shown small on screen lose the detector's evidence (AUC 0.80
+ * at 360 px wide vs 0.998 at full resolution, BNext-T COCOFake unfrozen). A k0×k0 box filter (the antialiasing) brings
+ * the square to 252, and its centre 224×224 is the "whole view" model input. The images found on screen ([RectFinder]) are cut from the same
  * capture and preprocessed by [Resample].
  */
 internal class Geometry(val screenW: Int, val screenH: Int, densityDpi: Int) {
     /** Side of the largest centred square in screen pixels. */
     val side: Int = min(screenW, screenH)
-    private val scale: Double = RESIZE * KS[0] / side.toDouble()
+    /** Box-filter factor of the centre square: the square is captured at 252·k0 pixels. */
+    val k0: Int = max(1, side / RESIZE)
+    private val scale: Double = RESIZE * k0 / side.toDouble()
     /** Virtual display size (the whole screen, scaled). */
-    val vw: Int = max(RESIZE * KS[0], (screenW * scale).roundToInt())
-    val vh: Int = max(RESIZE * KS[0], (screenH * scale).roundToInt())
+    val vw: Int = max(RESIZE * k0, (screenW * scale).roundToInt())
+    val vh: Int = max(RESIZE * k0, (screenH * scale).roundToInt())
     val vdpi: Int = max(1, (densityDpi * scale).roundToInt())
 
     /** Box-filter factor of square [i] (0 = largest). */
-    fun k(i: Int): Int = KS[i]
+    fun k(i: Int): Int = k0
     /** Top-left of square [i]'s 224·k crop in the virtual display. */
-    fun cropX(i: Int): Int = (vw - RESIZE * KS[i]) / 2 + MARGIN * KS[i]
-    fun cropY(i: Int): Int = (vh - RESIZE * KS[i]) / 2 + MARGIN * KS[i]
+    fun cropX(i: Int): Int = (vw - RESIZE * k0) / 2 + MARGIN * k0
+    fun cropY(i: Int): Int = (vh - RESIZE * k0) / 2 + MARGIN * k0
 
     /** Capture pixels -> screen pixels. */
-    val toScreen: Float = side / (RESIZE * KS[0]).toFloat()
+    val toScreen: Float = side / (RESIZE * k0).toFloat()
 
     fun sameAs(o: Geometry?): Boolean = o != null && o.vw == vw && o.vh == vh && o.vdpi == vdpi
 
@@ -38,8 +43,6 @@ internal class Geometry(val screenW: Int, val screenH: Int, densityDpi: Int) {
         const val RESIZE = 252
         const val CROP = 224
         const val MARGIN = (RESIZE - CROP) / 2
-        /** Box-filter factor of the centre square (index 0; the class keeps the index for more squares). */
-        val KS = intArrayOf(3)
     }
 }
 
@@ -96,7 +99,7 @@ internal object ScreenCrop {
      * whether the screen changed. The top and bottom 10 % are left out: the whole-view banner can lie there.
      */
     fun signature(buf: ByteBuffer, rowStride: Int, ps: Int, g: Geometry): IntArray {
-        val side = Geometry.RESIZE * Geometry.KS[0]
+        val side = Geometry.RESIZE * g.k0
         val x0 = (g.vw - side) / 2 + side / 10
         val y0 = (g.vh - side) / 2 + side / 10
         val span = side * 8 / 10

@@ -262,6 +262,24 @@ its label shown in a blue banner (the banner strip is never part of that input).
 synthetic screen with two ImageNet validation images): both images found where placed, labelled "robin" 0.63 and
 "Gila monster" 0.99 (both correct), 14 ms per image at 1 thread including preprocessing.
 
+**Tuning** (`tools/screen_threshold_study.py`, reports/screen_threshold/): 200 COCOFake val2014 real/fake pairs
+(the official SD 1.4 release and the COCO originals; not redistributed), the app's pipeline simulated on the OnePlus Open
+inner screen (images shown 360 / 900 / 1800 px wide, 3 one-pixel shifts as frames, 3 capture scales, 2 preprocessings);
+threshold and frames in a row chosen on one half for the most fakes caught at <= 5 % false alarms, measured on the
+other. Findings:
+- BNext-T COCOFake (frozen backbone, the first default) is weak on COCOFake val: AUC 0.82, 23-35 % of fakes caught at
+  low false-alarm rates;
+- BNext-T COCOFake **unfrozen** (same size and speed) separates COCOFake almost perfectly and keeps it through the
+  screen, provided the capture keeps the detail: at a 1/3 capture images shown 360 px wide drop to AUC 0.80, at full
+  resolution 0.998;
+- Resize 224 + CenterCrop 224 beats the authors' 252 / 224 on screen captures.
+The app therefore captures at the screen's own resolution (the centre square is the largest multiple of 252 that fits:
+2268 px on the inner screen, 1:1), bundles the unfrozen detector as the default, and sets each detector's threshold,
+frames in a row and resize from `Tuning`: BNext-T COCOFake unfrozen 0.36, 2 frames, Resize 224 (test half: 100 % of
+fakes caught, 2.5 % false alarms); BNext-T COCOFake 0.85, 2 frames; others 0.70, 3 frames ("not tuned": no data of
+their kind, e.g. DFFD). The user's own threshold is kept per detector. Cost on the OnePlus inner screen with 3 images:
+165 ms per frame at 1 thread (find 28 ms, crops 35 ms, 4 detector runs).
+
 The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
 frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread
 (3.6 ms to find the images, 12.3 ms of crops, 4 detector runs); more threads lower it. Everything runs on the phone.

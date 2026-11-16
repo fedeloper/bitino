@@ -14,7 +14,8 @@ import java.nio.ByteBuffer
  * uniform columns. Splitting trims the uniform margins too, so a card shrinks to its own background and is then split
  * inside. A block with neither is a leaf: a photo, a text line, an icon, a button.
  *
- * Leaves of at least [MIN_SIDE] half-resolution pixels per side that look like photographs are kept:
+ * Leaves of at least [minSide] half-resolution pixels per side (default [MIN_SIDE]; the app scales it with the capture
+ * so that the smallest image is ~190 screen pixels) that look like photographs are kept:
  * - at least [MIN_COLOURS] distinct colours (4 bits per channel, each on at least 0.1 % of the pixels);
  * - no luminance band (8 levels wide) on more than [MAX_MODE] of the pixels.
  * Text, buttons and flat graphics have few colours and are dominated by their background.
@@ -28,7 +29,7 @@ import java.nio.ByteBuffer
  * the photos found with IoU >= 0.8 (mean IoU 0.988); misses are mostly photos whose own border is a flat band (letterbox
  * bars), found slightly smaller.
  */
-internal class RectFinder(private val maxRects: Int = 24) {
+internal class RectFinder(private val maxRects: Int = 24, private val minSide: Int = MIN_SIDE) {
     companion object {
         const val UNIFORM = 10       // a row / column is uniform if each channel spans at most this inside the block
         const val MIN_SIDE = 32      // half-resolution pixels (64 capture pixels)
@@ -56,7 +57,7 @@ internal class RectFinder(private val maxRects: Int = 24) {
         halve(buf, rowStride, pixelStride, w, h)
         leaves.clear()
         cut(0, 0, hw, hh, 0)
-        val kept = leaves.filter { (it[2] - it[0]) >= MIN_SIDE && (it[3] - it[1]) >= MIN_SIDE && photoLike(it) }
+        val kept = leaves.filter { (it[2] - it[0]) >= minSide && (it[3] - it[1]) >= minSide && photoLike(it) }
             .sortedByDescending { (it[2] - it[0]).toLong() * (it[3] - it[1]) }
             .take(maxRects)
         return kept.map { intArrayOf(it[0] * 2, it[1] * 2, it[2] * 2, it[3] * 2) }
