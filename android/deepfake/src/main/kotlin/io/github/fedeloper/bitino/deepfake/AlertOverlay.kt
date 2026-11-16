@@ -13,19 +13,18 @@ import android.view.View
 import android.view.WindowManager
 
 /**
- * The full-screen, touch-through overlay. Whatever it draws is captured too, so outside alerts it draws only what
- * leaves the layout analysis ([RectFinder]) unchanged: a dashed outline of each found image, in two contrasting
- * colours (never a uniform line, so never trimmed as a border) and inside the image's own edge (so the background
- * around it stays uniform). The detector's centre crop drops those edge pixels. During an alert (when frames are not
- * analysed) it tints each flagged image red with its P(fake), and frames the whole view in red when the centre square
- * fired without a single image doing so.
+ * The full-screen, touch-through overlay. Whatever it draws is captured too, so everything is drawn inside the image
+ * it belongs to (the background around images stays uniform for [RectFinder], which also leaves those bands out):
+ * - a dashed outline in two contrasting colours (never a uniform line) for each found image: grey = not analysed yet,
+ *   green = looks real, orange = P(fake) at or above the threshold;
+ * - a red tint, a solid red border and the P(fake) for an image flagged as fake; it stays until the image moves or
+ *   disappears (the service does not analyse a flagged image, so the tint never reaches the detector);
+ * - a red banner at the top of the screen when the whole view was flagged.
  */
 internal class AlertOverlay(context: Context) {
-    /** A flagged region in screen pixels; [whole] = the centre-square ("whole view") input. */
-    class Flag(val rect: RectF, val pFake: Float, val whole: Boolean)
-    /** A found image (screen pixels) and its state: not analysed yet, below the threshold, at or above it. */
-    data class Box(val rect: RectF, val state: Int) {
-        companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2 }
+    /** A found image (screen pixels), its state and its last P(fake). */
+    data class Box(val rect: RectF, val state: Int, val pFake: Float) {
+        companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2; const val FAKE = 3 }
     }
 
     private val wm = context.getSystemService(WindowManager::class.java)
@@ -56,44 +55,37 @@ internal class AlertOverlay(context: Context) {
         attached = false
     }
 
-    /** Main thread only. An empty list clears the alert. */
-    fun show(flags: List<Flag>) {
-        view.flags = flags
-        view.invalidate()
-    }
-
-    /** Main thread only: the outlines of the found images (redrawn only when they change). */
-    fun showBoxes(boxes: List<Box>) {
-        if (boxes == view.boxes) return
+    /** Main thread only. [wholeFake]: P(fake) of a flagged whole view, or null. Redraws only on a change. */
+    fun update(boxes: List<Box>, wholeFake: Float?) {
+        if (boxes == view.boxes && wholeFake == view.wholeFake) return
         view.boxes = boxes
+        view.wholeFake = wholeFake
         view.invalidate()
     }
 
     private class OverlayView(context: Context) : View(context) {
-        var flags: List<Flag> = emptyList()
         var boxes: List<Box> = emptyList()
+        var wholeFake: Float? = null
         private val dp = context.resources.displayMetrics.density
         private val dash = 6f * dp
         private val stroke = 2f * dp
+        private val loc = IntArray(2)
         private fun dashed(c: Int, phase: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = stroke
             color = c
             pathEffect = android.graphics.DashPathEffect(floatArrayOf(dash, dash), phase)
         }
-        private val okA = dashed(Color.rgb(0, 230, 90), 0f)
-        private val okB = dashed(Color.WHITE, dash)
-        private val susA = dashed(Color.rgb(255, 150, 0), 0f)
-        private val susB = dashed(Color.BLACK, dash)
-        private val pendA = dashed(Color.rgb(150, 150, 150), 0f)
-        private val pendB = dashed(Color.WHITE, dash)
-        private val loc = IntArray(2)
-        private val tint = Paint().apply { color = Color.argb(140, 255, 0, 0) }
+        private val pend = dashed(Color.rgb(150, 150, 150), 0f) to dashed(Color.WHITE, dash)
+        private val ok = dashed(Color.rgb(0, 230, 90), 0f) to dashed(Color.WHITE, dash)
+        private val sus = dashed(Color.rgb(255, 150, 0), 0f) to dashed(Color.BLACK, dash)
+        private val tint = Paint().apply { color = Color.argb(120, 255, 0, 0) }
         private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
-            strokeWidth = 6f * dp
+            strokeWidth = stroke
             color = Color.rgb(255, 30, 30)
         }
+        private val banner = Paint().apply { color = Color.rgb(220, 0, 0) }
         private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER
@@ -103,28 +95,29 @@ internal class AlertOverlay(context: Context) {
 
         override fun onDraw(canvas: Canvas) {
             getLocationOnScreen(loc)
-            if (flags.isEmpty()) {
-                for (b in boxes) {
-                    val r = RectF(b.rect)
-                    r.offset(-loc[0].toFloat(), -loc[1].toFloat())
-                    r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
-                    val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> susA to susB; Box.OK -> okA to okB; else -> pendA to pendB }
-                    canvas.drawRect(r, pa)
-                    canvas.drawRect(r, pb)
-                }
-                return
-            }
-            for (f in flags) {
-                val r = RectF(f.rect)
+            for (b in boxes) {
+                val r = RectF(b.rect)
                 r.offset(-loc[0].toFloat(), -loc[1].toFloat())
-                if (!f.whole) canvas.drawRect(r, tint)
-                canvas.drawRect(r, border)
-                val size = (minOf(r.width(), r.height()) / 6f).coerceIn(14f * dp, 48f * dp)
-                label.textSize = size
-                val text = if (f.whole) "FAKE (whole view)" else "FAKE"
-                canvas.drawText(text, r.centerX(), r.centerY(), label)
-                label.textSize = size * 0.55f
-                canvas.drawText("P(fake) %.2f".format(f.pFake), r.centerX(), r.centerY() + size, label)
+                r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
+                if (b.state == Box.FAKE) {
+                    canvas.drawRect(r, tint)
+                    canvas.drawRect(r, border)
+                    val size = (minOf(r.width(), r.height()) / 6f).coerceIn(12f * dp, 44f * dp)
+                    label.textSize = size
+                    canvas.drawText("FAKE", r.centerX(), r.centerY(), label)
+                    label.textSize = size * 0.55f
+                    canvas.drawText("P(fake) %.2f".format(b.pFake), r.centerX(), r.centerY() + size, label)
+                    continue
+                }
+                val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> sus; Box.OK -> ok; else -> pend }
+                canvas.drawRect(r, pa)
+                canvas.drawRect(r, pb)
+            }
+            wholeFake?.let { p ->
+                val h = 36f * dp
+                canvas.drawRect(0f, 0f, width.toFloat(), h, banner)
+                label.textSize = 16f * dp
+                canvas.drawText("FAKE in the whole view · P(fake) %.2f".format(p), width / 2f, h * 0.68f, label)
             }
         }
     }

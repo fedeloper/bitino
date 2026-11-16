@@ -91,6 +91,37 @@ internal object ScreenCrop {
         }
     }
 
+    /**
+     * A coarse picture of the centre square (8×8 mean luminance over its middle 80 %, sampled every 4th pixel), to tell
+     * whether the screen changed. The top and bottom 10 % are left out: the whole-view banner can lie there.
+     */
+    fun signature(buf: ByteBuffer, rowStride: Int, ps: Int, g: Geometry): IntArray {
+        val side = Geometry.RESIZE * Geometry.KS[0]
+        val x0 = (g.vw - side) / 2 + side / 10
+        val y0 = (g.vh - side) / 2 + side / 10
+        val span = side * 8 / 10
+        val sum = IntArray(64)
+        val cnt = IntArray(64)
+        val src = buf.duplicate()
+        var y = 0
+        while (y < span) {
+            var x = 0
+            while (x < span) {
+                val o = (y0 + y) * rowStride + (x0 + x) * ps
+                val l = ((src.get(o).toInt() and 0xff) * 77 + (src.get(o + 1).toInt() and 0xff) * 150 + (src.get(o + 2).toInt() and 0xff) * 29) shr 8
+                val cell = (y * 8 / span) * 8 + (x * 8 / span)
+                sum[cell] += l
+                cnt[cell]++
+                x += 4
+            }
+            y += 4
+        }
+        return IntArray(64) { if (cnt[it] > 0) sum[it] / cnt[it] else 0 }
+    }
+
+    /** Mean absolute difference of two [signature]s (0..255). */
+    fun signatureDiff(a: IntArray, b: IntArray): Int = (0 until 64).sumOf { kotlin.math.abs(a[it] - b[it]) } / 64
+
     /** Bytes read per source row: 224·k pixels. */
     fun rowBytes(k: Int, pixelStride: Int): Int = (Geometry.CROP * k - 1) * pixelStride + 4
 }

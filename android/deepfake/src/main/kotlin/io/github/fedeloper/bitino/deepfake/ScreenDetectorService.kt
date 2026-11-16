@@ -49,8 +49,7 @@ class ScreenDetectorService : Service() {
         private const val TAG = "BitinoDeepfake"
         private const val CHANNEL = "detector"
         private const val NOTIFICATION_ID = 1
-        private const val ALERT_MS = 900L          // red alert shown this long, then the square is analysed again
-        private const val SETTLE_MS = 120L         // frames composed before this point may still contain the alert
+        private const val SCREEN_CHANGE = 6        // mean luminance change (0..255) of the centre that counts as a new screen
         private const val PER_FRAME = 4            // images analysed per frame besides the whole view, in rotation
         private const val MAX_IMAGES = 24          // images followed on screen
 
@@ -78,18 +77,17 @@ class ScreenDetectorService : Service() {
     private var row = ByteArray(0)
     private val finder = RectFinder(maxRects = MAX_IMAGES)
     private val wholeAlert = AlertState()
-    /** Images followed from frame to frame (capture pixels), each with its own run of fake frames. */
-    private class Track(var rect: IntArray, val alert: AlertState = AlertState(), var pFake: Float = -1f, var seen: Boolean = true,
-                        var still: Int = 0, var lastRun: Long = -1)   // pFake < 0: not analysed yet; lastRun: frame number
+    /** Whole view flagged as fake: the banner stays until the screen changes ([wholeSig] = the centre when flagged). */
+    private var wholeFake = false
+    private var wholeSig = IntArray(64)
+    private var tracker = Tracker(tol = 8)
     private var frameNo = 0L
-    private var tracks = ArrayList<Track>()
-    private var pWhole = 0f
+    private var pWhole = -1f
     private var threshold = 0.7f
     private var showBoxes = true
     /** Rectangles (capture pixels) whose outlines are on screen: the finder ignores those pixels. */
     @Volatile private var drawn: List<IntArray> = emptyList()
     private var modelName = ""
-    @Volatile private var resumeAtNs = 0L
     private var frames = 0
     private var windowStart = 0L
     private var lastMs = 0.0
@@ -181,7 +179,8 @@ class ScreenDetectorService : Service() {
             held = null
             geometry = g
             wholeAlert.reset()
-            tracks.clear()
+            wholeFake = false
+            tracker = Tracker(tol = maxOf(8, g.vw / 100))
         }
         val vd = display
         if (vd == null) {
@@ -199,14 +198,13 @@ class ScreenDetectorService : Service() {
     /** The latest analysed frame, kept so that a still screen (no new frames) still gets every image analysed. */
     private var held: android.media.Image? = null
     private var heldPasses = 0
-    private val repass = Runnable { held?.let { if (it.timestamp >= resumeAtNs) process(it) } }
+    private val repass = Runnable { held?.let { process(it) } }
 
     /** Worker thread. */
     private fun onFrame(r: ImageReader) {
         val img = try { r.acquireLatestImage() } catch (e: IllegalStateException) { null } ?: return
         val g = geometry
-        if (g == null || model == null || img.width != g.vw || img.height != g.vh ||
-            img.timestamp < resumeAtNs) {            // composed while the red alert was (still) on screen
+        if (g == null || model == null || img.width != g.vw || img.height != g.vh) {
             img.close()
             return
         }
@@ -233,43 +231,37 @@ class ScreenDetectorService : Service() {
             // 1. the images on screen (classical layout analysis)
             val rects = finder.find(pl.buffer, pl.rowStride, pl.pixelStride, g.vw, g.vh, drawn, outlineBand(g))
             val tf = SystemClock.elapsedRealtimeNanos()
-            // 2. the whole view: the largest centred square
-            ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, 0, input, row)
-            pWhole = pFake(m)
-            // 3. every image found, matched to the image tracked at about the same place in the previous frame
+            // 2. match them to the images followed so far (a few pixels of movement = the same image)
             frameNo++
-            tracks.forEach { it.seen = false }
-            val now = ArrayList<Track>()
-            for (rc in rects) {
-                val t = tracks.filter { !it.seen }.maxByOrNull { iou(it.rect, rc) }?.takeIf { iou(it.rect, rc) >= 0.5f } ?: Track(rc)
-                // "still": same place (within 2 half-resolution pixels per edge) as in the previous frame
-                t.still = if ((0..3).all { kotlin.math.abs(t.rect[it] - rc[it]) <= 4 }) t.still + 1 else 0
-                t.rect = rc
-                t.seen = true
-                now += t
+            val changed = tracker.update(rects)
+            val tracks = tracker.tracks
+            // 3. the whole view: the largest centred square. A flagged whole view stays flagged until the screen changes;
+            //    it is not analysed while an image is tinted red (the tint would be part of its input)
+            val sig = ScreenCrop.signature(pl.buffer, pl.rowStride, pl.pixelStride, g)
+            if (wholeFake && (changed || ScreenCrop.signatureDiff(sig, wholeSig) > SCREEN_CHANGE)) {
+                wholeFake = false
+                wholeAlert.reset()
             }
-            tracks = now
-            // 4. the detector on PER_FRAME of them, in rotation: never-analysed images first, then the longest waiting
-            //    (largest first among equals); once every image has had its turn the rotation starts again
-            val turn = tracks.sortedWith(compareBy<Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
+            if (!wholeFake && tracks.none { it.fake }) {
+                ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, 0, input, row)
+                pWhole = pFake(m)
+                if (wholeAlert.update(pWhole, threshold)) {
+                    wholeFake = true
+                    wholeSig = sig
+                }
+            }
+            // 4. the detector on PER_FRAME of the images in view, in rotation: never-analysed images first, then the
+            //    longest waiting (largest first among equals); once every image has had its turn the rotation starts
+            //    again. Images flagged as fake are not analysed again: their flag stays until they move or disappear.
+            val turn = tracks.filter { it.seen && !it.fake }
+                .sortedWith(compareBy<Tracker.Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
                 .take(PER_FRAME)
-            val flags = ArrayList<AlertOverlay.Flag>()
             for (t in turn) {
                 val rc = t.rect
                 Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0], rc[1], rc[2], rc[3], input)
                 t.pFake = pFake(m)
                 t.lastRun = frameNo
-                if (t.alert.update(t.pFake, threshold)) flags += AlertOverlay.Flag(screenRect(g, t.rect), t.pFake, whole = false)
-            }
-            // images analysed earlier and still fake keep blinking with the others
-            if (flags.isNotEmpty()) for (t in tracks) {
-                if (t !in turn && t.alert.streak >= 2 && t.pFake >= threshold) flags += AlertOverlay.Flag(screenRect(g, t.rect), t.pFake, whole = false)
-            }
-            if (wholeAlert.update(pWhole, threshold) && flags.isEmpty()) {
-                val side = g.side.toFloat()
-                val l = (g.screenW - side) / 2f
-                val tp = (g.screenH - side) / 2f
-                flags += AlertOverlay.Flag(android.graphics.RectF(l, tp, l + side, tp + side), pWhole, whole = true)
+                if (t.alert.update(t.pFake, threshold)) t.fake = true
             }
             val t1 = SystemClock.elapsedRealtimeNanos()
             lastMs = (t1 - t0) / 1e6
@@ -280,48 +272,43 @@ class ScreenDetectorService : Service() {
                 fps = frames * 1e9 / (t1 - windowStart)
                 frames = 0
                 windowStart = t1
-                val pImages = tracks.joinToString(" ") { if (it.pFake < 0) "?" else String.format(Locale.US, "%.2f", it.pFake) }
-                val text = String.format(Locale.US, "%d image%s found (%d analysed per frame), P(fake) %s; whole view %.2f · %.0f ms/frame (find %.0f) · %.1f fps",
-                    tracks.size, if (tracks.size == 1) "" else "s", PER_FRAME, pImages.ifEmpty { "-" }, pWhole, lastMs, lastFindMs, fps)
+                val pImages = tracks.joinToString(" ") { if (it.fake) "FAKE" else if (it.pFake < 0) "?" else String.format(Locale.US, "%.2f", it.pFake) }
+                val text = String.format(Locale.US, "%d image%s found (%d analysed per frame), P(fake) %s; whole view %s · %.0f ms/frame (find %.0f) · %.1f fps",
+                    tracks.size, if (tracks.size == 1) "" else "s", PER_FRAME, pImages.ifEmpty { "-" },
+                    if (wholeFake) "FAKE" else if (pWhole < 0) "?" else String.format(Locale.US, "%.2f", pWhole), lastMs, lastFindMs, fps)
                 Log.i(TAG, text)
                 status = text
                 getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification(text))
             }
-            if (showBoxes) {
-                // outlines only of images that held still for 2 frames: no outline is left behind on scrolling content
-                val still = tracks.filter { it.still >= 2 }
-                val boxes = still.map {
-                    AlertOverlay.Box(screenRect(g, it.rect), when { it.pFake < 0 -> AlertOverlay.Box.PENDING; it.pFake >= threshold -> AlertOverlay.Box.SUSPICIOUS; else -> AlertOverlay.Box.OK })
+            // overlay: flagged images always; outlines of the others (setting) once they held still for 2 frames, so
+            // that nothing is left behind on scrolling content
+            val shown = tracks.filter { it.fake || (showBoxes && it.seen && it.still >= 2) }
+            val boxes = shown.map {
+                val st = when {
+                    it.fake -> AlertOverlay.Box.FAKE
+                    it.pFake < 0 -> AlertOverlay.Box.PENDING
+                    it.pFake >= threshold -> AlertOverlay.Box.SUSPICIOUS
+                    else -> AlertOverlay.Box.OK
                 }
-                val rects = still.map { it.rect.copyOf() }
-                main.post {
-                    overlay?.showBoxes(boxes)
-                    drawn = rects
-                }
+                AlertOverlay.Box(screenRect(g, it.rect), st, it.pFake)
             }
-            if (flags.isNotEmpty()) {
-                resumeAtNs = System.nanoTime() + (ALERT_MS + SETTLE_MS) * 1_000_000L
-                main.post {
-                    overlay?.show(flags)
-                    main.postDelayed({ overlay?.show(emptyList()) }, ALERT_MS)
-                }
+            val rectsShown = shown.map { it.rect.copyOf() }
+            val banner = if (wholeFake) pWhole else null
+            main.post {
+                overlay?.update(boxes, banner)
+                drawn = rectsShown
             }
         }
         heldPasses++
-        val passes = 3 * maxOf(1, (tracks.size + PER_FRAME - 1) / PER_FRAME)
-        if (heldPasses < passes && img.timestamp >= resumeAtNs) work.post(repass)
+        val open = tracker.tracks.count { it.seen && !it.fake }
+        val passes = 3 * maxOf(1, (open + PER_FRAME - 1) / PER_FRAME)
+        if (heldPasses < passes) work.post(repass)
     }
 
     /** Runs the detector on [input]; output 0 = [constant 0, logit of "real"]: P(fake) = 1 / (1 + exp(logit)). */
     private fun pFake(m: BitinoModel): Float {
         m.run(input, output)
         return (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
-    }
-
-    private fun iou(a: IntArray, b: IntArray): Float {
-        val ix = maxOf(0, minOf(a[2], b[2]) - maxOf(a[0], b[0])).toLong() * maxOf(0, minOf(a[3], b[3]) - maxOf(a[1], b[1]))
-        val u = (a[2] - a[0]).toLong() * (a[3] - a[1]) + (b[2] - b[0]).toLong() * (b[3] - b[1]) - ix
-        return if (u > 0) ix.toFloat() / u else 0f
     }
 
     /** Capture pixels covered by an outline from the image edge inwards: inset 2 dp + 2 dp stroke, with a margin. */

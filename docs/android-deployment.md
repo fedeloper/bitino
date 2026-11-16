@@ -215,11 +215,14 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    252 with PIL's antialiased bilinear filter, centre crop 224, u8 / 255. Tested against PIL itself: within one level
    on every sample, at least 95 % exact. Run it **once more on the whole view**, the largest centred square (3×3 box
    filter to 252, centre crop 224).
-3. **Alert where the fake is.** Each image is followed from frame to frame (IoU >= 0.5) with its own count. When an
-   image reaches 3 frames in a row at or above the threshold (50–99 %, default 70 %), that image alone is tinted red
-   with its P(fake) for 0.9 s. If only the whole view fires, the centre square is framed in red. The overlay draws
-   nothing else, because anything it drew would be captured and change the layout analysis. Frames composed while an
-   alert is up are not analysed, and the alert comes back as long as the image stays fake.
+3. **Flag where the fake is, and keep the flag.** Images are followed from frame to frame (`Tracker`): an image whose
+   four edges all moved by at most max(8, width / 100) capture pixels is the same image (it keeps its score and its
+   place in the rotation); one that moved further (a scroll) is analysed again; one missing for more than 2 frames in a
+   row is gone. When an image has 3 fake results in a row (threshold 50–99 %, default 70 %), it is tinted red with a
+   red border and its P(fake), and it stays so until it moves beyond that tolerance or disappears. A flagged image is
+   not analysed again, so the tint never reaches the detector. The whole view (largest centred square) is analysed only
+   while no image is tinted; when it fires, a red banner at the top of the screen stays until the screen changes
+   (different images found, or the centre's 8×8 luminance changes by more than 6 levels on average).
 
 **Found images are outlined** (a setting, on by default) with a dashed line in two contrasting colours: grey and white
 until the image is analysed, green and white while P(fake) is below the threshold, orange and black above it. Whatever the overlay draws is captured too, so the
@@ -247,8 +250,10 @@ On start Android asks for "Display over other apps" (once) and for screen-captur
 entire screen). The service stops from its notification or the app.
 
 Tests:
-- `:deepfake:testDebugUnitTest` (JVM): image finder on synthetic screens (every photo with IoU >= 0.97, nothing else),
-  resampler against PIL (`android/tools/make_resample_fixture.py`), capture geometry, alert logic.
+- `:deepfake:testDebugUnitTest` (JVM): image finder on synthetic screens (every photo with IoU >= 0.97, nothing else;
+  a grid against a toolbar shadow; outlines drawn into the capture), resampler against PIL
+  (`android/tools/make_resample_fixture.py`), tracker (a few pixels = the same image, a scroll = a new view, a flag
+  stays put, missed frames), capture geometry, alert logic.
 - On a phone, without using its screen (`python3 android/tools/make_deepfake_testdata.py`, then
   `:deepfake:assembleDebug :deepfake:assembleDebugAndroidTest` with the same `-Pbitino.deepfakeModels`, install both
   APKs and `adb shell am instrument -w io.github.fedeloper.bitino.deepfake.test/androidx.test.runner.AndroidJUnitRunner`):
