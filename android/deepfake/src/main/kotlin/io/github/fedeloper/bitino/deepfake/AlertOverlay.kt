@@ -13,14 +13,18 @@ import android.view.View
 import android.view.WindowManager
 
 /**
- * The full-screen, touch-through overlay. It draws nothing while no alert is up: anything it drew would be captured
- * and would change the layout analysis ([RectFinder]) of the next frames. During an alert (when frames are not
+ * The full-screen, touch-through overlay. Whatever it draws is captured too, so outside alerts it draws only what
+ * leaves the layout analysis ([RectFinder]) unchanged: a dashed outline of each found image, in two contrasting
+ * colours (never a uniform line, so never trimmed as a border) and inside the image's own edge (so the background
+ * around it stays uniform). The detector's centre crop drops those edge pixels. During an alert (when frames are not
  * analysed) it tints each flagged image red with its P(fake), and frames the whole view in red when the centre square
  * fired without a single image doing so.
  */
 internal class AlertOverlay(context: Context) {
     /** A flagged region in screen pixels; [whole] = the centre-square ("whole view") input. */
     class Flag(val rect: RectF, val pFake: Float, val whole: Boolean)
+    /** A found image (screen pixels); [suspicious] = P(fake) at or above the threshold. */
+    data class Box(val rect: RectF, val suspicious: Boolean)
 
     private val wm = context.getSystemService(WindowManager::class.java)
     private val view = OverlayView(context)
@@ -56,9 +60,29 @@ internal class AlertOverlay(context: Context) {
         view.invalidate()
     }
 
+    /** Main thread only: the outlines of the found images (redrawn only when they change). */
+    fun showBoxes(boxes: List<Box>) {
+        if (boxes == view.boxes) return
+        view.boxes = boxes
+        view.invalidate()
+    }
+
     private class OverlayView(context: Context) : View(context) {
         var flags: List<Flag> = emptyList()
+        var boxes: List<Box> = emptyList()
         private val dp = context.resources.displayMetrics.density
+        private val dash = 6f * dp
+        private val stroke = 2f * dp
+        private fun dashed(c: Int, phase: Float) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = stroke
+            color = c
+            pathEffect = android.graphics.DashPathEffect(floatArrayOf(dash, dash), phase)
+        }
+        private val okA = dashed(Color.rgb(0, 230, 90), 0f)
+        private val okB = dashed(Color.WHITE, dash)
+        private val susA = dashed(Color.rgb(255, 150, 0), 0f)
+        private val susB = dashed(Color.BLACK, dash)
         private val loc = IntArray(2)
         private val tint = Paint().apply { color = Color.argb(140, 255, 0, 0) }
         private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -74,8 +98,17 @@ internal class AlertOverlay(context: Context) {
         }
 
         override fun onDraw(canvas: Canvas) {
-            if (flags.isEmpty()) return
             getLocationOnScreen(loc)
+            if (flags.isEmpty()) {
+                for (b in boxes) {
+                    val r = RectF(b.rect)
+                    r.offset(-loc[0].toFloat(), -loc[1].toFloat())
+                    r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
+                    canvas.drawRect(r, if (b.suspicious) susA else okA)
+                    canvas.drawRect(r, if (b.suspicious) susB else okB)
+                }
+                return
+            }
             for (f in flags) {
                 val r = RectF(f.rect)
                 r.offset(-loc[0].toFloat(), -loc[1].toFloat())

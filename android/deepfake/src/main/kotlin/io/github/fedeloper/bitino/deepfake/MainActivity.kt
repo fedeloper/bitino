@@ -39,6 +39,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var thresholdBar: SeekBar
     private lateinit var threadsSpinner: Spinner
     private lateinit var startStop: Button
+    private lateinit var showBoxes: android.widget.CheckBox
     private lateinit var statusView: TextView
     private var models: List<ModelEntry> = emptyList()
 
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
             .putExtra(ScreenDetectorService.EXTRA_MODEL, models.getOrNull(modelSpinner.selectedItemPosition)?.source)
             .putExtra(ScreenDetectorService.EXTRA_THRESHOLD, thresholdBar.progress / 100f)
             .putExtra(ScreenDetectorService.EXTRA_THREADS, threadsSpinner.selectedItem.toString().toInt())
+            .putExtra(ScreenDetectorService.EXTRA_SHOW_BOXES, showBoxes.isChecked)
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(i) else startService(i)
         moveTaskToBack(true)   // show what is on screen; the overlay keeps the score
     }
@@ -118,6 +120,12 @@ class MainActivity : ComponentActivity() {
             }
         }
         col.addView(threadsSpinner)
+        showBoxes = android.widget.CheckBox(this).apply {
+            text = "Outline the images found (dashed: green = looks real, orange = above the threshold)"
+            isChecked = prefs.getBoolean("showBoxes", true)
+            setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("showBoxes", on).apply() }
+        }
+        col.addView(showBoxes)
         startStop = Button(this).apply { setOnClickListener { onStartStop() } }
         col.addView(startStop)
         statusView = text("", 14f)

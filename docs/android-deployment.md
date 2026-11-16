@@ -215,6 +215,13 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    nothing else, because anything it drew would be captured and change the layout analysis. Frames composed while an
    alert is up are not analysed, and the alert comes back as long as the image stays fake.
 
+**Found images are outlined** (a setting, on by default) with a dashed line in two contrasting colours: green and white
+while P(fake) is below the threshold, orange and black above it. Whatever the overlay draws is captured too, so the
+outline is drawn just inside the image's own edge (the background around it stays uniform), is never a uniform line
+(so it is never trimmed as a border), and appears only for images that have stayed in place for 2 frames (nothing is
+left behind on scrolling content). The detector's centre crop drops those edge pixels; the whole-view input sees them,
+3× smaller. A JVM test checks that drawing the outlines into the capture leaves the rectangles found unchanged.
+
 The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
 frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread
 (3.6 ms to find the images, 12.3 ms of crops, 4 detector runs); more threads lower it. Everything runs on the phone.

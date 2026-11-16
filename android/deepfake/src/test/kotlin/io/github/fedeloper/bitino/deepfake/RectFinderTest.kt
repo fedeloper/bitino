@@ -97,4 +97,30 @@ class RectFinderTest {
         assertTrue(iou(found[0], s.photos[0]) >= 0.97)   // full-width photo, 756 x 420 visible
         assertTrue(iou(found[1], s.photos[1]) >= 0.97)   // inset photo 660 x 350
     }
+
+    @Test
+    fun drawnOutlinesDoNotMoveTheRectangles() {
+        // the overlay's dashed two-colour outline, 3 capture pixels wide just inside each found image, as captured
+        for (dark in listOf(false, true)) {
+            val s = screen(dark, 1)
+            val finder = RectFinder(maxRects = 10)
+            val before = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
+            for (r in before) {
+                val inset = 1
+                for (t in 0 until 3) {
+                    val x0 = r[0] + inset + t; val y0 = r[1] + inset + t; val x1 = r[2] - 1 - inset - t; val y1 = r[3] - 1 - inset - t
+                    fun put(x: Int, y: Int, along: Int) {
+                        val green = (along / 10) % 2 == 0
+                        val o = (y * w + x) * 4
+                        s.buf.put(o, (if (green) 0 else 255).toByte()); s.buf.put(o + 1, (if (green) 230 else 255).toByte())
+                        s.buf.put(o + 2, (if (green) 90 else 255).toByte())
+                    }
+                    for (x in x0..x1) { put(x, y0, x); put(x, y1, x) }
+                    for (y in y0..y1) { put(x0, y, y); put(x1, y, y) }
+                }
+            }
+            val after = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
+            assertEquals("dark=$dark", before, after)
+        }
+    }
 }

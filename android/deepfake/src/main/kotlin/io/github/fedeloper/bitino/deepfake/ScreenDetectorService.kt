@@ -45,6 +45,7 @@ class ScreenDetectorService : Service() {
         const val EXTRA_MODEL = "model"            // "asset:models/<name>.bitino" or "file:<absolute path>"
         const val EXTRA_THRESHOLD = "threshold"    // P(fake) threshold in [0, 1]
         const val EXTRA_THREADS = "threads"
+        const val EXTRA_SHOW_BOXES = "showBoxes"    // outline the found images
         private const val TAG = "BitinoDeepfake"
         private const val CHANNEL = "detector"
         private const val NOTIFICATION_ID = 1
@@ -77,10 +78,12 @@ class ScreenDetectorService : Service() {
     private val finder = RectFinder(maxRects = MAX_IMAGES)
     private val wholeAlert = AlertState()
     /** Images followed from frame to frame (capture pixels), each with its own run of fake frames. */
-    private class Track(var rect: IntArray, val alert: AlertState = AlertState(), var pFake: Float = 0f, var seen: Boolean = true)
+    private class Track(var rect: IntArray, val alert: AlertState = AlertState(), var pFake: Float = 0f, var seen: Boolean = true,
+                        var still: Int = 0)
     private var tracks = ArrayList<Track>()
     private var pWhole = 0f
     private var threshold = 0.7f
+    private var showBoxes = true
     private var modelName = ""
     @Volatile private var resumeAtNs = 0L
     private var frames = 0
@@ -103,6 +106,7 @@ class ScreenDetectorService : Service() {
         else @Suppress("DEPRECATION") intent.getParcelableExtra(EXTRA_RESULT_DATA)
         threshold = intent.getFloatExtra(EXTRA_THRESHOLD, 0.7f)
         val threads = intent.getIntExtra(EXTRA_THREADS, 1)
+        showBoxes = intent.getBooleanExtra(EXTRA_SHOW_BOXES, true)
         val source = intent.getStringExtra(EXTRA_MODEL) ?: ""
         try {
             model = loadModel(source, threads)
@@ -209,6 +213,8 @@ class ScreenDetectorService : Service() {
             for (rc in rects) {
                 Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0], rc[1], rc[2], rc[3], input)
                 val t = tracks.filter { !it.seen }.maxByOrNull { iou(it.rect, rc) }?.takeIf { iou(it.rect, rc) >= 0.5f } ?: Track(rc)
+                // "still": same place (within 2 half-resolution pixels per edge) as in the previous frame
+                t.still = if ((0..3).all { kotlin.math.abs(t.rect[it] - rc[it]) <= 4 }) t.still + 1 else 0
                 t.rect = rc
                 t.seen = true
                 t.pFake = pFake(m)
@@ -240,6 +246,11 @@ class ScreenDetectorService : Service() {
                 Log.i(TAG, text)
                 status = text
                 getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification(text))
+            }
+            if (showBoxes) {
+                // outlines only of images that held still for 2 frames: no outline is left behind on scrolling content
+                val boxes = tracks.filter { it.still >= 2 }.map { AlertOverlay.Box(screenRect(g, it.rect), it.pFake >= threshold) }
+                main.post { overlay?.showBoxes(boxes) }
             }
             if (flags.isNotEmpty()) {
                 resumeAtNs = System.nanoTime() + (ALERT_MS + SETTLE_MS) * 1_000_000L
