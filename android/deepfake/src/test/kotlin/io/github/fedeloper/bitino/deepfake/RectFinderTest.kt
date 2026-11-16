@@ -145,19 +145,23 @@ class RectFinderTest {
         assertEquals(found.map { it.toList() }.toString(), photos.size, found.size)
     }
 
-    /** Draws what the overlay draws for a found image, as captured: dashed outline just inside it, optional red tint. */
-    private fun drawOverlay(buf: ByteBuffer, sw: Int, r: IntArray, tint: Boolean) {
+    /**
+     * Draws what the overlay draws for a found image, as captured: dashed outline [inset] capture pixels inside it
+     * (OverlayGeometry.INSET_CAPTURE), the P(fake) pill inside the outline, optional red tint.
+     */
+    private fun drawOverlay(buf: ByteBuffer, sw: Int, r: IntArray, tint: Boolean, inset: Int = OverlayGeometry.INSET_CAPTURE) {
         fun put(x: Int, y: Int, c: IntArray) { val o = (y * sw + x) * 4; for (k in 0 until 3) buf.put(o + k, c[k].toByte()) }
         fun get(x: Int, y: Int, k: Int) = buf.get((y * sw + x) * 4 + k).toInt() and 0xff
-        if (tint) for (y in r[1] + 2 until r[3] - 2) for (x in r[0] + 2 until r[2] - 2) {
+        if (tint) for (y in r[1] + inset until r[3] - inset) for (x in r[0] + inset until r[2] - inset) {
             put(x, y, intArrayOf((get(x, y, 0) * 135 + 255 * 120) / 255, get(x, y, 1) * 135 / 255, get(x, y, 2) * 135 / 255))
         }
         // the P(fake) pill in the top-left corner: a dark rounded box with white "text"
-        if (r[2] - r[0] > 60 && r[3] - r[1] > 60) for (y in r[1] + 5 until r[1] + 17) for (x in r[0] + 5 until r[0] + 40) {
-            val corner = (y == r[1] + 5 || y == r[1] + 16) && (x == r[0] + 5 || x == r[0] + 39)
-            if (!corner) put(x, y, if (y in r[1] + 8..r[1] + 13 && (x - r[0]) % 4 < 2) intArrayOf(255, 255, 255) else intArrayOf(0, 140, 60))
+        val p0 = inset + 3
+        if (r[2] - r[0] > 60 + 2 * p0 && r[3] - r[1] > 60 + 2 * p0) for (y in r[1] + p0 until r[1] + p0 + 12) for (x in r[0] + p0 until r[0] + p0 + 35) {
+            val corner = (y == r[1] + p0 || y == r[1] + p0 + 11) && (x == r[0] + p0 || x == r[0] + p0 + 34)
+            if (!corner) put(x, y, if (y in r[1] + p0 + 3..r[1] + p0 + 8 && (x - r[0]) % 4 < 2) intArrayOf(255, 255, 255) else intArrayOf(0, 140, 60))
         }
-        for (t in 2 until 4) {
+        for (t in inset until inset + 2) {
             val x0 = r[0] + t; val y0 = r[1] + t; val x1 = r[2] - 1 - t; val y1 = r[3] - 1 - t
             fun dash(x: Int, y: Int, along: Int) =
                 put(x, y, if ((along / 10) % 2 == 1) intArrayOf(255, 255, 255) else if (tint) intArrayOf(255, 30, 30) else intArrayOf(0, 230, 90))
@@ -226,6 +230,41 @@ class RectFinderTest {
             cur = finder.find(b2, sw * 4, 4, sw, sh).map { it.toList() }
             println("REAL_SCREENSHOT frame $frame with overlay: same as clean = ${cur == found.map { it.toList() }}")
             assertEquals(found.map { it.toList() }, cur)
+        }
+    }
+
+    /** A Google-Images-like grid: 90-pixel photo tiles separated by 3-pixel purple lines, on a white page. */
+    private fun grid(): Pair<ByteBuffer, List<IntArray>> {
+        val buf = ByteBuffer.allocate(w * h * 4)
+        for (i in 0 until w * h) { buf.put(i * 4, -1); buf.put(i * 4 + 1, -1); buf.put(i * 4 + 2, -1); buf.put(i * 4 + 3, -1) }
+        fun set(x: Int, y: Int, c: IntArray) { val o = (y * w + x) * 4; for (k in 0 until 3) buf.put(o + k, c[k].toByte()) }
+        val x0 = 144; val y0 = 200; val tile = 90; val sep = 3
+        for (y in y0 - sep until y0 + 4 * (tile + sep)) for (x in x0 - sep until x0 + 5 * (tile + sep)) set(x, y, intArrayOf(205, 140, 230))
+        val tiles = ArrayList<IntArray>()
+        for (j in 0 until 4) for (i in 0 until 5) {
+            val tx = x0 + i * (tile + sep); val ty = y0 + j * (tile + sep)
+            for (y in ty until ty + tile) for (x in tx until tx + tile) {
+                set(x, y, intArrayOf(photo(x, y, 0, i + 5 * j), photo(x, y, 1, i + 5 * j), photo(x, y, 2, i + 5 * j)))
+            }
+            tiles += intArrayOf(tx, ty, tx + tile, ty + tile)
+        }
+        return buf to tiles
+    }
+
+    @Test
+    fun aThinSeparatorGridSurvivesTheOverlay() {
+        val (buf, tiles) = grid()
+        val finder = RectFinder(maxRects = 24)
+        val clean = finder.find(buf, w * 4, 4, w, h).map { it.toList() }
+        for (t in tiles) assertTrue("tile ${t.toList()} in $clean", clean.any { iou(it.toIntArray(), t) >= 0.95 })
+        assertEquals(tiles.size, clean.size)
+        val original = buf.array().copyOf()
+        var cur = clean
+        repeat(4) { frame ->
+            val b = ByteBuffer.wrap(original.copyOf())
+            for ((i, r) in cur.withIndex()) drawOverlay(b, w, r.toIntArray(), tint = (i == 3 || i == 7) && frame > 0)
+            cur = finder.find(b, w * 4, 4, w, h).map { it.toList() }
+            assertEquals("frame $frame", clean, cur)
         }
     }
 }

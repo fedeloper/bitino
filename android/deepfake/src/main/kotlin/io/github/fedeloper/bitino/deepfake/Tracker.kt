@@ -6,7 +6,7 @@ import kotlin.math.abs
  * Follows the images found on screen from frame to frame (capture pixels).
  *
  * - An image whose four edges all moved by at most [tol] pixels is the same image: it keeps its score, its place in the
- *   rotation and, if it was flagged as fake, its flag (and its box stays where it was flagged).
+ *   rotation and, if it was flagged as fake, its flag; its box follows it.
  * - An image that moved further (but still overlaps its old place by IoU >= 0.5) is a different view of it, for
  *   instance after a scroll: its state is reset and it is analysed again.
  * - An image not found for more than [maxMissed] frames in a row is gone.
@@ -46,7 +46,7 @@ internal class Tracker(private val tol: Int, private val maxMissed: Int = 2) {
             t.missed = 0
             if (same(t.rect, rc)) {
                 t.still++
-                if (!t.fake) t.rect = rc
+                t.rect = rc
             } else {
                 t.rect = rc
                 t.still = 0

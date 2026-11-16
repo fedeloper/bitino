@@ -36,14 +36,14 @@ class TrackerTest {
     }
 
     @Test
-    fun aFlagStaysWhileTheImageStaysAndItsBoxDoesNotDrift() {
+    fun aFlagStaysWhileTheImageStaysAndItsBoxFollowsIt() {
         val t = Tracker(tol = 8)
         t.update(listOf(r(10, 100, 300, 400)))
         val a = t.tracks[0]
         a.fake = true
         repeat(5) { assertFalse(t.update(listOf(r(12 + it % 2, 101, 302, 399)))) }
         assertTrue(a.fake)
-        assertEquals(listOf(10, 100, 300, 400), a.rect.toList())    // the flagged box stays where it was flagged
+        assertEquals(listOf(12, 101, 302, 399), a.rect.toList())    // the flagged box follows the image
     }
 
     @Test

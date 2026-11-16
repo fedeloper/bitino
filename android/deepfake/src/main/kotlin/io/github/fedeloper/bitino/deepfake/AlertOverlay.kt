@@ -24,13 +24,6 @@ import android.view.WindowManager
  * - a red banner at the top of the screen when the whole view was flagged.
  */
 internal class AlertOverlay(context: Context) {
-    companion object {
-        /** The P(fake) pill: [LABEL_TOP] dp from the image's top-left corner, [LABEL_H] dp tall. */
-        const val LABEL_TOP = 4f
-        const val LABEL_H = 14f
-        /** The strip along an image's top edge that may hold the pill (dp): never part of the detector's input. */
-        const val LABEL_STRIP = 20f
-    }
 
     /** A found image (screen pixels), its state and its last P(fake) (rounded to 0.01; < 0 = not analysed yet). */
     data class Box(val rect: RectF, val state: Int, val pFake: Float) {
@@ -65,17 +58,22 @@ internal class AlertOverlay(context: Context) {
         attached = false
     }
 
-    /** Main thread only. [wholeFake]: P(fake) of a flagged whole view, or null. Redraws only on a change. */
-    fun update(boxes: List<Box>, wholeFake: Float?) {
-        if (boxes == view.boxes && wholeFake == view.wholeFake) return
+    /**
+     * Main thread only. [wholeFake]: P(fake) of a flagged whole view, or null. [geo]: where to draw inside each image.
+     * Redraws only on a change.
+     */
+    fun update(boxes: List<Box>, wholeFake: Float?, geo: OverlayGeometry) {
+        if (boxes == view.boxes && wholeFake == view.wholeFake && geo === view.geo) return
         view.boxes = boxes
         view.wholeFake = wholeFake
+        view.geo = geo
         view.invalidate()
     }
 
     private class OverlayView(context: Context) : View(context) {
         var boxes: List<Box> = emptyList()
         var wholeFake: Float? = null
+        var geo: OverlayGeometry? = null
         private val dp = context.resources.displayMetrics.density
         private val dash = 6f * dp
         private val stroke = 2f * dp
@@ -107,10 +105,11 @@ internal class AlertOverlay(context: Context) {
 
         override fun onDraw(canvas: Canvas) {
             getLocationOnScreen(loc)
+            val geo = geo ?: return
             for (b in boxes) {
                 val r = RectF(b.rect)
                 r.offset(-loc[0].toFloat(), -loc[1].toFloat())
-                r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
+                r.inset(geo.insetPx + stroke / 2, geo.insetPx + stroke / 2)   // the stroke's outer side at insetPx
                 if (b.state == Box.FAKE) {
                     canvas.drawRect(r, tint)
                     canvas.drawRect(r, fake.first)
@@ -125,19 +124,19 @@ internal class AlertOverlay(context: Context) {
                 val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> sus; Box.OK -> ok; else -> pend }
                 canvas.drawRect(r, pa)
                 canvas.drawRect(r, pb)
-                // P(fake) pill: LABEL_TOP..LABEL_TOP + LABEL_H dp below the image's top edge, smaller than the image
+                // P(fake) pill inside the outline, in the top strip the detector never sees, smaller than the image
                 val text = if (b.pFake < 0) "…" else "%.2f".format(b.pFake)
                 val pw = pillText.measureText(text) + 8f * dp
-                val top = b.rect.top - loc[1] + LABEL_TOP * dp
-                val left = b.rect.left - loc[0] + LABEL_TOP * dp
-                if (pw < b.rect.width() - 2 * LABEL_TOP * dp && b.rect.height() > 3 * LABEL_STRIP * dp) {
+                val top = b.rect.top - loc[1] + geo.pillOffsetPx
+                val left = b.rect.left - loc[0] + geo.pillOffsetPx
+                if (pw < b.rect.width() - 2 * geo.pillOffsetPx && geo.pillFits(b.rect.height())) {
                     pillBg.color = when (b.state) {
                         Box.SUSPICIOUS -> Color.rgb(230, 120, 0)
                         Box.OK -> Color.rgb(0, 140, 60)
                         else -> Color.rgb(90, 90, 90)
                     }
-                    canvas.drawRoundRect(RectF(left, top, left + pw, top + LABEL_H * dp), 4f * dp, 4f * dp, pillBg)
-                    canvas.drawText(text, left + 4f * dp, top + LABEL_H * dp * 0.78f, pillText)
+                    canvas.drawRoundRect(RectF(left, top, left + pw, top + geo.pillHeightPx), 4f * dp, 4f * dp, pillBg)
+                    canvas.drawText(text, left + 4f * dp, top + geo.pillHeightPx * 0.78f, pillText)
                 }
             }
             wholeFake?.let { p ->

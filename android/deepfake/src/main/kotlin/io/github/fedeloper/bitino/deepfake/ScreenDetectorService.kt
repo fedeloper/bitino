@@ -256,15 +256,15 @@ class ScreenDetectorService : Service() {
             val turn = tracks.filter { it.seen && !it.fake }
                 .sortedWith(compareBy<Tracker.Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
                 .take(PER_FRAME)
-            val m0 = cropMargin(g)
+            val geo = overlayGeometry(g)
+            val m0 = geo.cropMarginCapture
             for (t in turn) {
                 val rc = t.rect
                 // the detector sees the image without a fixed margin wider than the outline band and, on images tall
                 // enough to carry the P(fake) pill, without the strip along the top that may hold it, whether they are
                 // drawn or not: what the overlay draws never reaches its input
                 val mm = if (minOf(rc[2] - rc[0], rc[3] - rc[1]) > 4 * m0) m0 else 0
-                val strip = labelStrip(g)
-                val top = if ((rc[3] - rc[1]) * g.toScreen > 3 * AlertOverlay.LABEL_STRIP * resources.displayMetrics.density) strip else mm
+                val top = if (mm > 0 && geo.pillFits((rc[3] - rc[1]) * g.toScreen)) geo.cropTopCapture else mm
                 Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm, input)
                 t.pFake = pFake(m)
                 t.lastRun = frameNo
@@ -289,7 +289,7 @@ class ScreenDetectorService : Service() {
             }
             // overlay: flagged images always; outlines of the others (setting) once they held still for 2 frames, so
             // that nothing is left behind on scrolling content
-            val shown = tracks.filter { it.fake || (showBoxes && it.seen && it.still >= 2) }
+            val shown = tracks.filter { it.seen && (it.fake || (showBoxes && it.still >= 2)) }
             val boxes = shown.map {
                 val st = when {
                     it.fake -> AlertOverlay.Box.FAKE
@@ -302,7 +302,7 @@ class ScreenDetectorService : Service() {
             }
             val banner = if (wholeFake) pWhole else null
             main.post {
-                overlay?.update(boxes, banner)
+                overlay?.update(boxes, banner, geo)
             }
         }
         heldPasses++
@@ -317,12 +317,10 @@ class ScreenDetectorService : Service() {
         return (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
     }
 
-    /** Capture pixels from an image's edge that the overlay may draw on (2 dp inset + 2 dp stroke), plus 2. */
-    private fun cropMargin(g: Geometry): Int = kotlin.math.ceil(4f * resources.displayMetrics.density / g.toScreen).toInt() + 2
-
-    /** Capture pixels of the strip along an image's top edge that may hold the P(fake) pill, plus 2. */
-    private fun labelStrip(g: Geometry): Int =
-        kotlin.math.ceil(AlertOverlay.LABEL_STRIP * resources.displayMetrics.density / g.toScreen).toInt() + 2
+    private var geoCache: Pair<Geometry, OverlayGeometry>? = null
+    private fun overlayGeometry(g: Geometry): OverlayGeometry =
+        geoCache?.takeIf { it.first === g }?.second
+            ?: OverlayGeometry(resources.displayMetrics.density, g.toScreen).also { geoCache = g to it }
 
     private fun screenRect(g: Geometry, r: IntArray) =
         android.graphics.RectF(r[0] * g.toScreen, r[1] * g.toScreen, r[2] * g.toScreen, r[3] * g.toScreen)

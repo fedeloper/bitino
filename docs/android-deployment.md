@@ -233,7 +233,13 @@ until the image is analysed, green and white while P(fake) is below the threshol
 outline is drawn just inside the image's own edge (the background around it stays uniform), is never a uniform line
 (so it is never trimmed as a border), and appears only for images that have stayed in place for 2 frames (nothing is
 left behind on scrolling content). The detector's centre crop drops those edge pixels; the whole-view input sees them,
-3× smaller. The detector never sees what the overlay draws: each image is analysed without a fixed margin from its edges (wider
+3× smaller. Everything the overlay draws inside an image starts 6 capture pixels from its edge (`OverlayGeometry`): on the
+OnePlus a 2 dp inset was 2 capture pixels, and once the screen was scaled into the capture and halved, the outlines
+bled into the 3-pixel separators of an image grid, so the grid alternated between 20 tiles and one block every frame
+(seen as flicker). Flagged boxes follow their image within the tolerance, and only images found in the current frame
+are drawn.
+
+The detector never sees what the overlay draws: each image is analysed without a fixed margin from its edges (wider
 than the outline band: 2 dp inset + 2 dp stroke + 2 capture pixels), applied whether an outline is drawn or not, and the
 whole view is analysed only when no image is on screen (it is the fallback for screens without images found). The
 overlay redraws only when what it shows changes (every redraw is a new captured frame).
