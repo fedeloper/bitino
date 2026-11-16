@@ -39,6 +39,11 @@ if(BITINO_SANITIZE)
 endif()
 if(BITINO_NATIVE AND CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
   add_compile_options(-march=native)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+  # Portable baseline, stated explicitly: some toolchains default to a higher level (Ubuntu 26.04's GCC 15 emitted
+  # AVX code all over the binary). The AVX2 / AVX-VNNI kernels are separate translation units with their own flags,
+  # selected at run time (tools/check_isa_isolation.py checks that nothing else contains VEX code).
+  add_compile_options(-march=x86-64 -mtune=generic)
 endif()
 if(BITINO_STATIC)
   add_link_options(-static)
