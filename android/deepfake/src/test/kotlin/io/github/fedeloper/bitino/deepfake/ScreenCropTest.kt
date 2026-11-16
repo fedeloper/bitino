@@ -5,31 +5,9 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.ByteBuffer
+import kotlin.math.abs
 
 class ScreenCropTest {
-    @Test
-    fun geometryPortraitAndLandscape() {
-        val p = Geometry(1116, 2484, 420)        // OnePlus Open cover screen, portrait
-        assertEquals(1116, p.side)
-        assertEquals(756, p.vw)                   // largest square = 3 x 252
-        assertEquals(1683, p.vh)
-        assertEquals(intArrayOf(3, 2, 1).toList(), (0 until 3).map { p.k(it) })
-        assertEquals(0 + 14 * 3, p.cropX(0))
-        assertEquals((756 - 504) / 2 + 14 * 2, p.cropX(1))
-        assertEquals((756 - 252) / 2 + 14, p.cropX(2))
-        assertEquals((1683 - 756) / 2 + 42, p.cropY(0))
-        assertEquals((1683 - 252) / 2 + 14, p.cropY(2))
-        val l = Geometry(2484, 1116, 420)
-        assertEquals(1683, l.vw)
-        assertEquals(756, l.vh)
-        assertEquals((1683 - 756) / 2 + 42, l.cropX(0))
-        // every crop stays inside the virtual display
-        for (g in listOf(p, l, Geometry(720, 1600, 320), Geometry(2268, 2440, 400))) for (i in 0 until 3) {
-            assertTrue(g.cropX(i) >= 0 && g.cropX(i) + 224 * g.k(i) <= g.vw)
-            assertTrue(g.cropY(i) >= 0 && g.cropY(i) + 224 * g.k(i) <= g.vh)
-        }
-    }
-
     private fun frame(w: Int, h: Int, rowStride: Int, f: (Int, Int, Int) -> Int): ByteBuffer {
         val b = ByteBuffer.allocate(rowStride * h)
         for (y in 0 until h) for (x in 0 until w) for (c in 0 until 4) {
@@ -39,51 +17,76 @@ class ScreenCropTest {
     }
 
     @Test
-    fun smallestSquareIsAnExactCropScaledBy255() {
+    fun geometryPortraitAndLandscape() {
+        val p = Geometry(1116, 2484, 420)        // OnePlus Open cover screen, portrait
+        assertEquals(1116, p.side)
+        assertEquals(756, p.vw)                   // centre square = 3 x 252
+        assertEquals(1683, p.vh)
+        assertEquals(3, p.k(0))
+        assertEquals(42, p.cropX(0))
+        assertEquals((1683 - 756) / 2 + 42, p.cropY(0))
+        assertEquals(1116f / 756f, p.toScreen, 1e-6f)
+        val l = Geometry(2484, 1116, 420)
+        assertEquals(1683, l.vw)
+        assertEquals(756, l.vh)
+        for (g in listOf(p, l, Geometry(720, 1600, 320), Geometry(2268, 2440, 400))) {
+            assertTrue(g.cropX(0) >= 0 && g.cropX(0) + 224 * 3 <= g.vw)
+            assertTrue(g.cropY(0) >= 0 && g.cropY(0) + 224 * 3 <= g.vh)
+        }
+    }
+
+    @Test
+    fun centreSquareIsA3x3Average() {
         val g = Geometry(1116, 2484, 420)
-        val sc = 2
-        assertEquals(1, g.k(sc))
         val rowStride = g.vw * 4 + 32               // padded rows, as ImageReader may deliver
-        val buf = frame(g.vw, g.vh, rowStride) { x, y, c -> (x * 7 + y * 3 + c * 50) and 0xff }
-        val out = FloatArray(224 * 224 * 3)
-        ScreenCrop.toInput(buf, rowStride, 4, g, sc, out, ByteArray(ScreenCrop.rowBytes(3, 4)))
-        for (y in listOf(0, 1, 100, 223)) for (x in listOf(0, 5, 223)) for (c in 0 until 3) {
-            val v = ((g.cropX(sc) + x) * 7 + (g.cropY(sc) + y) * 3 + c * 50) and 0xff
-            assertEquals(v.toFloat() * (1f / 255f), out[(y * 224 + x) * 3 + c], 0f)
-        }
-    }
-
-    @Test
-    fun middleSquareIsARoundedBoxAverage() {
-        val g = Geometry(2484, 1116, 420)
-        val sc = 1
-        assertEquals(2, g.k(sc))
-        val rowStride = g.vw * 4
-        val buf = frame(g.vw, g.vh, rowStride) { x, y, c -> (x * 13 + y * 29 + c * 71) % 251 }
-        val out = FloatArray(224 * 224 * 3)
-        ScreenCrop.toInput(buf, rowStride, 4, g, sc, out, ByteArray(ScreenCrop.rowBytes(3, 4)))
-        for (y in listOf(0, 77, 223)) for (x in listOf(0, 150, 223)) for (c in 0 until 3) {
-            var s = 0
-            for (dy in 0 until 2) for (dx in 0 until 2) {
-                s += ((g.cropX(sc) + 2 * x + dx) * 13 + (g.cropY(sc) + 2 * y + dy) * 29 + c * 71) % 251
-            }
-            assertEquals(((s + 2) / 4).toFloat() * (1f / 255f), out[(y * 224 + x) * 3 + c], 0f)
-        }
-    }
-
-    @Test
-    fun largestSquareIsA3x3Average() {
-        val g = Geometry(1116, 2484, 420)
-        assertEquals(3, g.k(0))
-        val rowStride = g.vw * 4
         val buf = frame(g.vw, g.vh, rowStride) { x, y, c -> (x * 5 + y * 11 + c * 31) % 241 }
         val out = FloatArray(224 * 224 * 3)
         ScreenCrop.toInput(buf, rowStride, 4, g, 0, out, ByteArray(ScreenCrop.rowBytes(3, 4)))
-        for (y in listOf(0, 223)) for (x in listOf(0, 111, 223)) for (c in 0 until 3) {
+        for (y in listOf(0, 100, 223)) for (x in listOf(0, 111, 223)) for (c in 0 until 3) {
             var s = 0
             for (dy in 0 until 3) for (dx in 0 until 3) s += ((g.cropX(0) + 3 * x + dx) * 5 + (g.cropY(0) + 3 * y + dy) * 11 + c * 31) % 241
             assertEquals(((s + 4) / 9).toFloat() * (1f / 255f), out[(y * 224 + x) * 3 + c], 0f)
         }
+    }
+
+    @Test
+    fun resampleMatchesPil() {
+        // android/tools/make_resample_fixture.py: PIL crop -> resize(BILINEAR) -> centre crop, sampled
+        val lines = javaClass.classLoader!!.getResourceAsStream("resample_fixture.txt")!!.bufferedReader().readLines()
+            .filter { !it.startsWith("#") }
+        val w = 900
+        val h = 1200
+        val buf = frame(w, h, w * 4) { x, y, c -> ((x.toLong() * x / 7 + y * 3 + c * 60 + (x.toLong() * y) % 17) % 256).toInt() }
+        val out = FloatArray(224 * 224 * 3)
+        var cases = 0
+        for (i in lines.indices step 2) {
+            val head = lines[i].split(" ")
+            val rect = head.subList(1, 5).map { it.toInt() }
+            assertEquals(listOf(head[6].toInt(), head[7].toInt()), Resample.resized(rect[2] - rect[0], rect[3] - rect[1]).toList())
+            val ref = lines[i + 1].split(" ").map { it.toInt() }
+            Resample.toInput(buf, w * 4, 4, rect[0], rect[1], rect[2], rect[3], out)
+            var k = 0
+            var exact = 0
+            for (y in 0 until 224 step 9) for (x in 0 until 224 step 9) for (c in 0 until 3) {
+                val v = Math.round(out[(y * 224 + x) * 3 + c] * 255f)
+                assertTrue("rect $rect ($x, $y, $c): $v vs PIL ${ref[k]}", abs(v - ref[k]) <= 1)
+                if (v == ref[k]) exact++
+                k++
+            }
+            assertEquals(ref.size, k)
+            // PIL works in fixed point (22 fractional bits) with its own rounding: within one level, nearly always exact
+            assertTrue("rect $rect: only $exact of $k exact", exact >= 0.95 * k)
+            cases++
+        }
+        assertEquals(5, cases)
+    }
+
+    @Test
+    fun halfEvenIsPythonRound() {
+        assertEquals(0, Resample.halfEven(1))   // round(0.5) = 0
+        assertEquals(2, Resample.halfEven(3))   // round(1.5) = 2
+        assertEquals(2, Resample.halfEven(5))   // round(2.5) = 2
+        assertEquals(98, Resample.halfEven(196))
     }
 
     @Test

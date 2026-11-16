@@ -77,9 +77,10 @@ class MainActivity : ComponentActivity() {
         col.addView(text("Deepfake screen detector", 22f))
         col.addView(text(
             "Runs a Faster Than Lies binary detector (BNext backbone, CVPRW 2024) with Bitino on this phone's CPU. " +
-                "On every new frame it analyses the centre of the screen at three sizes: the largest centred square " +
-                "(outlined) and the squares at 2/3 and 1/3 of it (ticks), each resized to the model input. It flashes the " +
-                "screen red while one of them looks generated or manipulated. Nothing leaves the device.\n\n" +
+                "On every new frame it finds the images on screen with classical layout analysis (photos and videos are " +
+                "rectangles of many colours set apart by flat UI background), crops each one and runs the detector on " +
+                "it, plus once on the largest centred square of the screen as a whole view. A fake image is tinted " +
+                "red where it is; the whole view is framed in red if only it fires. Nothing leaves the device.\n\n" +
                 "When Android asks what to share, choose the entire screen.", 14f))
         col.addView(text("Detector"))
         modelSpinner = Spinner(this)
@@ -96,14 +97,14 @@ class MainActivity : ComponentActivity() {
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(s: SeekBar, v: Int, fromUser: Boolean) {
                     if (v < 50) { s.progress = 50; return }
-                    thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row (any of the 3 squares)", v / 100f)
+                    thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", v / 100f)
                     prefs.edit().putInt("threshold", v).apply()
                 }
                 override fun onStartTrackingTouch(s: SeekBar) {}
                 override fun onStopTrackingTouch(s: SeekBar) {}
             })
         }
-        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row (any of the 3 squares)", thresholdBar.progress / 100f)
+        thresholdLabel.text = String.format(Locale.US, "Alert when P(fake) ≥ %.2f on 3 frames in a row", thresholdBar.progress / 100f)
         col.addView(thresholdBar)
         col.addView(text("Threads per inference"))
         threadsSpinner = Spinner(this).apply {

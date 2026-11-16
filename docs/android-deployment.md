@@ -194,17 +194,30 @@ takes several minutes.
 
 A second app runs a "Faster Than Lies" binary deepfake detector (Lanzino et al., CVPRW 2024; BNext backbone with the
 FFT and LBP features computed inside the model, converted by `tools/convert_ftl_deepfake.py`) on whatever the phone
-shows. A foreground service mirrors the screen with MediaProjection into a small virtual display. On every new frame it
-analyses the centre of the screen at three sizes: the largest centred square (outlined on screen) and the centred
-squares at 2/3 and 1/3 of its side (ticks outside the outline). A fake image that fills only the middle of the screen
-then also gets a close-up. Each square goes through the authors' test preprocessing: the virtual display is scaled so
-that the largest square is 3·252 = 756 pixels, box filters of 3×3, 2×2 and 1×1 bring the three squares to 252, and
-the centre 224×224 crop of each is a model input (u8 / 255). The detector runs on each, P(fake) = 1 / (1 + exp(logit)).
-After 3 frames in a row at or above the threshold (50–99 %, default 70 %) on any of the squares, the whole screen
-flashes red for 0.9 s with the square that fired. The red frames are not analysed, and the alert comes back as long as
-the image stays fake. A badge in the corner shows the model, the three P(fake), the time per frame (three crops and
-three detector runs: 77.8 ms on the OnePlus Open at 1 thread, of which 4.3 ms for the crops, about 13 frames per second; more threads lower it) and the frames analysed
-per second. Everything runs on the phone.
+shows. A foreground service mirrors the screen with MediaProjection into a small virtual display (the largest centred square
+of the screen becomes 3·252 = 756 pixels). On every new frame:
+
+1. **Find the images** with classical layout analysis (`RectFinder`, no learned model). This is a recursive X-Y cut on
+   the capture halved: UI backgrounds are flat, so whole rows or columns of one colour separate a screen's elements
+   (margins, gaps between posts, the space between a thumbnail and its text). A block is split along its uniform rows,
+   else its uniform columns (which also trims a card down to its contents), until neither exists. Leaves of at least
+   64×64 capture pixels with at least 24 colours (4 bits per channel) and no luminance band on more than 75 % of the
+   pixels are photos or videos; text, buttons and flat graphics are not. The 4 largest are kept. On synthetic feed
+   screens (light and dark, with text, cards, buttons, full-width, inset and thumbnail photos) 92.5 % of the photos were
+   found with IoU >= 0.8 (mean IoU 0.988).
+2. **Run the detector on each image**, preprocessed like the authors' test loader (`Resample`): shorter side resized to
+   252 with PIL's antialiased bilinear filter, centre crop 224, u8 / 255. Tested against PIL itself: within one level
+   on every sample, at least 95 % exact. Run it **once more on the whole view**, the largest centred square (3×3 box
+   filter to 252, centre crop 224).
+3. **Alert where the fake is.** Each image is followed from frame to frame (IoU >= 0.5) with its own count. When an
+   image reaches 3 frames in a row at or above the threshold (50–99 %, default 70 %), that image alone is tinted red
+   with its P(fake) for 0.9 s. If only the whole view fires, the centre square is framed in red. The overlay draws
+   nothing else, because anything it drew would be captured and change the layout analysis. Frames composed while an
+   alert is up are not analysed, and the alert comes back as long as the image stays fake.
+
+The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
+frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread
+(3.6 ms to find the images, 12.3 ms of crops, 4 detector runs); more threads lower it. Everything runs on the phone.
 
 ```bash
 # local build with detectors bundled (the weights have no redistribution licence yet: do not distribute this APK)
@@ -219,7 +232,8 @@ On start Android asks for "Display over other apps" (once) and for screen-captur
 entire screen). The service stops from its notification or the app.
 
 Tests:
-- `:deepfake:testDebugUnitTest` (JVM): capture geometry of the three squares, box-filter crops, alert logic.
+- `:deepfake:testDebugUnitTest` (JVM): image finder on synthetic screens (every photo with IoU >= 0.97, nothing else),
+  resampler against PIL (`android/tools/make_resample_fixture.py`), capture geometry, alert logic.
 - On a phone, without using its screen (`python3 android/tools/make_deepfake_testdata.py`, then
   `:deepfake:assembleDebug :deepfake:assembleDebugAndroidTest` with the same `-Pbitino.deepfakeModels`, install both
   APKs and `adb shell am instrument -w io.github.fedeloper.bitino.deepfake.test/androidx.test.runner.AndroidJUnitRunner`):

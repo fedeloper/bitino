@@ -9,15 +9,13 @@ import kotlin.math.roundToInt
  * Where the analysed squares lie and how the screen is captured.
  *
  * The detectors expect the authors' test preprocessing: Resize(252, antialiased) -> CenterCrop(224) -> u8 / 255,
- * NHWC RGB. The app analyses three centred squares of the screen, at [FRACTIONS] of the largest centred square (side
- * [side] screen pixels), so that an image filling only the middle of the screen also gets a close-up. The virtual
- * display that mirrors the screen is scaled so that the largest square is 3·252 = 756 pixels: the three squares are
- * then 756, 504 and 252 pixels, and a k×k box filter with k = 3, 2, 1 (the antialiasing) brings each to 252. The
- * centre 224×224 of each is a model input. The overlay draws only the largest square's outline, on its border (which
- * the crop drops), and marks the smaller squares with ticks outside it, so no drawing reaches the model.
+ * NHWC RGB. The virtual display that mirrors the screen is scaled so that the largest centred square of the screen
+ * (side [side] screen pixels) is 3·252 = 756 pixels; a 3×3 box filter (the antialiasing) brings it to 252, and its
+ * centre 224×224 is the "whole view" model input. The images found on screen ([RectFinder]) are cut from the same
+ * capture and preprocessed by [Resample].
  */
 internal class Geometry(val screenW: Int, val screenH: Int, densityDpi: Int) {
-    /** Side of the largest analysed square in screen pixels. */
+    /** Side of the largest centred square in screen pixels. */
     val side: Int = min(screenW, screenH)
     private val scale: Double = RESIZE * KS[0] / side.toDouble()
     /** Virtual display size (the whole screen, scaled). */
@@ -31,16 +29,17 @@ internal class Geometry(val screenW: Int, val screenH: Int, densityDpi: Int) {
     fun cropX(i: Int): Int = (vw - RESIZE * KS[i]) / 2 + MARGIN * KS[i]
     fun cropY(i: Int): Int = (vh - RESIZE * KS[i]) / 2 + MARGIN * KS[i]
 
+    /** Capture pixels -> screen pixels. */
+    val toScreen: Float = side / (RESIZE * KS[0]).toFloat()
+
     fun sameAs(o: Geometry?): Boolean = o != null && o.vw == vw && o.vh == vh && o.vdpi == vdpi
 
     companion object {
         const val RESIZE = 252
         const val CROP = 224
         const val MARGIN = (RESIZE - CROP) / 2
-        /** Box-filter factors of the three squares, largest first; their sides are KS[i] / KS[0] of the largest. */
-        val KS = intArrayOf(3, 2, 1)
-        val FRACTIONS = floatArrayOf(1f, 2f / 3f, 1f / 3f)
-        const val SCALES = 3
+        /** Box-filter factor of the centre square (index 0; the class keeps the index for more squares). */
+        val KS = intArrayOf(3)
     }
 }
 

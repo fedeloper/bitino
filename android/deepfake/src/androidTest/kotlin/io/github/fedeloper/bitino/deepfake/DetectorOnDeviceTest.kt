@@ -69,37 +69,55 @@ class DetectorOnDeviceTest {
     }
 
     @Test
-    fun threeSquaresPerFrameTiming() {
+    fun perFrameTimingWithImagesOnScreen() {
         val bundled = app.assets.list("models")?.filter { it.endsWith(".bitino") }.orEmpty()
         assumeTrue("no bundled detector", bundled.isNotEmpty())
         val g = Geometry(1116, 2484, 420)                     // OnePlus Open cover screen, portrait
         val rowStride = g.vw * 4
         val frame = ByteBuffer.allocateDirect(rowStride * g.vh)
+        for (i in 0 until rowStride * g.vh) frame.put(i, (-1).toByte())   // white UI background
         val rnd = java.util.Random(1)
-        for (i in 0 until rowStride * g.vh) frame.put(i, rnd.nextInt(256).toByte())
+        // three "photos" (noise) on the white page: full width, inset, thumbnail
+        val photos = listOf(intArrayOf(0, 100, g.vw, 520), intArrayOf(40, 600, 700, 1000), intArrayOf(40, 1100, 300, 1360))
+        for (p in photos) for (y in p[1] until p[3]) for (x in p[0] until p[2]) for (c in 0 until 3) {
+            frame.put(y * rowStride + x * 4 + c, rnd.nextInt(256).toByte())
+        }
         val input = FloatArray(224 * 224 * 3)
         val row = ByteArray(ScreenCrop.rowBytes(3, 4))
         val out = FloatArray(2)
+        val finder = RectFinder(maxRects = 4)
         Bitino.load(app, "models/${bundled.first()}", threads = 1).use { m ->
-            var crop = 0.0
+            var find = 0.0
+            var prep = 0.0
             var total = 0.0
+            var found = 0
             val reps = 10
             for (r in 0 until reps + 2) {
-                var c = 0L
                 val t0 = SystemClock.elapsedRealtimeNanos()
-                for (sc in 0 until Geometry.SCALES) {
-                    val a = SystemClock.elapsedRealtimeNanos()
-                    ScreenCrop.toInput(frame, rowStride, 4, g, sc, input, row)
-                    c += SystemClock.elapsedRealtimeNanos() - a
+                val rects = finder.find(frame, rowStride, 4, g.vw, g.vh)
+                val t1 = SystemClock.elapsedRealtimeNanos()
+                var p = 0L
+                var a = SystemClock.elapsedRealtimeNanos()
+                ScreenCrop.toInput(frame, rowStride, 4, g, 0, input, row)
+                p += SystemClock.elapsedRealtimeNanos() - a
+                m.run(input, out)
+                for (rc in rects) {
+                    a = SystemClock.elapsedRealtimeNanos()
+                    Resample.toInput(frame, rowStride, 4, rc[0], rc[1], rc[2], rc[3], input)
+                    p += SystemClock.elapsedRealtimeNanos() - a
                     m.run(input, out)
                     assertTrue(out[1].isFinite())
                 }
                 if (r >= 2) {
                     total += (SystemClock.elapsedRealtimeNanos() - t0) / 1e6
-                    crop += c / 1e6
+                    find += (t1 - t0) / 1e6
+                    prep += p / 1e6
                 }
+                found = rects.size
             }
-            Log.i("BitinoDeepfakeTest", "3 squares per frame: ${"%.1f".format(total / reps)} ms (crops ${"%.1f".format(crop / reps)} ms), 1 thread, unpinned")
+            assertEquals(3, found)
+            Log.i("BitinoDeepfakeTest", "per frame with 3 images on screen: ${"%.1f".format(total / reps)} ms " +
+                "(find ${"%.1f".format(find / reps)}, crops ${"%.1f".format(prep / reps)}, 4 detector runs), 1 thread, unpinned")
         }
     }
 }
