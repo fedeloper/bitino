@@ -199,13 +199,19 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
 
 1. **Find the images** with classical layout analysis (`RectFinder`, no learned model). This is a recursive X-Y cut on
    the capture halved: UI backgrounds are flat, so whole rows or columns of one colour separate a screen's elements
-   (margins, gaps between posts, the space between a thumbnail and its text). A block is split along its uniform rows,
+   (margins, gaps between posts, the space between a thumbnail and its text). A row or column is uniform when at most
+   max(2, length / 64) of its pixels differ from its majority colour, so thin lines across the gaps (a toolbar shadow
+   touching a grid of images, dividers) do not glue a whole grid into one block; on a Chrome image-search page the
+   strict version saw one block, this one the 9 images. A block is split along its uniform rows,
    else its uniform columns (which also trims a card down to its contents), until neither exists. Leaves of at least
    64×64 capture pixels with at least 24 colours (4 bits per channel) and no luminance band on more than 75 % of the
-   pixels are photos or videos; text, buttons and flat graphics are not. The 4 largest are kept. On synthetic feed
+   pixels are photos or videos; text, buttons and flat graphics are not. Up to 24 are followed. On synthetic feed
    screens (light and dark, with text, cards, buttons, full-width, inset and thumbnail photos) 92.5 % of the photos were
    found with IoU >= 0.8 (mean IoU 0.988).
-2. **Run the detector on each image**, preprocessed like the authors' test loader (`Resample`): shorter side resized to
+2. **Run the detector on 4 images per frame, in rotation**: images never analysed first, then those that waited
+   longest. When the next frame shows the same images, the next 4 get their turn; once all have had one, the rotation
+   starts again. Android sends a new frame only when the screen changes, so on a still screen the last frame is kept and
+   analysed again until every image has had 3 turns (an alert needs 3 fake results in a row). Each image is preprocessed like the authors' test loader (`Resample`): shorter side resized to
    252 with PIL's antialiased bilinear filter, centre crop 224, u8 / 255. Tested against PIL itself: within one level
    on every sample, at least 95 % exact. Run it **once more on the whole view**, the largest centred square (3×3 box
    filter to 252, centre crop 224).
@@ -215,12 +221,14 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    nothing else, because anything it drew would be captured and change the layout analysis. Frames composed while an
    alert is up are not analysed, and the alert comes back as long as the image stays fake.
 
-**Found images are outlined** (a setting, on by default) with a dashed line in two contrasting colours: green and white
-while P(fake) is below the threshold, orange and black above it. Whatever the overlay draws is captured too, so the
+**Found images are outlined** (a setting, on by default) with a dashed line in two contrasting colours: grey and white
+until the image is analysed, green and white while P(fake) is below the threshold, orange and black above it. Whatever the overlay draws is captured too, so the
 outline is drawn just inside the image's own edge (the background around it stays uniform), is never a uniform line
 (so it is never trimmed as a border), and appears only for images that have stayed in place for 2 frames (nothing is
 left behind on scrolling content). The detector's centre crop drops those edge pixels; the whole-view input sees them,
-3× smaller. A JVM test checks that drawing the outlines into the capture leaves the rectangles found unchanged.
+3× smaller. The finder also leaves the outline pixels out of its uniformity tests (a line that is mostly outline is never cut, or
+the box would shrink frame after frame). JVM tests check that drawing the outlines into the capture leaves the
+rectangles found unchanged over several frames.
 
 The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
 frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread

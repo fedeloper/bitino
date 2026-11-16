@@ -121,6 +121,59 @@ class RectFinderTest {
             }
             val after = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
             assertEquals("dark=$dark", before, after)
+            // as in the app: the outlined rectangles' bands are ignored; several frames in a row must not shrink them
+            var cur = before.map { it.toIntArray() }
+            repeat(3) { cur = finder.find(s.buf, w * 4, 4, w, h, cur, band = 8) }
+            assertEquals("dark=$dark, masked", before, cur.map { it.toList() })
         }
+    }
+
+    @Test
+    fun aThinLineAcrossTheGapsDoesNotGlueAGrid() {
+        // a masonry grid of photos pressed against a toolbar shadow (1 grey line across the screen), as in a browser
+        val buf = ByteBuffer.allocate(w * h * 4)
+        for (i in 0 until w * h) { buf.put(i * 4, -1); buf.put(i * 4 + 1, -1); buf.put(i * 4 + 2, -1); buf.put(i * 4 + 3, -1) }
+        fun set(x: Int, y: Int, c: IntArray) { val o = (y * w + x) * 4; for (k in 0 until 3) buf.put(o + k, c[k].toByte()) }
+        for (x in 0 until w) for (y in 200..201) set(x, y, intArrayOf(200, 200, 205))
+        val photos = listOf(intArrayOf(4, 202, 248, 700), intArrayOf(256, 202, 500, 520), intArrayOf(508, 202, 752, 600),
+            intArrayOf(256, 560, 500, 900), intArrayOf(4, 740, 248, 1000))
+        for ((i, p) in photos.withIndex()) for (y in p[1] until p[3]) for (x in p[0] until p[2]) {
+            set(x, y, intArrayOf(photo(x, y, 0, i), photo(x, y, 1, i), photo(x, y, 2, i)))
+        }
+        val found = RectFinder(maxRects = 10).find(buf, w * 4, 4, w, h)
+        for (p in photos) {
+            val best = found.maxOf { iou(it, p) }
+            assertTrue("photo ${p.toList()}: best IoU $best in ${found.map { it.toList() }}", best >= 0.97)
+        }
+        assertEquals(found.map { it.toList() }.toString(), photos.size, found.size)
+    }
+
+    @Test
+    fun ignoredOutlineBandsAreLeftOut() {
+        // a wrong, screen-wide box outlined by the app must not glue its contents: its band is ignored
+        val s = screen(false, 2)
+        val finder = RectFinder(maxRects = 10)
+        val before = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
+        val big = intArrayOf(0, 0, w, h)
+        for (t in 2 until 6) for (x in 0 until w) for (y in listOf(t, h - 1 - t)) {
+            val o = (y * w + x) * 4
+            val green = (x / 10) % 2 == 0
+            s.buf.put(o, (if (green) 0 else 255).toByte()); s.buf.put(o + 1, (if (green) 230 else 255).toByte()); s.buf.put(o + 2, (if (green) 90 else 255).toByte())
+        }
+        val after = finder.find(s.buf, w * 4, 4, w, h, listOf(big), band = 8).map { it.toList() }
+        assertEquals(before, after)
+    }
+
+    /** Local check on a real screenshot (never committed): BITINO_SCREENSHOT=<RGB raw file>, BITINO_SCREENSHOT_W/H. */
+    @Test
+    fun realScreenshotIfGiven() {
+        val path = System.getenv("BITINO_SCREENSHOT") ?: return
+        val sw = System.getenv("BITINO_SCREENSHOT_W").toInt()
+        val sh = System.getenv("BITINO_SCREENSHOT_H").toInt()
+        val rgb = java.io.File(path).readBytes()
+        val buf = ByteBuffer.allocate(sw * sh * 4)
+        for (i in 0 until sw * sh) { for (k in 0 until 3) buf.put(i * 4 + k, rgb[i * 3 + k]); buf.put(i * 4 + 3, -1) }
+        val found = RectFinder(maxRects = 20).find(buf, sw * 4, 4, sw, sh)
+        println("REAL_SCREENSHOT ${found.size} ${found.map { it.toList() }}")
     }
 }

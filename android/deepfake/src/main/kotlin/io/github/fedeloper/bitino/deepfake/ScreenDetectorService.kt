@@ -51,7 +51,8 @@ class ScreenDetectorService : Service() {
         private const val NOTIFICATION_ID = 1
         private const val ALERT_MS = 900L          // red alert shown this long, then the square is analysed again
         private const val SETTLE_MS = 120L         // frames composed before this point may still contain the alert
-        private const val MAX_IMAGES = 4           // images analysed per frame besides the whole view (largest first)
+        private const val PER_FRAME = 4            // images analysed per frame besides the whole view, in rotation
+        private const val MAX_IMAGES = 24          // images followed on screen
 
         /** Shown by the activity. */
         @Volatile var running = false
@@ -78,12 +79,15 @@ class ScreenDetectorService : Service() {
     private val finder = RectFinder(maxRects = MAX_IMAGES)
     private val wholeAlert = AlertState()
     /** Images followed from frame to frame (capture pixels), each with its own run of fake frames. */
-    private class Track(var rect: IntArray, val alert: AlertState = AlertState(), var pFake: Float = 0f, var seen: Boolean = true,
-                        var still: Int = 0)
+    private class Track(var rect: IntArray, val alert: AlertState = AlertState(), var pFake: Float = -1f, var seen: Boolean = true,
+                        var still: Int = 0, var lastRun: Long = -1)   // pFake < 0: not analysed yet; lastRun: frame number
+    private var frameNo = 0L
     private var tracks = ArrayList<Track>()
     private var pWhole = 0f
     private var threshold = 0.7f
     private var showBoxes = true
+    /** Rectangles (capture pixels) whose outlines are on screen: the finder ignores those pixels. */
+    @Volatile private var drawn: List<IntArray> = emptyList()
     private var modelName = ""
     @Volatile private var resumeAtNs = 0L
     private var frames = 0
@@ -172,6 +176,9 @@ class ScreenDetectorService : Service() {
         r.setOnImageAvailableListener({ onFrame(it) }, work)
         val old = reader
         work.post {
+            work.removeCallbacks(repass)
+            held?.close()
+            held = null
             geometry = g
             wholeAlert.reset()
             tracks.clear()
@@ -189,41 +196,74 @@ class ScreenDetectorService : Service() {
         Log.i(TAG, "capture ${g.vw}x${g.vh} for screen ${g.screenW}x${g.screenH}: centre square ${g.side} px")
     }
 
+    /** The latest analysed frame, kept so that a still screen (no new frames) still gets every image analysed. */
+    private var held: android.media.Image? = null
+    private var heldPasses = 0
+    private val repass = Runnable { held?.let { if (it.timestamp >= resumeAtNs) process(it) } }
+
     /** Worker thread. */
     private fun onFrame(r: ImageReader) {
         val img = try { r.acquireLatestImage() } catch (e: IllegalStateException) { null } ?: return
-        try {
-            val g = geometry ?: return
-            val m = model ?: return
-            if (img.width != g.vw || img.height != g.vh) return
-            if (img.timestamp < resumeAtNs) return     // composed while the red alert was (still) on screen
+        val g = geometry
+        if (g == null || model == null || img.width != g.vw || img.height != g.vh ||
+            img.timestamp < resumeAtNs) {            // composed while the red alert was (still) on screen
+            img.close()
+            return
+        }
+        work.removeCallbacks(repass)
+        held?.close()
+        held = img
+        heldPasses = 0
+        process(img)
+    }
+
+    /**
+     * One pass over [img]: find the images, run the whole view and the next [PER_FRAME] images in the rotation. While
+     * no new frame arrives, passes repeat on the same picture until every image has had 3 turns (an alert needs 3
+     * fake results in a row); then the service waits for the screen to change. Worker thread.
+     */
+    private fun process(img: android.media.Image) {
+        val g = geometry ?: return
+        val m = model ?: return
+        run {
             val pl = img.planes[0]
             val need = ScreenCrop.rowBytes(Geometry.KS[0], pl.pixelStride)
             if (row.size < need) row = ByteArray(need)
             val t0 = SystemClock.elapsedRealtimeNanos()
             // 1. the images on screen (classical layout analysis)
-            val rects = finder.find(pl.buffer, pl.rowStride, pl.pixelStride, g.vw, g.vh)
+            val rects = finder.find(pl.buffer, pl.rowStride, pl.pixelStride, g.vw, g.vh, drawn, outlineBand(g))
             val tf = SystemClock.elapsedRealtimeNanos()
             // 2. the whole view: the largest centred square
             ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, 0, input, row)
             pWhole = pFake(m)
             // 3. every image found, matched to the image tracked at about the same place in the previous frame
+            frameNo++
             tracks.forEach { it.seen = false }
             val now = ArrayList<Track>()
             for (rc in rects) {
-                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0], rc[1], rc[2], rc[3], input)
                 val t = tracks.filter { !it.seen }.maxByOrNull { iou(it.rect, rc) }?.takeIf { iou(it.rect, rc) >= 0.5f } ?: Track(rc)
                 // "still": same place (within 2 half-resolution pixels per edge) as in the previous frame
                 t.still = if ((0..3).all { kotlin.math.abs(t.rect[it] - rc[it]) <= 4 }) t.still + 1 else 0
                 t.rect = rc
                 t.seen = true
-                t.pFake = pFake(m)
                 now += t
             }
             tracks = now
+            // 4. the detector on PER_FRAME of them, in rotation: never-analysed images first, then the longest waiting
+            //    (largest first among equals); once every image has had its turn the rotation starts again
+            val turn = tracks.sortedWith(compareBy<Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
+                .take(PER_FRAME)
             val flags = ArrayList<AlertOverlay.Flag>()
-            for (t in tracks) {
+            for (t in turn) {
+                val rc = t.rect
+                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0], rc[1], rc[2], rc[3], input)
+                t.pFake = pFake(m)
+                t.lastRun = frameNo
                 if (t.alert.update(t.pFake, threshold)) flags += AlertOverlay.Flag(screenRect(g, t.rect), t.pFake, whole = false)
+            }
+            // images analysed earlier and still fake keep blinking with the others
+            if (flags.isNotEmpty()) for (t in tracks) {
+                if (t !in turn && t.alert.streak >= 2 && t.pFake >= threshold) flags += AlertOverlay.Flag(screenRect(g, t.rect), t.pFake, whole = false)
             }
             if (wholeAlert.update(pWhole, threshold) && flags.isEmpty()) {
                 val side = g.side.toFloat()
@@ -240,17 +280,24 @@ class ScreenDetectorService : Service() {
                 fps = frames * 1e9 / (t1 - windowStart)
                 frames = 0
                 windowStart = t1
-                val pImages = tracks.joinToString(" ") { String.format(Locale.US, "%.2f", it.pFake) }
-                val text = String.format(Locale.US, "%d image%s found, P(fake) %s; whole view %.2f · %.0f ms/frame (find %.0f) · %.1f fps",
-                    tracks.size, if (tracks.size == 1) "" else "s", pImages.ifEmpty { "-" }, pWhole, lastMs, lastFindMs, fps)
+                val pImages = tracks.joinToString(" ") { if (it.pFake < 0) "?" else String.format(Locale.US, "%.2f", it.pFake) }
+                val text = String.format(Locale.US, "%d image%s found (%d analysed per frame), P(fake) %s; whole view %.2f · %.0f ms/frame (find %.0f) · %.1f fps",
+                    tracks.size, if (tracks.size == 1) "" else "s", PER_FRAME, pImages.ifEmpty { "-" }, pWhole, lastMs, lastFindMs, fps)
                 Log.i(TAG, text)
                 status = text
                 getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification(text))
             }
             if (showBoxes) {
                 // outlines only of images that held still for 2 frames: no outline is left behind on scrolling content
-                val boxes = tracks.filter { it.still >= 2 }.map { AlertOverlay.Box(screenRect(g, it.rect), it.pFake >= threshold) }
-                main.post { overlay?.showBoxes(boxes) }
+                val still = tracks.filter { it.still >= 2 }
+                val boxes = still.map {
+                    AlertOverlay.Box(screenRect(g, it.rect), when { it.pFake < 0 -> AlertOverlay.Box.PENDING; it.pFake >= threshold -> AlertOverlay.Box.SUSPICIOUS; else -> AlertOverlay.Box.OK })
+                }
+                val rects = still.map { it.rect.copyOf() }
+                main.post {
+                    overlay?.showBoxes(boxes)
+                    drawn = rects
+                }
             }
             if (flags.isNotEmpty()) {
                 resumeAtNs = System.nanoTime() + (ALERT_MS + SETTLE_MS) * 1_000_000L
@@ -259,9 +306,10 @@ class ScreenDetectorService : Service() {
                     main.postDelayed({ overlay?.show(emptyList()) }, ALERT_MS)
                 }
             }
-        } finally {
-            img.close()
         }
+        heldPasses++
+        val passes = 3 * maxOf(1, (tracks.size + PER_FRAME - 1) / PER_FRAME)
+        if (heldPasses < passes && img.timestamp >= resumeAtNs) work.post(repass)
     }
 
     /** Runs the detector on [input]; output 0 = [constant 0, logit of "real"]: P(fake) = 1 / (1 + exp(logit)). */
@@ -275,6 +323,10 @@ class ScreenDetectorService : Service() {
         val u = (a[2] - a[0]).toLong() * (a[3] - a[1]) + (b[2] - b[0]).toLong() * (b[3] - b[1]) - ix
         return if (u > 0) ix.toFloat() / u else 0f
     }
+
+    /** Capture pixels covered by an outline from the image edge inwards: inset 2 dp + 2 dp stroke, with a margin. */
+    private fun outlineBand(g: Geometry): Int =
+        kotlin.math.ceil(4f * resources.displayMetrics.density / g.toScreen).toInt() + 2
 
     private fun screenRect(g: Geometry, r: IntArray) =
         android.graphics.RectF(r[0] * g.toScreen, r[1] * g.toScreen, r[2] * g.toScreen, r[3] * g.toScreen)
@@ -321,6 +373,9 @@ class ScreenDetectorService : Service() {
             val r = reader
             val m = model
             work.post {
+                work.removeCallbacks(repass)
+                held?.close()
+                held = null
                 r?.close()
                 m?.close()
             }

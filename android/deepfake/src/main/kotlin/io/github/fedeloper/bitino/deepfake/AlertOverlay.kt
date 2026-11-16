@@ -23,8 +23,10 @@ import android.view.WindowManager
 internal class AlertOverlay(context: Context) {
     /** A flagged region in screen pixels; [whole] = the centre-square ("whole view") input. */
     class Flag(val rect: RectF, val pFake: Float, val whole: Boolean)
-    /** A found image (screen pixels); [suspicious] = P(fake) at or above the threshold. */
-    data class Box(val rect: RectF, val suspicious: Boolean)
+    /** A found image (screen pixels) and its state: not analysed yet, below the threshold, at or above it. */
+    data class Box(val rect: RectF, val state: Int) {
+        companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2 }
+    }
 
     private val wm = context.getSystemService(WindowManager::class.java)
     private val view = OverlayView(context)
@@ -83,6 +85,8 @@ internal class AlertOverlay(context: Context) {
         private val okB = dashed(Color.WHITE, dash)
         private val susA = dashed(Color.rgb(255, 150, 0), 0f)
         private val susB = dashed(Color.BLACK, dash)
+        private val pendA = dashed(Color.rgb(150, 150, 150), 0f)
+        private val pendB = dashed(Color.WHITE, dash)
         private val loc = IntArray(2)
         private val tint = Paint().apply { color = Color.argb(140, 255, 0, 0) }
         private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -104,8 +108,9 @@ internal class AlertOverlay(context: Context) {
                     val r = RectF(b.rect)
                     r.offset(-loc[0].toFloat(), -loc[1].toFloat())
                     r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
-                    canvas.drawRect(r, if (b.suspicious) susA else okA)
-                    canvas.drawRect(r, if (b.suspicious) susB else okB)
+                    val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> susA to susB; Box.OK -> okA to okB; else -> pendA to pendB }
+                    canvas.drawRect(r, pa)
+                    canvas.drawRect(r, pb)
                 }
                 return
             }

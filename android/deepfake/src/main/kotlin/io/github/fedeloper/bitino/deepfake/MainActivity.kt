@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
         }
         col.addView(threadsSpinner)
         showBoxes = android.widget.CheckBox(this).apply {
-            text = "Outline the images found (dashed: green = looks real, orange = above the threshold)"
+            text = "Outline the images found (dashed: grey = not analysed yet, green = looks real, orange = above the threshold)"
             isChecked = prefs.getBoolean("showBoxes", true)
             setOnCheckedChangeListener { _, on -> prefs.edit().putBoolean("showBoxes", on).apply() }
         }
