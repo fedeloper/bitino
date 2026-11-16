@@ -152,6 +152,11 @@ class RectFinderTest {
         if (tint) for (y in r[1] + 2 until r[3] - 2) for (x in r[0] + 2 until r[2] - 2) {
             put(x, y, intArrayOf((get(x, y, 0) * 135 + 255 * 120) / 255, get(x, y, 1) * 135 / 255, get(x, y, 2) * 135 / 255))
         }
+        // the P(fake) pill in the top-left corner: a dark rounded box with white "text"
+        if (r[2] - r[0] > 60 && r[3] - r[1] > 60) for (y in r[1] + 5 until r[1] + 17) for (x in r[0] + 5 until r[0] + 40) {
+            val corner = (y == r[1] + 5 || y == r[1] + 16) && (x == r[0] + 5 || x == r[0] + 39)
+            if (!corner) put(x, y, if (y in r[1] + 8..r[1] + 13 && (x - r[0]) % 4 < 2) intArrayOf(255, 255, 255) else intArrayOf(0, 140, 60))
+        }
         for (t in 2 until 4) {
             val x0 = r[0] + t; val y0 = r[1] + t; val x1 = r[2] - 1 - t; val y1 = r[3] - 1 - t
             fun dash(x: Int, y: Int, along: Int) =

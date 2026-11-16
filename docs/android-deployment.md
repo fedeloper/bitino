@@ -213,8 +213,8 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    starts again. Android sends a new frame only when the screen changes, so on a still screen the last frame is kept and
    analysed again until every image has had 3 turns (an alert needs 3 fake results in a row). Each image is preprocessed like the authors' test loader (`Resample`): shorter side resized to
    252 with PIL's antialiased bilinear filter, centre crop 224, u8 / 255. Tested against PIL itself: within one level
-   on every sample, at least 95 % exact. Run it **once more on the whole view**, the largest centred square (3×3 box
-   filter to 252, centre crop 224).
+   on every sample, at least 95 % exact. When no image is found, run it on the **whole view**, the largest centred square
+   (3×3 box filter to 252, centre crop 224).
 3. **Flag where the fake is, and keep the flag.** Images are followed from frame to frame (`Tracker`): an image whose
    four edges all moved by at most max(8, width / 100) capture pixels is the same image (it keeps its score and its
    place in the rotation); one that moved further (a scroll) is analysed again; one missing for more than 2 frames in a
@@ -224,12 +224,21 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    while no image is tinted; when it fires, a red banner at the top of the screen stays until the screen changes
    (different images found, or the centre's 8×8 luminance changes by more than 6 levels on average).
 
+**Each found image shows its P(fake)** in a small pill in its top-left corner (grey "…" until analysed, green below the
+threshold, orange above). The detector's input leaves out the strip along the top of every image tall enough to carry
+the pill (20 dp), whether the pill is drawn or not, so the label never reaches the detector.
+
 **Found images are outlined** (a setting, on by default) with a dashed line in two contrasting colours: grey and white
 until the image is analysed, green and white while P(fake) is below the threshold, orange and black above it. Whatever the overlay draws is captured too, so the
 outline is drawn just inside the image's own edge (the background around it stays uniform), is never a uniform line
 (so it is never trimmed as a border), and appears only for images that have stayed in place for 2 frames (nothing is
 left behind on scrolling content). The detector's centre crop drops those edge pixels; the whole-view input sees them,
-3× smaller. The finder is deterministic: its result is a function of the captured pixels only (no state carries over between
+3× smaller. The detector never sees what the overlay draws: each image is analysed without a fixed margin from its edges (wider
+than the outline band: 2 dp inset + 2 dp stroke + 2 capture pixels), applied whether an outline is drawn or not, and the
+whole view is analysed only when no image is on screen (it is the fallback for screens without images found). The
+overlay redraws only when what it shows changes (every redraw is a new captured frame).
+
+The finder is deterministic: its result is a function of the captured pixels only (no state carries over between
 frames). The overlay draws only inside images already found (and the banner above the content), and never a
 single-colour line (inside an image it would read as a gap and the image would shrink a little on every frame): outlines
 and the fake border are dashed in two colours. JVM tests check that the same pixels give the same rectangles, that no

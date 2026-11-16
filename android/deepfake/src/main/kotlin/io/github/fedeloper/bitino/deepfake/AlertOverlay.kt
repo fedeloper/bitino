@@ -20,10 +20,19 @@ import android.view.WindowManager
  *   green = looks real, orange = P(fake) at or above the threshold;
  * - a red tint, a dashed red and white border and the P(fake) for an image flagged as fake; it stays until the image moves or
  *   disappears (the service does not analyse a flagged image, so the tint never reaches the detector);
+ * - the image's P(fake) in a small pill in its top-left corner (inside the strip the detector never sees);
  * - a red banner at the top of the screen when the whole view was flagged.
  */
 internal class AlertOverlay(context: Context) {
-    /** A found image (screen pixels), its state and its last P(fake). */
+    companion object {
+        /** The P(fake) pill: [LABEL_TOP] dp from the image's top-left corner, [LABEL_H] dp tall. */
+        const val LABEL_TOP = 4f
+        const val LABEL_H = 14f
+        /** The strip along an image's top edge that may hold the pill (dp): never part of the detector's input. */
+        const val LABEL_STRIP = 20f
+    }
+
+    /** A found image (screen pixels), its state and its last P(fake) (rounded to 0.01; < 0 = not analysed yet). */
     data class Box(val rect: RectF, val state: Int, val pFake: Float) {
         companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2; const val FAKE = 3 }
     }
@@ -83,6 +92,12 @@ internal class AlertOverlay(context: Context) {
         private val tint = Paint().apply { color = Color.argb(120, 255, 0, 0) }
         private val fake = dashed(Color.rgb(255, 30, 30), 0f) to dashed(Color.WHITE, dash)
         private val banner = Paint().apply { color = Color.rgb(220, 0, 0) }
+        private val pillText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textSize = 11f * dp
+            typeface = Typeface.DEFAULT_BOLD
+        }
+        private val pillBg = Paint(Paint.ANTI_ALIAS_FLAG)
         private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textAlign = Paint.Align.CENTER
@@ -110,6 +125,20 @@ internal class AlertOverlay(context: Context) {
                 val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> sus; Box.OK -> ok; else -> pend }
                 canvas.drawRect(r, pa)
                 canvas.drawRect(r, pb)
+                // P(fake) pill: LABEL_TOP..LABEL_TOP + LABEL_H dp below the image's top edge, smaller than the image
+                val text = if (b.pFake < 0) "…" else "%.2f".format(b.pFake)
+                val pw = pillText.measureText(text) + 8f * dp
+                val top = b.rect.top - loc[1] + LABEL_TOP * dp
+                val left = b.rect.left - loc[0] + LABEL_TOP * dp
+                if (pw < b.rect.width() - 2 * LABEL_TOP * dp && b.rect.height() > 3 * LABEL_STRIP * dp) {
+                    pillBg.color = when (b.state) {
+                        Box.SUSPICIOUS -> Color.rgb(230, 120, 0)
+                        Box.OK -> Color.rgb(0, 140, 60)
+                        else -> Color.rgb(90, 90, 90)
+                    }
+                    canvas.drawRoundRect(RectF(left, top, left + pw, top + LABEL_H * dp), 4f * dp, 4f * dp, pillBg)
+                    canvas.drawText(text, left + 4f * dp, top + LABEL_H * dp * 0.78f, pillText)
+                }
             }
             wholeFake?.let { p ->
                 val h = 36f * dp

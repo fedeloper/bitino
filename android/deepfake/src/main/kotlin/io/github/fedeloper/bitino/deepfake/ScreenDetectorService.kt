@@ -233,14 +233,16 @@ class ScreenDetectorService : Service() {
             frameNo++
             val changed = tracker.update(rects)
             val tracks = tracker.tracks
-            // 3. the whole view: the largest centred square. A flagged whole view stays flagged until the screen changes;
-            //    it is not analysed while an image is tinted red (the tint would be part of its input)
+            if (changed) Log.i(TAG, "frame $frameNo: ${rects.size} rectangles " + rects.joinToString(" ") { it.joinToString(",", "[", "]") })
+            // 3. the whole view: the largest centred square, the fallback for screens without images found. A flagged
+            //    whole view stays flagged until the screen changes. It is analysed only when no image is on screen, so
+            //    that nothing the overlay draws (outlines, tints) is ever part of its input.
             val sig = ScreenCrop.signature(pl.buffer, pl.rowStride, pl.pixelStride, g)
             if (wholeFake && (changed || ScreenCrop.signatureDiff(sig, wholeSig) > SCREEN_CHANGE)) {
                 wholeFake = false
                 wholeAlert.reset()
             }
-            if (!wholeFake && tracks.none { it.fake }) {
+            if (!wholeFake && tracks.none { it.seen || it.fake }) {
                 ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, 0, input, row)
                 pWhole = pFake(m)
                 if (wholeAlert.update(pWhole, threshold)) {
@@ -254,9 +256,16 @@ class ScreenDetectorService : Service() {
             val turn = tracks.filter { it.seen && !it.fake }
                 .sortedWith(compareBy<Tracker.Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
                 .take(PER_FRAME)
+            val m0 = cropMargin(g)
             for (t in turn) {
                 val rc = t.rect
-                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0], rc[1], rc[2], rc[3], input)
+                // the detector sees the image without a fixed margin wider than the outline band and, on images tall
+                // enough to carry the P(fake) pill, without the strip along the top that may hold it, whether they are
+                // drawn or not: what the overlay draws never reaches its input
+                val mm = if (minOf(rc[2] - rc[0], rc[3] - rc[1]) > 4 * m0) m0 else 0
+                val strip = labelStrip(g)
+                val top = if ((rc[3] - rc[1]) * g.toScreen > 3 * AlertOverlay.LABEL_STRIP * resources.displayMetrics.density) strip else mm
+                Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm, input)
                 t.pFake = pFake(m)
                 t.lastRun = frameNo
                 if (t.alert.update(t.pFake, threshold)) t.fake = true
@@ -288,7 +297,8 @@ class ScreenDetectorService : Service() {
                     it.pFake >= threshold -> AlertOverlay.Box.SUSPICIOUS
                     else -> AlertOverlay.Box.OK
                 }
-                AlertOverlay.Box(screenRect(g, it.rect), st, it.pFake)
+                // the score is rounded as shown, so the overlay is redrawn (a new captured frame) only when what it shows changes
+                AlertOverlay.Box(screenRect(g, it.rect), st, if (it.pFake < 0) -1f else Math.round(it.pFake * 100) / 100f)
             }
             val banner = if (wholeFake) pWhole else null
             main.post {
@@ -306,6 +316,13 @@ class ScreenDetectorService : Service() {
         m.run(input, output)
         return (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
     }
+
+    /** Capture pixels from an image's edge that the overlay may draw on (2 dp inset + 2 dp stroke), plus 2. */
+    private fun cropMargin(g: Geometry): Int = kotlin.math.ceil(4f * resources.displayMetrics.density / g.toScreen).toInt() + 2
+
+    /** Capture pixels of the strip along an image's top edge that may hold the P(fake) pill, plus 2. */
+    private fun labelStrip(g: Geometry): Int =
+        kotlin.math.ceil(AlertOverlay.LABEL_STRIP * resources.displayMetrics.density / g.toScreen).toInt() + 2
 
     private fun screenRect(g: Geometry, r: IntArray) =
         android.graphics.RectF(r[0] * g.toScreen, r[1] * g.toScreen, r[2] * g.toScreen, r[3] * g.toScreen)
