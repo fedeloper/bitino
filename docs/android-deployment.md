@@ -219,7 +219,7 @@ of the screen becomes 3·252 = 756 pixels). On every new frame:
    four edges all moved by at most max(8, width / 100) capture pixels is the same image (it keeps its score and its
    place in the rotation); one that moved further (a scroll) is analysed again; one missing for more than 2 frames in a
    row is gone. When an image has 3 fake results in a row (threshold 50–99 %, default 70 %), it is tinted red with a
-   red border and its P(fake), and it stays so until it moves beyond that tolerance or disappears. A flagged image is
+   dashed red and white border and its P(fake), and it stays so until it moves beyond that tolerance or disappears. A flagged image is
    not analysed again, so the tint never reaches the detector. The whole view (largest centred square) is analysed only
    while no image is tinted; when it fires, a red banner at the top of the screen stays until the screen changes
    (different images found, or the centre's 8×8 luminance changes by more than 6 levels on average).
@@ -229,9 +229,13 @@ until the image is analysed, green and white while P(fake) is below the threshol
 outline is drawn just inside the image's own edge (the background around it stays uniform), is never a uniform line
 (so it is never trimmed as a border), and appears only for images that have stayed in place for 2 frames (nothing is
 left behind on scrolling content). The detector's centre crop drops those edge pixels; the whole-view input sees them,
-3× smaller. The finder also leaves the outline pixels out of its uniformity tests (a line that is mostly outline is never cut, or
-the box would shrink frame after frame). JVM tests check that drawing the outlines into the capture leaves the
-rectangles found unchanged over several frames.
+3× smaller. The finder is deterministic: its result is a function of the captured pixels only (no state carries over between
+frames). The overlay draws only inside images already found (and the banner above the content), and never a
+single-colour line (inside an image it would read as a gap and the image would shrink a little on every frame): outlines
+and the fake border are dashed in two colours. JVM tests check that the same pixels give the same rectangles, that no
+state carries over between screens, and that the overlay redrawn frame after frame (outlines, a red-tinted image, a
+wrong screen-sized outline) leaves the result equal to the clean screen's; checked locally on a real Chrome
+image-search screenshot too (9 images, unchanged with the overlay over 3 frames).
 
 The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
 frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread

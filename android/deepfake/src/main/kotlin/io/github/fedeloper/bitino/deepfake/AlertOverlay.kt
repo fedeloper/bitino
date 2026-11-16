@@ -14,10 +14,11 @@ import android.view.WindowManager
 
 /**
  * The full-screen, touch-through overlay. Whatever it draws is captured too, so everything is drawn inside the image
- * it belongs to (the background around images stays uniform for [RectFinder], which also leaves those bands out):
+ * it belongs to (the background around images stays uniform for [RectFinder]) and no line is ever a single colour (a
+ * single-colour line inside an image would read as a gap and the image would shrink a little on every frame):
  * - a dashed outline in two contrasting colours (never a uniform line) for each found image: grey = not analysed yet,
  *   green = looks real, orange = P(fake) at or above the threshold;
- * - a red tint, a solid red border and the P(fake) for an image flagged as fake; it stays until the image moves or
+ * - a red tint, a dashed red and white border and the P(fake) for an image flagged as fake; it stays until the image moves or
  *   disappears (the service does not analyse a flagged image, so the tint never reaches the detector);
  * - a red banner at the top of the screen when the whole view was flagged.
  */
@@ -80,11 +81,7 @@ internal class AlertOverlay(context: Context) {
         private val ok = dashed(Color.rgb(0, 230, 90), 0f) to dashed(Color.WHITE, dash)
         private val sus = dashed(Color.rgb(255, 150, 0), 0f) to dashed(Color.BLACK, dash)
         private val tint = Paint().apply { color = Color.argb(120, 255, 0, 0) }
-        private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            style = Paint.Style.STROKE
-            strokeWidth = stroke
-            color = Color.rgb(255, 30, 30)
-        }
+        private val fake = dashed(Color.rgb(255, 30, 30), 0f) to dashed(Color.WHITE, dash)
         private val banner = Paint().apply { color = Color.rgb(220, 0, 0) }
         private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
@@ -101,7 +98,8 @@ internal class AlertOverlay(context: Context) {
                 r.inset(stroke, stroke)   // inside the image's edge (the capture rounding needs the margin)
                 if (b.state == Box.FAKE) {
                     canvas.drawRect(r, tint)
-                    canvas.drawRect(r, border)
+                    canvas.drawRect(r, fake.first)
+                    canvas.drawRect(r, fake.second)
                     val size = (minOf(r.width(), r.height()) / 6f).coerceIn(12f * dp, 44f * dp)
                     label.textSize = size
                     canvas.drawText("FAKE", r.centerX(), r.centerY(), label)

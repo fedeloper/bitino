@@ -85,8 +85,6 @@ class ScreenDetectorService : Service() {
     private var pWhole = -1f
     private var threshold = 0.7f
     private var showBoxes = true
-    /** Rectangles (capture pixels) whose outlines are on screen: the finder ignores those pixels. */
-    @Volatile private var drawn: List<IntArray> = emptyList()
     private var modelName = ""
     private var frames = 0
     private var windowStart = 0L
@@ -229,7 +227,7 @@ class ScreenDetectorService : Service() {
             if (row.size < need) row = ByteArray(need)
             val t0 = SystemClock.elapsedRealtimeNanos()
             // 1. the images on screen (classical layout analysis)
-            val rects = finder.find(pl.buffer, pl.rowStride, pl.pixelStride, g.vw, g.vh, drawn, outlineBand(g))
+            val rects = finder.find(pl.buffer, pl.rowStride, pl.pixelStride, g.vw, g.vh)
             val tf = SystemClock.elapsedRealtimeNanos()
             // 2. match them to the images followed so far (a few pixels of movement = the same image)
             frameNo++
@@ -292,11 +290,9 @@ class ScreenDetectorService : Service() {
                 }
                 AlertOverlay.Box(screenRect(g, it.rect), st, it.pFake)
             }
-            val rectsShown = shown.map { it.rect.copyOf() }
             val banner = if (wholeFake) pWhole else null
             main.post {
                 overlay?.update(boxes, banner)
-                drawn = rectsShown
             }
         }
         heldPasses++
@@ -310,10 +306,6 @@ class ScreenDetectorService : Service() {
         m.run(input, output)
         return (1.0 / (1.0 + exp(output[1].toDouble()))).toFloat()
     }
-
-    /** Capture pixels covered by an outline from the image edge inwards: inset 2 dp + 2 dp stroke, with a margin. */
-    private fun outlineBand(g: Geometry): Int =
-        kotlin.math.ceil(4f * resources.displayMetrics.density / g.toScreen).toInt() + 2
 
     private fun screenRect(g: Geometry, r: IntArray) =
         android.graphics.RectF(r[0] * g.toScreen, r[1] * g.toScreen, r[2] * g.toScreen, r[3] * g.toScreen)

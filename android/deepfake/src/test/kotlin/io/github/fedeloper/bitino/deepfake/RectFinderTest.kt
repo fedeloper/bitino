@@ -121,10 +121,7 @@ class RectFinderTest {
             }
             val after = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
             assertEquals("dark=$dark", before, after)
-            // as in the app: the outlined rectangles' bands are ignored; several frames in a row must not shrink them
-            var cur = before.map { it.toIntArray() }
-            repeat(3) { cur = finder.find(s.buf, w * 4, 4, w, h, cur, band = 8) }
-            assertEquals("dark=$dark, masked", before, cur.map { it.toList() })
+
         }
     }
 
@@ -148,23 +145,63 @@ class RectFinderTest {
         assertEquals(found.map { it.toList() }.toString(), photos.size, found.size)
     }
 
-    @Test
-    fun ignoredOutlineBandsAreLeftOut() {
-        // a wrong, screen-wide box outlined by the app must not glue its contents: its band is ignored
-        val s = screen(false, 2)
-        val finder = RectFinder(maxRects = 10)
-        val before = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
-        val big = intArrayOf(0, 0, w, h)
-        for (t in 2 until 6) for (x in 0 until w) for (y in listOf(t, h - 1 - t)) {
-            val o = (y * w + x) * 4
-            val green = (x / 10) % 2 == 0
-            s.buf.put(o, (if (green) 0 else 255).toByte()); s.buf.put(o + 1, (if (green) 230 else 255).toByte()); s.buf.put(o + 2, (if (green) 90 else 255).toByte())
+    /** Draws what the overlay draws for a found image, as captured: dashed outline just inside it, optional red tint. */
+    private fun drawOverlay(buf: ByteBuffer, sw: Int, r: IntArray, tint: Boolean) {
+        fun put(x: Int, y: Int, c: IntArray) { val o = (y * sw + x) * 4; for (k in 0 until 3) buf.put(o + k, c[k].toByte()) }
+        fun get(x: Int, y: Int, k: Int) = buf.get((y * sw + x) * 4 + k).toInt() and 0xff
+        if (tint) for (y in r[1] + 2 until r[3] - 2) for (x in r[0] + 2 until r[2] - 2) {
+            put(x, y, intArrayOf((get(x, y, 0) * 135 + 255 * 120) / 255, get(x, y, 1) * 135 / 255, get(x, y, 2) * 135 / 255))
         }
-        val after = finder.find(s.buf, w * 4, 4, w, h, listOf(big), band = 8).map { it.toList() }
-        assertEquals(before, after)
+        for (t in 2 until 4) {
+            val x0 = r[0] + t; val y0 = r[1] + t; val x1 = r[2] - 1 - t; val y1 = r[3] - 1 - t
+            fun dash(x: Int, y: Int, along: Int) =
+                put(x, y, if ((along / 10) % 2 == 1) intArrayOf(255, 255, 255) else if (tint) intArrayOf(255, 30, 30) else intArrayOf(0, 230, 90))
+            for (x in x0..x1) { dash(x, y0, x); dash(x, y1, x) }
+            for (y in y0..y1) { dash(x0, y, y); dash(x1, y, y) }
+        }
     }
 
-    /** Local check on a real screenshot (never committed): BITINO_SCREENSHOT=<RGB raw file>, BITINO_SCREENSHOT_W/H. */
+    @Test
+    fun sameInputSameOutputAndNoStateCarriesOver() {
+        val a = screen(false, 0)
+        val b = screen(true, 2)
+        val reused = RectFinder(maxRects = 24)
+        val first = reused.find(a.buf, w * 4, 4, w, h).map { it.toList() }
+        assertEquals(first, reused.find(a.buf, w * 4, 4, w, h).map { it.toList() })
+        reused.find(b.buf, w * 4, 4, w, h)
+        assertEquals(first, reused.find(a.buf, w * 4, 4, w, h).map { it.toList() })
+        assertEquals(first, RectFinder(maxRects = 24).find(a.buf, w * 4, 4, w, h).map { it.toList() })
+    }
+
+    @Test
+    fun theOverlayRedrawnFrameAfterFrameKeepsTheResult() {
+        // frame after frame the app outlines what it found (one image tinted as fake): the result must stay the clean one
+        for (dark in listOf(false, true)) {
+            val s = screen(dark, 0)
+            val finder = RectFinder(maxRects = 24)
+            val clean = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
+            val original = s.buf.array().copyOf()
+            var cur = clean
+            repeat(4) { frame ->
+                // each captured frame = the screen + the overlay drawn for the previous result (one layer, not cumulative)
+                val buf = ByteBuffer.wrap(original.copyOf())
+                for ((i, r) in cur.withIndex()) drawOverlay(buf, w, r.toIntArray(), tint = i == 1 && frame > 0)
+                cur = finder.find(buf, w * 4, 4, w, h).map { it.toList() }
+                assertEquals("dark=$dark frame $frame", clean, cur)
+            }
+        }
+    }
+
+    @Test
+    fun aWrongScreenSizedOutlineDoesNotGlueTheScreen() {
+        val s = screen(false, 2)
+        val finder = RectFinder(maxRects = 24)
+        val clean = finder.find(s.buf, w * 4, 4, w, h).map { it.toList() }
+        drawOverlay(s.buf, w, intArrayOf(0, 0, w, h), tint = false)
+        assertEquals(clean, finder.find(s.buf, w * 4, 4, w, h).map { it.toList() })
+    }
+
+    /** Local check on a real screenshot (never committed): the clean result, and the result with the overlay drawn in. */
     @Test
     fun realScreenshotIfGiven() {
         val path = System.getenv("BITINO_SCREENSHOT") ?: return
@@ -173,7 +210,17 @@ class RectFinderTest {
         val rgb = java.io.File(path).readBytes()
         val buf = ByteBuffer.allocate(sw * sh * 4)
         for (i in 0 until sw * sh) { for (k in 0 until 3) buf.put(i * 4 + k, rgb[i * 3 + k]); buf.put(i * 4 + 3, -1) }
-        val found = RectFinder(maxRects = 20).find(buf, sw * 4, 4, sw, sh)
+        val finder = RectFinder(maxRects = 24)
+        val found = finder.find(buf, sw * 4, 4, sw, sh)
         println("REAL_SCREENSHOT ${found.size} ${found.map { it.toList() }}")
+        var cur = found.map { it.toList() }
+        val original = buf.array().copyOf()
+        repeat(3) { frame ->
+            val b2 = ByteBuffer.wrap(original.copyOf())
+            for ((i, r) in cur.withIndex()) drawOverlay(b2, sw, r.toIntArray(), tint = i == 0 && frame > 0)
+            cur = finder.find(b2, sw * 4, 4, sw, sh).map { it.toList() }
+            println("REAL_SCREENSHOT frame $frame with overlay: same as clean = ${cur == found.map { it.toList() }}")
+            assertEquals(found.map { it.toList() }, cur)
+        }
     }
 }

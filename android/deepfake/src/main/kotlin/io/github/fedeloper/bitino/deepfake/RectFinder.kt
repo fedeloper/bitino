@@ -8,8 +8,8 @@ import java.nio.ByteBuffer
  * UI backgrounds are flat, so whole rows or columns of one colour separate the elements of a screen (margins, the gaps
  * between posts, the space between a thumbnail and its text). A row or column counts as uniform when at most
  * max(2, length / 64) of its pixels differ from its majority colour: thin lines that cross the gaps (toolbar shadows,
- * dividers, scroll indicators) must not glue a whole grid of images into one block. Pixels of the outlines the app
- * itself draws are ignored ([find]'s `ignore`). The capture is halved (2×2 average). Then each block,
+ * dividers, scroll indicators) must not glue a whole grid of images into one block. The capture is halved (2×2
+ * average). Then each block,
  * starting from the whole screen, is split along its uniform rows; a block without uniform rows is split along its
  * uniform columns. Splitting trims the uniform margins too, so a card shrinks to its own background and is then split
  * inside. A block with neither is a leaf: a photo, a text line, an icon, a button.
@@ -18,6 +18,11 @@ import java.nio.ByteBuffer
  * - at least [MIN_COLOURS] distinct colours (4 bits per channel, each on at least 0.1 % of the pixels);
  * - no luminance band (8 levels wide) on more than [MAX_MODE] of the pixels.
  * Text, buttons and flat graphics have few colours and are dominated by their background.
+ *
+ * Deterministic: the result is a function of the pixels only (no state carries over between calls, ties keep the
+ * layout order). What the app draws (outlines, red tint, banner) lies inside images already found or above the content,
+ * and drawing inside a found image does not move its edges, so the overlay does not change the result either (JVM
+ * tests draw it into the capture and compare).
  *
  * Tuned on synthetic feed screens (text, cards, buttons, full-width / inset / thumbnail photos, light and dark): 92.5 % of
  * the photos found with IoU >= 0.8 (mean IoU 0.988); misses are mostly photos whose own border is a flat band (letterbox
@@ -40,20 +45,15 @@ internal class RectFinder(private val maxRects: Int = 24) {
     private var row0 = ByteArray(0)
     private var row1 = ByteArray(0)
     private val leaves = ArrayList<IntArray>()
-    private var mask = BooleanArray(0)
-    private var anyMask = false
     private val colourCount = IntArray(4096)
     private val lumHist = IntArray(32)
 
     /**
      * Image rectangles of the RGBA frame ([w]×[h] pixels), largest first, at most [maxRects]: {x0, y0, x1, y1} in frame
-     * pixels (end exclusive). [ignore]: rectangles (frame pixels) whose inner band of [band] frame pixels holds an
-     * outline drawn by the app; those pixels are left out of the uniformity tests.
+     * pixels (end exclusive). The same pixels always give the same rectangles.
      */
-    fun find(buf: ByteBuffer, rowStride: Int, pixelStride: Int, w: Int, h: Int,
-             ignore: List<IntArray> = emptyList(), band: Int = 0): List<IntArray> {
+    fun find(buf: ByteBuffer, rowStride: Int, pixelStride: Int, w: Int, h: Int): List<IntArray> {
         halve(buf, rowStride, pixelStride, w, h)
-        buildMask(ignore, band)
         leaves.clear()
         cut(0, 0, hw, hh, 0)
         val kept = leaves.filter { (it[2] - it[0]) >= MIN_SIDE && (it[3] - it[1]) >= MIN_SIDE && photoLike(it) }
@@ -87,49 +87,26 @@ internal class RectFinder(private val maxRects: Int = 24) {
         }
     }
 
-    private fun buildMask(ignore: List<IntArray>, band: Int) {
-        anyMask = ignore.isNotEmpty() && band > 0
-        if (!anyMask) return
-        if (mask.size < hw * hh) mask = BooleanArray(hw * hh) else java.util.Arrays.fill(mask, 0, hw * hh, false)
-        val bh = (band + 1) / 2 + 1   // half-resolution band, rounded up, plus the 2x2 averaging spill
-        for (rc in ignore) {
-            val x0 = (rc[0] / 2).coerceIn(0, hw); val y0 = (rc[1] / 2).coerceIn(0, hh)
-            val x1 = ((rc[2] + 1) / 2).coerceIn(0, hw); val y1 = ((rc[3] + 1) / 2).coerceIn(0, hh)
-            for (y in y0 until y1) for (x in x0 until x1) {
-                if (y - y0 < bh || y1 - 1 - y < bh || x - x0 < bh || x1 - 1 - x < bh) mask[y * hw + x] = true
-            }
-        }
-    }
-
     /**
-     * Uniform line of [n] pixels starting at index [start] with stride [step]: at most max(2, n / 64) pixels (masked
-     * ones excluded) differ by more than [UNIFORM] in a channel from the majority colour (Boyer-Moore vote on 5-bit
-     * channels). A line that is mostly masked (an outline's own band) is never uniform: trimming it would shrink the
-     * outlined image a little on every frame.
+     * Uniform line of [n] pixels starting at index [start] with stride [step]: at most max(2, n / 64) pixels differ by
+     * more than [UNIFORM] in a channel from the majority colour (Boyer-Moore vote on 5-bit channels).
      */
     private fun lineUniform(start: Int, step: Int, n: Int): Boolean {
         val lim = maxOf(2, n / 64)
         var cand = -1; var cnt = 0; var cr = 0; var cg = 0; var cb = 0
         var o = start
-        var seen = 0
         for (i in 0 until n) {
-            if (!(anyMask && mask[o])) {
-                seen++
-                val rv = r[o]; val gv = g[o]; val bv = b[o]
-                val key = ((rv shr 3) shl 10) or ((gv shr 3) shl 5) or (bv shr 3)
-                if (cnt == 0) { cand = key; cnt = 1; cr = rv; cg = gv; cb = bv }
-                else if (key == cand) cnt++ else cnt--
-            }
+            val rv = r[o]; val gv = g[o]; val bv = b[o]
+            val key = ((rv shr 3) shl 10) or ((gv shr 3) shl 5) or (bv shr 3)
+            if (cnt == 0) { cand = key; cnt = 1; cr = rv; cg = gv; cb = bv }
+            else if (key == cand) cnt++ else cnt--
             o += step
         }
-        if (2 * seen < n) return false
         var dev = 0
         o = start
         for (i in 0 until n) {
-            if (!(anyMask && mask[o])) {
-                if (kotlin.math.abs(r[o] - cr) > UNIFORM || kotlin.math.abs(g[o] - cg) > UNIFORM || kotlin.math.abs(b[o] - cb) > UNIFORM) {
-                    if (++dev > lim) return false
-                }
+            if (kotlin.math.abs(r[o] - cr) > UNIFORM || kotlin.math.abs(g[o] - cg) > UNIFORM || kotlin.math.abs(b[o] - cb) > UNIFORM) {
+                if (++dev > lim) return false
             }
             o += step
         }
