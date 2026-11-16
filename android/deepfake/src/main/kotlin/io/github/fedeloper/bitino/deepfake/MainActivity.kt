@@ -76,13 +76,15 @@ class MainActivity : ComponentActivity() {
             setPadding(pad, pad * 2, pad, pad)
         }
         fun text(s: String, size: Float = 15f) = TextView(this).apply { this.text = s; textSize = size; setPadding(0, pad / 2, 0, pad / 4) }
-        col.addView(text("Deepfake screen detector", 22f))
+        col.addView(text("Bitino screen analysis", 22f))
         col.addView(text(
             "Runs a Faster Than Lies binary detector (BNext backbone, CVPRW 2024) with Bitino on this phone's CPU. " +
                 "On every new frame it finds the images on screen with classical layout analysis (photos and videos are " +
                 "rectangles of many colours set apart by flat UI background), crops each one and runs the detector on " +
                 "it, plus once on the largest centred square of the screen as a whole view. A fake image is tinted " +
                 "red where it is; the whole view is framed in red if only it fires. Nothing leaves the device.\n\n" +
+                "Pick an ImageNet classifier instead (e.g. ab-bnn-imagenet-reactnet18) and each image is labelled with " +
+                "its top-1 class and probability.\n\n" +
                 "When Android asks what to share, choose the entire screen.", 14f))
         col.addView(text("Detector"))
         modelSpinner = Spinner(this)

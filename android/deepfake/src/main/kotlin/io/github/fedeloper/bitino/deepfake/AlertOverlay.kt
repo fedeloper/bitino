@@ -21,14 +21,18 @@ import android.view.WindowManager
  * - a red tint, a dashed red and white border and the P(fake) for an image flagged as fake; it stays until the image moves or
  *   disappears (the service does not analyse a flagged image, so the tint never reaches the detector);
  * - the image's P(fake) in a small pill in its top-left corner (inside the strip the detector never sees);
- * - a red banner at the top of the screen when the whole view was flagged.
+ * - a red banner at the top of the screen when the whole view was flagged;
+ * - classification mode (an ImageNet classifier instead of a detector): a blue outline and a pill with the top-1 label
+ *   and its probability on each image, and a blue banner with the whole view's label when no image is found.
  */
 internal class AlertOverlay(context: Context) {
 
     /** A found image (screen pixels), its state and its last P(fake) (rounded to 0.01; < 0 = not analysed yet). */
-    data class Box(val rect: RectF, val state: Int, val pFake: Float) {
-        companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2; const val FAKE = 3 }
+    data class Box(val rect: RectF, val state: Int, val pFake: Float, val label: String? = null) {
+        companion object { const val PENDING = 0; const val OK = 1; const val SUSPICIOUS = 2; const val FAKE = 3; const val CLASS = 4 }
     }
+    /** A banner at the top of the screen: red for an alert, blue for information (classification mode). */
+    data class Banner(val text: String, val alert: Boolean)
 
     private val wm = context.getSystemService(WindowManager::class.java)
     private val view = OverlayView(context)
@@ -59,20 +63,20 @@ internal class AlertOverlay(context: Context) {
     }
 
     /**
-     * Main thread only. [wholeFake]: P(fake) of a flagged whole view, or null. [geo]: where to draw inside each image.
+     * Main thread only. [banner]: the whole-view banner, or null. [geo]: where to draw inside each image.
      * Redraws only on a change.
      */
-    fun update(boxes: List<Box>, wholeFake: Float?, geo: OverlayGeometry) {
-        if (boxes == view.boxes && wholeFake == view.wholeFake && geo === view.geo) return
+    fun update(boxes: List<Box>, banner: Banner?, geo: OverlayGeometry) {
+        if (boxes == view.boxes && banner == view.banner && geo === view.geo) return
         view.boxes = boxes
-        view.wholeFake = wholeFake
+        view.banner = banner
         view.geo = geo
         view.invalidate()
     }
 
     private class OverlayView(context: Context) : View(context) {
         var boxes: List<Box> = emptyList()
-        var wholeFake: Float? = null
+        var banner: Banner? = null
         var geo: OverlayGeometry? = null
         private val dp = context.resources.displayMetrics.density
         private val dash = 6f * dp
@@ -87,9 +91,10 @@ internal class AlertOverlay(context: Context) {
         private val pend = dashed(Color.rgb(150, 150, 150), 0f) to dashed(Color.WHITE, dash)
         private val ok = dashed(Color.rgb(0, 230, 90), 0f) to dashed(Color.WHITE, dash)
         private val sus = dashed(Color.rgb(255, 150, 0), 0f) to dashed(Color.BLACK, dash)
+        private val cls = dashed(Color.rgb(40, 120, 255), 0f) to dashed(Color.WHITE, dash)
         private val tint = Paint().apply { color = Color.argb(120, 255, 0, 0) }
         private val fake = dashed(Color.rgb(255, 30, 30), 0f) to dashed(Color.WHITE, dash)
-        private val banner = Paint().apply { color = Color.rgb(220, 0, 0) }
+        private val bannerBg = Paint()
         private val pillText = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = Color.WHITE
             textSize = 11f * dp
@@ -101,6 +106,16 @@ internal class AlertOverlay(context: Context) {
             textAlign = Paint.Align.CENTER
             typeface = Typeface.DEFAULT_BOLD
             setShadowLayer(4f * dp, 0f, 0f, Color.BLACK)
+        }
+
+        /** [s] shortened with "…" (keeping the score at the end) to fit [room] pixels. */
+        private fun fit(s: String, room: Float): String {
+            if (pillText.measureText(s) <= room) return s
+            val sp = s.lastIndexOf(' ')
+            val tail = if (sp > 0) s.substring(sp) else ""
+            var head = if (sp > 0) s.substring(0, sp) else s
+            while (head.isNotEmpty() && pillText.measureText("$head…$tail") > room) head = head.dropLast(1)
+            return "$head…$tail"
         }
 
         override fun onDraw(canvas: Canvas) {
@@ -121,29 +136,32 @@ internal class AlertOverlay(context: Context) {
                     canvas.drawText("P(fake) %.2f".format(b.pFake), r.centerX(), r.centerY() + size, label)
                     continue
                 }
-                val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> sus; Box.OK -> ok; else -> pend }
+                val (pa, pb) = when (b.state) { Box.SUSPICIOUS -> sus; Box.OK -> ok; Box.CLASS -> cls; else -> pend }
                 canvas.drawRect(r, pa)
                 canvas.drawRect(r, pb)
                 // P(fake) pill inside the outline, in the top strip the detector never sees, smaller than the image
-                val text = if (b.pFake < 0) "…" else "%.2f".format(b.pFake)
+                val room = b.rect.width() - 2 * geo.pillOffsetPx - 8f * dp
+                val text = fit(if (b.pFake < 0) "…" else if (b.label != null) "${b.label} %.2f".format(b.pFake) else "%.2f".format(b.pFake), room)
                 val pw = pillText.measureText(text) + 8f * dp
                 val top = b.rect.top - loc[1] + geo.pillOffsetPx
                 val left = b.rect.left - loc[0] + geo.pillOffsetPx
-                if (pw < b.rect.width() - 2 * geo.pillOffsetPx && geo.pillFits(b.rect.height())) {
+                if (pw <= b.rect.width() - 2 * geo.pillOffsetPx && geo.pillFits(b.rect.height())) {
                     pillBg.color = when (b.state) {
                         Box.SUSPICIOUS -> Color.rgb(230, 120, 0)
                         Box.OK -> Color.rgb(0, 140, 60)
+                        Box.CLASS -> Color.rgb(30, 90, 200)
                         else -> Color.rgb(90, 90, 90)
                     }
                     canvas.drawRoundRect(RectF(left, top, left + pw, top + geo.pillHeightPx), 4f * dp, 4f * dp, pillBg)
                     canvas.drawText(text, left + 4f * dp, top + geo.pillHeightPx * 0.78f, pillText)
                 }
             }
-            wholeFake?.let { p ->
+            banner?.let { bn ->
                 val h = 36f * dp
-                canvas.drawRect(0f, 0f, width.toFloat(), h, banner)
+                bannerBg.color = if (bn.alert) Color.rgb(220, 0, 0) else Color.rgb(30, 90, 200)
+                canvas.drawRect(0f, 0f, width.toFloat(), h, bannerBg)
                 label.textSize = 16f * dp
-                canvas.drawText("FAKE in the whole view · P(fake) %.2f".format(p), width / 2f, h * 0.68f, label)
+                canvas.drawText(bn.text, width / 2f, h * 0.68f, label)
             }
         }
     }

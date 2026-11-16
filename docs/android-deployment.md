@@ -252,6 +252,16 @@ state carries over between screens, and that the overlay redrawn frame after fra
 wrong screen-sized outline) leaves the result equal to the clean screen's; checked locally on a real Chrome
 image-search screenshot too (9 images, unchanged with the overlay over 3 frames).
 
+**Classification mode.** Pick an ImageNet classifier instead of a detector (any converted model with 1000 outputs whose
+preprocessing the library reproduces; ab-bnn-imagenet-reactnet18, MIT weights, in a local build with
+`-Pbitino.deepfakeModels=...,artifacts/ab-bnn-imagenet-reactnet18/model.bitino`). The app then does the same screen
+analysis, but each found image gets a blue outline and a pill with its top-1 ImageNet label and probability (shortened
+to fit), classified once until it moves, through the classifier's own preprocessing (`RectClassifier`: Resize 256 /
+CenterCrop 224 / ImageNet mean and std from its manifest). With no image on screen, the centre square is classified and
+its label shown in a blue banner (the banner strip is never part of that input). On the OnePlus (instrumented test,
+synthetic screen with two ImageNet validation images): both images found where placed, labelled "robin" 0.63 and
+"Gila monster" 0.99 (both correct), 14 ms per image at 1 thread including preprocessing.
+
 The notification shows, once per second, the images found and their P(fake), the whole-view P(fake), the time per
 frame and the frames analysed per second. With 3 images on screen a frame takes 115 ms on the OnePlus Open at 1 thread
 (3.6 ms to find the images, 12.3 ms of crops, 4 detector runs); more threads lower it. Everything runs on the phone.

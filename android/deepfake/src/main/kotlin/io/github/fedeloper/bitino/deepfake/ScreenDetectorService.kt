@@ -74,6 +74,12 @@ class ScreenDetectorService : Service() {
     // worker-thread state
     private val input = FloatArray(Geometry.CROP * Geometry.CROP * 3)
     private val output = FloatArray(2)
+    /** Classification mode: an ImageNet classifier (1000 outputs) instead of a deepfake detector. */
+    private var classify = false
+    private var labels: List<String> = emptyList()
+    private var classifier: RectClassifier? = null
+    /** Whole-view label in classification mode (banner). */
+    private var wholeLabel: String? = null
     private var row = ByteArray(0)
     private val finder = RectFinder(maxRects = MAX_IMAGES)
     private val wholeAlert = AlertState()
@@ -146,10 +152,19 @@ class ScreenDetectorService : Service() {
             else -> error("no model selected")
         }
         val shape = m.inputShape
-        if (!(shape.contentEquals(intArrayOf(1, Geometry.CROP, Geometry.CROP, 3)) && m.outputSize == 2)) {
-            m.close()
-            error("not a Faster Than Lies detector (input ${shape.contentToString()}, ${m.outputSize} outputs; " +
-                "expected [1, 224, 224, 3] and the two-logit head of tools/convert_ftl_deepfake.py)")
+        when {
+            shape.contentEquals(intArrayOf(1, Geometry.CROP, Geometry.CROP, 3)) && m.outputSize == 2 -> classify = false
+            m.outputSize == 1000 && m.preprocessing != null -> {
+                classify = true
+                labels = assets.open("imagenet_classes.txt").bufferedReader().readLines()
+                classifier = RectClassifier(m, labels)
+            }
+            else -> {
+                m.close()
+                error("neither a Faster Than Lies detector (input [1, 224, 224, 3], the two-logit head of " +
+                    "tools/convert_ftl_deepfake.py) nor an ImageNet classifier with a known preprocessing " +
+                    "(input ${shape.contentToString()}, ${m.outputSize} outputs)")
+            }
         }
         return m
     }
@@ -242,7 +257,16 @@ class ScreenDetectorService : Service() {
                 wholeFake = false
                 wholeAlert.reset()
             }
-            if (!wholeFake && tracks.none { it.seen || it.fake }) {
+            if (classify) {
+                wholeLabel = if (tracks.none { it.seen }) {
+                    val side = Geometry.RESIZE * Geometry.KS[0]
+                    val x0 = (g.vw - side) / 2
+                    // the banner (36 dp at the top of the screen) is never part of the input, even when the square reaches it
+                    val bannerCap = kotlin.math.ceil(36f * resources.displayMetrics.density / g.toScreen).toInt() + 2
+                    val y0 = maxOf((g.vh - side) / 2, bannerCap)
+                    classifier!!.classify(pl.buffer, pl.rowStride, pl.pixelStride, x0, y0, x0 + side, (g.vh - side) / 2 + side).let { "${it.first} ${"%.2f".format(Locale.US, it.second)}" }
+                } else null
+            } else if (!wholeFake && tracks.none { it.seen || it.fake }) {
                 ScreenCrop.toInput(pl.buffer, pl.rowStride, pl.pixelStride, g, 0, input, row)
                 pWhole = pFake(m)
                 if (wholeAlert.update(pWhole, threshold)) {
@@ -253,7 +277,7 @@ class ScreenDetectorService : Service() {
             // 4. the detector on PER_FRAME of the images in view, in rotation: never-analysed images first, then the
             //    longest waiting (largest first among equals); once every image has had its turn the rotation starts
             //    again. Images flagged as fake are not analysed again: their flag stays until they move or disappear.
-            val turn = tracks.filter { it.seen && !it.fake }
+            val turn = tracks.filter { it.seen && !it.fake && !(classify && it.lastRun >= 0) }
                 .sortedWith(compareBy<Tracker.Track> { it.lastRun }.thenByDescending { (it.rect[2] - it.rect[0]).toLong() * (it.rect[3] - it.rect[1]) })
                 .take(PER_FRAME)
             val geo = overlayGeometry(g)
@@ -265,6 +289,13 @@ class ScreenDetectorService : Service() {
                 // drawn or not: what the overlay draws never reaches its input
                 val mm = if (minOf(rc[2] - rc[0], rc[3] - rc[1]) > 4 * m0) m0 else 0
                 val top = if (mm > 0 && geo.pillFits((rc[3] - rc[1]) * g.toScreen)) geo.cropTopCapture else mm
+                if (classify) {
+                    val (label, prob) = classifier!!.classify(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm)
+                    t.label = label
+                    t.pFake = prob
+                    t.lastRun = frameNo
+                    continue
+                }
                 Resample.toInput(pl.buffer, pl.rowStride, pl.pixelStride, rc[0] + mm, rc[1] + top, rc[2] - mm, rc[3] - mm, input)
                 t.pFake = pFake(m)
                 t.lastRun = frameNo
@@ -279,10 +310,13 @@ class ScreenDetectorService : Service() {
                 fps = frames * 1e9 / (t1 - windowStart)
                 frames = 0
                 windowStart = t1
-                val pImages = tracks.joinToString(" ") { if (it.fake) "FAKE" else if (it.pFake < 0) "?" else String.format(Locale.US, "%.2f", it.pFake) }
-                val text = String.format(Locale.US, "%d image%s found (%d analysed per frame), P(fake) %s; whole view %s · %.0f ms/frame (find %.0f) · %.1f fps",
-                    tracks.size, if (tracks.size == 1) "" else "s", PER_FRAME, pImages.ifEmpty { "-" },
-                    if (wholeFake) "FAKE" else if (pWhole < 0) "?" else String.format(Locale.US, "%.2f", pWhole), lastMs, lastFindMs, fps)
+                val pImages = tracks.joinToString(if (classify) "; " else " ") {
+                    if (classify) (if (it.pFake < 0) "?" else String.format(Locale.US, "%s %.2f", it.label, it.pFake))
+                    else if (it.fake) "FAKE" else if (it.pFake < 0) "?" else String.format(Locale.US, "%.2f", it.pFake)
+                }
+                val text = String.format(Locale.US, "%d image%s found (%d analysed per frame), %s %s; whole view %s · %.0f ms/frame (find %.0f) · %.1f fps",
+                    tracks.size, if (tracks.size == 1) "" else "s", PER_FRAME, if (classify) "classes" else "P(fake)", pImages.ifEmpty { "-" },
+                    if (classify) (wholeLabel ?: "-") else if (wholeFake) "FAKE" else if (pWhole < 0) "?" else String.format(Locale.US, "%.2f", pWhole), lastMs, lastFindMs, fps)
                 Log.i(TAG, text)
                 status = text
                 getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, buildNotification(text))
@@ -292,22 +326,28 @@ class ScreenDetectorService : Service() {
             val shown = tracks.filter { it.seen && (it.fake || (showBoxes && it.still >= 2)) }
             val boxes = shown.map {
                 val st = when {
+                    classify -> if (it.pFake < 0) AlertOverlay.Box.PENDING else AlertOverlay.Box.CLASS
                     it.fake -> AlertOverlay.Box.FAKE
                     it.pFake < 0 -> AlertOverlay.Box.PENDING
                     it.pFake >= threshold -> AlertOverlay.Box.SUSPICIOUS
                     else -> AlertOverlay.Box.OK
                 }
                 // the score is rounded as shown, so the overlay is redrawn (a new captured frame) only when what it shows changes
-                AlertOverlay.Box(screenRect(g, it.rect), st, if (it.pFake < 0) -1f else Math.round(it.pFake * 100) / 100f)
+                AlertOverlay.Box(screenRect(g, it.rect), st, if (it.pFake < 0) -1f else Math.round(it.pFake * 100) / 100f,
+                    if (classify) it.label else null)
             }
-            val banner = if (wholeFake) pWhole else null
+            val banner = when {
+                classify -> wholeLabel?.let { AlertOverlay.Banner("whole view: $it", alert = false) }
+                wholeFake -> AlertOverlay.Banner("FAKE in the whole view · P(fake) ${"%.2f".format(Locale.US, pWhole)}", alert = true)
+                else -> null
+            }
             main.post {
                 overlay?.update(boxes, banner, geo)
             }
         }
         heldPasses++
         val open = tracker.tracks.count { it.seen && !it.fake }
-        val passes = 3 * maxOf(1, (open + PER_FRAME - 1) / PER_FRAME)
+        val passes = (if (classify) 1 else 3) * maxOf(1, (open + PER_FRAME - 1) / PER_FRAME)
         if (heldPasses < passes) work.post(repass)
     }
 

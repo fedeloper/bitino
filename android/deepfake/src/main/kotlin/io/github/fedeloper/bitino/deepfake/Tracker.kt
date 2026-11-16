@@ -14,8 +14,10 @@ import kotlin.math.abs
 internal class Tracker(private val tol: Int, private val maxMissed: Int = 2) {
     class Track(var rect: IntArray) {
         val alert = AlertState()
-        /** Last P(fake); < 0 = not analysed yet. */
+        /** Last P(fake) (classification mode: top-1 probability); < 0 = not analysed yet. */
         var pFake = -1f
+        /** Classification mode: top-1 label. */
+        var label = ""
         /** Rotation stamp of its last analysis (-1 = never). */
         var lastRun = -1L
         /** Frames in a row in the same place. */

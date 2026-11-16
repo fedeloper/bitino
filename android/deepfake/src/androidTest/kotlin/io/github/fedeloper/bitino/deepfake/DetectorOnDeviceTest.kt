@@ -86,7 +86,9 @@ class DetectorOnDeviceTest {
         val row = ByteArray(ScreenCrop.rowBytes(3, 4))
         val out = FloatArray(2)
         val finder = RectFinder(maxRects = 4)
-        Bitino.load(app, "models/${bundled.first()}", threads = 1).use { m ->
+        val detector = bundled.firstOrNull { it.startsWith("ftl-deepfake") }
+        assumeTrue("no bundled deepfake detector", detector != null)
+        Bitino.load(app, "models/$detector", threads = 1).use { m ->
             var find = 0.0
             var prep = 0.0
             var total = 0.0
@@ -118,6 +120,43 @@ class DetectorOnDeviceTest {
             assertEquals(3, found)
             Log.i("BitinoDeepfakeTest", "per frame with 3 images on screen: ${"%.1f".format(total / reps)} ms " +
                 "(find ${"%.1f".format(find / reps)}, crops ${"%.1f".format(prep / reps)}, 4 detector runs), 1 thread, unpinned")
+        }
+    }
+
+    @Test
+    fun classificationModeOnASyntheticScreen() {
+        val clf = app.assets.list("models")?.firstOrNull { it.startsWith("ab-bnn-imagenet-reactnet18") }
+        assumeTrue("no bundled ImageNet classifier", clf != null)
+        val imgs = testAssets.open("screen_images.u8").use { it.readBytes() }
+        val truth = testAssets.open("screen_labels.txt").bufferedReader().readLines().map { it.trim().toInt() }
+        val labels = app.assets.open("imagenet_classes.txt").bufferedReader().readLines()
+        val w = 756
+        val h = 1683
+        val frame = ByteBuffer.allocateDirect(w * h * 4)
+        for (i in 0 until w * h * 4) frame.put(i, (-1).toByte())        // white page
+        // image 0 shown twice as large (448 px, nearest), image 1 at 224 px, as on a feed
+        val placed = listOf(intArrayOf(40, 200, 488, 648), intArrayOf(300, 900, 524, 1124))
+        for ((k, r) in placed.withIndex()) {
+            val s = (r[2] - r[0]) / 224
+            for (y in r[1] until r[3]) for (x in r[0] until r[2]) {
+                val sx = (x - r[0]) / s
+                val sy = (y - r[1]) / s
+                for (c in 0 until 3) frame.put((y * w + x) * 4 + c, imgs[k * 224 * 224 * 3 + (sy * 224 + sx) * 3 + c])
+            }
+        }
+        val found = RectFinder().find(frame, w * 4, 4, w, h)
+        Log.i("BitinoDeepfakeTest", "classification screen: found ${found.map { it.toList() }}")
+        Bitino.load(app, "models/$clf", threads = 1).use { m ->
+            val rc = RectClassifier(m, labels)
+            for ((k, r) in placed.withIndex()) {
+                val f = found.firstOrNull { abs(it[0] - r[0]) <= 4 && abs(it[1] - r[1]) <= 4 && abs(it[2] - r[2]) <= 4 && abs(it[3] - r[3]) <= 4 }
+                assertTrue("image $k at ${r.toList()} not found in ${found.map { it.toList() }}", f != null)
+                val t0 = SystemClock.elapsedRealtimeNanos()
+                val (label, p) = rc.classify(frame, w * 4, 4, f!![0], f[1], f[2], f[3])
+                val ms = (SystemClock.elapsedRealtimeNanos() - t0) / 1e6
+                Log.i("BitinoDeepfakeTest", "classification image $k: '$label' ${"%.2f".format(p)} (truth '${labels[truth[k]]}'), ${"%.1f".format(ms)} ms incl. preprocessing, 1 thread")
+                assertTrue(p in 0f..1f)
+            }
         }
     }
 }
