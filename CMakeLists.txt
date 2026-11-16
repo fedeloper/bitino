@@ -186,11 +186,14 @@ target_link_libraries(bitino_microbench PRIVATE bitino)
 target_include_directories(bitino_microbench PRIVATE runtime)
 
 # Research microbenchmark: binary-weight x multi-bit-activation GEMM kernels (the research notes (not published)).
-add_executable(bitino_lutbench benchmarks/lut/lutbench.cc benchmarks/lut/lut_i8mm.cc)
-target_link_libraries(bitino_lutbench PRIVATE bitino)
-target_include_directories(bitino_lutbench PRIVATE runtime ${CMAKE_SOURCE_DIR})
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
-  set_source_files_properties(benchmarks/lut/lut_i8mm.cc PROPERTIES COMPILE_OPTIONS "-march=armv8.2-a+dotprod+i8mm")
+# Development tree only (benchmarks/ is not part of the public export).
+if(EXISTS ${CMAKE_SOURCE_DIR}/benchmarks/lut/lutbench.cc)
+  add_executable(bitino_lutbench benchmarks/lut/lutbench.cc benchmarks/lut/lut_i8mm.cc)
+  target_link_libraries(bitino_lutbench PRIVATE bitino)
+  target_include_directories(bitino_lutbench PRIVATE runtime ${CMAKE_SOURCE_DIR})
+  if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+    set_source_files_properties(benchmarks/lut/lut_i8mm.cc PROPERTIES COMPILE_OPTIONS "-march=armv8.2-a+dotprod+i8mm")
+  endif()
 endif()
 
 add_executable(bitino_int8_quantbench runtime/tools/bitino_int8_quantbench.cc)
