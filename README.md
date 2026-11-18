@@ -33,7 +33,7 @@ public weights.
 ## Quickstart: Python
 
 ```bash
-pip install "bitino[image]"           # native runtime inside the wheel; [image] adds Pillow
+pip install "bitino[image] @ git+https://github.com/fedeloper/bitino"   # builds the native runtime (CMake + a C++17 compiler); [image] adds Pillow
 ```
 
 ```python
@@ -46,7 +46,8 @@ print(logits.argmax(), m.benchmark(threads=1), "ms on this CPU")
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb)
 classify an image and time it on Colab's CPU (a cloud x86 server, not a phone: the phone numbers are below).
-Wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64, any Python >= 3.10; `predict(x)` takes numpy
+Any Python >= 3.10 (prebuilt wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64 will be on PyPI; until
+then pip builds the runtime from the repository); `predict(x)` takes numpy
 arrays in the model's layout (NHWC for images), `stage="neon"` is bit-identical with the reference numpy executor.
 From a terminal: `bitino run ab-bnn-imagenet-reactnet18 --image cat.jpg --bench`. API: [docs/python.md](docs/python.md).
 Models whose weights licence is not explicitly permissive are converted from their original checkpoint
@@ -87,7 +88,7 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
 <p align="center"><img src="docs/img/android_demo.gif" width="300" alt="Bitino demo app: live ImageNet top-5 from the camera with latency and fps"></p> -->
 
 The Android library (`android/bitino`, an AAR for arm64-v8a and armeabi-v7a, API 24+) wraps the runtime in a small
-Kotlin API; `android/demo` is the CameraX app above (bundled ReActNet-18, weights MIT).
+Kotlin API; `android/demo` is a CameraX app that classifies the camera feed live (bundled ReActNet-18, weights MIT).
 
 ```kotlin
 // build.gradle.kts: implementation("io.github.fedeloper:bitino-android:0.1.0")   (until published: build the AAR,
