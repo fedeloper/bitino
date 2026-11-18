@@ -1,120 +1,176 @@
-<p align="center"><img src="site/assets/logo.svg" width="96" alt="Bitino logo"></p>
+<p align="center"><img src="site/assets/logo.svg" width="110" alt="Bitino logo"></p>
 
 <h1 align="center">Bitino</h1>
-<p align="center"><i>1-bit neural networks that keep your phone cool.</i><br>
-<a href="https://federicofontana.dev">federicofontana.dev</a></p>
 
-Bitino runs **binary neural networks** (BNNs) on the CPU of an Android phone or a laptop: a dependency-free C++17
-runtime with NEON (ARMv8.2 dotprod, i8mm) and AVX2 / AVX-VNNI kernels, converters that take networks from their
-**original** published checkpoints, a full-integer int8 path, and a curated zoo of every BNN we could find with
-public weights.
+<p align="center"><b>1-bit neural networks that keep your phone cool.</b><br>
+A fast, dependency-free runtime for binary neural networks on phone and laptop CPUs, with a zoo of 132 published
+BNNs converted from their original checkpoints.</p>
+
+<p align="center">
+  <a href="https://github.com/fedeloper/bitino/actions/workflows/ci.yml"><img src="https://github.com/fedeloper/bitino/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/fedeloper/bitino/releases"><img src="https://img.shields.io/github/v/release/fedeloper/bitino" alt="Release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
+  <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/platforms-Android%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-lightgrey" alt="Platforms">
+  <a href="https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
+</p>
+
+<p align="center">
+  <a href="https://federicofontana.dev/bitino/">Website</a> ·
+  <a href="docs/MODEL_ZOO.md">Model zoo</a> ·
+  <a href="docs/SPEED.md">Benchmarks</a> ·
+  <a href="docs/getting-started.md">Getting started</a> ·
+  <a href="docs/python.md">Python API</a> ·
+  <a href="docs/android-deployment.md">Android</a>
+</p>
+
+---
+
+Bitino runs **binary neural networks** (BNNs: 1-bit weights and activations) on the CPU of an Android phone or a
+laptop. It is a C++17 runtime with no dependencies, with hand-written NEON kernels (ARMv8 dotprod / i8mm, ARMv7) and
+AVX2 / AVX-VNNI kernels. It comes with converters that read networks from their authors' **original** checkpoints
+(Larq, PyTorch, OpenVINO, ONNX, Brevitas, MindSpore, …), a full-integer int8 path, and a curated zoo of every BNN with
+public weights we could find.
 
 <!-- generated:stats -->
 **343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 131 verified end to end, 1 broken upstream.
 <!-- /generated:stats -->
 
-*Un bitino* is Italian for “a little bit”, which is all a binary network needs per weight.
+<p align="center"><img src="docs/img/pareto_imagenet.svg" width="760" alt="ImageNet: accuracy vs latency of the converted BNNs on one phone core, with the Pareto frontier"></p>
+<p align="center"><sub>ImageNet BNNs on one core of a OnePlus Open (Snapdragon 8 Gen 2), batch 1: accuracy against measured
+latency. Every point is a published network converted from its original checkpoint.</sub></p>
 
-## Why binary networks, why Bitino
+## Highlights
 
-* **Small and cool.** A binary convolution is `XNOR` + `popcount` on packed bits: 32 weights per 32-bit word,
-  ~1/32 of the weight memory, and far less energy per operation than float multiply-adds. Phones run them on the
-  CPU, without an NPU driver and without heating up.
-* **Real models, not toy ones.** BNN research is spread over a dozen frameworks (Larq/Keras, PyTorch, OpenVINO,
-  ONNX, Brevitas, MindSpore, Theano…). Bitino converts the authors' own checkpoints, so you get the published
-  networks, verified against their source framework.
-* **Checked, not trusted.** Every conversion is compared with the original framework in float32 *and* float64;
-  every optimized kernel is checked against a scalar reference; every first disagreement between runtime and
-  reference is traced to a rounding-scale sign flip (`docs/numerical-correctness.md`).
-* **Honest speed numbers.** Timings come only from real hardware (the Android phones in `results/devices.json`,
-  an x86-64 host), with date, thread setting and clock state. Emulators are used for correctness and instruction
-  counts, never for timings.
+- **Fast on one core.**
+  - QuickNet-Small at 4.7 ms, QuickNet at 7.4 ms and ReActNet-18 at 10.8 ms per ImageNet image on a single phone
+    core.
+  - Faster than Larq Compute Engine on every model on every phone measured: **1.35×** on a Cortex-X3, 1.12× on a
+    Cortex-A75, 1.11× on a 32-bit Cortex-A53.
+- **Real networks, verified.** 132 published BNNs from more than ten frameworks. Each conversion is checked against
+  the source framework in float32 and float64. The exact `neon` stage is bit-identical with the reference executor.
+- **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
+  about 0.85× the float latency on the measured phones; the accuracy change of each file is in the zoo tables.
+- **Honest numbers.** Every timing comes from real hardware: four Android phones and an x86-64 host, with date, thread
+  setting and clock state recorded. Emulators are used for correctness only, never for speed.
+- **Runs everywhere a CPU does.**
+  - Android arm64 and 32-bit armeabi-v7a, Linux aarch64 / x86-64, Python on Linux, macOS and Windows.
+  - An Android library (AAR) with a Kotlin API and two example apps.
 
-## Quickstart: Python
+*Un bitino* is Italian for "a little bit", which is all a binary network needs per weight.
+
+## Quickstart
 
 ```bash
-pip install "bitino[image] @ git+https://github.com/fedeloper/bitino"   # builds the native runtime (CMake + a C++17 compiler); [image] adds Pillow
+pip install "bitino[image] @ git+https://github.com/fedeloper/bitino"   # builds the native runtime (CMake + a C++17 compiler)
 ```
 
 ```python
 import bitino
 
-m = bitino.load("ab-bnn-imagenet-reactnet18")    # MIT-licensed weights: converted file from the release, SHA-256 checked
-logits = m.predict_image("cat.jpg")              # the model's own preprocessing, then the runtime (numpy in, numpy out)
+m = bitino.load("ab-bnn-imagenet-reactnet18")   # MIT-licensed weights, downloaded from the release (SHA-256 checked)
+logits = m.predict_image("cat.jpg")             # the model's own preprocessing, then the runtime
 print(logits.argmax(), m.benchmark(threads=1), "ms on this CPU")
 ```
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb)
-classify an image and time it on Colab's CPU (a cloud x86 server, not a phone: the phone numbers are below).
-Any Python >= 3.10 (prebuilt wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64 will be on PyPI; until
-then pip builds the runtime from the repository); `predict(x)` takes numpy
-arrays in the model's layout (NHWC for images), `stage="neon"` is bit-identical with the reference numpy executor.
-From a terminal: `bitino run ab-bnn-imagenet-reactnet18 --image cat.jpg --bench`. API: [docs/python.md](docs/python.md).
-Models whose weights licence is not explicitly permissive are converted from their original checkpoint
-(`bitino fetch`, below) and then load the same way.
+Or try it in the browser: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb)
+(Colab runs on a cloud x86 server, not a phone; the phone numbers are below). Prebuilt wheels for Linux x86-64 /
+aarch64, macOS arm64 and Windows x64 will be published on PyPI; until then pip builds the runtime from this repository.
 
-## Five-minute quickstart: from source
+The same from a terminal:
+
+```bash
+bitino list --converted --task imagenet                     # browse the zoo
+bitino run ab-bnn-imagenet-reactnet18 --image cat.jpg --bench
+bitino fetch larq-zoo-quicknet                              # any other model: the authors' weights, converted locally
+```
+
+Models whose weights licence is not explicitly permissive are not redistributed. `bitino fetch` downloads them from
+where the authors published them and converts them on your machine; they then load the same way.
+
+<details>
+<summary><b>Build from source</b></summary>
 
 ```bash
 git clone https://github.com/fedeloper/bitino && cd bitino
-pip install -e .                      # the `bitino` CLI and Python API (compiles the runtime library with CMake)
-
-# 1. the runtime: build it (CMake + a C++17 compiler), or download bitino_bench from the Releases page
+pip install -e .                                           # the bitino CLI and Python API
 cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build/host
 
-# 2. a model: browse the zoo, then fetch one
-bitino list --converted --task imagenet
-bitino fetch ab-bnn-imagenet-reactnet18 --prebuilt   # converted file from GitHub Releases (permissive licence)
-bitino fetch ab-bnn-imagenet-reactnet18              # or: original weights + code, SHA-256 check, local conversion (needs torch)
-
-# 3. run it on x86 and time it
-bitino run ab-bnn-imagenet-reactnet18 --random 2
+bitino fetch ab-bnn-imagenet-reactnet18 --prebuilt         # converted file from the release (permissive licence)
+bitino fetch ab-bnn-imagenet-reactnet18                    # or: original weights + code, SHA-256 check, local conversion
 bitino bench ab-bnn-imagenet-reactnet18 --threads 4
-bitino validate ab-bnn-imagenet-reactnet18           # runtime vs numpy executor vs source framework
+bitino validate ab-bnn-imagenet-reactnet18                 # runtime vs numpy executor vs source framework
 ```
 
-**Deploy on Android** (arm64, no root): take `bitino_bench-android-arm64` from the Releases page (or
-`scripts/build_android.sh` with the NDK) and
+How `fetch` works:
+- It downloads the weights from where the authors published them, into a fresh directory, and checks their SHA-256.
+- It downloads the authors' model code, pinned to the recorded commit.
+- It runs the converter with `python -I`; checkpoints are read with `torch.load(weights_only=True)` only.
+- The converted data section is compared with the published conversion: `IDENTICAL` means bit-identical weights and
+  constants.
+
+Converters run in the source framework's environment (`envs/`). Without a dataset, `fetch` generates a small synthetic
+eval set: enough for conversion and runtime checks, not for accuracy numbers.
+</details>
+
+<details>
+<summary><b>Run on an Android phone from the command line</b> (arm64, no root)</summary>
+
+Take `bitino_bench-android-arm64` from the [Releases](https://github.com/fedeloper/bitino/releases) page (or build
+it with `scripts/build_android.sh` and the NDK):
 
 ```bash
 adb push bitino_bench-android-arm64 /data/local/tmp/bitino_bench
 adb push ~/.cache/bitino/models/ab-bnn-imagenet-reactnet18/model.bitino /data/local/tmp/
-adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --threads 4 --stage all
+adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --threads 1 --stage all
 ```
+</details>
 
-## In an Android app
+## Android apps
 
-<!-- demo GIF: record with android/tools/record_demo.sh (docs/android-deployment.md), then restore:
-<p align="center"><img src="docs/img/android_demo.gif" width="300" alt="Bitino demo app: live ImageNet top-5 from the camera with latency and fps"></p> -->
-
-The Android library (`android/bitino`, an AAR for arm64-v8a and armeabi-v7a, API 24+) wraps the runtime in a small
-Kotlin API; `android/demo` is a CameraX app that classifies the camera feed live (bundled ReActNet-18, weights MIT).
+The Android library (`android/bitino`) is an AAR for arm64-v8a and armeabi-v7a, API 24+. It wraps the runtime in a
+small Kotlin API, and its preprocessing reproduces each model's Python pipeline bit for bit, Pillow resampling
+included.
 
 ```kotlin
-// build.gradle.kts: implementation("io.github.fedeloper:bitino-android:0.1.0")   (until published: build the AAR,
-// android/gradlew -p android :bitino:publishToMavenLocal, and add mavenLocal())
+// build.gradle.kts: implementation("io.github.fedeloper:bitino-android:0.1.0")
+// (until it is on Maven Central: android/gradlew -p android :bitino:publishToMavenLocal, and add mavenLocal())
 import io.github.fedeloper.bitino.Bitino
 
-val model = Bitino.load(context, "ab-bnn-imagenet-reactnet18.bitino", threads = 1)   // asset or absolute file path
-val scores = model.run(bitmap)                  // resize / crop / normalize exactly as the model's manifest says
+val model = Bitino.load(context, "ab-bnn-imagenet-reactnet18.bitino", threads = 1)   // asset or file path
+val scores = model.run(bitmap)              // resize / crop / normalize exactly as the model's manifest says
 val top5 = Bitino.topK(Bitino.softmax(scores), 5)
 model.close()
 ```
 
-The preprocessing reproduces the Python pipeline of each model bit for bit (Pillow resampling included; checked
-against the evaluation tensors). Native code can instead link `libbitino.a` and use the C API
-(`runtime/include/bitino/bitino_c.h`). Details: [docs/android-deployment.md](docs/android-deployment.md),
-[docs/getting-started.md](docs/getting-started.md).
+| App | What it does |
+|---|---|
+| [`android/demo`](android/demo) | Classifies the camera feed live with ReActNet-18 (bundled, MIT weights). Shows latency and fps. |
+| [`android/deepfake`](android/deepfake) | Finds the images on screen with classical layout analysis and runs a binary deepfake detector ([Faster Than Lies](https://arxiv.org/abs/2406.04932)) on each, flagging the fake ones in place. With an ImageNet model instead, it labels each image with its class. Detectors are not bundled (no redistribution licence yet). |
 
-`bitino fetch` downloads the weights from where the authors published them, into a fresh directory, checks their
-SHA-256, downloads the authors' model code pinned to the recorded commit, and runs the converter with `python -I`
-(checkpoints are read with `torch.load(weights_only=True)` only). The converted file's data section is compared with
-the published conversion: `IDENTICAL` means bit-identical weights and constants. Converters run in the source
-framework's environment (`envs/`); `bitino fetch` says which one and how to point it there
-(`--python larq=/path/to/python`). Without a dataset it generates a small synthetic eval set, which is enough for
-conversion and runtime checks (accuracy numbers need the real one).
+Native code can link `libbitino.a` and use the C API (`runtime/include/bitino/bitino_c.h`). Details:
+[docs/android-deployment.md](docs/android-deployment.md).
 
-## Speed (measured on phones)
+## Benchmarks
+
+All numbers: median latency of one inference, batch 1, measured on the phone, pinned to its fastest core.
+
+**Against Larq Compute Engine and TensorFlow Lite.** Same Larq Zoo weights, 1 thread, batch 1, every runtime pinned to
+the same core by one launcher.
+
+| Phone (core) | Bitino vs LCE 0.16 |
+|---|---|
+| OnePlus Open (Cortex-X3) | **1.35× faster** (all 11 models, 1.14–1.74×) |
+| moto e13 (Cortex-A75) | **1.12× faster** (all 11, 1.03–1.25×) |
+| Redmi 9A (Cortex-A53, 32-bit) | **1.11× faster** (5 models, earlier runtime) |
+
+TFLite fp32 is 5–13× slower than Bitino. TFLite int8 is 1.4–4.8× slower, and its top-1 class agrees with the float
+model on only 45–66 % of the images.
+
+Tables, method, setup differences and raw data: [docs/comparison-lce-tflite.md](docs/comparison-lce-tflite.md).
+
+<details>
+<summary><b>Latency of every converted model on every phone</b></summary>
 
 <!-- generated:speed -->
 Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (CPH2551)** (Qualcomm Snapdragon 8 Gen 2 (SM8550)); 1 thread = pinned to the fastest core; int8 = the full-integer file (int8_full) where measured, else the int8 kernels on the exact file. Accuracy: the original model in its own framework → Bitino's exact stage, on the small check subset; int8_full Δ: the full-integer file's paired difference against the exact stage. Fastest first.
@@ -279,19 +335,14 @@ Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power poli
 Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 415/415 correctness checks passed on 132 models, 2026-11-14 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 503/503 correctness checks passed on 132 models, 2026-11-14 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 264/264 correctness checks passed on 132 models, 2026-11-14 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
 
-The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host
-runs (older runtime, labelled): `results/speed_x86.json`. Method: [docs/benchmarking.md](docs/benchmarking.md).
-
-**Against Larq Compute Engine and TensorFlow Lite** (same Larq Zoo weights, 1 thread, batch 1, every runtime pinned
-to the same core by one launcher): Bitino is faster than LCE 0.16 on every model on every phone measured: 1.35× on a
-Cortex-X3 (all 11 models, 1.14–1.74×), 1.12× on a Cortex-A75 (all 11, 1.03–1.25×) and 1.11× on a 32-bit Cortex-A53
-(5 models, earlier runtime). TFLite fp32 is 5–13× slower than Bitino; TFLite int8 is 1.4–4.8× slower and agrees
-with the float model on only 45–66 % of top-1 classes. Tables, method, setup differences and raw data: [docs/comparison-lce-tflite.md](docs/comparison-lce-tflite.md).
+The phones: `results/devices.json`. All runs with their clock state: `results/speed_<device>.json`; x86-64 host runs
+(older runtime, labelled): `results/speed_x86.json`. Method: [docs/benchmarking.md](docs/benchmarking.md).
+</details>
 
 ## Model zoo
 
-Selected models (full table with all converted models: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md); searchable version on
-the website):
+Selected models (all converted models: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md); a searchable version is on the
+[website](https://federicofontana.dev/bitino/)):
 
 <!-- generated:zoo_top -->
 | model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | fastest phone ms (1 thread) | weights licence | release |
@@ -314,61 +365,57 @@ the website):
 | `omz-resnet50-binary-0001` | imagenet-classification | openvino-ir | 72.7% → 73.4% | imagenet-val-subset-128 (128) | – | 34.1 ◇ (OnePlus Open) | Apache-2.0 (model.yml license field points to th | yes |
 <!-- /generated:zoo_top -->
 
-Accuracy columns are conversion checks on small subsets (n = 128 for most classifiers): the original model run by its
-own framework (in float64 where the conversion recorded it, else float32) against Bitino's exact stage. They are not
-estimates of full-dataset accuracy.
+The accuracy columns are conversion checks on small subsets (n = 128 for most classifiers). They compare the original
+model, run by its own framework, with Bitino's exact stage; they are not new full-dataset accuracies.
 
-**Weights and licences.** Converted files are attached to GitHub Releases only when the weights licence is
-explicitly permissive (Apache-2.0 / MIT / BSD stated for the weights), with the licence text and attribution next to
-each file (`bitino list --release`). Everything else is one `bitino fetch` away from its original source; the
-registry records code and weights licences separately for every model (`registry/models.json`).
+**Weights and licences.**
+- Converted files are attached to the releases only when the weights licence is explicitly permissive (Apache-2.0 /
+  MIT / BSD stated for the weights). Each file comes with its licence text and attribution (`bitino list --release`).
+- Everything else is one `bitino fetch` away from its original source.
+- The registry records the code and weights licences of every model separately (`registry/models.json`).
 
 ## What is supported
 
-* **Frameworks / checkpoint formats:** Larq Zoo and Keras/Larq `.h5` (TensorFlow), PyTorch state dicts and
-  Lightning checkpoints (AB-BNN, ReActNet / Bi-Real / IR-Net families, BNext, bitorch, BNAS, BHViT, Bi-ViT, BiBERT,
-  restoration and super-resolution BNNs, …), OpenVINO IR, ONNX (daBNN), FINN-ONNX / QONNX, Brevitas, NNCF,
-  MindSpore checkpoints, tensorpack and Theano/Lasagne `.npz`.
-* **Operators:** binary Conv2D / Dense / MatMul with exact padding correction and fused thresholds, float
-  Conv2D / depthwise / Dense / pooling / elementwise, transformer blocks (attention, LayerNorm, GELU, softmax),
-  full-integer `I8*` operators. Contracts: [docs/operators.md](docs/operators.md).
-* **Kernel tiers:** scalar reference (every op), NEON (`binary_neon`, `float_opt`, `int8_neon` with SDOT / SMMLA),
-  x86-64 AVX2 / AVX-VNNI, selected at run time from the CPU features.
-* **Stages:** `reference`, `neon` (exact), `optimized` (float fusion), `optimized_int8`, `int8_full`.
-* **Targets:** Android arm64 and armeabi-v7a (command-line runtime: API 30+; AAR: API 24+), Linux aarch64,
-  Linux x86-64; Python wheels for Linux x86-64 / aarch64, macOS arm64 and Windows x64 (correctness-tested in CI;
-  speed is measured on the phones and the x86 host only).
+| | |
+|---|---|
+| **Checkpoint formats** | Larq Zoo and Keras/Larq `.h5`; PyTorch state dicts and Lightning checkpoints (AB-BNN, ReActNet / Bi-Real / IR-Net families, BNext, bitorch, BNAS, BHViT, Bi-ViT, BiBERT, restoration and super-resolution BNNs, …); OpenVINO IR; ONNX (daBNN); FINN-ONNX / QONNX; Brevitas; NNCF; MindSpore; tensorpack and Theano/Lasagne `.npz` |
+| **Operators** | Binary Conv2D / Dense / MatMul with exact padding correction and fused thresholds; float Conv2D / depthwise / Dense / pooling / elementwise; transformer blocks (attention, LayerNorm, GELU, softmax); full-integer `I8*` operators ([docs/operators.md](docs/operators.md)) |
+| **Kernels** | Scalar reference for every op; NEON (`binary_neon`, `float_opt`, `int8_neon` with SDOT / SMMLA) on arm64 and AArch32; x86-64 AVX2 / AVX-VNNI. Selected at run time from the CPU features |
+| **Stages** | `reference`, `neon` (exact), `optimized` (float fusion), `optimized_int8`, `int8_full` (full integer) |
+| **Targets** | Android arm64-v8a and armeabi-v7a (command-line runtime API 30+, AAR API 24+), Linux aarch64 and x86-64. Python on Linux x86-64 / aarch64, macOS arm64, Windows x64 (correctness-tested in CI; speed is measured on the phones and the x86 host only) |
+
+More: [architecture](docs/architecture.md) · [model format](docs/model-format.md) ·
+[numerical correctness](docs/numerical-correctness.md) · [int8](docs/int8.md) · [threads](docs/threads.md).
 
 ## Add a model
 
-1. Add the network to `registry/models.json` (checkpoint URL, SHA-256, licences, provenance).
-2. Convert it with the closest converter in `tools/convert_*.py` (or write an adapter in `python/bitino/adapters/`).
-3. Validate: `tools/validate_model.py` on the host, then on a device.
+1. Add the network to `registry/models.json`: checkpoint URL, SHA-256, licences, provenance.
+2. Convert it with the closest converter in `tools/convert_*.py`, or write an adapter in `python/bitino/adapters/`.
+3. Validate it with `tools/validate_model.py` on the host, then on a device.
 4. `tools/build_recipes.py --artifacts <dir>` writes its fetch recipe; `tools/build_site.py` refreshes the tables.
 
-Full walk-through: [docs/adding-a-model.md](docs/adding-a-model.md).
+Walk-through: [docs/adding-a-model.md](docs/adding-a-model.md). Issues and pull requests are welcome, especially new
+BNNs with public weights and speed runs on phones not listed here.
 
-## Honest limitations
+## Limitations
 
-* **Speed data has caveats.** The OnePlus Open numbers are on the current runtime with the phone's stock power
-  policy, which holds the clocks below their maximum with the screen off (◇, ceilings recorded per run). The S22
-  numbers are from an older runtime on a thermally capped phone (charging over USB) and are labelled so. x86 host
-  numbers are from an older runtime.
-* **Fetch recipes:** 131 of 132 were run end to end from an empty cache (authors' downloads, SHA-256 checked,
-  converted file identical to the published one); one is broken upstream (S2-BNN: the authors' OneDrive link has
-  expired). State per model: `bitino list --converted`. Google Drive can refuse a scripted download (daily quota);
-  `fetch` then prints the link to download by hand. Some recipes need a second reference environment
-  (BHViT's transformers 4.39, OpenCV + scikit-image for the Faster Than Lies detectors, tensorpack/TensorFlow,
-  Python 2.7 Theano for BNN-PYNQ), listed in `envs/`.
-* **int8_full** loses accuracy on some networks (see the zoo tables); the exact `neon` / `optimized` stages
-  match the source framework. Reproducing an int8 file bit for bit needs the calibration images it was built from
-  (training split, not redistributed).
-* **Accuracy subsets are small** (mostly 128 images): they validate conversions, they do not re-measure the papers.
-* **Few phones.** Tuned on a Snapdragon 8 Gen 1 and measured on the phones in `results/devices.json`. Other arm64
-  CPUs run the same code; their speed is not measured here. 32-bit Android (armeabi-v7a) runs only a portable
-  fallback build without NEON kernels. No GPU / NPU backends.
-* **File format v1** keeps the on-disk magic `BFMODEL1` from the format's original name, so files converted
-  before the rename stay readable (`docs/model-format.md`).
+- **Speed caveats.**
+  - The OnePlus Open runs use the phone's stock power policy, which holds the clocks below their maximum with the
+    screen off (◇; the ceiling is recorded per run).
+  - The Galaxy S22 numbers come from an older runtime on a thermally capped phone (⚠).
+  - The x86 host numbers come from an older runtime.
+- **Few phones.** The OnePlus Open is the reference; the Galaxy S22, moto e13 and Redmi 9A (32-bit) are also
+  measured. Other arm64 CPUs run the same code, but their speed is not measured here. There are no GPU / NPU backends.
+- **int8_full** loses accuracy on some networks (see the zoo tables); the exact `neon` / `optimized` stages match the
+  source framework. Reproducing an int8 file bit for bit needs its calibration images (training split, not
+  redistributed).
+- **Small accuracy subsets** (mostly 128 images): they validate conversions; they do not re-measure the papers.
+- **Fetch recipes.**
+  - 131 of 132 ran end to end from an empty cache. One is broken upstream: S2-BNN, whose OneDrive link has expired.
+  - Google Drive can refuse a scripted download; `fetch` then prints the link to download by hand.
+  - Some recipes need a second environment, listed in `envs/`.
+- **File format v1** keeps the on-disk magic `BFMODEL1` from the format's original name, so older files stay readable
+  ([docs/model-format.md](docs/model-format.md)).
 
 ## Citation
 
@@ -381,9 +428,13 @@ Full walk-through: [docs/adding-a-model.md](docs/adding-a-model.md).
 }
 ```
 
-Please also cite the papers of the networks you use (`bitino info <model-id>` prints each paper).
+Please also cite the papers of the networks you use (`bitino info <model-id>` prints each one).
 
-## Licence
+## Licence and acknowledgements
 
-Code: Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE), third-party notes in [THIRD_PARTY.md](THIRD_PARTY.md)).
-Model weights are not covered by this licence: each keeps its authors' licence. Datasets are not redistributed.
+Code: Apache-2.0 ([LICENSE](LICENSE), [NOTICE](NOTICE), third-party notes in [THIRD_PARTY.md](THIRD_PARTY.md)). Model
+weights are not covered by this licence: each keeps its authors' licence. Datasets are not redistributed.
+
+Bitino exists because many research groups published their binary networks with weights. The zoo credits each one
+(`registry/models.json`, `bitino info <model-id>`). The head-to-head uses [Larq Compute Engine](https://github.com/larq/compute-engine)
+and [TensorFlow Lite](https://www.tensorflow.org/lite).
