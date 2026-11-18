@@ -2,7 +2,7 @@
 
 <h1 align="center">Bitino</h1>
 <p align="center"><i>1-bit neural networks that keep your phone cool.</i><br>
-by Fred · <a href="https://federicofontana.dev">federicofontana.dev</a></p>
+<a href="https://federicofontana.dev">federicofontana.dev</a></p>
 
 Bitino runs **binary neural networks** (BNNs) on the CPU of an Android phone or a laptop: a dependency-free C++17
 runtime with NEON (ARMv8.2 dotprod, i8mm) and AVX2 / AVX-VNNI kernels, converters that take networks from their

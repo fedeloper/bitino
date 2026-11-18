@@ -547,7 +547,7 @@ def page(title: str, active: str, body: str, extra_head: str = "", scripts: str 
 {body}
 </main>
 <footer>
-  <p>Bitino · by Fred · <a href="{AUTHOR_URL}">federicofontana.dev</a> · <a href="{REPO_URL}">GitHub</a> · Apache-2.0 code; model weights keep their own licences.</p>
+  <p>Bitino · <a href="{AUTHOR_URL}">federicofontana.dev</a> · <a href="{REPO_URL}">GitHub</a> · Apache-2.0 code; model weights keep their own licences.</p>
 </footer>
 <script src="assets/app.js"></script>
 {scripts}
@@ -587,7 +587,7 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
   <div>
     <h1>Bitino</h1>
     <p class="tagline">1-bit neural networks that keep your phone cool.</p>
-    <p class="by">by Fred · <a href="{AUTHOR_URL}">federicofontana.dev</a></p>
+    <p class="by"><a href="{AUTHOR_URL}">federicofontana.dev</a></p>
     <p class="cta"><a class="btn" href="models.html">Browse the model zoo</a> <a class="btn ghost" href="{REPO_URL}">Source on GitHub</a></p>
   </div>
 </section>
@@ -897,7 +897,7 @@ def site_about(d: dict) -> str:
     body = f"""
 <section class="doc">
   <h1>About</h1>
-  <p><b>Bitino</b> is made by Fred (Federico Fontana) · <a href="{AUTHOR_URL}">federicofontana.dev</a>.</p>
+  <p><b>Bitino</b> is made by Federico Fontana · <a href="{AUTHOR_URL}">federicofontana.dev</a>.</p>
   <p>The name is an Italian pun: <i>un bitino</i> is “a little bit”. A binary network is exactly that: one little bit
   per weight and per activation, and a phone that stays cool while it thinks.</p>
   <h2>What is in the repository</h2>
