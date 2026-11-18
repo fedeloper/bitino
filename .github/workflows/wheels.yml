@@ -59,7 +59,7 @@ jobs:
         include:
           - { name: linux-x86_64, os: ubuntu-latest, archs: x86_64 }
           - { name: linux-aarch64, os: ubuntu-24.04-arm, archs: aarch64 }   # native ARM runner; clang (pyproject.toml)
-          - { name: macos-arm64, os: macos-14, archs: arm64 }
+          - { name: macos-arm64, os: macos-15, archs: arm64 }
           - { name: windows-x64, os: windows-latest, archs: AMD64 }
     runs-on: ${{ matrix.os }}
     steps:
