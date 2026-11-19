@@ -553,6 +553,68 @@
    {
     "model_id": "ab-bnn-imagenet-reactnet34",
     "device": "oneplus-open",
+    "date": "2026-11-19",
+    "timestamp_utc": "2026-11-19T11:45:42Z",
+    "plan": "int8full_20261119_1245_cph2551",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 14.5844275,
+    "median_range_ms": [
+     14.5053385,
+     14.8890625
+    ],
+    "p90_ms": 14.90862031,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17436,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+    "runtime": "development runtime as of 2026-11-19"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "oneplus-open",
+    "date": "2026-11-19",
+    "timestamp_utc": "2026-11-19T11:50:28Z",
+    "plan": "int8full_20261119_1245_cph2551",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 14.500026,
+    "median_range_ms": [
+     14.4998701,
+     14.5684375
+    ],
+    "p90_ms": 14.604495,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 17412,
+    "validity": "vendor-policy",
+    "caps_seen": [
+     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
+    ],
+    "notes": null,
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+    "runtime": "development runtime as of 2026-11-19"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "oneplus-open",
     "date": "2026-11-11",
     "timestamp_utc": null,
     "plan": "quick_20261111_1500_cph2551",
@@ -1141,6 +1203,68 @@
     "kernels": "neon",
     "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
     "runtime": "development runtime as of 2026-11-13"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "moto-e13",
+    "date": "2026-11-19",
+    "timestamp_utc": null,
+    "plan": "int8full_20261119_1307_moto-e13",
+    "config": "t1_x2_int8_full",
+    "model_file": "model_int8_full.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 77.567538,
+    "median_range_ms": [
+     77.4845385,
+     77.5905
+    ],
+    "p90_ms": 77.79108450999999,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16756,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-16T11:14:09Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+    "runtime": "development runtime as of 2026-11-19"
+   },
+   {
+    "model_id": "ab-bnn-imagenet-reactnet34",
+    "device": "moto-e13",
+    "date": "2026-11-19",
+    "timestamp_utc": null,
+    "plan": "int8full_20261119_1307_moto-e13",
+    "config": "t1_x2_int8_full_log2",
+    "model_file": "model_int8_full_log2.bitino",
+    "stage": "int8_full",
+    "threads": 1,
+    "affinity": "7",
+    "median_ms": 77.4745385,
+    "median_range_ms": [
+     77.4050195,
+     77.4911535
+    ],
+    "p90_ms": 77.63877689,
+    "repeats": 3,
+    "iterations": 50,
+    "warmup": 10,
+    "peak_rss_kb": 16772,
+    "validity": "clean",
+    "caps_seen": null,
+    "notes": [
+     "phone clock was wrong (it read 2023-09-16T11:14:14Z); date from the host clock"
+    ],
+    "abi": "arm64-v8a",
+    "kernels": "neon",
+    "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+    "runtime": "development runtime as of 2026-11-19"
    },
    {
     "model_id": "ab-bnn-imagenet-reactnet34",

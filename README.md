@@ -248,10 +248,10 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 13.7 ◇ | 8.06 ◇ | 12.3 ◇ | 42.1 ⚠ | 67.4 | – |
 | `biper-resnet34-imagenet` | 66.4% → 66.4% | – | 17.3 ◇ | 9.11 ◇ | 13.6 ◇ | – | 89.7 | – |
 | `recu-resnet34-imagenet` | 68.8% → 68.8% | – | 17.4 ◇ | 9.12 ◇ | 13.6 ◇ | – | 89.6 | – |
-| `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.4 ◇ | 8.92 ◇ | 14.5 ◇ | 27.0 ⚠ | 90.0 | – |
+| `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.4 ◇ | 8.92 ◇ | 14.6 ◇ | 27.0 ⚠ | 90.0 | – |
 | `siman-resnet34-imagenet` | 59.4% → 60.9% | -14.10 pt | 17.8 ◇ | 9.82 ◇ | 14.7 ◇ | – | 93.5 | – |
 | `rbnn-resnet34-imagenet` | 64.1% → 63.3% | -0.52 pt | 18.1 ◇ | 10.0 ◇ | 13.4 ◇ | – | 93.8 | – |
-| `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 19.8 ◇ | 10.0 ◇ | 19.6 ◇ | 19.6 ⚠ | 95.9 | – |
+| `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 19.8 ◇ | 10.0 ◇ | 19.5 ◇ | 19.6 ⚠ | 95.9 | – |
 | `larq-zoo-binary-densenet28` | 60.9% → 60.9% | -0.66 pt | 21.3 ◇ | 11.1 ◇ | 14.6 ◇ | – | 113.3 | – |
 | `bitorch-densenet28-imagenet` | 59.4% → 59.4% | -0.76 pt | 22.6 ◇ | 11.8 ◇ | 14.5 ◇ | – | 119.4 | – |
 | `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.2 ◇ | 12.0 ◇ | 19.9 ◇ | – | 117.9 | – |
@@ -334,7 +334,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 | `ftl-deepfake-bnext-m-dffd-unfrozen` | deepfake-image-detection | – → – | – | 82.6 ◇ | 41.1 ◇ | 82.0 ◇ | – | 398.4 | – |
 | `bsrc2023-binary-sr-x2-v1` | single-image-super-resolution-x2 | 32.22 dB → 32.22 dB | – | 91.6 ◇ | 45.0 ◇ | 61.5 ◇ | – | 544.4 | – |
 
-Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 2402 vendor-policy; moto e13: 872 clean; Redmi 9A: 107 clean. 
+Unmarked = clean (every repeat at full clocks). ◇ = the phone's own power policy held the clock ceiling below the maximum with no thermal event (stock settings, screen off; the ceiling is recorded per run); ⚠ = at least one repeat ran under a thermal CPU-frequency cap (e.g. a phone charging over USB); † = run made before the frequency-cap check existed (caps unknown). Runs per device and validity: Galaxy S22: 185 thermal-throttled, 24 unknown-caps; OnePlus Open: 2406 vendor-policy; moto e13: 876 clean; Redmi 9A: 107 clean. 
 
 Every phone with 1 and 4 threads and int8: [docs/SPEED.md](docs/SPEED.md). On-device correctness: Galaxy S22: 381/381 correctness checks passed on 114 models, 2026-11-02 to 2026-11-12 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); OnePlus Open: 415/415 correctness checks passed on 132 models, 2026-11-14 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); moto e13: 503/503 correctness checks passed on 132 models, 2026-11-14 (outputs byte-identical to a validated emulated-ARM or reference-phone run of the same code); Redmi 9A: 264/264 correctness checks passed on 132 models, 2026-11-14 (exact stage bit-identical to the numpy executor, float stage within tolerance of the float64 reference).
 <!-- /generated:speed -->
