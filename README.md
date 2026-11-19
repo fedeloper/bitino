@@ -48,8 +48,8 @@ latency. Every point is a published network converted from its original checkpoi
   - Faster than Larq Compute Engine on every model on every core measured: **1.35×** on a Cortex-X3, 1.14× on a
     Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×**
     faster than daBNN on its own models.
-- **Real networks, verified.** 132 published BNNs from more than ten frameworks. Each conversion is checked against
-  the source framework in float32 and float64. The exact `neon` stage is bit-identical with the reference executor.
+- **Real networks, verified.** 132 published BNNs from ten frameworks. Each conversion is checked against a float64
+  evaluation of the source model (the source framework itself wherever it has a float64 mode). The exact `neon` stage is bit-identical with the reference executor.
 - **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
   about 0.85× the float latency on the measured phones; the accuracy change of each file is in the zoo tables.
 - **Honest numbers.** Every timing comes from real hardware: four Android phones and an x86-64 host, with date, thread
