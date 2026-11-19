@@ -33,7 +33,7 @@ Accuracy: the headline numbers are on small smoke-test subsets (n = 128 for most
 | `bibert-bert-base-mrpc` | glue-mrpc | pytorch | 76.6% → 76.6% | mrpc-dev-128 (128) | +0.98 pt (mrpc-dev-408, n=408) | 45.2 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
 | `bibert-bert-base-qqp` | glue-qqp | pytorch | 83.6% → 83.6% | qqp-dev-128 (128) | -0.59 pt (qqp-dev-40430, n=40430) | 58.0 ◇ (OnePlus Open) | unspecified | – |
 | `bibert-bert-base-sst2` | glue-sst2 | pytorch | 89.8% → 89.8% | sst2-dev-128 (128) | -0.34 pt (sst2-dev-872, n=872) | 27.2 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
-| `bimatting-bimobilenet-backbone` | imagenet-classification (backbone) | pytorch | 55.5% → 55.5% | imagenet-val-subset-128 (128) | – | 8.52 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
+| `bimatting-bimobilenet-backbone` | imagenet-classification (backbone) | pytorch | 55.5% → 55.5% | imagenet-val-subset-128 (128) | -22.86 pt (imagenet-val-subset-5000, n=5000) | 8.52 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
 | `biper-resnet18-cifar10` | cifar10-classification | pytorch | 94.5% → 94.5% | cifar10-test-first-128 (128) | – | 1.97 ◇ (OnePlus Open) | no explicit weights licence (inherits repo MIT?  | – |
 | `biper-resnet18-imagenet` | imagenet-classification | pytorch | 59.4% → 59.4% | imagenet-val-subset-128 (128) | – | 11.0 ◇ (OnePlus Open) | no explicit weights licence (inherits repo MIT?  | – |
 | `biper-resnet20-cifar10` | cifar10-classification | pytorch | 86.7% → 86.7% | cifar10-test-first-128 (128) | – | 0.454 ◇ (OnePlus Open) | no explicit weights licence (inherits repo MIT?  | – |
@@ -135,7 +135,7 @@ Accuracy: the headline numbers are on small smoke-test subsets (n = 128 for most
 | `siman-resnet18-cifar10` | cifar10-classification | pytorch | 95.3% → 95.3% | cifar10-test-first-128 (128) | – | 2.17 ◇ (OnePlus Open) | unspecified (no separate weights licence) | – |
 | `siman-resnet18-imagenet` | imagenet-classification | pytorch | 54.7% → 54.7% | imagenet-val-subset-128 (128) | – | 11.1 ◇ (OnePlus Open) | none stated | – |
 | `siman-resnet20-cifar10` | cifar10-classification | pytorch | 87.5% → 87.5% | cifar10-test-first-128 (128) | -2.32 pt (cifar10-test-first-10000, n=10000) | 0.501 ◇ (OnePlus Open) | unspecified (no separate weights licence) | – |
-| `siman-resnet34-imagenet` | imagenet-classification | pytorch | 59.4% → 60.9% | imagenet-val-subset-128 (128) | – | 17.8 ◇ (OnePlus Open) | none stated | – |
+| `siman-resnet34-imagenet` | imagenet-classification | pytorch | 59.4% → 60.9% | imagenet-val-subset-128 (128) | -14.10 pt (imagenet-val-subset-5000, n=5000) | 17.8 ◇ (OnePlus Open) | none stated | – |
 | `siman-vgg-small-cifar10` | cifar10-classification | pytorch | 95.3% → 95.3% | cifar10-test-first-128 (128) | – | 2.13 ◇ (OnePlus Open) | unspecified (no separate weights licence) | – |
 | `snn-subbit-reactnet18-w0.67a1-imagenet` | imagenet-classification | pytorch | 64.1% → 64.8% | imagenet-val-subset-128 (128) | -0.68 pt (imagenet-val-subset-5000, n=5000) | 10.8 ◇ (OnePlus Open) | unspecified (MIT repo) | – |
 | `snn-subbit-reactnet18-w1a1-imagenet` | imagenet-classification | pytorch | 64.8% → 64.8% | imagenet-val-subset-128 (128) | -0.20 pt (imagenet-val-subset-5000, n=5000) | 10.8 ◇ (OnePlus Open) | unspecified (MIT repo) | – |

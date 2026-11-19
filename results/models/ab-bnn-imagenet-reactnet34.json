@@ -17,8 +17,8 @@
    "data_sha256": "df7f4a42dab50a5003b2ee0615a8c439bd107d20a23e06eb4cefefda62cdac32"
   },
   "model_int8_full.bitino": {
-   "bytes": 5629312,
-   "data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793"
+   "bytes": 3550080,
+   "data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e"
   },
   "model_int8_full_log2.bitino": {
    "bytes": 3550080,
@@ -130,15 +130,6 @@
   ],
   "int8_full": [
    {
-    "file": "model_int8_full.bitino",
-    "note": "eval5000: 0.00% vs exact 62.82%; emulated 199.6 M instructions",
-    "eval_set": "imagenet-val-subset-5000",
-    "n": 5000,
-    "top1": 0.0,
-    "exact_top1": 0.6282,
-    "instructions_M": 199.6
-   },
-   {
     "file": "model_int8_full_log2.bitino",
     "note": "8-bit log2 residual stream with fused I8BConv2DRes (python/bitino/quantize_l8.py --stem split --l8-range lohi-1); eval5000: 62.20% (vs exact -0.62 pt, McNemar p=0.12, accepted); emulated 199.6 -> 183.9 M instructions (optimized 181.3 M). Not run on the device yet.",
     "eval_set": "imagenet-val-subset-5000",
@@ -146,6 +137,10 @@
     "top1": 0.622,
     "delta_vs_exact_pt": -0.62,
     "mcnemar_p": 0.12
+   },
+   {
+    "file": "model_int8_full.bitino",
+    "note": "same file as model_int8_full_log2.bitino (made the int8_full file on 2026-11-19): 62.20% (vs exact -0.62 pt, McNemar p=0.12, accepted); emulated 199.6 -> 183.9 M "
    }
   ]
  },
@@ -283,7 +278,7 @@
  },
  "instructions_M": {
   "values": {
-   "int8_full": 199.6,
+   "int8_full": 160.132,
    "int8_full_log2": 147.813,
    "optimized": 175.573
   },
@@ -429,39 +424,6 @@
     "date": "2026-11-12",
     "timestamp_utc": null,
     "plan": "int8full_20261112_1204_cph2551",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 17.8577865,
-    "median_range_ms": [
-     17.8435415,
-     17.8829945
-    ],
-    "p90_ms": 17.9249532,
-    "repeats": 3,
-    "iterations": 30,
-    "warmup": 10,
-    "peak_rss_kb": 19816,
-    "validity": "vendor-policy",
-    "caps_seen": [
-     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
-    ],
-    "notes": [
-     "phone clock was wrong (it read 2026-01-26T01:46:19Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
-    "runtime": "development runtime as of 2026-11-12"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "oneplus-open",
-    "date": "2026-11-12",
-    "timestamp_utc": null,
-    "plan": "int8full_20261112_1204_cph2551",
     "config": "t1_x2_int8_full_log2",
     "model_file": "model_int8_full_log2.bitino",
     "stage": "int8_full",
@@ -488,39 +450,6 @@
     "kernels": "neon",
     "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
     "runtime": "development runtime as of 2026-11-12"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "oneplus-open",
-    "date": "2026-11-13",
-    "timestamp_utc": null,
-    "plan": "int8full_20261113_0034_cph2551",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 16.3002605,
-    "median_range_ms": [
-     16.2931255,
-     16.3205205
-    ],
-    "p90_ms": 16.3682239,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 20108,
-    "validity": "vendor-policy",
-    "caps_seen": [
-     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
-    ],
-    "notes": [
-     "phone clock was wrong (it read 2026-01-26T14:16:31Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
-    "runtime": "development runtime as of 2026-11-13"
    },
    {
     "model_id": "ab-bnn-imagenet-reactnet34",
@@ -561,39 +490,6 @@
     "date": "2026-11-13",
     "timestamp_utc": null,
     "plan": "int8full_20261113_0807_cph2551",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 16.290104,
-    "median_range_ms": [
-     16.2774745,
-     16.35875
-    ],
-    "p90_ms": 16.395337899999998,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 20064,
-    "validity": "vendor-policy",
-    "caps_seen": [
-     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
-    ],
-    "notes": [
-     "phone clock was wrong (it read 2026-01-26T21:47:32Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
-    "runtime": "development runtime as of 2026-11-13"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "oneplus-open",
-    "date": "2026-11-13",
-    "timestamp_utc": null,
-    "plan": "int8full_20261113_0807_cph2551",
     "config": "t1_x2_int8_full_log2",
     "model_file": "model_int8_full_log2.bitino",
     "stage": "int8_full",
@@ -619,39 +515,6 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
-    "runtime": "development runtime as of 2026-11-13"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "oneplus-open",
-    "date": "2026-11-13",
-    "timestamp_utc": null,
-    "plan": "int8full_20261113_0819_cph2551",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 15.9038545,
-    "median_range_ms": [
-     15.903203,
-     15.933281
-    ],
-    "p90_ms": 15.9763854,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 19868,
-    "validity": "vendor-policy",
-    "caps_seen": [
-     "X3 2.23/3.19 GHz, A715/A710 1.79/2.80 GHz, A510 2.02/2.02 GHz"
-    ],
-    "notes": [
-     "phone clock was wrong (it read 2026-01-26T21:59:53Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
     "runtime": "development runtime as of 2026-11-13"
    },
    {
@@ -1223,37 +1086,6 @@
     "date": "2026-11-13",
     "timestamp_utc": null,
     "plan": "int8full_20261113_0121_moto-e13",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 90.843077,
-    "median_range_ms": [
-     90.7395955,
-     90.9293075
-    ],
-    "p90_ms": 91.1001729,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 19392,
-    "validity": "clean",
-    "caps_seen": null,
-    "notes": [
-     "phone clock was wrong (it read 2023-09-09T23:31:01Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
-    "runtime": "development runtime as of 2026-11-13"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "moto-e13",
-    "date": "2026-11-13",
-    "timestamp_utc": null,
-    "plan": "int8full_20261113_0121_moto-e13",
     "config": "t1_x2_int8_full_log2",
     "model_file": "model_int8_full_log2.bitino",
     "stage": "int8_full",
@@ -1277,37 +1109,6 @@
     "abi": "arm64-v8a",
     "kernels": "neon",
     "model_data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
-    "runtime": "development runtime as of 2026-11-13"
-   },
-   {
-    "model_id": "ab-bnn-imagenet-reactnet34",
-    "device": "moto-e13",
-    "date": "2026-11-13",
-    "timestamp_utc": null,
-    "plan": "int8full_20261113_0916_moto-e13",
-    "config": "t1_x2_int8_full",
-    "model_file": "model_int8_full.bitino",
-    "stage": "int8_full",
-    "threads": 1,
-    "affinity": "7",
-    "median_ms": 84.7646345,
-    "median_range_ms": [
-     84.652558,
-     85.1117885
-    ],
-    "p90_ms": 85.1691885,
-    "repeats": 3,
-    "iterations": 50,
-    "warmup": 10,
-    "peak_rss_kb": 19112,
-    "validity": "clean",
-    "caps_seen": null,
-    "notes": [
-     "phone clock was wrong (it read 2023-09-10T07:23:43Z); date from the host clock"
-    ],
-    "abi": "arm64-v8a",
-    "kernels": "neon",
-    "model_data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
     "runtime": "development runtime as of 2026-11-13"
    },
    {

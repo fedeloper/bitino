@@ -1,6 +1,6 @@
 {
  "schema": "bitino.registry.v1",
- "generated_utc": "2026-11-13T23:37:13Z",
+ "generated_utc": "2026-11-19T11:46:09Z",
  "generator": "tools/build_registry.py",
  "counts": {
   "no-public-weights": 46,
@@ -728,12 +728,13 @@
      "author_claim_full_imagenet_top1": 0.6519
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "eval5000: 0.00% vs exact 62.82%; emulated 199.6 M instructions",
      "model_int8_full_log2.bitino": "8-bit log2 residual stream with fused I8BConv2DRes (python/bitino/quantize_l8.py --stem split --l8-range lohi-1); eval5000: 62.20% (vs exact -0.62 pt, McNemar p=0.12, accepted); emulated 199.6 -> 183.9 M instructions (optimized 181.3 M). Not run on the device yet.",
      "log2_kernel_tuning": "after the log2 kernel tuning merge: 148.01 M emulated instructions per inference (1 thread, qemu -cpu max; SMMLA GEMMs, two-phase residual epilogue, folded LUTs). Outputs unchanged (byte-identical).",
      "rejected_2026_11_04": [
       "stem_l8 (log2_stem9; ): rejected (dev: worse than the shipped --stem split); dev -2.10 pt p=0.02"
-     ]
+     ],
+     "model_int8_full.bitino": "same file as model_int8_full_log2.bitino (made the int8_full file on 2026-11-19): 62.20% (vs exact -0.62 pt, McNemar p=0.12, accepted); emulated 199.6 -> 183.9 M ",
+     "model_int8_full.bitino (removed 2026-11-19)": "eval5000: 0.00% vs exact 62.82%; emulated 199.6 M instructions -- not usable; replaced by the log2 file"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -849,12 +850,13 @@
      "note": "128-sample smoke test, not a full-test-set estimate"
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "eval5000: 3.92% vs exact 63.84%; emulated 232.0 M instructions",
      "model_int8_full_log2.bitino": "8-bit log2 residual stream with fused I8BConv2DRes (python/bitino/quantize_l8.py --stem split); eval5000: 63.26% (vs exact -0.58 pt, McNemar p=0.17, accepted); emulated 232.0 -> 212.7 M instructions (optimized 194.6 M). Not run on the device yet.",
      "log2_kernel_tuning": "after the log2 kernel tuning merge: 188.44 M emulated instructions per inference (1 thread, qemu -cpu max; SMMLA GEMMs, two-phase residual epilogue, folded LUTs). Outputs unchanged (byte-identical).",
      "rejected_2026_11_04": [
       "stem_l8 (log2_stem9; ): rejected (dev: worse than the shipped --stem split); dev -2.00 pt p=0.021"
-     ]
+     ],
+     "model_int8_full.bitino": "same file as model_int8_full_log2.bitino (made the int8_full file on 2026-11-19): 63.26% (vs exact -0.58 pt, McNemar p=0.17, accepted); emulated 232.0 -> 212.7 M ",
+     "model_int8_full.bitino (removed 2026-11-19)": "eval5000: 3.92% vs exact 63.84%; emulated 232.0 M instructions -- not usable; replaced by the log2 file"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -6800,12 +6802,12 @@
      "note": "100-class ImageNet subset (smoke/regression, not an ImageNet-1k estimate). Bitino tracks the exact (fp64) model (agreement 98.88%, McNemar p = 0.66); the official fp32 run is 1.14 pt higher on eval5000 because of its own fp32 ties (fp32 vs fp64 p = 0.011); no published claim (checkpoint field only)"
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "eval5000: 34.46% vs exact 51.74%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 28.88% (v2 - previous +5.58 pt, paired p=8.5e-22, n=5000), faster on every phone timed",
      "rejected_2026_11_04": [
       "log2 (log2_lohi; ): rejected (dev: dev p < 0.01 vs exact); dev -18.80 pt p=2.4e-35",
       "fix (bimfix; ): rejected (dev: dev p < 0.01, no gain over int8_full); dev -28.20 pt p=8e-62"
      ],
-     "model_int8_full.bitino (superseded 2026-11-13)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 28.88% vs exact 51.74% (-22.86 pt, McNemar p=2.1e-232); before 0.00% (-51.74 pt); emulated 108.95 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194"
+     "model_int8_full.bitino (superseded 2026-11-13)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 28.88% vs exact 51.74% (-22.86 pt, McNemar p=2.1e-232); before 0.00% (-51.74 pt); emulated 108.95 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
+     "model_int8_full.bitino (removed 2026-11-19)": "eval5000: 34.46% vs exact 51.74%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 28.88% (v2 - previous +5.58 pt, paired p=8.5e-22, n=5000), faster on every phone timed -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -20493,7 +20495,7 @@
       "log2 (log2_center; ): rejected (dev: dev p < 0.01); dev -4.80 pt p=0.00014",
       "fix (center; ): rejected (dev: dev p < 0.01); dev -7.40 pt p=6.7e-09"
      ],
-     "model_int8_full.bitino": "eval5000: 53.78% vs exact 61.66%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 47.56% (v2 - previous +6.22 pt, paired p=4.2e-23, n=5000), faster on every phone timed"
+     "model_int8_full.bitino (removed 2026-11-19)": "eval5000: 53.78% vs exact 61.66%; int8_full v2 (lin8 residual code, tools/int8_full_v2.py), promoted 2026-11-13: previous int8_full file 47.56% (v2 - previous +6.22 pt, paired p=4.2e-23, n=5000), faster on every phone timed -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -28317,10 +28319,10 @@
      "top5_reference_fp32": 0.859375
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 18.80% vs exact 60.08% (-41.28 pt, McNemar p=0); before 4.96% (-55.12 pt); emulated 196.50 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
      "rejected_2026_11_04": [
       "fix (partspc; --concat-parts --pc-stem): rejected; eval -0.94 pt p=0.036"
-     ]
+     ],
+     "model_int8_full.bitino (removed 2026-11-19)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 18.80% vs exact 60.08% (-41.28 pt, McNemar p=0); before 4.96% (-55.12 pt); emulated 196.50 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194 -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -28423,10 +28425,10 @@
      "top5_reference_fp32": 0.8671875
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 2.92% vs exact 61.92% (-59.00 pt, McNemar p=0); before 0.26% (-61.66 pt); emulated 336.83 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
      "rejected_2026_11_04": [
       "fix (partspc; --concat-parts --pc-stem): rejected; eval -2.08 pt p=9.1e-07"
-     ]
+     ],
+     "model_int8_full.bitino (removed 2026-11-19)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 2.92% vs exact 61.92% (-59.00 pt, McNemar p=0); before 0.26% (-61.66 pt); emulated 336.83 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194 -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -28529,10 +28531,10 @@
      "top5_reference_fp32": 0.8671875
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 18.08% vs exact 61.94% (-43.86 pt, McNemar p=0); before 4.70% (-57.24 pt); emulated 270.51 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
      "rejected_2026_11_04": [
       "fix (partspc; --concat-parts --pc-stem): rejected; eval -0.88 pt p=0.026"
-     ]
+     ],
+     "model_int8_full.bitino (removed 2026-11-19)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 18.08% vs exact 61.94% (-43.86 pt, McNemar p=0); before 4.70% (-57.24 pt); emulated 270.51 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194 -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {
@@ -28973,7 +28975,6 @@
      "top5_reference_fp32": 0.8515625
     },
     "int8_full_variants": {
-     "model_int8_full.bitino": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 2.96% vs exact 60.34% (-57.38 pt, McNemar p=0); before 1.34% (-59.00 pt); emulated 284.31 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194",
      "rejected_2026_11_04": [
       "fix (parts; ): rejected (dev: dev p < 0.01 (-3.4 pt)); dev -3.40 pt p=0.0027"
      ],
@@ -28985,7 +28986,8 @@
       "fix (pcpool_ssmm; --concat-parts --pc-stem pooled --pc-slices slice_minmax): rejected (dev: not the best variant on the dev set); dev -1.20 pt p=0.26",
       "fix (pcpool_slmm; --concat-parts --pc-stem pooled --pc-slices channel_minmax): rejected (dev: not the best variant on the dev set); dev -0.90 pt p=0.42",
       "fix (pcpool_slch; --concat-parts --pc-stem pooled --pc-slices channel): rejected; eval -1.68 pt p=0.0001"
-     ]
+     ],
+     "model_int8_full.bitino (removed 2026-11-19)": "2026-11-04 poolfix (pool-grid fix (default); --pool-grid-fix (default)): fixed, significant loss remains; imagenet-val-subset-5000 2.96% vs exact 60.34% (-57.38 pt, McNemar p=0); before 1.34% (-59.00 pt); emulated 284.31 M instructions; emulated reference stamp fccc6c1, byte-identical on merged runtime a890194 -- not usable (accuracy far below the exact model); removed, no int8_full file shipped"
     },
     "speed_2026_11_04": {
      "instructions_M": {

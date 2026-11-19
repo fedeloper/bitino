@@ -1036,9 +1036,9 @@
      "bytes": 5638336
     },
     "model_int8_full.bitino": {
-     "data_sha256": "a2a4677ce669939e26b9ac16777085580c5c0d25a5cb5a9dd0cd5470847c2793",
-     "graph_sha256": "39b33708eebbed0e08bf7727f5d14479c01c836b9d6d7bf086e8ce8cbaaa72d7",
-     "bytes": 5629312
+     "data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
+     "graph_sha256": "fdf39f327ae13217dc6d2c3171f450b123f2d04977863c2d3caec96930f04325",
+     "bytes": 3550080
     },
     "model_int8_full_log2.bitino": {
      "data_sha256": "e6c2355e5d58fd88bd6b229cd97eaa288d8dff26c4febb5f7a5ed46d07c6e87e",
@@ -1049,7 +1049,7 @@
    "int8": [
     {
      "file": "model_int8_full.bitino",
-     "date": "2026-11-02",
+     "date": "2026-11-03",
      "calibration": {
       "set": "imagenet100-train-calib-512",
       "split": "train",
@@ -1077,6 +1077,8 @@
       "{out_dir}/model_int8_full.bitino",
       "--jobs",
       "{threads}",
+      "--residual-code",
+      "l8",
       "--no-pool-grid-fix",
       "--percentile",
       "99.99"
@@ -1205,9 +1207,9 @@
      "bytes": 7919424
     },
     "model_int8_full.bitino": {
-     "data_sha256": "b04a1af433e07cd33a8a2ba4b30e6712ed79bc3849a7542f01745a6c5469a59d",
-     "graph_sha256": "6f7a2c8364bf6723e2dea4e563d1ca982a3b6e66fb8793757d746e870845d2a6",
-     "bytes": 7746368
+     "data_sha256": "4153d6a860d96912e915bd14dc1bf2ce05e32414177a3c98cb17c9295ad505b7",
+     "graph_sha256": "236c3aaa630273b948796436387c8ae57f0b471d445bd2f90943ef8b8500d58f",
+     "bytes": 4815680
     },
     "model_int8_full_log2.bitino": {
      "data_sha256": "4153d6a860d96912e915bd14dc1bf2ce05e32414177a3c98cb17c9295ad505b7",
@@ -1218,7 +1220,7 @@
    "int8": [
     {
      "file": "model_int8_full.bitino",
-     "date": "2026-11-02",
+     "date": "2026-11-03",
      "calibration": {
       "set": "imagenet100-train-calib-512",
       "split": "train",
@@ -1246,6 +1248,8 @@
       "{out_dir}/model_int8_full.bitino",
       "--jobs",
       "{threads}",
+      "--residual-code",
+      "l8",
       "--no-pool-grid-fix",
       "--percentile",
       "99.99"
@@ -3582,61 +3586,9 @@
      "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
      "graph_sha256": "ca0d23aa81f1ae95b81ec3f7aa82625578a1a5d1852519fc1bdc46609b378325",
      "bytes": 4745536
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "d88c83b82ea66b0260355ac4ca7df62cef3ab4c0f522b82d48c510e78a1b77a9",
-     "graph_sha256": "74390ee90621f02204037090b0d880c20034e71b5df8bfdf881543326dbe9e98",
-     "bytes": 2396672
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-13",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "torchvision_imagenet",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "220b8a49adfd3914da7e042dbf0232a28453f789906ab0c25110817d1501148c"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "torchvision_imagenet",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--residual-code",
-      "lin8",
-      "--identity-blocks",
-      "all",
-      "--res-pre",
-      "--int-epilogue",
-      "--gated",
-      "--dense",
-      "--pool-grid-fix"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "MIT",
@@ -10621,53 +10573,9 @@
      "data_sha256": "2dde4d2048c38c3c2c814c9f7467c6cb59c6606ff094f320c6a7a0255f6ee420",
      "graph_sha256": "4f608bec898eb9a2e96ba3494b66ac31ff8afd698cce33aef4102b0452b4c23a",
      "bytes": 5429696
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "4353a0d4abd73206960383fa543b5a421dfd89994d65c6cb314413a8ebd9955f",
-     "graph_sha256": "efecba6d61942fc60186781f5bbb42a15d1fec2168b1e49039a279a5a24b77f6",
-     "bytes": 6095168
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-04",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "larq_zoo",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "720d1edcc421e6c6f68baea8bf2ca134ba0e66657c0effb78ba97bb42a2bd6db"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "larq_zoo",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--pool-grid-fix"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "Apache-2.0",
@@ -10738,53 +10646,9 @@
      "data_sha256": "9f966d4b22fa32445562cb36eb7d36a6ff1ba54cd246d679610ba826a69f6076",
      "graph_sha256": "edacaa0b189dba906f86faeb1f81a5e6cbbaa4e16e61d4930263161c5b6f9f46",
      "bytes": 5429440
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "b187d5546af16fc693fd16c4426af4bd596ebbd0c803b9c684cd368bc8ea45b3",
-     "graph_sha256": "6a921bff4c9c678383475061eeb21fb9e4b0629af45b43e3f7d85f57e365831d",
-     "bytes": 6190848
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-04",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "larq_zoo",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "720d1edcc421e6c6f68baea8bf2ca134ba0e66657c0effb78ba97bb42a2bd6db"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "larq_zoo",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--pool-grid-fix"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "Apache-2.0",
@@ -10855,53 +10719,9 @@
      "data_sha256": "0892a677236fa6b5604fa7019f4b0f7c3e26ac6e8ba51f6c1e306d5414122250",
      "graph_sha256": "bd3c229da9633c307cd29ac41d10586d0e7121e1897317e8c8d0b5ba51fa111a",
      "bytes": 7761664
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "69a82c1494379e3d6934b1c75af1bdba61fc6c50db42bc2dcfa929c1303e9724",
-     "graph_sha256": "62d467c3cfc55c6bb37df84654134f94b0527e418c46edaf51753a15460a10ec",
-     "bytes": 9505088
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-04",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "larq_zoo",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "720d1edcc421e6c6f68baea8bf2ca134ba0e66657c0effb78ba97bb42a2bd6db"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "larq_zoo",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--pool-grid-fix"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "Apache-2.0",
@@ -11426,53 +11246,9 @@
      "data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
      "graph_sha256": "fccc078e1ea4574d7cc914ae1b092e06c1a66b431bcd4903832927ead6ecdfb6",
      "bytes": 4128256
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "b301ee720b36d1bd4aad2d3c3c99af1c535185474866307516f979f25bac0611",
-     "graph_sha256": "a3a6c165b0e8b03167c70510816247ad175684b8ee1838d8d90d4ab152122f02",
-     "bytes": 4104384
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-04",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "larq_zoo",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "720d1edcc421e6c6f68baea8bf2ca134ba0e66657c0effb78ba97bb42a2bd6db"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "larq_zoo",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--pool-grid-fix"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "Apache-2.0",
@@ -16241,59 +16017,9 @@
      "data_sha256": "3e729e54673bf8434e86345728dd7710b7cbd10c59e5fe6dad9aad6dfcbc449f",
      "graph_sha256": "c58e6938757d9cfdb4a9e76591fc16e7b88efc78f08a37f1121816aa7bcc7946",
      "bytes": 5592000
-    },
-    "model_int8_full.bitino": {
-     "data_sha256": "ab805a717cd616a245d8ae0bc3c4555f9c3be66aca4f4faf4bdb5f9d86cad17c",
-     "graph_sha256": "cf4278c927af27819874cf3c04b2f50e45a036913ddbd016d18df6dca20118b4",
-     "bytes": 3714048
     }
    },
-   "int8": [
-    {
-     "file": "model_int8_full.bitino",
-     "date": "2026-11-13",
-     "calibration": {
-      "set": "imagenet100-train-calib-512",
-      "split": "train",
-      "preprocessing": "torchvision_imagenet",
-      "n": 128,
-      "range": "percentile 99.99",
-      "tensor_sha256": "220b8a49adfd3914da7e042dbf0232a28453f789906ab0c25110817d1501148c"
-     },
-     "calibration_sample_ids": "listed in the shipped file's manifest.quantization.calibration.sample_ids",
-     "options": {
-      "affine_trees": true,
-      "monotone_bypass": true,
-      "pool_grid_fix": true,
-      "split_mixed": true
-     },
-     "args": [
-      "--model",
-      "{out_dir}/model.bitino",
-      "--calib-dir",
-      "{calib_dir}",
-      "--preprocess",
-      "torchvision_imagenet",
-      "--n",
-      "128",
-      "--out",
-      "{out_dir}/model_int8_full.bitino",
-      "--jobs",
-      "{threads}",
-      "--percentile",
-      "99.99",
-      "--residual-code",
-      "lin8",
-      "--identity-blocks",
-      "all",
-      "--res-pre",
-      "--int-epilogue",
-      "--gated"
-     ],
-     "state": "reconstructed",
-     "note": "the quantizer reads calibration images that are not redistributed (training split of the dataset); identical bytes need the same samples (ids in the manifest) and the quantizer version of the date above"
-    }
-   ],
+   "int8": [],
    "notes": [],
    "licence": {
     "code": "none",
