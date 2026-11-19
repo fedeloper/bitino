@@ -1,0 +1,196 @@
+{
+ "model": "larq-zoo-binary-resnet-e18",
+ "runtime": "tflite_int8",
+ "repeat": 0,
+ "order_in_round": 0,
+ "cmd": "/data/local/tmp/h2h_cores/bin/h2h_run --cpus 0 -- /data/local/tmp/h2h_cores/bin/benchmark_model --graph=/data/local/tmp/h2h_cores/m/larq-zoo-binary-resnet-e18/tflite_int8.tflite --num_threads=1 --warmup_runs=10 --warmup_min_secs=0 --num_runs=50 --min_secs=0 --max_secs=100000 --input_layer=serving_default_input_1_0 --input_layer_shape=1,224,224,3 --input_layer_value_files=serving_default_input_1_0:/data/local/tmp/h2h_cores/m/larq-zoo-binary-resnet-e18/input0_int8.bin --output_filepath=/data/local/tmp/h2h_cores/out/larq-zoo-binary-resnet-e18__tflite_int8.out",
+ "exit": 0,
+ "wall_s_host": 5.53,
+ "utc": "2026-11-19T11:36:18Z",
+ "launcher": {
+  "cpus_requested": "0",
+  "exit": 0,
+  "wall_s": 5.472,
+  "maxrss_kb": 47388,
+  "utime_s": 5.216,
+  "stime_s": 0.07,
+  "nvcsw": 1,
+  "nivcsw": 176,
+  "minflt": 7670,
+  "majflt": 0,
+  "cpus_allowed_list": "0",
+  "allowed_samples": 216,
+  "allowed_mismatch_samples": 0,
+  "max_threads": 1,
+  "cpu_samples": 216,
+  "cpu_hist": {
+   "0": 216
+  }
+ },
+ "pin_wait": {
+  "tries": 0,
+  "wait_s": 0.0
+ },
+ "timing": {
+  "n": 50,
+  "first_ms": 87.609,
+  "min_ms": 87.345,
+  "max_ms": 89.017,
+  "mean_ms": 87.8942,
+  "std_ms": 0.371,
+  "warmup_n": 10,
+  "warmup_mean_ms": 89.863,
+  "median_ms": 87.858,
+  "init_ms": 99.839,
+  "first_inference_ms": 89.887,
+  "delegate": {
+   "name": "TfLiteXNNPackDelegate",
+   "nodes_delegated": 121,
+   "nodes_total": 158,
+   "partitions": 68
+  },
+  "tool_memory_delta_mb": {
+   "init": 33.5977,
+   "overall": 35.832
+  }
+ },
+ "stdout_tail": [
+  "INFO: Min num runs: [50]",
+  "INFO: Min runs duration (seconds): [0]",
+  "INFO: Max runs duration (seconds): [100000]",
+  "INFO: Num threads: [1]",
+  "INFO: Min warmup runs: [10]",
+  "INFO: Min warmup runs duration (seconds): [0]",
+  "INFO: Graph: [/data/local/tmp/h2h_cores/m/larq-zoo-binary-resnet-e18/tflite_int8.tflite]",
+  "INFO: Signature to run: []",
+  "INFO: Input layers: [serving_default_input_1_0]",
+  "INFO: Input shapes: [1,224,224,3]",
+  "INFO: Input value files: [serving_default_input_1_0:/data/local/tmp/h2h_cores/m/larq-zoo-binary-resnet-e18/input0_int8.bin]",
+  "INFO: File path to export outputs layer to: [/data/local/tmp/h2h_cores/out/larq-zoo-binary-resnet-e18__tflite_int8.out]",
+  "INFO: #threads used for CPU inference: [1]",
+  "INFO: Loaded model /data/local/tmp/h2h_cores/m/larq-zoo-binary-resnet-e18/tflite_int8.tflite",
+  "INFO: The input model file size (MB): 11.8529",
+  "INFO: Initialized session in 99.839ms.",
+  "INFO: Running benchmark for at least 10 iterations and at least 0 seconds but terminate if exceeding 100000 seconds.",
+  "INFO: count=10 first=89887 curr=88379 min=87732 max=96194 avg=89863 std=2518 p5=87732 median=88951 p95=96194",
+  "",
+  "INFO: Running benchmark for at least 50 iterations and at least 0 seconds but terminate if exceeding 100000 seconds.",
+  "INFO: count=50 first=87609 curr=88751 min=87345 max=89017 avg=87894.2 std=371 p5=87389 median=87858 p95=88751",
+  "",
+  "INFO: Inference timings in us: Init: 99839, First inference: 89887, Warmup (avg): 89863, Inference (avg): 87894.2",
+  "INFO: Note: as the benchmark tool itself affects memory footprint, the following is only APPROXIMATE to the actual memory footprint of the model at runtime. Take the information at your discretion.",
+  "INFO: Memory footprint delta from the start of the tool (MB): init=33.5977 overall=35.832",
+  "H2H_PIN_WAIT {\"tries\": 0, \"wait_s\": 0.000}",
+  "INFO: Initialized TensorFlow Lite runtime.",
+  "INFO: Created TensorFlow Lite XNNPACK delegate for CPU.",
+  "VERBOSE: Replacing 121 out of 158 node(s) with delegate (TfLiteXNNPackDelegate) node, yielding 68 partitions for subgraph 0.",
+  "H2H_RUN {\"cpus_requested\": \"0\", \"exit\": 0, \"wall_s\": 5.472, \"maxrss_kb\": 47388, \"utime_s\": 5.216, \"stime_s\": 0.070, \"nvcsw\": 1, \"nivcsw\": 176, \"minflt\": 7670, \"majflt\": 0, \"cpus_allowed_list\": \"0\", \"allowed_samples\": 216, \"allowed_mismatch_samples\": 0, \"max_threads\": 1, \"cpu_samples\": 216, \"cpu_hist\": {\"0\": 216}}"
+ ],
+ "ok": true,
+ "placement_ok": true,
+ "attempts": [
+  {
+   "exit": 0,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 5.472,
+    "maxrss_kb": 47388,
+    "utime_s": 5.216,
+    "stime_s": 0.07,
+    "nvcsw": 1,
+    "nivcsw": 176,
+    "minflt": 7670,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 216,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 216,
+    "cpu_hist": {
+     "0": 216
+    }
+   },
+   "pin_wait": {
+    "tries": 0,
+    "wait_s": 0.0
+   },
+   "placement_ok": true
+  }
+ ],
+ "round": {
+  "lock_wait_s": 0.0,
+  "gate": {
+   "waited_s": 0.1,
+   "before": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "timeout": false,
+   "mode": "pinned_reference_cap",
+   "reference_cap_khz": 2016000,
+   "throttled_before": false
+  },
+  "caps_before": {
+   "policies": {
+    "0": [
+     2016000,
+     2016000
+    ],
+    "3": [
+     1785600,
+     2803200
+    ],
+    "7": [
+     2227200,
+     3187200
+    ]
+   },
+   "capped": true,
+   "thermal_status": 0,
+   "skin_c": null
+  },
+  "caps_after": {
+   "policies": {
+    "0": [
+     2016000,
+     2016000
+    ],
+    "3": [
+     1785600,
+     2803200
+    ],
+    "7": [
+     2227200,
+     3187200
+    ]
+   },
+   "capped": true,
+   "thermal_status": 0,
+   "skin_c": null
+  },
+  "throttled": false,
+  "order": [
+   "tflite_int8",
+   "bitino_all",
+   "bitino_neon",
+   "lce",
+   "tflite_fp32"
+  ]
+ }
+}

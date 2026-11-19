@@ -45,8 +45,9 @@ latency. Every point is a published network converted from its original checkpoi
 - **Fast on one core.**
   - QuickNet-Small at 4.7 ms, QuickNet at 7.4 ms and ReActNet-18 at 10.8 ms per ImageNet image on a single phone
     core.
-  - Faster than Larq Compute Engine on every model on every phone measured: **1.35×** on a Cortex-X3, 1.12× on a
-    Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×** faster than daBNN on its own models.
+  - Faster than Larq Compute Engine on every model on every core measured: **1.35×** on a Cortex-X3, 1.14× on a
+    Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×**
+    faster than daBNN on its own models.
 - **Real networks, verified.** 132 published BNNs from more than ten frameworks. Each conversion is checked against
   the source framework in float32 and float64. The exact `neon` stage is bit-identical with the reference executor.
 - **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
@@ -161,6 +162,8 @@ the same core by one launcher.
 | Phone (core) | Bitino vs LCE 0.16 |
 |---|---|
 | OnePlus Open (Cortex-X3) | **1.35× faster** (all 11 models, 1.14–1.74×) |
+| OnePlus Open (Cortex-A715) | **1.14× faster** (all 11, 1.05–1.29×) |
+| OnePlus Open (Cortex-A510) | **1.24× faster** (all 11, 1.12–1.35×) |
 | moto e13 (Cortex-A75) | **1.12× faster** (all 11, 1.03–1.25×) |
 | Redmi 9A (Cortex-A53, 32-bit) | **1.11× faster** (5 models, earlier runtime) |
 

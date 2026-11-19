@@ -1,0 +1,464 @@
+{
+ "bitino_version": "0.1.0",
+ "build": {
+  "compiler": "Android (12470979, +pgo, +bolt, +lto, +mlgo, based on r522817c) Clang 18.0.3 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+  "flags": "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -DNDEBUG  -Wall -Wextra -Wno-unused-parameter -ffp-contract=off -march=armv8.2-a+dotprod",
+  "type": "Release"
+ },
+ "config": {
+  "affinity": "",
+  "affinity_errors": 0,
+  "bit_outputs": true,
+  "fuse": true,
+  "host_epilogues": true,
+  "iterations": 50,
+  "nodes": 17,
+  "parallel_for_per_run": 15,
+  "plan_rewrites": {
+   "absorbed_nodes": 0,
+   "aliased_reshapes": 1,
+   "bit_outputs": 0,
+   "folded_thresholds": 0,
+   "fused_nodes": 0,
+   "hosted_epilogues": 0,
+   "i8_absorbed_luts": 0,
+   "i8_add_twins": 0,
+   "i8_bit_outputs": 0,
+   "i8_composed_luts": 0,
+   "i8_folded_luts": 0,
+   "i8_interval_folds": 0,
+   "i8_lut_twins": 0,
+   "i8_merged_nodes": 0,
+   "i8_removed_luts": 0,
+   "shared_binarizations": 0
+  },
+  "pool_dispatches_per_run": 0,
+  "pool_threads": 1,
+  "profile": false,
+  "reuse_memory": true,
+  "spin_run": true,
+  "spin_us": 0,
+  "stage": "neon",
+  "threads": 1,
+  "unpinned_threads_after": 0,
+  "warmup": 9
+ },
+ "correctness_samples": 1,
+ "cpu_freq_after": [
+  {
+   "cpu": 0,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 1785600,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 1785600,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 1785600,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 1785600,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 864000,
+   "max_khz": 3187200
+  }
+ ],
+ "cpu_freq_before": [
+  {
+   "cpu": 0,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 1651200,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 1651200,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 1651200,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 1651200,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 864000,
+   "max_khz": 3187200
+  }
+ ],
+ "device": {
+  "android_release": "16",
+  "api_level": "36",
+  "build_fingerprint": "OnePlus/CPH2551EEA/OP5973L1:16/BP2A.250605.015/T.R4T3.31ff4af-c33982-ca5214:user/release-keys",
+  "cpu_features": "aarch64: neon dotprod i8mm fp16 bf16",
+  "cpu_parts": "0xd46 0xd46 0xd46 0xd4d 0xd4d 0xd47 0xd47 0xd4e ",
+  "kernel": "5.15.197-android13-8-o-01214-gbee5b6ef6244",
+  "model": "CPH2551",
+  "online_cpus": "0-7",
+  "soc": "SM8550",
+  "thermal_status": "Thermal Status: 0"
+ },
+ "kernels": {
+  "bconv2d.neon_opt": 7,
+  "channel_affine.reference": 3,
+  "conv2d.reference": 1,
+  "maxpool2d.reference": 3,
+  "reshape.reference": 2,
+  "softmax.reference": 1
+ },
+ "label": "larq-zoo-binary-alexnet__bitino_neon__r1",
+ "latency": {
+  "load_ms": 61.194792,
+  "max_ms": 154.619844,
+  "mean_ms": 154.252713,
+  "median_ms": 154.255702,
+  "min_ms": 153.748385,
+  "n": 50,
+  "p90_ms": 154.541119,
+  "p95_ms": 154.594927,
+  "samples_ms": [
+   154.155052,
+   153.765417,
+   154.420052,
+   154.366719,
+   153.748385,
+   154.217083,
+   154.296041,
+   154.118698,
+   153.952865,
+   154.43901,
+   154.166042,
+   154.116614,
+   153.924375,
+   154.367032,
+   154.575677,
+   154.137708,
+   154.372291,
+   154.329791,
+   154.134843,
+   153.849375,
+   154.304167,
+   154.23099,
+   154.043333,
+   154.26052,
+   154.263437,
+   154.18276,
+   153.860104,
+   154.214844,
+   154.466458,
+   154.250365,
+   154.089688,
+   154.452239,
+   154.618021,
+   154.029271,
+   154.619844,
+   154.444687,
+   154.250885,
+   154.416563,
+   154.335625,
+   154.136614,
+   153.955468,
+   154.540885,
+   154.421979,
+   154.043437,
+   154.543229,
+   154.361302,
+   154.610677,
+   154.23224,
+   154.513489,
+   154.489479
+  ],
+  "session_prepare_ms": 21.437083,
+  "stddev_ms": 0.224239276,
+  "throughput_per_s": 6.48274251,
+  "timed_wall_ms": 7712.66145
+ },
+ "memory": {
+  "activation_bytes": 1972800,
+  "model_mapped": true,
+  "prepacked_bytes": 7939744,
+  "released_constant_bytes": 7692288,
+  "rss_after_load_kb": 12576,
+  "rss_after_run_kb": 16644,
+  "rss_after_session_kb": 16260,
+  "rss_start_kb": 3928,
+  "vm_hwm_kb": 34876
+ },
+ "model": {
+  "constant_bytes": 7902272,
+  "data_sha256": "2232e146633b6082e519d41a75c090ee87a3d74a24335d32786acadf12d43967",
+  "file_bytes": 7912384,
+  "hash_verified": true,
+  "inputs": [
+   {
+    "dtype": "f32",
+    "name": "input",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   }
+  ],
+  "manifest": {
+   "conversion": {
+    "adapter": "bitino.adapters.keras_larq",
+    "date_utc": "2026-10-29T16:13:31.178139Z",
+    "larq": "0.13.3",
+    "larq_zoo": "2.4.0",
+    "passes": {
+     "fold_affine_into_conv": 5,
+     "fold_relu_into_producer": 0,
+     "prune_unused_constants": 10
+    },
+    "python": "3.11.18",
+    "tensorflow": "2.15.1",
+    "tool": "tools/convert_larq_zoo.py"
+   },
+   "input": {
+    "dtype": "f32",
+    "layout": "NHWC",
+    "name": "input",
+    "preprocessing": "larq_zoo.training.data.preprocess_image_bytes(is_training=False)",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   },
+   "layer_precision": [
+    {
+     "activations": "fp32",
+     "exact_zero_latent_weights": 0,
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d",
+     "op": "Conv2D",
+     "weights": "binary (+-1, stored as fp32)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_1",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_1",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_2",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_2",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_3",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_3",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_4",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_4",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_5",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_5",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_6",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_6",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary",
+     "exact_zero_latent_weights": 0,
+     "input_quantizer": "SteSign",
+     "kernel_quantizer": "SteSign",
+     "layer": "quant_conv2d_7",
+     "op": "BConv2D",
+     "pad_value": 0,
+     "weights": "binary"
+    },
+    {
+     "activations": "fp32",
+     "layer": "batch_normalization_7",
+     "op": "BatchNorm",
+     "weights": "fp32"
+    }
+   ],
+   "model_id": "larq-zoo-binary-alexnet",
+   "op_versions": {
+    "format": 1
+   },
+   "outputs": [
+    "logits",
+    "probabilities"
+   ],
+   "schema": "bitino.manifest.v1",
+   "source": {
+    "checkpoint_file": "binary_alexnet_weights.h5",
+    "checkpoint_sha256": "7fc065c47c5c1d92389e0bb988ce6df6a4fa09d803b866e2ba648069d6652d63",
+    "class": "literature.BinaryAlexNet",
+    "framework": "larq_zoo"
+   },
+   "variant": "fused"
+  },
+  "path": "/data/local/tmp/h2h_cores/m/larq-zoo-binary-alexnet/model.bitino"
+ },
+ "schema": "bitino.benchmark.v1",
+ "thermal_after_c": {
+  "cpu-0-0#47": 34.4,
+  "cpu-0-1#48": 34,
+  "cpu-0-2#49": 34.4,
+  "cpu-1-0#35": 34.3,
+  "cpu-1-1#36": 34.7,
+  "cpu-1-10#45": 34.3,
+  "cpu-1-2#37": 35.1,
+  "cpu-1-3#38": 35.9,
+  "cpu-1-4#39": 35.5,
+  "cpu-1-5#40": 35.1,
+  "cpu-1-6#41": 35.1,
+  "cpu-1-7#42": 34.3,
+  "cpu-1-8#43": 34.3,
+  "cpu-1-9#44": 34.3,
+  "cpuss-0#31": 34.7,
+  "cpuss-1#32": 34.7,
+  "cpuss-2#33": 34.7,
+  "cpuss-3#34": 34.3,
+  "socd#82": 0
+ },
+ "thermal_before_c": {
+  "cpu-0-0#47": 35.2,
+  "cpu-0-1#48": 34.4,
+  "cpu-0-2#49": 34.4,
+  "cpu-1-0#35": 35.1,
+  "cpu-1-1#36": 35.5,
+  "cpu-1-10#45": 35.5,
+  "cpu-1-2#37": 35.5,
+  "cpu-1-3#38": 35.9,
+  "cpu-1-4#39": 35.5,
+  "cpu-1-5#40": 35.5,
+  "cpu-1-6#41": 35.5,
+  "cpu-1-7#42": 34.7,
+  "cpu-1-8#43": 34.7,
+  "cpu-1-9#44": 34.7,
+  "cpuss-0#31": 35.5,
+  "cpuss-1#32": 35.1,
+  "cpuss-2#33": 35.1,
+  "cpuss-3#34": 35.1,
+  "socd#82": 0
+ },
+ "timestamp_utc": "2026-11-19T10:50:53Z"
+}

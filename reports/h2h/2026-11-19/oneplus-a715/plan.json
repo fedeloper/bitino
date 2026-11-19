@@ -1,0 +1,186 @@
+{
+ "tag": "oneplus-a715",
+ "serial": "e3698ea7",
+ "device": {
+  "model": "CPH2551",
+  "android": "16",
+  "sdk": "36",
+  "soc": "SM8550",
+  "platform": "kalama",
+  "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+  "build": "OnePlus/CPH2551EEA/OP5973L1:16/BP2A.250605.015/T.R4T3.31ff4af-c33982-ca5214:user/release-keys",
+  "kernel": "Linux localhost 5.15.197-android13-8-o-01214-gbee5b6ef6244 #1 SMP PREEMPT Fri Aug 7 06:32:56 UTC 2026 aarch64 Toybox",
+  "cpus": {
+   "0": "2016000 2016000 uag",
+   "1": "2016000 2016000 uag",
+   "2": "2016000 2016000 uag",
+   "3": "2803200 1785600 uag",
+   "4": "2803200 1785600 uag",
+   "5": "2803200 1785600 uag",
+   "6": "2803200 1785600 uag",
+   "7": "3187200 2227200 uag"
+  },
+  "cpu_parts": {
+   "0": "0xd46",
+   "1": "0xd46",
+   "2": "0xd46",
+   "3": "0xd4d",
+   "4": "0xd4d",
+   "5": "0xd47",
+   "6": "0xd47",
+   "7": "0xd4e"
+  },
+  "pinned_cpu": "4",
+  "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  Dock powered: false\n  level: 100\n  temperature: 302\n  Capacity level: 3",
+  "wakefulness": "mWakefulness=Asleep",
+  "core_ctl_cpu": ""
+ },
+ "binaries": {
+  "bitino": {
+   "local": "build/android-arm64/bitino_bench",
+   "sha256": "fe33774aa387480aa8f35900e2643919d1afe52c6f2bc40ee3a8916cb177aa05"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_arm64",
+   "sha256": "add86a6dc0e2825ec80209fff6a61725ea6bd399e6f5a6b50cc9c4c701a27dbb"
+  },
+  "lce": {
+   "local": "<tmp>",
+   "sha256": "4068e0c40b3ef51d167be1ab2677304c3bf3fcb8ff2651ef81f8295e025d1c90"
+  },
+  "tflite": {
+   "local": "<tmp>",
+   "sha256": "5d45116eb86e3a23ea03318e93bfc8efb4dd0149d4692c127e7b0343faba1374"
+  }
+ },
+ "models": [
+  "larq-zoo-quicknet-small",
+  "larq-zoo-quicknet",
+  "larq-zoo-quicknet-large",
+  "larq-zoo-birealnet",
+  "larq-zoo-binary-resnet-e18",
+  "larq-zoo-xnornet",
+  "larq-zoo-binary-alexnet",
+  "larq-zoo-binary-densenet28",
+  "larq-zoo-binary-densenet37",
+  "larq-zoo-binary-densenet37-dilated",
+  "larq-zoo-binary-densenet45"
+ ],
+ "runtimes": [
+  "bitino_all",
+  "bitino_neon",
+  "lce",
+  "tflite_fp32",
+  "tflite_int8"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 5,
+ "cpu": "4",
+ "abi": "arm64",
+ "started_utc": "2026-11-19T11:30:00Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    2016000,
+    2016000
+   ],
+   "3": [
+    1785600,
+    2803200
+   ],
+   "7": [
+    2227200,
+    3187200
+   ]
+  },
+  "capped": true,
+  "thermal_status": 0,
+  "skin_c": null
+ },
+ "invocations": [
+  {
+   "models": [
+    "larq-zoo-quicknet-small",
+    "larq-zoo-quicknet",
+    "larq-zoo-quicknet-large",
+    "larq-zoo-birealnet",
+    "larq-zoo-binary-resnet-e18",
+    "larq-zoo-xnornet",
+    "larq-zoo-binary-alexnet",
+    "larq-zoo-binary-densenet28",
+    "larq-zoo-binary-densenet37",
+    "larq-zoo-binary-densenet37-dilated",
+    "larq-zoo-binary-densenet45"
+   ],
+   "repeats": 5,
+   "started_utc": "2026-11-19T10:38:19Z",
+   "finished_utc": "2026-11-19T11:29:49Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  }
+ ],
+ "reference_cap_khz": 1785600,
+ "throttle_gate": {
+  "max_wait_s": 600.0,
+  "poll_s": 2.0,
+  "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+  "reference_cap_khz": 1785600
+ },
+ "finished_utc": "2026-11-19T11:31:18Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    2016000,
+    2016000
+   ],
+   "3": [
+    1785600,
+    2803200
+   ],
+   "7": [
+    2227200,
+    3187200
+   ]
+  },
+  "capped": true,
+  "thermal_status": 0,
+  "skin_c": null
+ }
+}

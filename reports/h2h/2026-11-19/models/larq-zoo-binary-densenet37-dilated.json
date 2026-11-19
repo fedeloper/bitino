@@ -1,0 +1,251 @@
+{
+ "model_id": "larq-zoo-binary-densenet37-dilated",
+ "h5": {
+  "file": ".cache/checkpoints/larq-zoo-binary-densenet37-dilated/binary_densenet_37_dilated_weights.h5",
+  "sha256": "15c1bcd79b8dc22971382fbf79acf364a3f51049d0e584a11533e6fdbb7363d3",
+  "expected_sha256": "15c1bcd79b8dc22971382fbf79acf364a3f51049d0e584a11533e6fdbb7363d3",
+  "n_weighted_layers": 74,
+  "n_tensors": 186,
+  "names_identical_in_order": true,
+  "layer_types_identical_in_order": true,
+  "keras_version_in_file": "2.2.4-tf"
+ },
+ "env": {
+  "tensorflow": "2.16.1",
+  "tf_keras": "",
+  "larq": "0.14.0",
+  "larq_compute_engine": "0.16.0",
+  "python": "3.11.18"
+ },
+ "keras_params": 8734120,
+ "keras_vs_reference": {
+  "logits": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.6640625
+  },
+  "probs": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.6640625
+  }
+ },
+ "lce_default_conversion": {
+  "bytes": 5429068,
+  "ops": {
+   "ADD": 36,
+   "AVERAGE_POOL_2D": 1,
+   "CONCATENATION": 32,
+   "CONV_2D": 4,
+   "FULLY_CONNECTED": 1,
+   "LceBconv2d": 32,
+   "LceQuantize": 32,
+   "MAX_POOL_2D": 2,
+   "MUL": 36,
+   "SOFTMAX": 1
+  },
+  "binary_quantconv2d_layers": 32
+ },
+ "int8_mode": "supported_ops=TFLITE_BUILTINS_INT8",
+ "int8_calibration": {
+  "set": ".cache/data/dev1000_imagenet100train_larq (ImageNet-100 TRAIN images, larq_zoo preprocessing, disjoint from eval128)",
+  "n": 128
+ },
+ "files": {
+  "lce": {
+   "file": "lce.tflite",
+   "bytes": 5429068,
+   "sha256_converter": "f439a35f3626695e4632415965756ece8fcf158e0aaebc0552faeccade45fed5",
+   "convert_s": 12.2,
+   "ops": {
+    "ADD": 36,
+    "AVERAGE_POOL_2D": 1,
+    "CONCATENATION": 32,
+    "CONV_2D": 4,
+    "FULLY_CONNECTED": 1,
+    "LceBconv2d": 32,
+    "LceQuantize": 32,
+    "MAX_POOL_2D": 2,
+    "MUL": 36,
+    "SOFTMAX": 1
+   },
+   "sha256": "294ca8d47df746394ea0609e0ba2769ca2e6e433117c472e6765581bfdad118b",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_fp32": {
+   "file": "tflite_fp32.tflite",
+   "bytes": 34872532,
+   "sha256_converter": "1dcb58530bbd774e0f59b1130e9f5c97dba9a024204e97fa41e2adb81e0f8594",
+   "convert_s": 17.9,
+   "ops": {
+    "ADD": 68,
+    "AVERAGE_POOL_2D": 1,
+    "BATCH_TO_SPACE_ND": 18,
+    "CONCATENATION": 32,
+    "CONV_2D": 36,
+    "FULLY_CONNECTED": 1,
+    "MAX_POOL_2D": 2,
+    "MUL": 36,
+    "RESHAPE": 1,
+    "SIGN": 64,
+    "SOFTMAX": 1,
+    "SPACE_TO_BATCH_ND": 18
+   },
+   "sha256": "7168f6e9bc37c54b10376726577f404c5d60f39cf55c092f41b927641eeba7a8",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_int8": {
+   "file": "tflite_int8.tflite",
+   "bytes": 8868224,
+   "sha256_converter": "1f14a5b2ecb93b448228df0cecfb42289d1d920ee9c3626a582d0399aa9c977c",
+   "convert_s": 219.8,
+   "ops": {
+    "ADD": 68,
+    "AVERAGE_POOL_2D": 1,
+    "BATCH_TO_SPACE_ND": 18,
+    "CONCATENATION": 32,
+    "CONV_2D": 36,
+    "DEQUANTIZE": 64,
+    "FULLY_CONNECTED": 1,
+    "MAX_POOL_2D": 2,
+    "MUL": 36,
+    "QUANTIZE": 64,
+    "RESHAPE": 1,
+    "SIGN": 64,
+    "SOFTMAX": 1,
+    "SPACE_TO_BATCH_ND": 18
+   },
+   "sha256": "47cd4bb9b7911c9d593f0844871c04c9baa2c0311a912d92711fad3298b4802f",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ],
+   "op_types": {
+    "ADD:INT8": 68,
+    "AVERAGE_POOL_2D:INT8": 1,
+    "BATCH_TO_SPACE_ND:INT8": 18,
+    "CONCATENATION:INT8": 32,
+    "CONV_2D:INT8": 36,
+    "DEQUANTIZE:INT8": 64,
+    "FULLY_CONNECTED:INT8": 1,
+    "MAX_POOL_2D:INT8": 2,
+    "MUL:INT8": 36,
+    "QUANTIZE:FLOAT32": 64,
+    "RESHAPE:INT8": 1,
+    "SIGN:FLOAT32": 64,
+    "SOFTMAX:INT8": 1,
+    "SPACE_TO_BATCH_ND:INT8": 18
+   }
+  },
+  "bitino": {
+   "file": "artifacts/larq-zoo-binary-densenet37-dilated/model.bitino",
+   "bytes": 5429440,
+   "sha256": "d7f8b6c26fb7309e75655ce9e4c04eff3524e47944961130b835ea6f3e853f19"
+  }
+ },
+ "int8_float_ops": {
+  "SIGN:FLOAT32": 64
+ },
+ "host_agreement_vs_reference_probs": {
+  "keras": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.6640625
+  },
+  "lce": {
+   "n": 128,
+   "max_abs": 0.11051437258720398,
+   "mean_abs": 5.057613475173785e-05,
+   "top1_agreement": 0.984375,
+   "n_top1_disagreements": 2,
+   "top5_overlap": 0.965625,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.65625
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.11051928997039795,
+   "mean_abs": 5.057607156317645e-05,
+   "top1_agreement": 0.984375,
+   "n_top1_disagreements": 2,
+   "top5_overlap": 0.965625,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.65625
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.9999642372131348,
+   "mean_abs": 0.001971821496430804,
+   "top1_agreement": 0.0,
+   "n_top1_disagreements": 128,
+   "top5_overlap": 0.003125,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.0
+  }
+ },
+ "host_agreement_vs_keras_probs": {
+  "lce": {
+   "n": 128,
+   "max_abs": 0.11051437258720398,
+   "mean_abs": 5.057613475173785e-05,
+   "top1_agreement": 0.984375,
+   "n_top1_disagreements": 2,
+   "top5_overlap": 0.965625,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.65625
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.11051928997039795,
+   "mean_abs": 5.057607156317645e-05,
+   "top1_agreement": 0.984375,
+   "n_top1_disagreements": 2,
+   "top5_overlap": 0.965625,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.65625
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.9999642372131348,
+   "mean_abs": 0.001971821496430804,
+   "top1_agreement": 0.0,
+   "n_top1_disagreements": 128,
+   "top5_overlap": 0.003125,
+   "top1_acc_ref": 0.6640625,
+   "top1_acc_out": 0.0
+  }
+ },
+ "int8_io": {
+  "input_scale": 0.02717430144548416,
+  "input_zero_point": -19,
+  "output_scale": 0.00390625,
+  "output_zero_point": -128
+ }
+}

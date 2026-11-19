@@ -22,6 +22,9 @@ The raw data are in `reports/h2h/2026-11-12/`:
 * `models/<model>.json`: the model build reports.
 * `summary.json` and `summary.md`: the aggregates.
 
+The re-run of 2026-11-13 (`reports/h2h/2026-11-13/`) and the OnePlus Cortex-A715 / Cortex-A510 runs of 2026-11-19
+(`reports/h2h/2026-11-19/`, directories `oneplus-a715` and `oneplus-a510`) use the same layout.
+
 ## Contents
 
 1. [Results](#results)
@@ -33,22 +36,35 @@ The raw data are in `reports/h2h/2026-11-12/`:
 
 ## Results
 
-**Summary** (re-run 2026-11-13 with the current runtime for Bitino vs LCE; TFLite figures from the 2026-11-12 run,
-when Bitino was slower than now).
+**Summary.** The X3 and A75 figures for Bitino vs LCE are from the re-run of 2026-11-13. The A715 and A510 figures
+(OnePlus Open mid and little cores) are from the 2026-11-19 run, with all five runtimes. The other TFLite figures
+are from the 2026-11-12 run, when Bitino was slower than now.
 
-* **Bitino vs LCE, same weights and core (2026-11-13):**
-  * OnePlus Open (Cortex-X3): Bitino is faster on all 11 models, by 1.14–1.74× (geometric mean 1.35×; 1.29× on
-    2026-11-12). Smallest margins on the QuickNets (1.14–1.17×), largest on XNOR-Net (1.74×) and Bi-Real/ResNet-E18
-    (1.52×).
-  * Moto e13 (Cortex-A75): Bitino is faster on all 11 models, by 1.03–1.25× (geometric mean 1.12×). On 2026-11-12 the
-    two were about even (0.97×, LCE ahead by 6–10 % on the QuickNets, Bi-Real, ResNet-E18 and AlexNet); the A75 binary
-    tile and stem work of 2026-11-13 closed that gap.
-  * Redmi 9A (32-bit Cortex-A53, 2026-11-12 run, not re-run): Bitino is faster on all 5 models run, by 1.06–1.17×
-    (geometric mean 1.11×).
-* **Plain TFLite fp32**, what Android developers get by default, was 4.7–13× slower than Bitino on every phone on
-  2026-11-12 (geometric mean 7.3× OnePlus, 6.2× Moto, 10.2× Redmi).
-* **TFLite full-int8 PTQ** was 1.4–4.8× slower than Bitino on 2026-11-12, and it breaks accuracy: top-1 agreement with
-  the reference is 0.45–0.66, and 0 on the DenseNets.
+LCE ÷ Bitino, geometric mean over the 11 models (5 on the A53); > 1 means Bitino is faster:
+
+| core (phone) | LCE ÷ Bitino | range | run |
+|---|---:|---:|---|
+| Cortex-X3 (OnePlus Open, cpu7) | 1.35× | 1.14–1.74× | 2026-11-13 |
+| Cortex-A715 (OnePlus Open, cpu4) | 1.14× | 1.05–1.29× | 2026-11-19 |
+| Cortex-A510 (OnePlus Open, cpu0) | 1.24× | 1.12–1.35× | 2026-11-19 |
+| Cortex-A75 (Moto e13, cpu7) | 1.12× | 1.03–1.25× | 2026-11-13 |
+| Cortex-A53, 32-bit (Redmi 9A, cpu0) | 1.11× | 1.06–1.17× | 2026-11-12 |
+
+* **Bitino vs LCE, same weights and core:** Bitino is faster on every model on every core.
+  * OnePlus Open, Cortex-X3: 1.29× on 2026-11-12. The smallest margins are on the QuickNets (1.14–1.17×), the
+    largest on XNOR-Net (1.74×) and Bi-Real/ResNet-E18 (1.52×).
+  * OnePlus Open, Cortex-A715: the smallest margins are on the QuickNets (1.05–1.07×), the largest on XNOR-Net
+    (1.29×) and Bi-Real/ResNet-E18 (1.21×).
+  * OnePlus Open, Cortex-A510 (in-order): QuickNets 1.12–1.14×; Bi-Real, ResNet-E18 and DenseNet-28/37/45 1.30–1.31×;
+    XNOR-Net 1.35×.
+  * Moto e13, Cortex-A75: on 2026-11-12 the two were about even (0.97×, LCE ahead by 6–10 % on the QuickNets,
+    Bi-Real, ResNet-E18 and AlexNet). The A75 binary tile and stem work of 2026-11-13 closed that gap.
+  * Redmi 9A, 32-bit Cortex-A53: 2026-11-12 run, 5 models, not re-run.
+* **Plain TFLite fp32**, what Android developers get by default, is 4.7–13× slower than Bitino on every core.
+  Geometric means: 7.3× X3, 6.8× A715, 7.3× A510, 6.2× A75, 10.2× A53 (X3/A75/A53 from 2026-11-12).
+* **TFLite full-int8 PTQ** is 1.2–4.8× slower than Bitino, and it breaks accuracy: top-1 agreement with the reference
+  is 0.45–0.66, and 0 on the DenseNets. Geometric means: 1.9× X3, 1.7× A715, 1.9× A510, 3.2× A75, 3.7× A53.
+  The closest case is XNOR-Net on the A715: 22.0 vs 18.7 ms, 1.18×.
 * **Model size:** Bitino and LCE files are within 1 % of each other, except XNOR-Net, where LCE's file is 89 MB vs
   Bitino's 24 MB. The TFLite fp32 files are 5–31× larger than Bitino's, and the int8 files 1.2–8× larger.
 * **Peak RSS:** Bitino 14–54 MB, LCE 17–189 MB, TFLite fp32 83–496 MB.
@@ -56,8 +72,9 @@ when Bitino was slower than now).
 One-sentence summary:
 
 > On the same Larq Zoo binary networks and weights, at 1 thread, Bitino is faster than Larq Compute Engine on every
-> model on every phone measured: 1.35× on a Cortex-X3 (up to 1.74×), 1.12× on a Cortex-A75 and 1.11× on a 32-bit
-> Cortex-A53, while plain TensorFlow Lite is 5–13× slower than Bitino in fp32 and loses most of the accuracy in int8.
+> model on every core measured. The geometric-mean margins are 1.35× on a Cortex-X3 (up to 1.74×), 1.14× on a
+> Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75 and 1.11× on a 32-bit Cortex-A53. Plain TensorFlow
+> Lite is 5–13× slower than Bitino in fp32 and loses most of the accuracy in int8.
 
 **Re-run 2026-11-13** (current runtime; Bitino stage `all` and LCE only, same launcher, models, binaries and clock
 gate as below; 5 rounds per model, no throttled round; raw data `reports/h2h/2026-11-13/`), median ms:
@@ -76,6 +93,59 @@ gate as below; 5 rounds per model, no throttled round; raw data `reports/h2h/202
 | binary-densenet37-dilated | 44.29 | 56.58 | 1.28 | 239.65 | 280.02 | 1.17 |
 | binary-densenet45 | 32.83 | 42.75 | 1.30 | 172.03 | 208.15 | 1.21 |
 | geometric mean | | | 1.35 | | | 1.12 |
+
+**OnePlus Open mid and little cores (2026-11-19).** These runs cover all five runtimes on the same phone, the same
+models and the same official binaries; the LCE/TFLite `.tflite` files match the SHA-256 of the 2026-11-12 build
+reports. The Bitino binary was rebuilt at commit a7c17ddd. The method and launcher are unchanged:
+
+* every runtime was pinned by `h2h_run --cpus 4` (Cortex-A715) or `--cpus 0` (Cortex-A510);
+* 5 rounds per model on each core;
+* every round ran at its reference cap with thermal status 0: none was off-reference, and none was re-measured;
+* every sample of every run was on the pinned core.
+
+The official binaries and the converted models were not downloaded or rebuilt again. They were copied back from
+the phone's `/data/local/tmp/h2h`, where the 2026-11-12 run had pushed them, after their SHA-256 were checked
+against the pinned hashes and the build reports. The host interpreters' outputs (`host_outputs.npz`) were not
+recreated, so the output table of `reports/h2h/2026-11-19/summary.md` has no `=host` marks. The device outputs on
+image 0 are identical to the 2026-11-12 X3 ones for every runtime and model.
+
+Raw data are in `reports/h2h/2026-11-19/`, in `oneplus-a715/` and `oneplus-a510/`, and the generated tables
+(including peak RSS, run-to-run spread and the `bitino_neon` stage) are in `summary.md` there. Bitino-alone timings
+of more models on the same two cores, at stages `all` and `int8_full`, are in the development log (not published).
+
+**OnePlus Open (A715 @1.79 GHz cap, cpu4)**, median ms (1 thread, batch 1); the last column is LCE ÷ Bitino (> 1: Bitino faster)
+
+| model | Bitino | LCE 0.16 | TFLite fp32 | TFLite int8 | LCE ÷ Bitino |
+|---|---:|---:|---:|---:|---:|
+| quicknet-small | **10.80** | 11.55 | 93.54 | 23.93 | 1.07 |
+| quicknet | **17.41** | 18.39 | 147.68 | 37.14 | 1.06 |
+| quicknet-large | **31.48** | 32.99 | 289.57 | 70.54 | 1.05 |
+| birealnet | **24.36** | 29.55 | 144.84 | 37.20 | 1.21 |
+| binary-resnet-e18 | **24.47** | 29.69 | 145.03 | 37.41 | 1.21 |
+| xnornet | **18.67** | 24.13 | 98.51 | 22.01 | 1.29 |
+| binary-alexnet | **12.83** | 14.92 | 74.92 | 16.40 | 1.16 |
+| binary-densenet28 | **49.28** | 55.47 | 308.38 | 88.01 | 1.13 |
+| binary-densenet37 | **56.77** | 63.70 | 380.25 | 108.70 | 1.12 |
+| binary-densenet37-dilated | **102.69** | 113.96 | 670.30 | 186.32 | 1.11 |
+| binary-densenet45 | **76.16** | 84.76 | 536.33 | 152.57 | 1.11 |
+| geometric mean | | | | | 1.14 |
+
+**OnePlus Open (A510 @2.02 GHz, cpu0)**, median ms (1 thread, batch 1); the last column is LCE ÷ Bitino (> 1: Bitino faster)
+
+| model | Bitino | LCE 0.16 | TFLite fp32 | TFLite int8 | LCE ÷ Bitino |
+|---|---:|---:|---:|---:|---:|
+| quicknet-small | **23.08** | 25.78 | 230.80 | 53.92 | 1.12 |
+| quicknet | **36.39** | 41.35 | 349.85 | 84.87 | 1.14 |
+| quicknet-large | **65.17** | 72.89 | 675.72 | 162.41 | 1.12 |
+| birealnet | **53.64** | 70.07 | 340.29 | 87.33 | 1.31 |
+| binary-resnet-e18 | **54.77** | 70.99 | 340.50 | 88.08 | 1.30 |
+| xnornet | **41.39** | 55.91 | 218.58 | 52.84 | 1.35 |
+| binary-alexnet | **28.77** | 33.68 | 167.36 | 39.96 | 1.17 |
+| binary-densenet28 | **108.50** | 141.47 | 704.74 | 212.41 | 1.30 |
+| binary-densenet37 | **124.17** | 161.75 | 878.21 | 260.58 | 1.30 |
+| binary-densenet37-dilated | **224.68** | 279.66 | 1547.50 | 445.94 | 1.24 |
+| binary-densenet45 | **164.42** | 214.91 | 1255.05 | 365.50 | 1.31 |
+| geometric mean | | | | | 1.24 |
 
 The tables below are the original 2026-11-12 run (all five runtimes).
 
@@ -399,7 +469,8 @@ done.
   * On the OnePlus Open, Qualcomm core_ctl *pauses* the idle Cortex-X3. `sched_setaffinity(cpu7)` then fails with
     `EINVAL`, or returns 0 while the kernel substitutes other CPUs (read back as `0-5`). The launcher busy-spins for
     20 ms and retries until the mask reads back as `7`. The X3 typically wakes after 2–4 tries (40–80 ms), and the
-    wait is recorded per run (`pin_wait`). The same procedure applies to all runtimes.
+    wait is recorded per run (`pin_wait`). The same procedure applies to all runtimes. On cpu4 (A715) and cpu0
+    (A510), in the 2026-11-19 runs, the first `sched_setaffinity()` call was accepted in all 550 runs (0 retries).
   * Placement is then verified during the run. Every 25 ms the launcher reads the core each thread of the benchmark
     process last ran on (`/proc/<pid>/task/<tid>/stat` field 39) and the process's `Cpus_allowed_list`.
   * A run counts only when every sample of every thread is on the requested CPU and the allowed list never changed.
@@ -412,8 +483,9 @@ done.
   whole round, so no other job runs between two runtimes of the same round.
 * **Clocks and thermals.** No governor change, no reboot, USB only.
   * Every phone has a **reference cap**: the `scaling_max_freq` of the pinned core's cpufreq policy at the start of
-    its first invocation. The values are 2227200 kHz on the OnePlus cpu7, 1612000 kHz on the Moto cpu7 and
-    2001000 kHz on the Redmi cpu0.
+    its first invocation. The values are 2227200 kHz on the OnePlus cpu7, 1785600 kHz on the OnePlus cpu4
+    (2026-11-19), 2016000 kHz on the OnePlus cpu0 (2026-11-19), 1612000 kHz on the Moto cpu7 and 2001000 kHz on
+    the Redmi cpu0.
   * Before every round, the gate (`PinnedGate` in `tools/h2h_bench.py`) waits, for at most 600 s, until the Android
     thermal status is 0 and that cap equals the reference.
   * The thermal status and the `scaling_max_freq` of every policy are recorded before and after every round. A
@@ -438,8 +510,9 @@ These are the known differences between the runtimes' setups, and what each one 
 * **The clocks are vendor-capped, the same for every runtime.**
   * OnePlus Open: with the screen off, the vendor power policy holds the Cortex-X3 at 2.23 GHz of 3.19 GHz (and
     the A715/A710 at 1.79 of 2.80), at thermal status 0. Every accepted OnePlus round ran at the 2.23 GHz cap.
-    Absolute OnePlus milliseconds are therefore *not* peak-clock numbers. The ratios between runtimes are
-    unaffected.
+    Every accepted cpu4 (A715) round of 2026-11-19 ran at the 1.79 GHz cap. The A510 cluster (cpu0–2) is not
+    capped: its rounds ran at the full 2.02 GHz. Absolute OnePlus X3 and A715 milliseconds are therefore *not*
+    peak-clock numbers. The ratios between runtimes are unaffected.
   * Moto e13: every core reports 1.61 GHz as both the cap and the maximum.
   * Redmi 9A: cpu0–3 run at 2.0 GHz and cpu4–7 at 1.5 GHz, uncapped.
 * **The TFLite runtime versions differ, but this does not move the float numbers.** LCE 0.16.0 bundles the TFLite
@@ -471,7 +544,8 @@ These are the known differences between the runtimes' setups, and what each one 
 * **Statistic.** Each run reports the mean of its 50 timed runs. Over all Bitino runs, the mean/median ratio is
   0.998–1.010. The tables show the median over repeats.
   * Repeats: the OnePlus used 5 for every model. The Moto used 5 for the first five models and 3 for XNOR-Net,
-    AlexNet and the DenseNets. The Redmi used 3.
+    AlexNet and the DenseNets. The Redmi used 3. The OnePlus A715 and A510 runs of 2026-11-19 used 5 for every
+    model.
   * The max/min spread of the per-run means is in the RSS tables.
   * Runs longer than 1 s (Moto DenseNet-37-dilated TFLite fp32) were first recorded as failed: the early parser did
     not read `avg=1.68347e+06`. The report re-parses the kept tool output of such runs. Only runs that exited 0,
@@ -488,7 +562,8 @@ These are the known differences between the runtimes' setups, and what each one 
 * **Other jobs shared the phones.** Other benchmark and correctness suites ran on the same phones between rounds,
   under the same lock, never inside a round. Several batches waited up to about 2 h for a suite that held a phone's
   lock. Every round was gated on the reference cap (see above). The Redmi run started only after its correctness
-  suite had ended.
+  suite had ended. On 2026-11-19, the Bitino-alone runs of the development log (not published) ran between the A715 rounds,
+  under the same lock, never inside a round.
 * **Redmi 9A (32-bit only): LCE runs the Linux AArch32 build through glibc.** No armeabi-v7a Android build of
   `lce_benchmark_model` is published. The v0.16.0 release ships `lce_benchmark_model_aarch32`, a glibc Linux
   binary (`--config=rpi3`: `-march=armv7-a -mfpu=neon-vfpv4`), and no Bazel build was attempted.

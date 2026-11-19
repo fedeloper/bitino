@@ -16,6 +16,9 @@
 # The 2026-11-12 results (reports/h2h/2026-11-12) ran OnePlus with REPEATS=5; Moto with REPEATS=5 for the QuickNets,
 # Bi-Real and ResNet-E18 and 3 for the rest; Redmi (PHONES=75AUS4CUDYN75LEQ:redmi9a:0:armv7) with REPEATS=3 on
 # MODELS=quicknet-small,quicknet,quicknet-large,birealnet,binary-resnet-e18, after its correctness suite had ended.
+# The 2026-11-19 results (reports/h2h/2026-11-19) ran PHONES="e3698ea7:oneplus-a715:4:arm64 e3698ea7:oneplus-a510:0:arm64"
+# with REPEATS=5 (OnePlus Open Cortex-A715 and Cortex-A510), binaries and models copied back from the phone after a
+# SHA-256 check against the pinned hashes and the 2026-11-12 build reports.
 # Control (TFLite fp32 model under LCE's binary): tools/h2h_bench.py run ... --runtimes tflite_fp32,lcebin_fp32.
 # Heavy host steps run under scripts/capped.sh; timing runs hold /tmp/bitino-device-<serial>.lock (tools/h2h_bench.py).
 set -euo pipefail

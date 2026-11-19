@@ -1,0 +1,245 @@
+{
+ "model_id": "larq-zoo-binary-densenet28",
+ "h5": {
+  "file": ".cache/checkpoints/larq-zoo-binary-densenet28/binary_densenet_28_weights.h5",
+  "sha256": "21fe3ca03eed244df9c41a2219876fcf03e73800932ec96a3e2a76af4747ac53",
+  "expected_sha256": "21fe3ca03eed244df9c41a2219876fcf03e73800932ec96a3e2a76af4747ac53",
+  "n_weighted_layers": 56,
+  "n_tensors": 141,
+  "names_identical_in_order": true,
+  "layer_types_identical_in_order": true,
+  "keras_version_in_file": "2.2.4-tf"
+ },
+ "env": {
+  "tensorflow": "2.16.1",
+  "tf_keras": "",
+  "larq": "0.14.0",
+  "larq_compute_engine": "0.16.0",
+  "python": "3.11.18"
+ },
+ "keras_params": 5150504,
+ "keras_vs_reference": {
+  "logits": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "probs": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  }
+ },
+ "lce_default_conversion": {
+  "bytes": 4277612,
+  "ops": {
+   "ADD": 27,
+   "AVERAGE_POOL_2D": 1,
+   "CONCATENATION": 23,
+   "CONV_2D": 4,
+   "FULLY_CONNECTED": 1,
+   "LceBconv2d": 23,
+   "LceQuantize": 23,
+   "MAX_POOL_2D": 4,
+   "MUL": 27,
+   "SOFTMAX": 1
+  },
+  "binary_quantconv2d_layers": 23
+ },
+ "int8_mode": "supported_ops=TFLITE_BUILTINS_INT8",
+ "int8_calibration": {
+  "set": ".cache/data/dev1000_imagenet100train_larq (ImageNet-100 TRAIN images, larq_zoo preprocessing, disjoint from eval128)",
+  "n": 128
+ },
+ "files": {
+  "lce": {
+   "file": "lce.tflite",
+   "bytes": 4277612,
+   "sha256_converter": "9a01b35cc6dafd3ca1d77ab80a5c80644afd88fdb308473354c60d12bbae921b",
+   "convert_s": 19.0,
+   "ops": {
+    "ADD": 27,
+    "AVERAGE_POOL_2D": 1,
+    "CONCATENATION": 23,
+    "CONV_2D": 4,
+    "FULLY_CONNECTED": 1,
+    "LceBconv2d": 23,
+    "LceQuantize": 23,
+    "MAX_POOL_2D": 4,
+    "MUL": 27,
+    "SOFTMAX": 1
+   },
+   "sha256": "6965a859997cc230d82e54d9c2ef15b3ecd951f317895a53752c8e4f833bbfde",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_fp32": {
+   "file": "tflite_fp32.tflite",
+   "bytes": 20569340,
+   "sha256_converter": "0ee8bfac4af85acc9691542b0ee531a3b8978cbec1524508e1b250a3eaa13351",
+   "convert_s": 17.9,
+   "ops": {
+    "ADD": 50,
+    "AVERAGE_POOL_2D": 1,
+    "CONCATENATION": 23,
+    "CONV_2D": 27,
+    "FULLY_CONNECTED": 1,
+    "MAX_POOL_2D": 4,
+    "MUL": 27,
+    "RESHAPE": 1,
+    "SIGN": 46,
+    "SOFTMAX": 1
+   },
+   "sha256": "63a2bce9b850c7c3615c18734eead0c6f9c91a34bae68e827b122760c19d9002",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ]
+  },
+  "tflite_int8": {
+   "file": "tflite_int8.tflite",
+   "bytes": 5253984,
+   "sha256_converter": "43475a49a1467b94c02d3fa2806f907f77d3442b887467f5c65df833ea60a43d",
+   "convert_s": 146.7,
+   "ops": {
+    "ADD": 50,
+    "AVERAGE_POOL_2D": 1,
+    "CONCATENATION": 23,
+    "CONV_2D": 27,
+    "DEQUANTIZE": 46,
+    "FULLY_CONNECTED": 1,
+    "MAX_POOL_2D": 4,
+    "MUL": 27,
+    "QUANTIZE": 46,
+    "RESHAPE": 1,
+    "SIGN": 46,
+    "SOFTMAX": 1
+   },
+   "sha256": "4fa0c047349c9f22f4dc73430c70cf4523b9715f990db72f2e12e9a5ca2b0216",
+   "input_renamed": [
+    [
+     "serving_default_input_1:0",
+     "serving_default_input_1_0"
+    ]
+   ],
+   "op_types": {
+    "ADD:INT8": 50,
+    "AVERAGE_POOL_2D:INT8": 1,
+    "CONCATENATION:INT8": 23,
+    "CONV_2D:INT8": 27,
+    "DEQUANTIZE:INT8": 46,
+    "FULLY_CONNECTED:INT8": 1,
+    "MAX_POOL_2D:INT8": 4,
+    "MUL:INT8": 27,
+    "QUANTIZE:FLOAT32": 46,
+    "RESHAPE:INT8": 1,
+    "SIGN:FLOAT32": 46,
+    "SOFTMAX:INT8": 1
+   }
+  },
+  "bitino": {
+   "file": "artifacts/larq-zoo-binary-densenet28/model.bitino",
+   "bytes": 4277248,
+   "sha256": "fc411c5109e622ccc1aea57d5c8b391a5e9056c0aeedb6949ba3279910066eeb"
+  }
+ },
+ "int8_float_ops": {
+  "SIGN:FLOAT32": 46
+ },
+ "host_agreement_vs_reference_probs": {
+  "keras": {
+   "n": 128,
+   "max_abs": 0.0,
+   "mean_abs": 0.0,
+   "top1_agreement": 1.0,
+   "n_top1_disagreements": 0,
+   "top5_overlap": 1.0,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "lce": {
+   "n": 128,
+   "max_abs": 0.16273146867752075,
+   "mean_abs": 3.216443103018751e-05,
+   "top1_agreement": 0.9921875,
+   "n_top1_disagreements": 1,
+   "top5_overlap": 0.9750000000000001,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.1627347767353058,
+   "mean_abs": 3.216729430076053e-05,
+   "top1_agreement": 0.9921875,
+   "n_top1_disagreements": 1,
+   "top5_overlap": 0.9750000000000001,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.9999740123748779,
+   "mean_abs": 0.0019462528945556647,
+   "top1_agreement": 0.0,
+   "n_top1_disagreements": 128,
+   "top5_overlap": 0.003125,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.0
+  }
+ },
+ "host_agreement_vs_keras_probs": {
+  "lce": {
+   "n": 128,
+   "max_abs": 0.16273146867752075,
+   "mean_abs": 3.216443103018751e-05,
+   "top1_agreement": 0.9921875,
+   "n_top1_disagreements": 1,
+   "top5_overlap": 0.9750000000000001,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "tflite_fp32": {
+   "n": 128,
+   "max_abs": 0.1627347767353058,
+   "mean_abs": 3.216729430076053e-05,
+   "top1_agreement": 0.9921875,
+   "n_top1_disagreements": 1,
+   "top5_overlap": 0.9750000000000001,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.609375
+  },
+  "tflite_int8": {
+   "n": 128,
+   "max_abs": 0.9999740123748779,
+   "mean_abs": 0.0019462528945556647,
+   "top1_agreement": 0.0,
+   "n_top1_disagreements": 128,
+   "top5_overlap": 0.003125,
+   "top1_acc_ref": 0.609375,
+   "top1_acc_out": 0.0
+  }
+ },
+ "int8_io": {
+  "input_scale": 0.02717430144548416,
+  "input_zero_point": -19,
+  "output_scale": 0.00390625,
+  "output_zero_point": -128
+ }
+}
