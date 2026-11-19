@@ -1,0 +1,1149 @@
+{
+ "bitino_version": "0.1.0",
+ "build": {
+  "compiler": "Android (12470979, +pgo, +bolt, +lto, +mlgo, based on r522817c) Clang 18.0.3 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+  "flags": "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -march=armv7-a -mthumb -Wformat -Werror=format-security   -O3 -DNDEBUG  -Wall -Wextra -Wno-unused-parameter -ffp-contract=off",
+  "type": "Release"
+ },
+ "config": {
+  "affinity": "",
+  "affinity_errors": 0,
+  "bit_outputs": true,
+  "fuse": true,
+  "host_epilogues": true,
+  "iterations": 50,
+  "nodes": 44,
+  "parallel_for_per_run": 45,
+  "plan_rewrites": {
+   "absorbed_nodes": 0,
+   "aliased_reshapes": 0,
+   "bit_outputs": 0,
+   "folded_thresholds": 0,
+   "fused_nodes": 0,
+   "hosted_epilogues": 0,
+   "i8_absorbed_luts": 0,
+   "i8_add_twins": 16,
+   "i8_bit_outputs": 15,
+   "i8_composed_luts": 0,
+   "i8_folded_luts": 0,
+   "i8_interval_folds": 0,
+   "i8_lut_twins": 0,
+   "i8_merged_nodes": 32,
+   "i8_removed_luts": 0,
+   "shared_binarizations": 0
+  },
+  "pool_dispatches_per_run": 0,
+  "pool_threads": 1,
+  "profile": false,
+  "reuse_memory": true,
+  "spin_run": true,
+  "spin_us": 0,
+  "stage": "int8_full",
+  "threads": 1,
+  "unpinned_threads_after": 0,
+  "warmup": 9
+ },
+ "correctness_samples": 1,
+ "cpu_freq_after": [
+  {
+   "cpu": 0,
+   "cur_khz": 2001000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 2001000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 2001000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 2001000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 400000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 400000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 400000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 400000,
+   "max_khz": 1500000
+  }
+ ],
+ "cpu_freq_before": [
+  {
+   "cpu": 0,
+   "cur_khz": 1617000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 1617000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 1779000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 1779000,
+   "max_khz": 2001000
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 542000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 542000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 542000,
+   "max_khz": 1500000
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 542000,
+   "max_khz": 1500000
+  }
+ ],
+ "device": {
+  "android_release": "11",
+  "api_level": "30",
+  "build_fingerprint": "Redmi/dandelion_eea/dandelion:11/RP1A.200720.011/V12.5.5.0.RCDEUXM:user/release-keys",
+  "cpu_features": "arm: neon fma",
+  "cpu_parts": "0xd03 0xd03 0xd03 0xd03 0xd03 0xd03 0xd03 0xd03 ",
+  "kernel": "4.19.127-perf-g7288046673d5",
+  "model": "M2006C3LG",
+  "online_cpus": "0-7",
+  "soc": "",
+  "thermal_status": "Thermal Status: 0"
+ },
+ "kernels": {
+  "i8add.neon": 1,
+  "i8addn.neon": 15,
+  "i8avgpool2d.neon": 3,
+  "i8bconv2d.neon": 16,
+  "i8conv2d.neon_a32_mull": 3,
+  "i8conv2dn.neon_a32_mull": 1,
+  "i8dense.neon_a32_mull": 1,
+  "i8globalavgpool.neon": 1,
+  "i8maxpool2d.neon": 2,
+  "i8quantize.neon": 1
+ },
+ "label": "dabnn-bireal18__bitino_int8_full__r4",
+ "latency": {
+  "load_ms": 45.295692,
+  "max_ms": 112.764308,
+  "mean_ms": 112.310849,
+  "median_ms": 112.318461,
+  "min_ms": 111.957308,
+  "n": 50,
+  "p90_ms": 112.522523,
+  "p95_ms": 112.607023,
+  "samples_ms": [
+   112.345077,
+   112.361231,
+   112.476385,
+   112.521461,
+   112.331847,
+   112.532077,
+   112.462077,
+   112.276385,
+   112.270615,
+   112.240077,
+   112.462539,
+   112.580539,
+   112.282461,
+   112.282462,
+   112.367923,
+   112.191615,
+   112.360693,
+   112.201,
+   112.238,
+   111.969077,
+   112.347308,
+   112.419385,
+   112.00323,
+   112.490231,
+   112.33677,
+   112.288154,
+   112.215154,
+   112.326307,
+   112.155231,
+   112.318846,
+   112.263077,
+   111.98,
+   112.351,
+   112.187461,
+   112.437692,
+   112.628692,
+   112.518923,
+   112.293539,
+   112.419847,
+   111.957308,
+   112.318077,
+   112.764308,
+   112.004,
+   112.057769,
+   111.97877,
+   112.470615,
+   112.181462,
+   112.110923,
+   112.652615,
+   112.312231
+  ],
+  "session_prepare_ms": 59.065539,
+  "stddev_ms": 0.185228744,
+  "throughput_per_s": 8.90325586,
+  "timed_wall_ms": 5615.91939
+ },
+ "memory": {
+  "activation_bytes": 2437536,
+  "model_mapped": true,
+  "prepacked_bytes": 2233344,
+  "released_constant_bytes": 1978368,
+  "rss_after_load_kb": 5444,
+  "rss_after_run_kb": 10000,
+  "rss_after_session_kb": 9684,
+  "rss_start_kb": 2876,
+  "vm_hwm_kb": 11612
+ },
+ "model": {
+  "constant_bytes": 2127040,
+  "data_sha256": "55b32fb893d332a3633bdd2eb6700368a3e140c8dbaf86c06702a35e4c5b5a8f",
+  "file_bytes": 2164480,
+  "hash_verified": true,
+  "inputs": [
+   {
+    "dtype": "f32",
+    "name": "input",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   }
+  ],
+  "manifest": {
+   "conversion": {
+    "adapter": "bitino.adapters.onnx_dabnn",
+    "binarization": "all-+-1 Conv -> BConv2D, input_binarize ge, pad_value -1, no weight scale",
+    "date_utc": "2026-10-30T23:41:45.663097+00:00",
+    "numpy": "2.5.4",
+    "onnx": "1.23.2",
+    "passes": {
+     "fold_affine_into_conv": 20,
+     "fold_relu_into_producer": 0,
+     "prune_unused_constants": 44
+    },
+    "python": "3.12.7",
+    "tool": "tools/convert_dabnn.py"
+   },
+   "input": {
+    "dtype": "f32",
+    "layout": "NHWC",
+    "name": "input",
+    "preprocessing": "torchvision 0.21.0+cu124 / PIL 12.2.0: PIL.Image.open(f).convert('RGB') -> transforms.Resize(256) [InterpolationMode.BILINEAR, antialias=True, short side 256] -> transforms.CenterCrop(224) -> transforms.ToTensor() -> transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)); CHW -> HWC (AB-BNN Inference/ImageNet.ipynb transform_test) (daBNN documents no preprocessing; the official Bi-Real ImageNet validation transform is assumed)",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   },
+   "layer_precision": [
+    {
+     "activations": "fp32",
+     "kernel": [
+      7,
+      7
+     ],
+     "layer": "conv_123",
+     "op": "Conv2D",
+     "pads": [
+      3,
+      3,
+      3,
+      3
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_126",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_129",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_132",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_135",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_140",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_142",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_145",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_148",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_151",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_156",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_158",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_161",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_164",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_167",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_172",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_174",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_177",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_180",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_183",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "conv_188",
+     "op": "Dense",
+     "shape": [
+      1000,
+      512
+     ],
+     "weights": "fp32"
+    }
+   ],
+   "model_id": "dabnn-bireal18",
+   "op_versions": {
+    "format": 1
+   },
+   "outputs": [
+    "logits"
+   ],
+   "quantization": {
+    "binarize_aware_tensors": 17,
+    "calibration": {
+     "dir": ".cache/data/calib512_imagenet100train",
+     "disjointness": {
+      "calib_samples": 512,
+      "checked": [
+       {
+        "eval_samples": 128,
+        "manifest": ".cache/data/eval128/manifest.json",
+        "manifest_sha256": "abed2b6bda569dcf3013b7cb06752caf2abc22319f8d7684badf02660aaf20eb",
+        "overlap_basename": 0,
+        "overlap_file": 0,
+        "overlap_jpeg_sha256": 0
+       },
+       {
+        "eval_samples": 5000,
+        "manifest": ".cache/data/eval5000/manifest.json",
+        "manifest_sha256": "aeb3cab4db718428f1ced16795b959b2a679143c38f7490984cd7b1839a1e345",
+        "overlap_basename": 0,
+        "overlap_file": 0,
+        "overlap_jpeg_sha256": 0
+       }
+      ],
+      "passed": true,
+      "rule": "no selected sample's synset/file, bare file name or JPEG SHA-256 occurs in any listed eval manifest",
+      "unique_jpeg_sha256": 512
+     },
+     "n": 128,
+     "preprocessing": "torchvision_imagenet",
+     "purpose": "calibration",
+     "range": "percentile 99.99",
+     "sample_ids": [
+      "n01558993/n01558993_1004.JPEG",
+      "n01692333/n01692333_10.JPEG",
+      "n01729322/n01729322_10008.JPEG",
+      "n01735189/n01735189_1.JPEG",
+      "n01749939/n01749939_10048.JPEG",
+      "n01773797/n01773797_1001.JPEG",
+      "n01820546/n01820546_1000.JPEG",
+      "n01855672/n01855672_10.JPEG",
+      "n01978455/n01978455_100.JPEG",
+      "n01980166/n01980166_1001.JPEG",
+      "n01983481/n01983481_1000.JPEG",
+      "n02009229/n02009229_1.JPEG",
+      "n02018207/n02018207_100.JPEG",
+      "n02085620/n02085620_10011.JPEG",
+      "n02086240/n02086240_10.JPEG",
+      "n02086910/n02086910_10015.JPEG",
+      "n02087046/n02087046_1004.JPEG",
+      "n02089867/n02089867_1.JPEG",
+      "n02089973/n02089973_1.JPEG",
+      "n02090622/n02090622_10.JPEG",
+      "n02091831/n02091831_1001.JPEG",
+      "n02093428/n02093428_10007.JPEG",
+      "n02099849/n02099849_10.JPEG",
+      "n02100583/n02100583_10019.JPEG",
+      "n02104029/n02104029_1008.JPEG",
+      "n02105505/n02105505_1018.JPEG",
+      "n02106550/n02106550_10003.JPEG",
+      "n02107142/n02107142_10009.JPEG",
+      "n02108089/n02108089_1.JPEG",
+      "n02109047/n02109047_100.JPEG",
+      "n02113799/n02113799_10.JPEG",
+      "n02113978/n02113978_10025.JPEG",
+      "n02114855/n02114855_1.JPEG",
+      "n02116738/n02116738_100.JPEG",
+      "n02119022/n02119022_10008.JPEG",
+      "n02123045/n02123045_10001.JPEG",
+      "n02138441/n02138441_10002.JPEG",
+      "n02172182/n02172182_10007.JPEG",
+      "n02231487/n02231487_1.JPEG",
+      "n02259212/n02259212_10003.JPEG",
+      "n02326432/n02326432_10017.JPEG",
+      "n02396427/n02396427_10010.JPEG",
+      "n02483362/n02483362_10002.JPEG",
+      "n02488291/n02488291_1.JPEG",
+      "n02701002/n02701002_1.JPEG",
+      "n02788148/n02788148_10.JPEG",
+      "n02804414/n02804414_10.JPEG",
+      "n02859443/n02859443_10001.JPEG",
+      "n02869837/n02869837_10001.JPEG",
+      "n02877765/n02877765_10009.JPEG",
+      "n02974003/n02974003_100.JPEG",
+      "n03017168/n03017168_10011.JPEG",
+      "n03032252/n03032252_100158.JPEG",
+      "n03062245/n03062245_1000.JPEG",
+      "n03085013/n03085013_10035.JPEG",
+      "n03259280/n03259280_10001.JPEG",
+      "n03379051/n03379051_10008.JPEG",
+      "n03424325/n03424325_10005.JPEG",
+      "n03492542/n03492542_10107.JPEG",
+      "n03494278/n03494278_10018.JPEG",
+      "n03530642/n03530642_10006.JPEG",
+      "n03584829/n03584829_10025.JPEG",
+      "n03594734/n03594734_10030.JPEG",
+      "n03637318/n03637318_100.JPEG",
+      "n03642806/n03642806_10106.JPEG",
+      "n03764736/n03764736_10011.JPEG",
+      "n03775546/n03775546_1.JPEG",
+      "n03777754/n03777754_1003.JPEG",
+      "n03785016/n03785016_1004.JPEG",
+      "n03787032/n03787032_10007.JPEG",
+      "n03794056/n03794056_10005.JPEG",
+      "n03837869/n03837869_10.JPEG",
+      "n03891251/n03891251_1.JPEG",
+      "n03903868/n03903868_100300.JPEG",
+      "n03930630/n03930630_10016.JPEG",
+      "n03947888/n03947888_1.JPEG",
+      "n04026417/n04026417_10031.JPEG",
+      "n04067472/n04067472_100.JPEG",
+      "n04099969/n04099969_10014.JPEG",
+      "n04111531/n04111531_10011.JPEG",
+      "n04127249/n04127249_10024.JPEG",
+      "n04136333/n04136333_10001.JPEG",
+      "n04229816/n04229816_1.JPEG",
+      "n04238763/n04238763_100.JPEG",
+      "n04336792/n04336792_10001.JPEG",
+      "n04418357/n04418357_1000.JPEG",
+      "n04429376/n04429376_10004.JPEG",
+      "n04435653/n04435653_100.JPEG",
+      "n04485082/n04485082_1000.JPEG",
+      "n04493381/n04493381_10004.JPEG",
+      "n04517823/n04517823_10009.JPEG",
+      "n04589890/n04589890_10003.JPEG",
+      "n04592741/n04592741_10013.JPEG",
+      "n07714571/n07714571_1000.JPEG",
+      "n07715103/n07715103_10001.JPEG",
+      "n07753275/n07753275_10049.JPEG",
+      "n07831146/n07831146_1000.JPEG",
+      "n07836838/n07836838_1.JPEG",
+      "n13037406/n13037406_1.JPEG",
+      "n13040303/n13040303_10.JPEG",
+      "n01558993/n01558993_10059.JPEG",
+      "n01692333/n01692333_1000.JPEG",
+      "n01729322/n01729322_10023.JPEG",
+      "n01735189/n01735189_10009.JPEG",
+      "n01749939/n01749939_10066.JPEG",
+      "n01773797/n01773797_1004.JPEG",
+      "n01820546/n01820546_1003.JPEG",
+      "n01855672/n01855672_1001.JPEG",
+      "n01978455/n01978455_1000.JPEG",
+      "n01980166/n01980166_10029.JPEG",
+      "n01983481/n01983481_10030.JPEG",
+      "n02009229/n02009229_10003.JPEG",
+      "n02018207/n02018207_1001.JPEG",
+      "n02085620/n02085620_1003.JPEG",
+      "n02086240/n02086240_1001.JPEG",
+      "n02086910/n02086910_10024.JPEG",
+      "n02087046/n02087046_10091.JPEG",
+      "n02089867/n02089867_1000.JPEG",
+      "n02089973/n02089973_1000.JPEG",
+      "n02090622/n02090622_10003.JPEG",
+      "n02091831/n02091831_10034.JPEG",
+      "n02093428/n02093428_10057.JPEG",
+      "n02099849/n02099849_1002.JPEG",
+      "n02100583/n02100583_10021.JPEG",
+      "n02104029/n02104029_1010.JPEG",
+      "n02105505/n02105505_1022.JPEG",
+      "n02106550/n02106550_10005.JPEG",
+      "n02107142/n02107142_10036.JPEG"
+     ],
+     "seconds": 55.8,
+     "set": "imagenet100-train-calib-512",
+     "split": "train",
+     "tensor_sha256": "220b8a49adfd3914da7e042dbf0232a28453f789906ab0c25110817d1501148c"
+    },
+    "date": "2026-11-02",
+    "int8_ops": {
+     "I8Add": 31,
+     "I8AvgPool2D": 3,
+     "I8BConv2D": 16,
+     "I8Conv2D": 5,
+     "I8Dense": 1,
+     "I8GlobalAvgPool": 1,
+     "I8MaxPool2D": 2
+    },
+    "left_float": {},
+    "notes": [],
+    "options": {
+     "affine_trees": true,
+     "monotone_bypass": true,
+     "split_mixed": true
+    },
+    "rewrites": {
+     "binarize-aware second version of mixed tensors (producer emitted twice)": 17
+    },
+    "scheme": "int8_full v1: per-tensor asymmetric int8 activations (static, calibrated), per-output-channel symmetric int8 weights, int32 accumulators, fixed-point requantization (SQRDMULH + SRSHL rounding); binary operators with exact integer binarization thresholds and fp32 epilogues rounded half-to-even (docs/int8.md)",
+    "source_model": {
+     "path": "artifacts/dabnn-bireal18/model.bitino",
+     "sha256": "5f1a21b8d91e89d77414042f175ed77b73ba4b401f38fa8a7995b4823e677cc4"
+    },
+    "tensor_params": {
+     "add_128:out": [
+      0.185061544,
+      -67
+     ],
+     "add_128:out:bin": [
+      4.46069635e-07,
+      0
+     ],
+     "add_131:out": [
+      0.186763912,
+      -70
+     ],
+     "add_131:out:bin": [
+      4.60562234e-07,
+      0
+     ],
+     "add_134:out": [
+      0.193894431,
+      -63
+     ],
+     "add_134:out:bin": [
+      4.36384852e-07,
+      0
+     ],
+     "add_137:out": [
+      0.202745676,
+      -48
+     ],
+     "add_137:out:bin": [
+      4.14524663e-07,
+      -1
+     ],
+     "add_144:out": [
+      0.0480113588,
+      -5
+     ],
+     "add_144:out:bin": [
+      1.10185027e-07,
+      -1
+     ],
+     "add_147:out": [
+      0.0513789728,
+      -2
+     ],
+     "add_147:out:bin": [
+      1.13906665e-07,
+      -1
+     ],
+     "add_150:out": [
+      0.0576064512,
+      -10
+     ],
+     "add_150:out:bin": [
+      1.17930746e-07,
+      0
+     ],
+     "add_153:out": [
+      0.0626332834,
+      -10
+     ],
+     "add_153:out:bin": [
+      1.26400437e-07,
+      -1
+     ],
+     "add_160:out": [
+      0.038570419,
+      -10
+     ],
+     "add_160:out:bin": [
+      8.17097998e-08,
+      0
+     ],
+     "add_163:out": [
+      0.0449759401,
+      -1
+     ],
+     "add_163:out:bin": [
+      8.5408729e-08,
+      -1
+     ],
+     "add_166:out": [
+      0.0541596003,
+      -3
+     ],
+     "add_166:out:bin": [
+      9.0578439e-08,
+      0
+     ],
+     "add_169:out": [
+      0.0728353187,
+      -10
+     ],
+     "add_169:out:bin": [
+      1.07040982e-07,
+      0
+     ],
+     "add_176:out": [
+      0.0416647419,
+      0
+     ],
+     "add_176:out:bin": [
+      8.34209288e-08,
+      0
+     ],
+     "add_179:out": [
+      0.0497762933,
+      0
+     ],
+     "add_179:out:bin": [
+      7.94767061e-08,
+      -1
+     ],
+     "add_182:out": [
+      0.0644723326,
+      0
+     ],
+     "add_182:out:bin": [
+      1.10030612e-07,
+      -1
+     ],
+     "add_185:out": [
+      0.0521717034,
+      2
+     ],
+     "averagepool_139:out": [
+      0.202745676,
+      -48
+     ],
+     "averagepool_155:out": [
+      0.0626332834,
+      -10
+     ],
+     "averagepool_171:out": [
+      0.0728353187,
+      -10
+     ],
+     "averagepool_187:out": [
+      0.0171589963,
+      3
+     ],
+     "conv_123:out": [
+      0.236339271,
+      2
+     ],
+     "conv_123:out:bin": [
+      4.66194962e-07,
+      0
+     ],
+     "conv_126:out": [
+      0.0351180919,
+      -8
+     ],
+     "conv_129:out": [
+      0.0392448008,
+      -15
+     ],
+     "conv_132:out": [
+      0.0456616729,
+      -1
+     ],
+     "conv_135:out": [
+      0.0514016971,
+      7
+     ],
+     "conv_140:out": [
+      0.0444023013,
+      -6
+     ],
+     "conv_142:out": [
+      0.0129516125,
+      -8
+     ],
+     "conv_145:out": [
+      0.0221442413,
+      13
+     ],
+     "conv_148:out": [
+      0.0278969295,
+      -21
+     ],
+     "conv_151:out": [
+      0.0331175104,
+      8
+     ],
+     "conv_156:out": [
+      0.0345898122,
+      -11
+     ],
+     "conv_158:out": [
+      0.0119254105,
+      -6
+     ],
+     "conv_161:out": [
+      0.0217905212,
+      -4
+     ],
+     "conv_164:out": [
+      0.0340686664,
+      -7
+     ],
+     "conv_167:out": [
+      0.0460463353,
+      -15
+     ],
+     "conv_172:out": [
+      0.0346721224,
+      0
+     ],
+     "conv_174:out": [
+      0.0163142066,
+      -2
+     ],
+     "conv_177:out": [
+      0.0290494468,
+      0
+     ],
+     "conv_180:out": [
+      0.0422648713,
+      2
+     ],
+     "conv_183:out": [
+      0.0464433804,
+      0
+     ],
+     "input": [
+      0.018658448,
+      -14
+     ],
+     "input:q8": [
+      0.018658448,
+      -14
+     ],
+     "maxpool_125:out": [
+      0.236339271,
+      2
+     ],
+     "maxpool_125:out:bin": [
+      4.66194962e-07,
+      0
+     ]
+    }
+   },
+   "schema": "bitino.manifest.v1",
+   "source": {
+    "checkpoint_file": "birealnet18.onnx",
+    "checkpoint_sha256": "9c3864bda688d41400ac398203bcb6af249f1f66b59421052152d1891f49e988",
+    "class": "Bi-Real Net 18 (daBNN model zoo)",
+    "dab_file": "birealnet18.dab",
+    "dab_sha256": "3b43f3c0444863b54f99e9765e8366056eaa42df87fcaef67094a85bad61d249",
+    "framework": "onnx (daBNN model zoo)",
+    "repo": "https://github.com/JDAI-CV/dabnn"
+   },
+   "variant": "int8_full"
+  },
+  "path": "/data/local/tmp/h2h_dabnn/m/dabnn-bireal18/model_int8_full.bitino"
+ },
+ "schema": "bitino.benchmark.v1",
+ "thermal_after_c": {},
+ "thermal_before_c": {},
+ "timestamp_utc": "2026-11-19T10:24:42Z"
+}

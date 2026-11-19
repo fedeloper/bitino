@@ -1,0 +1,197 @@
+{
+ "tag": "redmi9a",
+ "serial": "75AUS4CUDYN75LEQ",
+ "device": {
+  "model": "M2006C3LG",
+  "android": "11",
+  "sdk": "30",
+  "soc": "",
+  "platform": "mt6765",
+  "abilist": "armeabi-v7a,armeabi",
+  "build": "Redmi/dandelion_eea/dandelion:11/RP1A.200720.011/V12.5.5.0.RCDEUXM:user/release-keys",
+  "kernel": "Linux localhost 4.19.127-perf-g7288046673d5 #1 SMP PREEMPT Fri Jul 8 20:22:55 CST 2022 armv8l",
+  "cpus": {
+   "0": "2001000 2001000",
+   "1": "2001000 2001000",
+   "2": "2001000 2001000",
+   "3": "2001000 2001000",
+   "4": "1500000 1500000",
+   "5": "1500000 1500000",
+   "6": "1500000 1500000",
+   "7": "1500000 1500000"
+  },
+  "cpu_parts": {
+   "0": "0xd03",
+   "1": "0xd03",
+   "2": "0xd03",
+   "3": "0xd03",
+   "4": "0xd03",
+   "5": "0xd03",
+   "6": "0xd03",
+   "7": "0xd03"
+  },
+  "pinned_cpu": "0",
+  "battery": "AC powered: true\n  USB powered: false\n  Wireless powered: false\n  level: 100\n  temperature: 260",
+  "wakefulness": "mWakefulness=Asleep",
+  "core_ctl_cpu": ""
+ },
+ "binaries": {
+  "dabnn_h2h": {
+   "local": ".cache/dabnn-h2h/build-armv7/binaries/dabnn_h2h",
+   "sha256": "34a9c69ff5b7af5af32b82afa8d2b413dbb163efa55c70df8c11f3e5fd4bac36"
+  },
+  "benchmark_single_model": {
+   "local": ".cache/dabnn-h2h/build-armv7/benchmark/benchmark_single_model",
+   "sha256": "86b411139d6ba48def67a1ccff90189f061fbdc5ce3f1964d45c24a1e396606a"
+  },
+  "bitino_bench": {
+   "local": "build/android-armv7/bitino_bench",
+   "sha256": "75bdaf1118cab7bdf7441dd03a42e49b856914d3429a820990c33f9e553596d4"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_armv7",
+   "sha256": "14f9ee81b1b0e4431c28ca725e2a89ea93d9c61511b380751f7389fd39326251"
+  }
+ },
+ "model_files": {
+  "dabnn-bireal18": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18.dab",
+    "sha256": "3b43f3c0444863b54f99e9765e8366056eaa42df87fcaef67094a85bad61d249",
+    "bytes": 4198320
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18/model.bitino",
+    "sha256": "5f1a21b8d91e89d77414042f175ed77b73ba4b401f38fa8a7995b4823e677cc4",
+    "bytes": 4205568
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18/model_int8_full.bitino",
+    "sha256": "c279d2d72f0a3debbde8b27412efeda1db2a5edb782cbd0d7557572291f76679",
+    "bytes": 2164480
+   }
+  },
+  "dabnn-bireal18-stem": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18-stem.dab",
+    "sha256": "6a3aa84157313f5adf971770fc5cee51ccbf49ec413f80f8bbae38bc91fb40c3",
+    "bytes": 4202880
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model.bitino",
+    "sha256": "a6f8a7c65c0fa52c94323d2bcbf6d9b567e343aac0a2321c0da6053d8862ea55",
+    "bytes": 4210432
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model_int8_full.bitino",
+    "sha256": "d3c435086b84f286df47db795cc8a3d33bc76c7d6d7f0af2c70731b8832286eb",
+    "bytes": 2183104
+   }
+  }
+ },
+ "models": [
+  "dabnn-bireal18",
+  "dabnn-bireal18-stem"
+ ],
+ "runtimes": [
+  "dabnn",
+  "bitino_all",
+  "bitino_int8_full",
+  "dabnn_gbench"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 5,
+ "cpu": "0",
+ "abi": "armv7",
+ "started_utc": "2026-11-19T10:59:06Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    2001000,
+    2001000
+   ],
+   "4": [
+    1500000,
+    1500000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": 29.0
+ },
+ "invocations": [
+  {
+   "models": [
+    "dabnn-bireal18",
+    "dabnn-bireal18-stem"
+   ],
+   "repeats": 5,
+   "started_utc": "2026-11-19T10:48:30Z",
+   "finished_utc": "2026-11-19T10:59:04Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      2001000,
+      2001000
+     ],
+     "4": [
+      1500000,
+      1500000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": 29.0
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      2001000,
+      2001000
+     ],
+     "4": [
+      1500000,
+      1500000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": 29.0
+   }
+  }
+ ],
+ "reference_cap_khz": 2001000,
+ "throttle_gate": {
+  "max_wait_s": 600.0,
+  "poll_s": 2.0,
+  "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+  "reference_cap_khz": 2001000
+ },
+ "finished_utc": "2026-11-19T10:59:06Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    2001000,
+    2001000
+   ],
+   "4": [
+    1500000,
+    1500000
+   ]
+  },
+  "capped": false,
+  "thermal_status": 0,
+  "skin_c": 29.0
+ }
+}

@@ -1,0 +1,277 @@
+{
+ "tag": "redmi9a",
+ "outputs_dir": ".cache/dabnn-h2h/eval-outputs/redmi9a",
+ "serial": "75AUS4CUDYN75LEQ",
+ "cpu": "0",
+ "abi": "armv7",
+ "eval_file": ".cache/data/eval128/torchvision_imagenet.f32",
+ "eval_sha256": "962be4862fe69f7ac7f8ff7404678ae7659317c79939f0fa53cb1d2b42be79e5",
+ "runs": [
+  {
+   "model": "dabnn-bireal18",
+   "runtime": "dabnn",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/dabnn_h2h --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18/model.dab --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --blob 188 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18__dabnn.eval --eval 128",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 106.171,
+    "maxrss_kb": 33344,
+    "utime_s": 104.631,
+    "stime_s": 1.5,
+    "nvcsw": 1,
+    "nivcsw": 175,
+    "minflt": 306310,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 4117,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 4117,
+    "cpu_hist": {
+     "0": 4117
+    }
+   },
+   "sha256": "cd976197792e924fcf29425ecb987414cc051204d53ece42a1b674defa103703"
+  },
+  {
+   "model": "dabnn-bireal18",
+   "runtime": "bitino_all",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/bitino_bench --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18/model.bitino --stage all --threads 1 --warmup 0 --iterations 1 --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18__bitino_all.eval",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 17.451,
+    "maxrss_kb": 90200,
+    "utime_s": 16.992,
+    "stime_s": 0.407,
+    "nvcsw": 81,
+    "nivcsw": 99,
+    "minflt": 29410,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 670,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 670,
+    "cpu_hist": {
+     "0": 670
+    }
+   },
+   "sha256": "082fee0c91271b33a8248ea8d5907cda1baea5d5f2fc685b47b957d9cfff7511"
+  },
+  {
+   "model": "dabnn-bireal18",
+   "runtime": "bitino_int8_full",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/bitino_bench --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18/model_int8_full.bitino --stage int8_full --threads 1 --warmup 0 --iterations 1 --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18__bitino_int8_full.eval",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 15.315,
+    "maxrss_kb": 85776,
+    "utime_s": 14.886,
+    "stime_s": 0.378,
+    "nvcsw": 82,
+    "nivcsw": 94,
+    "minflt": 28219,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 589,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 589,
+    "cpu_hist": {
+     "0": 589
+    }
+   },
+   "sha256": "bda6fcd57c4a48638127007352d7fd628a81427bc4f15ef165731bdca1e6208a"
+  },
+  {
+   "model": "dabnn-bireal18-stem",
+   "runtime": "dabnn",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/dabnn_h2h --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18-stem/model.dab --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --blob 216 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18-stem__dabnn.eval --eval 128",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 99.386,
+    "maxrss_kb": 26968,
+    "utime_s": 98.017,
+    "stime_s": 1.34,
+    "nvcsw": 1,
+    "nivcsw": 189,
+    "minflt": 256371,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 3855,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 3855,
+    "cpu_hist": {
+     "0": 3855
+    }
+   },
+   "sha256": "730c4d98b1249c543ed95c3cdbb8e7aa27866fd585c8d44f3e9b56776a8e0d2b"
+  },
+  {
+   "model": "dabnn-bireal18-stem",
+   "runtime": "bitino_all",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/bitino_bench --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18-stem/model.bitino --stage all --threads 1 --warmup 0 --iterations 1 --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18-stem__bitino_all.eval",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 14.08,
+    "maxrss_kb": 88696,
+    "utime_s": 13.648,
+    "stime_s": 0.395,
+    "nvcsw": 83,
+    "nivcsw": 101,
+    "minflt": 29011,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 540,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 540,
+    "cpu_hist": {
+     "0": 540
+    }
+   },
+   "sha256": "4bbd831539d912225ff6a837850469b622d943273ada1b1080052d6e242f2a43"
+  },
+  {
+   "model": "dabnn-bireal18-stem",
+   "runtime": "bitino_int8_full",
+   "cmd": "/data/local/tmp/h2h_dabnn/bin/bitino_bench --model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18-stem/model_int8_full.bitino --stage int8_full --threads 1 --warmup 0 --iterations 1 --inputs /data/local/tmp/h2h_dabnn/eval/eval128.f32 --outputs /data/local/tmp/h2h_dabnn/out/dabnn-bireal18-stem__bitino_int8_full.eval",
+   "exit": 0,
+   "ok": true,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 11.115,
+    "maxrss_kb": 84884,
+    "utime_s": 10.713,
+    "stime_s": 0.356,
+    "nvcsw": 81,
+    "nivcsw": 93,
+    "minflt": 27955,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 427,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 427,
+    "cpu_hist": {
+     "0": 427
+    }
+   },
+   "sha256": "3279441fe7fe6d78eb4d891adbe6dd81be60e7541d1890addee55492e4a1b78f"
+  }
+ ],
+ "binaries": {
+  "dabnn_h2h": {
+   "local": ".cache/dabnn-h2h/build-armv7/binaries/dabnn_h2h",
+   "sha256": "34a9c69ff5b7af5af32b82afa8d2b413dbb163efa55c70df8c11f3e5fd4bac36"
+  },
+  "benchmark_single_model": {
+   "local": ".cache/dabnn-h2h/build-armv7/benchmark/benchmark_single_model",
+   "sha256": "86b411139d6ba48def67a1ccff90189f061fbdc5ce3f1964d45c24a1e396606a"
+  },
+  "bitino_bench": {
+   "local": "build/android-armv7/bitino_bench",
+   "sha256": "75bdaf1118cab7bdf7441dd03a42e49b856914d3429a820990c33f9e553596d4"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_armv7",
+   "sha256": "14f9ee81b1b0e4431c28ca725e2a89ea93d9c61511b380751f7389fd39326251"
+  }
+ },
+ "device": {
+  "model": "M2006C3LG",
+  "android": "11",
+  "sdk": "30",
+  "soc": "",
+  "platform": "mt6765",
+  "abilist": "armeabi-v7a,armeabi",
+  "build": "Redmi/dandelion_eea/dandelion:11/RP1A.200720.011/V12.5.5.0.RCDEUXM:user/release-keys",
+  "kernel": "Linux localhost 4.19.127-perf-g7288046673d5 #1 SMP PREEMPT Fri Jul 8 20:22:55 CST 2022 armv8l",
+  "cpus": {
+   "0": "2001000 2001000",
+   "1": "2001000 2001000",
+   "2": "2001000 2001000",
+   "3": "2001000 2001000",
+   "4": "1500000 1500000",
+   "5": "1500000 1500000",
+   "6": "1500000 1500000",
+   "7": "1500000 1500000"
+  },
+  "cpu_parts": {
+   "0": "0xd03",
+   "1": "0xd03",
+   "2": "0xd03",
+   "3": "0xd03",
+   "4": "0xd03",
+   "5": "0xd03",
+   "6": "0xd03",
+   "7": "0xd03"
+  },
+  "pinned_cpu": "0",
+  "battery": "AC powered: true\n  USB powered: false\n  Wireless powered: false\n  level: 100\n  temperature: 260",
+  "wakefulness": "mWakefulness=Asleep",
+  "core_ctl_cpu": ""
+ },
+ "model_files": {
+  "dabnn-bireal18": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18.dab",
+    "sha256": "3b43f3c0444863b54f99e9765e8366056eaa42df87fcaef67094a85bad61d249",
+    "bytes": 4198320
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18/model.bitino",
+    "sha256": "5f1a21b8d91e89d77414042f175ed77b73ba4b401f38fa8a7995b4823e677cc4",
+    "bytes": 4205568
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18/model_int8_full.bitino",
+    "sha256": "c279d2d72f0a3debbde8b27412efeda1db2a5edb782cbd0d7557572291f76679",
+    "bytes": 2164480
+   }
+  },
+  "dabnn-bireal18-stem": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18-stem.dab",
+    "sha256": "6a3aa84157313f5adf971770fc5cee51ccbf49ec413f80f8bbae38bc91fb40c3",
+    "bytes": 4202880
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model.bitino",
+    "sha256": "a6f8a7c65c0fa52c94323d2bcbf6d9b567e343aac0a2321c0da6053d8862ea55",
+    "bytes": 4210432
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model_int8_full.bitino",
+    "sha256": "d3c435086b84f286df47db795cc8a3d33bc76c7d6d7f0af2c70731b8832286eb",
+    "bytes": 2183104
+   }
+  }
+ }
+}

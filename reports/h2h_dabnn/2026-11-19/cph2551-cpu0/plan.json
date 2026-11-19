@@ -1,0 +1,213 @@
+{
+ "tag": "cph2551",
+ "serial": "e3698ea7",
+ "device": {
+  "model": "CPH2551",
+  "android": "16",
+  "sdk": "36",
+  "soc": "SM8550",
+  "platform": "kalama",
+  "abilist": "arm64-v8a,armeabi-v7a,armeabi",
+  "build": "OnePlus/CPH2551EEA/OP5973L1:16/BP2A.250605.015/T.R4T3.31ff4af-c33982-ca5214:user/release-keys",
+  "kernel": "Linux localhost 5.15.197-android13-8-o-01214-gbee5b6ef6244 #1 SMP PREEMPT Fri Aug 7 06:32:56 UTC 2026 aarch64 Toybox",
+  "cpus": {
+   "0": "2016000 2016000 uag",
+   "1": "2016000 2016000 uag",
+   "2": "2016000 2016000 uag",
+   "3": "2803200 1785600 uag",
+   "4": "2803200 1785600 uag",
+   "5": "2803200 1785600 uag",
+   "6": "2803200 1785600 uag",
+   "7": "3187200 2227200 uag"
+  },
+  "cpu_parts": {
+   "0": "0xd46",
+   "1": "0xd46",
+   "2": "0xd46",
+   "3": "0xd4d",
+   "4": "0xd4d",
+   "5": "0xd47",
+   "6": "0xd47",
+   "7": "0xd4e"
+  },
+  "pinned_cpu": "0",
+  "battery": "AC powered: false\n  USB powered: true\n  Wireless powered: false\n  Dock powered: false\n  level: 100\n  temperature: 298\n  Capacity level: 3",
+  "wakefulness": "mWakefulness=Asleep",
+  "core_ctl_cpu": "0"
+ },
+ "binaries": {
+  "dabnn_h2h": {
+   "local": ".cache/dabnn-h2h/build-arm64/binaries/dabnn_h2h",
+   "sha256": "80144e204f7ab97fd6df7db1a918287a14647f996937f600ff9878e93bb530fb"
+  },
+  "benchmark_single_model": {
+   "local": ".cache/dabnn-h2h/build-arm64/benchmark/benchmark_single_model",
+   "sha256": "c3442aef4a1d775f8f58f98d75401a5b1b1840d7a0daa378dce03980525813e2"
+  },
+  "bitino_bench": {
+   "local": "build/android-arm64/bitino_bench",
+   "sha256": "18f48089f5554697819daa7c54365f8367e025b72b77d2561b272ead2e0125b6"
+  },
+  "h2h_run": {
+   "local": "build/h2h/h2h_run_arm64",
+   "sha256": "add86a6dc0e2825ec80209fff6a61725ea6bd399e6f5a6b50cc9c4c701a27dbb"
+  }
+ },
+ "model_files": {
+  "dabnn-bireal18": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18.dab",
+    "sha256": "3b43f3c0444863b54f99e9765e8366056eaa42df87fcaef67094a85bad61d249",
+    "bytes": 4198320
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18/model.bitino",
+    "sha256": "5f1a21b8d91e89d77414042f175ed77b73ba4b401f38fa8a7995b4823e677cc4",
+    "bytes": 4205568
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18/model_int8_full.bitino",
+    "sha256": "c279d2d72f0a3debbde8b27412efeda1db2a5edb782cbd0d7557572291f76679",
+    "bytes": 2164480
+   }
+  },
+  "dabnn-bireal18-stem": {
+   "input0.f32": {
+    "local": ".cache/dabnn-h2h/inputs/input0.f32",
+    "sha256": "ca0258ccbaf8184f00462c5660a324c589ba8eec0729110ec20e200889535727",
+    "bytes": 602112
+   },
+   "model.dab": {
+    "local": ".cache/dabnn-h2h/dab/dabnn-bireal18-stem.dab",
+    "sha256": "6a3aa84157313f5adf971770fc5cee51ccbf49ec413f80f8bbae38bc91fb40c3",
+    "bytes": 4202880
+   },
+   "model.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model.bitino",
+    "sha256": "a6f8a7c65c0fa52c94323d2bcbf6d9b567e343aac0a2321c0da6053d8862ea55",
+    "bytes": 4210432
+   },
+   "model_int8_full.bitino": {
+    "local": "artifacts/dabnn-bireal18-stem/model_int8_full.bitino",
+    "sha256": "d3c435086b84f286df47db795cc8a3d33bc76c7d6d7f0af2c70731b8832286eb",
+    "bytes": 2183104
+   }
+  }
+ },
+ "models": [
+  "dabnn-bireal18",
+  "dabnn-bireal18-stem"
+ ],
+ "runtimes": [
+  "dabnn",
+  "bitino_all",
+  "bitino_int8_full",
+  "dabnn_gbench"
+ ],
+ "warmup": 10,
+ "iterations": 50,
+ "repeats": 5,
+ "cpu": "0",
+ "abi": "arm64",
+ "started_utc": "2026-11-19T11:12:03Z",
+ "caps_at_start": {
+  "policies": {
+   "0": [
+    2016000,
+    2016000
+   ],
+   "3": [
+    1785600,
+    2803200
+   ],
+   "7": [
+    2227200,
+    3187200
+   ]
+  },
+  "capped": true,
+  "thermal_status": 0,
+  "skin_c": null
+ },
+ "invocations": [
+  {
+   "models": [
+    "dabnn-bireal18",
+    "dabnn-bireal18-stem"
+   ],
+   "repeats": 5,
+   "started_utc": "2026-11-19T11:02:38Z",
+   "finished_utc": "2026-11-19T11:11:20Z",
+   "caps_at_start": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   },
+   "caps_at_end": {
+    "policies": {
+     "0": [
+      2016000,
+      2016000
+     ],
+     "3": [
+      1785600,
+      2803200
+     ],
+     "7": [
+      2227200,
+      3187200
+     ]
+    },
+    "capped": true,
+    "thermal_status": 0,
+    "skin_c": null
+   }
+  }
+ ],
+ "reference_cap_khz": 2016000,
+ "throttle_gate": {
+  "max_wait_s": 600.0,
+  "poll_s": 2.0,
+  "rule": "thermal status 0 and pinned-policy scaling_max_freq == reference_cap_khz, before and after the round",
+  "reference_cap_khz": 2016000
+ },
+ "finished_utc": "2026-11-19T11:12:04Z",
+ "caps_at_end": {
+  "policies": {
+   "0": [
+    2016000,
+    2016000
+   ],
+   "3": [
+    1785600,
+    2803200
+   ],
+   "7": [
+    2227200,
+    3187200
+   ]
+  },
+  "capped": true,
+  "thermal_status": 0,
+  "skin_c": null
+ }
+}

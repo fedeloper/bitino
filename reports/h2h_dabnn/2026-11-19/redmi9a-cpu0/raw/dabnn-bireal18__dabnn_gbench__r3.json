@@ -1,0 +1,150 @@
+{
+ "model": "dabnn-bireal18",
+ "runtime": "dabnn_gbench",
+ "repeat": 3,
+ "order_in_round": 0,
+ "cmd": "/data/local/tmp/h2h_dabnn/bin/h2h_run --cpus 0 -- /data/local/tmp/h2h_dabnn/bin/benchmark_single_model /data/local/tmp/h2h_dabnn/m/dabnn-bireal18/model.dab --benchmark_format=json",
+ "exit": 0,
+ "wall_s_host": 0.95,
+ "utc": "2026-11-19T10:54:52Z",
+ "launcher": {
+  "cpus_requested": "0",
+  "exit": 0,
+  "wall_s": 0.905,
+  "maxrss_kb": 25832,
+  "utime_s": 0.846,
+  "stime_s": 0.04,
+  "nvcsw": 1,
+  "nivcsw": 5,
+  "minflt": 8230,
+  "majflt": 0,
+  "cpus_allowed_list": "0",
+  "allowed_samples": 35,
+  "allowed_mismatch_samples": 0,
+  "max_threads": 1,
+  "cpu_samples": 35,
+  "cpu_hist": {
+   "0": 35
+  }
+ },
+ "pin_wait": {
+  "tries": 0,
+  "wait_s": 0.0
+ },
+ "timing": {
+  "n": 1,
+  "mean_ms": 840.6760009238495,
+  "cpu_mean_ms": 840.497386,
+  "gbench_context": {
+   "date": "2026-11-19 11:21:31",
+   "executable": "/data/local/tmp/h2h_dabnn/bin/benchmark_single_model",
+   "num_cpus": 8,
+   "mhz_per_cpu": 2001,
+   "cpu_scaling_enabled": false,
+   "caches": [],
+   "library_build_type": "release"
+  }
+ },
+ "stdout_tail": [
+  "      \"time_unit\": \"ns\"",
+  "    }",
+  "  ]",
+  "}",
+  "H2H_PIN_WAIT {\"tries\": 0, \"wait_s\": 0.000}",
+  "H2H_RUN {\"cpus_requested\": \"0\", \"exit\": 0, \"wall_s\": 0.905, \"maxrss_kb\": 25832, \"utime_s\": 0.846, \"stime_s\": 0.040, \"nvcsw\": 1, \"nivcsw\": 5, \"minflt\": 8230, \"majflt\": 0, \"cpus_allowed_list\": \"0\", \"allowed_samples\": 35, \"allowed_mismatch_samples\": 0, \"max_threads\": 1, \"cpu_samples\": 35, \"cpu_hist\": {\"0\": 35}}"
+ ],
+ "ok": true,
+ "placement_ok": true,
+ "attempts": [
+  {
+   "exit": 0,
+   "launcher": {
+    "cpus_requested": "0",
+    "exit": 0,
+    "wall_s": 0.905,
+    "maxrss_kb": 25832,
+    "utime_s": 0.846,
+    "stime_s": 0.04,
+    "nvcsw": 1,
+    "nivcsw": 5,
+    "minflt": 8230,
+    "majflt": 0,
+    "cpus_allowed_list": "0",
+    "allowed_samples": 35,
+    "allowed_mismatch_samples": 0,
+    "max_threads": 1,
+    "cpu_samples": 35,
+    "cpu_hist": {
+     "0": 35
+    }
+   },
+   "pin_wait": {
+    "tries": 0,
+    "wait_s": 0.0
+   },
+   "placement_ok": true
+  }
+ ],
+ "round": {
+  "lock_wait_s": 0.0,
+  "gate": {
+   "waited_s": 0.1,
+   "before": {
+    "policies": {
+     "0": [
+      2001000,
+      2001000
+     ],
+     "4": [
+      1500000,
+      1500000
+     ]
+    },
+    "capped": false,
+    "thermal_status": 0,
+    "skin_c": 29.0
+   },
+   "timeout": false,
+   "mode": "pinned_reference_cap",
+   "reference_cap_khz": 2001000,
+   "throttled_before": false
+  },
+  "caps_before": {
+   "policies": {
+    "0": [
+     2001000,
+     2001000
+    ],
+    "4": [
+     1500000,
+     1500000
+    ]
+   },
+   "capped": false,
+   "thermal_status": 0,
+   "skin_c": 29.0
+  },
+  "caps_after": {
+   "policies": {
+    "0": [
+     2001000,
+     2001000
+    ],
+    "4": [
+     1500000,
+     1500000
+    ]
+   },
+   "capped": false,
+   "thermal_status": 0,
+   "skin_c": 29.0
+  },
+  "throttled": false,
+  "order": [
+   "dabnn_gbench",
+   "dabnn",
+   "bitino_all",
+   "bitino_int8_full"
+  ]
+ }
+}

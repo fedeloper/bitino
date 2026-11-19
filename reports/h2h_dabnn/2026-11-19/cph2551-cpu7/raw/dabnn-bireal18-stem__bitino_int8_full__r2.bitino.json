@@ -1,0 +1,1365 @@
+{
+ "bitino_version": "0.1.0",
+ "build": {
+  "compiler": "Android (12470979, +pgo, +bolt, +lto, +mlgo, based on r522817c) Clang 18.0.3 (https://android.googlesource.com/toolchain/llvm-project d8003a456d14a3deb8054cdaa529ffbf02d9b262)",
+  "flags": "-g -DANDROID -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -D_FORTIFY_SOURCE=2 -Wformat -Werror=format-security   -O3 -DNDEBUG  -Wall -Wextra -Wno-unused-parameter -ffp-contract=off -march=armv8.2-a+dotprod",
+  "type": "Release"
+ },
+ "config": {
+  "affinity": "",
+  "affinity_errors": 0,
+  "bit_outputs": true,
+  "fuse": true,
+  "host_epilogues": true,
+  "iterations": 50,
+  "nodes": 31,
+  "parallel_for_per_run": 31,
+  "plan_rewrites": {
+   "absorbed_nodes": 0,
+   "aliased_reshapes": 0,
+   "bit_outputs": 0,
+   "folded_thresholds": 0,
+   "fused_nodes": 0,
+   "hosted_epilogues": 0,
+   "i8_absorbed_luts": 0,
+   "i8_add_twins": 0,
+   "i8_bit_outputs": 0,
+   "i8_composed_luts": 0,
+   "i8_folded_luts": 0,
+   "i8_interval_folds": 0,
+   "i8_lut_twins": 0,
+   "i8_merged_nodes": 0,
+   "i8_removed_luts": 0,
+   "shared_binarizations": 0
+  },
+  "pool_dispatches_per_run": 0,
+  "pool_threads": 1,
+  "profile": false,
+  "reuse_memory": true,
+  "spin_run": true,
+  "spin_us": 0,
+  "stage": "int8_full",
+  "threads": 1,
+  "unpinned_threads_after": 0,
+  "warmup": 9
+ },
+ "correctness_samples": 1,
+ "cpu_freq_after": [
+  {
+   "cpu": 0,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 2227200,
+   "max_khz": 3187200
+  }
+ ],
+ "cpu_freq_before": [
+  {
+   "cpu": 0,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 1,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 2,
+   "cur_khz": 672000,
+   "max_khz": 2016000
+  },
+  {
+   "cpu": 3,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 4,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 5,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 6,
+   "cur_khz": 614400,
+   "max_khz": 2803200
+  },
+  {
+   "cpu": 7,
+   "cur_khz": 2227200,
+   "max_khz": 3187200
+  }
+ ],
+ "device": {
+  "android_release": "16",
+  "api_level": "36",
+  "build_fingerprint": "OnePlus/CPH2551EEA/OP5973L1:16/BP2A.250605.015/T.R4T3.31ff4af-c33982-ca5214:user/release-keys",
+  "cpu_features": "aarch64: neon dotprod i8mm fp16 bf16",
+  "cpu_parts": "0xd46 0xd46 0xd46 0xd4d 0xd4d 0xd47 0xd47 0xd4e ",
+  "kernel": "5.15.197-android13-8-o-01214-gbee5b6ef6244",
+  "model": "CPH2551",
+  "online_cpus": "0-7",
+  "soc": "SM8550",
+  "thermal_status": "Thermal Status: 0"
+ },
+ "kernels": {
+  "i8avgpool2d.neon": 3,
+  "i8bconv2dresi.neon": 16,
+  "i8concat.neon": 1,
+  "i8conv2d.neon_sdot": 7,
+  "i8dense.neon_sdot": 1,
+  "i8globalavgpool.neon": 1,
+  "i8maxpool2d.neon": 1,
+  "i8quantize.neon": 1
+ },
+ "label": "dabnn-bireal18-stem__bitino_int8_full__r2",
+ "latency": {
+  "load_ms": 23.719635,
+  "max_ms": 6.83260393,
+  "mean_ms": 6.69835827,
+  "median_ms": 6.70354199,
+  "min_ms": 6.64833295,
+  "n": 50,
+  "p90_ms": 6.71593686,
+  "p95_ms": 6.72289543,
+  "samples_ms": [
+   6.703125,
+   6.69739592,
+   6.68942702,
+   6.70473897,
+   6.69468701,
+   6.65192699,
+   6.69760501,
+   6.72062504,
+   6.68854105,
+   6.71541595,
+   6.70875001,
+   6.66031206,
+   6.70666707,
+   6.72083294,
+   6.69479108,
+   6.83260393,
+   6.70619702,
+   6.65828097,
+   6.70760405,
+   6.6825,
+   6.70776105,
+   6.71166706,
+   6.70562506,
+   6.64833295,
+   6.70453191,
+   6.70947897,
+   6.69312501,
+   6.70333397,
+   6.69671798,
+   6.65255201,
+   6.70557308,
+   6.70375001,
+   6.68916702,
+   6.72458291,
+   6.71145892,
+   6.65312493,
+   6.71447897,
+   6.67968798,
+   6.690781,
+   6.70723999,
+   6.70973992,
+   6.66229093,
+   6.70588493,
+   6.6984899,
+   6.707968,
+   6.69458294,
+   6.72593808,
+   6.69781196,
+   6.65599,
+   6.70421898
+  ],
+  "session_prepare_ms": 9.04156196,
+  "stddev_ms": 0.0280311682,
+  "throughput_per_s": 149.174869,
+  "timed_wall_ms": 334.922292
+ },
+ "memory": {
+  "activation_bytes": 1333664,
+  "model_mapped": true,
+  "prepacked_bytes": 2233856,
+  "released_constant_bytes": 1978368,
+  "rss_after_load_kb": 7120,
+  "rss_after_run_kb": 11508,
+  "rss_after_session_kb": 11148,
+  "rss_start_kb": 3888,
+  "vm_hwm_kb": 13216
+ },
+ "model": {
+  "constant_bytes": 2147424,
+  "data_sha256": "cf218c69840cf15ba8e3ed21f806a65ddedfae09dd89a425e7632cca78feb44d",
+  "file_bytes": 2183104,
+  "hash_verified": true,
+  "inputs": [
+   {
+    "dtype": "f32",
+    "name": "input",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   }
+  ],
+  "manifest": {
+   "conversion": {
+    "adapter": "bitino.adapters.onnx_dabnn",
+    "binarization": "all-+-1 Conv -> BConv2D, input_binarize ge, pad_value -1, no weight scale",
+    "date_utc": "2026-10-30T23:58:37.095654+00:00",
+    "numpy": "2.5.4",
+    "onnx": "1.23.2",
+    "passes": {
+     "fold_affine_into_conv": 23,
+     "fold_relu_into_producer": 3,
+     "prune_unused_constants": 53
+    },
+    "python": "3.12.7",
+    "tool": "tools/convert_dabnn.py"
+   },
+   "input": {
+    "dtype": "f32",
+    "layout": "NHWC",
+    "name": "input",
+    "preprocessing": "torchvision 0.21.0+cu124 / PIL 12.2.0: PIL.Image.open(f).convert('RGB') -> transforms.Resize(256) [InterpolationMode.BILINEAR, antialias=True, short side 256] -> transforms.CenterCrop(224) -> transforms.ToTensor() -> transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)); CHW -> HWC (AB-BNN Inference/ImageNet.ipynb transform_test) (daBNN documents no preprocessing; the official Bi-Real ImageNet validation transform is assumed)",
+    "shape": [
+     1,
+     224,
+     224,
+     3
+    ]
+   },
+   "layer_precision": [
+    {
+     "activations": "fp32",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_141",
+     "op": "Conv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_144",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_147",
+     "op": "Conv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_152",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_154",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_157",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_160",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_163",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_168",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_170",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_173",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_176",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_179",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_184",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_186",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_189",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_192",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_195",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "kernel": [
+      1,
+      1
+     ],
+     "layer": "conv_200",
+     "op": "Conv2D",
+     "pads": [
+      0,
+      0,
+      0,
+      0
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "fp32"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_202",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      2,
+      2
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_205",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_208",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "binary (ge), pad_value -1",
+     "kernel": [
+      3,
+      3
+     ],
+     "layer": "conv_211",
+     "op": "BConv2D",
+     "pads": [
+      1,
+      1,
+      1,
+      1
+     ],
+     "strides": [
+      1,
+      1
+     ],
+     "weights": "binary +-1 (no scale)"
+    },
+    {
+     "activations": "fp32",
+     "layer": "conv_216",
+     "op": "Dense",
+     "shape": [
+      1000,
+      512
+     ],
+     "weights": "fp32"
+    }
+   ],
+   "model_id": "dabnn-bireal18-stem",
+   "op_versions": {
+    "format": 1
+   },
+   "outputs": [
+    "logits"
+   ],
+   "quantization": {
+    "binarize_aware_tensors": 16,
+    "calibration": {
+     "dir": ".cache/data/calib512_imagenet100train",
+     "disjointness": {
+      "calib_samples": 512,
+      "checked": [
+       {
+        "eval_samples": 128,
+        "manifest": ".cache/data/eval128/manifest.json",
+        "manifest_sha256": "abed2b6bda569dcf3013b7cb06752caf2abc22319f8d7684badf02660aaf20eb",
+        "overlap_basename": 0,
+        "overlap_file": 0,
+        "overlap_jpeg_sha256": 0
+       },
+       {
+        "eval_samples": 5000,
+        "manifest": ".cache/data/eval5000/manifest.json",
+        "manifest_sha256": "aeb3cab4db718428f1ced16795b959b2a679143c38f7490984cd7b1839a1e345",
+        "overlap_basename": 0,
+        "overlap_file": 0,
+        "overlap_jpeg_sha256": 0
+       }
+      ],
+      "passed": true,
+      "rule": "no selected sample's synset/file, bare file name or JPEG SHA-256 occurs in any listed eval manifest",
+      "unique_jpeg_sha256": 512
+     },
+     "n": 128,
+     "preprocessing": "torchvision_imagenet",
+     "purpose": "calibration",
+     "range": "percentile 99.99",
+     "sample_ids": [
+      "n01558993/n01558993_1004.JPEG",
+      "n01692333/n01692333_10.JPEG",
+      "n01729322/n01729322_10008.JPEG",
+      "n01735189/n01735189_1.JPEG",
+      "n01749939/n01749939_10048.JPEG",
+      "n01773797/n01773797_1001.JPEG",
+      "n01820546/n01820546_1000.JPEG",
+      "n01855672/n01855672_10.JPEG",
+      "n01978455/n01978455_100.JPEG",
+      "n01980166/n01980166_1001.JPEG",
+      "n01983481/n01983481_1000.JPEG",
+      "n02009229/n02009229_1.JPEG",
+      "n02018207/n02018207_100.JPEG",
+      "n02085620/n02085620_10011.JPEG",
+      "n02086240/n02086240_10.JPEG",
+      "n02086910/n02086910_10015.JPEG",
+      "n02087046/n02087046_1004.JPEG",
+      "n02089867/n02089867_1.JPEG",
+      "n02089973/n02089973_1.JPEG",
+      "n02090622/n02090622_10.JPEG",
+      "n02091831/n02091831_1001.JPEG",
+      "n02093428/n02093428_10007.JPEG",
+      "n02099849/n02099849_10.JPEG",
+      "n02100583/n02100583_10019.JPEG",
+      "n02104029/n02104029_1008.JPEG",
+      "n02105505/n02105505_1018.JPEG",
+      "n02106550/n02106550_10003.JPEG",
+      "n02107142/n02107142_10009.JPEG",
+      "n02108089/n02108089_1.JPEG",
+      "n02109047/n02109047_100.JPEG",
+      "n02113799/n02113799_10.JPEG",
+      "n02113978/n02113978_10025.JPEG",
+      "n02114855/n02114855_1.JPEG",
+      "n02116738/n02116738_100.JPEG",
+      "n02119022/n02119022_10008.JPEG",
+      "n02123045/n02123045_10001.JPEG",
+      "n02138441/n02138441_10002.JPEG",
+      "n02172182/n02172182_10007.JPEG",
+      "n02231487/n02231487_1.JPEG",
+      "n02259212/n02259212_10003.JPEG",
+      "n02326432/n02326432_10017.JPEG",
+      "n02396427/n02396427_10010.JPEG",
+      "n02483362/n02483362_10002.JPEG",
+      "n02488291/n02488291_1.JPEG",
+      "n02701002/n02701002_1.JPEG",
+      "n02788148/n02788148_10.JPEG",
+      "n02804414/n02804414_10.JPEG",
+      "n02859443/n02859443_10001.JPEG",
+      "n02869837/n02869837_10001.JPEG",
+      "n02877765/n02877765_10009.JPEG",
+      "n02974003/n02974003_100.JPEG",
+      "n03017168/n03017168_10011.JPEG",
+      "n03032252/n03032252_100158.JPEG",
+      "n03062245/n03062245_1000.JPEG",
+      "n03085013/n03085013_10035.JPEG",
+      "n03259280/n03259280_10001.JPEG",
+      "n03379051/n03379051_10008.JPEG",
+      "n03424325/n03424325_10005.JPEG",
+      "n03492542/n03492542_10107.JPEG",
+      "n03494278/n03494278_10018.JPEG",
+      "n03530642/n03530642_10006.JPEG",
+      "n03584829/n03584829_10025.JPEG",
+      "n03594734/n03594734_10030.JPEG",
+      "n03637318/n03637318_100.JPEG",
+      "n03642806/n03642806_10106.JPEG",
+      "n03764736/n03764736_10011.JPEG",
+      "n03775546/n03775546_1.JPEG",
+      "n03777754/n03777754_1003.JPEG",
+      "n03785016/n03785016_1004.JPEG",
+      "n03787032/n03787032_10007.JPEG",
+      "n03794056/n03794056_10005.JPEG",
+      "n03837869/n03837869_10.JPEG",
+      "n03891251/n03891251_1.JPEG",
+      "n03903868/n03903868_100300.JPEG",
+      "n03930630/n03930630_10016.JPEG",
+      "n03947888/n03947888_1.JPEG",
+      "n04026417/n04026417_10031.JPEG",
+      "n04067472/n04067472_100.JPEG",
+      "n04099969/n04099969_10014.JPEG",
+      "n04111531/n04111531_10011.JPEG",
+      "n04127249/n04127249_10024.JPEG",
+      "n04136333/n04136333_10001.JPEG",
+      "n04229816/n04229816_1.JPEG",
+      "n04238763/n04238763_100.JPEG",
+      "n04336792/n04336792_10001.JPEG",
+      "n04418357/n04418357_1000.JPEG",
+      "n04429376/n04429376_10004.JPEG",
+      "n04435653/n04435653_100.JPEG",
+      "n04485082/n04485082_1000.JPEG",
+      "n04493381/n04493381_10004.JPEG",
+      "n04517823/n04517823_10009.JPEG",
+      "n04589890/n04589890_10003.JPEG",
+      "n04592741/n04592741_10013.JPEG",
+      "n07714571/n07714571_1000.JPEG",
+      "n07715103/n07715103_10001.JPEG",
+      "n07753275/n07753275_10049.JPEG",
+      "n07831146/n07831146_1000.JPEG",
+      "n07836838/n07836838_1.JPEG",
+      "n13037406/n13037406_1.JPEG",
+      "n13040303/n13040303_10.JPEG",
+      "n01558993/n01558993_10059.JPEG",
+      "n01692333/n01692333_1000.JPEG",
+      "n01729322/n01729322_10023.JPEG",
+      "n01735189/n01735189_10009.JPEG",
+      "n01749939/n01749939_10066.JPEG",
+      "n01773797/n01773797_1004.JPEG",
+      "n01820546/n01820546_1003.JPEG",
+      "n01855672/n01855672_1001.JPEG",
+      "n01978455/n01978455_1000.JPEG",
+      "n01980166/n01980166_10029.JPEG",
+      "n01983481/n01983481_10030.JPEG",
+      "n02009229/n02009229_10003.JPEG",
+      "n02018207/n02018207_1001.JPEG",
+      "n02085620/n02085620_1003.JPEG",
+      "n02086240/n02086240_1001.JPEG",
+      "n02086910/n02086910_10024.JPEG",
+      "n02087046/n02087046_10091.JPEG",
+      "n02089867/n02089867_1000.JPEG",
+      "n02089973/n02089973_1000.JPEG",
+      "n02090622/n02090622_10003.JPEG",
+      "n02091831/n02091831_10034.JPEG",
+      "n02093428/n02093428_10057.JPEG",
+      "n02099849/n02099849_1002.JPEG",
+      "n02100583/n02100583_10021.JPEG",
+      "n02104029/n02104029_1010.JPEG",
+      "n02105505/n02105505_1022.JPEG",
+      "n02106550/n02106550_10005.JPEG",
+      "n02107142/n02107142_10036.JPEG"
+     ],
+     "seconds": 0,
+     "set": "imagenet100-train-calib-512",
+     "split": "train",
+     "tensor_sha256": "220b8a49adfd3914da7e042dbf0232a28453f789906ab0c25110817d1501148c"
+    },
+    "date": "2026-11-13",
+    "int8_ops": {
+     "I8AvgPool2D": 3,
+     "I8BConv2DResI": 16,
+     "I8Concat": 1,
+     "I8Conv2D": 7,
+     "I8Dense": 1,
+     "I8GlobalAvgPool": 1,
+     "I8MaxPool2D": 1,
+     "I8Quantize": 1
+    },
+    "left_float": {},
+    "notes": [],
+    "options": {
+     "affine_trees": true,
+     "monotone_bypass": true,
+     "pool_grid_fix": true,
+     "split_mixed": true
+    },
+    "residual_code": {
+     "bit_inputs": [],
+     "code": "lin8",
+     "fused_blocks": 16,
+     "gated": {
+      "gap_affines": [],
+      "gated_adds": [],
+      "prelu_convs": []
+     },
+     "identity_blocks": "all",
+     "int_epilogue": [
+      "conv_154+res",
+      "conv_157+res",
+      "conv_160+res",
+      "conv_163+res",
+      "conv_170+res",
+      "conv_173+res",
+      "conv_176+res",
+      "conv_179+res",
+      "conv_186+res",
+      "conv_189+res",
+      "conv_192+res",
+      "conv_195+res",
+      "conv_202+res",
+      "conv_205+res",
+      "conv_208+res",
+      "conv_211+res"
+     ],
+     "int_epilogue_option": true,
+     "lin8_tensors": {
+      "add_156:out": [
+       0.0961136967,
+       -67
+      ],
+      "add_159:out": [
+       0.101879343,
+       -68
+      ],
+      "add_162:out": [
+       0.113805279,
+       -52
+      ],
+      "add_165:out": [
+       0.122707613,
+       -34
+      ],
+      "add_172:out": [
+       0.0440699086,
+       -8
+      ],
+      "add_175:out": [
+       0.0475729443,
+       -1
+      ],
+      "add_178:out": [
+       0.0549700148,
+       -9
+      ],
+      "add_181:out": [
+       0.0608515479,
+       -9
+      ],
+      "add_188:out": [
+       0.037275821,
+       -10
+      ],
+      "add_191:out": [
+       0.0445857383,
+       0
+      ],
+      "add_194:out": [
+       0.0535126776,
+       -3
+      ],
+      "add_197:out": [
+       0.0713431686,
+       -9
+      ],
+      "add_204:out": [
+       0.041499719,
+       0
+      ],
+      "add_207:out": [
+       0.0506744385,
+       -1
+      ],
+      "add_210:out": [
+       0.0671083704,
+       -1
+      ],
+      "add_213:out": [
+       0.0544013046,
+       0
+      ]
+     },
+     "res_pre": true,
+     "scheme": "int8_full v2: fused I8BConv2DRes blocks writing the int8_full linear grid of the block output (output i8: clamp(rne(w) + y_zero)), linear residual codes, bit outputs of the unrounded sums; docs/int8.md",
+     "stem": {
+      "convs": [
+       "conv_152"
+      ],
+      "mode": "bits"
+     }
+    },
+    "rewrites": {
+     "binarize-aware second version of mixed tensors (producer emitted twice)": 16
+    },
+    "scheme": "int8_full v1: per-tensor asymmetric int8 activations (static, calibrated), per-output-channel symmetric int8 weights, int32 accumulators, fixed-point requantization (SQRDMULH + SRSHL rounding); binary operators with exact integer binarization thresholds and fp32 epilogues rounded half-to-even (docs/int8.md)",
+    "source_model": {
+     "path": "artifacts/dabnn-bireal18-stem/model.bitino",
+     "sha256": "a6f8a7c65c0fa52c94323d2bcbf6d9b567e343aac0a2321c0da6053d8862ea55"
+    },
+    "tensor_params": {
+     "add_156:out": [
+      0.0961136967,
+      -67
+     ],
+     "add_156:out:bin": [
+      2.45744246e-07,
+      -1
+     ],
+     "add_159:out": [
+      0.101879343,
+      -68
+     ],
+     "add_159:out:bin": [
+      2.59883507e-07,
+      0
+     ],
+     "add_162:out": [
+      0.113805279,
+      -52
+     ],
+     "add_162:out:bin": [
+      2.73407977e-07,
+      -1
+     ],
+     "add_165:out": [
+      0.122707613,
+      -34
+     ],
+     "add_165:out:bin": [
+      2.6273176e-07,
+      -1
+     ],
+     "add_172:out": [
+      0.0440699086,
+      -8
+     ],
+     "add_172:out:bin": [
+      9.4642246e-08,
+      0
+     ],
+     "add_175:out": [
+      0.0475729443,
+      -1
+     ],
+     "add_175:out:bin": [
+      8.66562502e-08,
+      -1
+     ],
+     "add_178:out": [
+      0.0549700148,
+      -9
+     ],
+     "add_178:out:bin": [
+      9.5032739e-08,
+      -1
+     ],
+     "add_181:out": [
+      0.0608515479,
+      -9
+     ],
+     "add_181:out:bin": [
+      1.01597891e-07,
+      0
+     ],
+     "add_188:out": [
+      0.037275821,
+      -10
+     ],
+     "add_188:out:bin": [
+      7.74564626e-08,
+      0
+     ],
+     "add_191:out": [
+      0.0445857383,
+      0
+     ],
+     "add_191:out:bin": [
+      7.8122369e-08,
+      0
+     ],
+     "add_194:out": [
+      0.0535126776,
+      -3
+     ],
+     "add_194:out:bin": [
+      8.37782181e-08,
+      -1
+     ],
+     "add_197:out": [
+      0.0713431686,
+      -9
+     ],
+     "add_197:out:bin": [
+      1.05251743e-07,
+      -1
+     ],
+     "add_204:out": [
+      0.041499719,
+      0
+     ],
+     "add_204:out:bin": [
+      7.27435676e-08,
+      0
+     ],
+     "add_207:out": [
+      0.0506744385,
+      -1
+     ],
+     "add_207:out:bin": [
+      8.04630602e-08,
+      0
+     ],
+     "add_210:out": [
+      0.0671083704,
+      -1
+     ],
+     "add_210:out:bin": [
+      1.11603349e-07,
+      -1
+     ],
+     "add_213:out": [
+      0.0544013046,
+      0
+     ],
+     "averagepool_167:out": [
+      0.122707613,
+      -34
+     ],
+     "averagepool_183:out": [
+      0.0608515479,
+      -9
+     ],
+     "averagepool_199:out": [
+      0.0713431686,
+      -9
+     ],
+     "averagepool_215:out": [
+      0.0176375341,
+      -4
+     ],
+     "concat_151:out": [
+      0.0426606461,
+      -128
+     ],
+     "conv_141:out": [
+      0.0348189771,
+      -128
+     ],
+     "conv_144:out": [
+      0.0337654166,
+      -128
+     ],
+     "conv_147:out": [
+      0.0426606461,
+      -128
+     ],
+     "conv_152:out": [
+      0.100514553,
+      -65
+     ],
+     "conv_152:out:bin": [
+      2.51642746e-07,
+      -1
+     ],
+     "conv_154:out": [
+      0.0218219124,
+      -29
+     ],
+     "conv_157:out": [
+      0.031569194,
+      -29
+     ],
+     "conv_160:out": [
+      0.0348429456,
+      -7
+     ],
+     "conv_163:out": [
+      0.0380796902,
+      4
+     ],
+     "conv_168:out": [
+      0.0403488614,
+      -9
+     ],
+     "conv_170:out": [
+      0.013226727,
+      -8
+     ],
+     "conv_173:out": [
+      0.0218121037,
+      7
+     ],
+     "conv_176:out": [
+      0.0273042247,
+      -18
+     ],
+     "conv_179:out": [
+      0.0309954043,
+      7
+     ],
+     "conv_184:out": [
+      0.0331316665,
+      -10
+     ],
+     "conv_186:out": [
+      0.0117082614,
+      -5
+     ],
+     "conv_189:out": [
+      0.0209835488,
+      -3
+     ],
+     "conv_192:out": [
+      0.0324985534,
+      -7
+     ],
+     "conv_195:out": [
+      0.0443575419,
+      -15
+     ],
+     "conv_200:out": [
+      0.0345510468,
+      -2
+     ],
+     "conv_202:out": [
+      0.0162361134,
+      0
+     ],
+     "conv_205:out": [
+      0.0300015192,
+      1
+     ],
+     "conv_208:out": [
+      0.0440865718,
+      1
+     ],
+     "conv_211:out": [
+      0.0496409535,
+      0
+     ],
+     "input": [
+      0.018658448,
+      -14
+     ],
+     "input:q8": [
+      0.018658448,
+      -14
+     ],
+     "maxpool_150:out": [
+      0.0348189771,
+      -128
+     ]
+    }
+   },
+   "schema": "bitino.manifest.v1",
+   "source": {
+    "checkpoint_file": "birealnet18stem.onnx",
+    "checkpoint_sha256": "b25d4e337cf66428ee0a74e9551f57648285c6d0c02f257f2f9bfc545af4ae2f",
+    "class": "Bi-Real Net 18 + stem module (daBNN model zoo)",
+    "dab_file": "birealnet18stem.dab",
+    "dab_sha256": "6a3aa84157313f5adf971770fc5cee51ccbf49ec413f80f8bbae38bc91fb40c3",
+    "framework": "onnx (daBNN model zoo)",
+    "repo": "https://github.com/JDAI-CV/dabnn"
+   },
+   "variant": "int8_full_v2"
+  },
+  "path": "/data/local/tmp/h2h_dabnn/m/dabnn-bireal18-stem/model_int8_full.bitino"
+ },
+ "schema": "bitino.benchmark.v1",
+ "thermal_after_c": {
+  "cpu-0-0#47": 38,
+  "cpu-0-1#48": 37.6,
+  "cpu-0-2#49": 37.6,
+  "cpu-1-0#35": 40.2,
+  "cpu-1-1#36": 39.8,
+  "cpu-1-10#45": 40.6,
+  "cpu-1-2#37": 37.8,
+  "cpu-1-3#38": 37.8,
+  "cpu-1-4#39": 38.2,
+  "cpu-1-5#40": 38.2,
+  "cpu-1-6#41": 36.7,
+  "cpu-1-7#42": 37.4,
+  "cpu-1-8#43": 40.6,
+  "cpu-1-9#44": 40.6,
+  "cpuss-0#31": 39.8,
+  "cpuss-1#32": 38.6,
+  "cpuss-2#33": 38.6,
+  "cpuss-3#34": 39,
+  "socd#82": 0
+ },
+ "thermal_before_c": {
+  "cpu-0-0#47": 37.6,
+  "cpu-0-1#48": 37.2,
+  "cpu-0-2#49": 37.2,
+  "cpu-1-0#35": 38.6,
+  "cpu-1-1#36": 37.8,
+  "cpu-1-10#45": 39,
+  "cpu-1-2#37": 37.1,
+  "cpu-1-3#38": 37.4,
+  "cpu-1-4#39": 37.4,
+  "cpu-1-5#40": 37.8,
+  "cpu-1-6#41": 37.1,
+  "cpu-1-7#42": 37.1,
+  "cpu-1-8#43": 38.6,
+  "cpu-1-9#44": 39,
+  "cpuss-0#31": 38.6,
+  "cpuss-1#32": 37.8,
+  "cpuss-2#33": 37.8,
+  "cpuss-3#34": 37.8,
+  "socd#82": 0
+ },
+ "timestamp_utc": "2026-11-19T10:51:04Z"
+}

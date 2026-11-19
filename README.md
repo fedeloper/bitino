@@ -46,7 +46,7 @@ latency. Every point is a published network converted from its original checkpoi
   - QuickNet-Small at 4.7 ms, QuickNet at 7.4 ms and ReActNet-18 at 10.8 ms per ImageNet image on a single phone
     core.
   - Faster than Larq Compute Engine on every model on every phone measured: **1.35×** on a Cortex-X3, 1.12× on a
-    Cortex-A75, 1.11× on a 32-bit Cortex-A53.
+    Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×** faster than daBNN on its own models.
 - **Real networks, verified.** 132 published BNNs from more than ten frameworks. Each conversion is checked against
   the source framework in float32 and float64. The exact `neon` stage is bit-identical with the reference executor.
 - **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
@@ -168,6 +168,10 @@ TFLite fp32 is 5–13× slower than Bitino. TFLite int8 is 1.4–4.8× slower, a
 model on only 45–66 % of the images.
 
 Tables, method, setup differences and raw data: [docs/comparison-lce-tflite.md](docs/comparison-lce-tflite.md).
+
+**Against daBNN.** On daBNN's own Bi-Real Net-18 models (same weights and input, 1 thread, pinned to the same core),
+Bitino is 1.60–2.05× faster on five arm64 cores (Cortex-X3, A715, A510, A75; geometric mean 1.81×) and 6.5–7.5×
+faster on a 32-bit Cortex-A53, with less peak memory. Method and data: [docs/comparison-dabnn.md](docs/comparison-dabnn.md).
 
 <details>
 <summary><b>Latency of every converted model on every phone</b></summary>
