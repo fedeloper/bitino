@@ -35,6 +35,20 @@
    "delta_unit": "pt",
    "note": "128-sample smoke test, not an ImageNet estimate"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 78.3,
+   "top1": 0.78128,
+   "top1_ci95": [
+    0.7776350451531203,
+    0.784881735557584
+   ],
+   "top5": 0.94048,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py"
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

@@ -43,6 +43,20 @@
    },
    "note": "100-class ImageNet subsets (smoke/regression, not ImageNet-1k estimates)"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 61.7,
+   "top1": 0.61686,
+   "top1_ci95": [
+    0.6125898664141701,
+    0.6211121777903695
+   ],
+   "top5": 0.82752,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py"
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

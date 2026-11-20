@@ -37,6 +37,30 @@
     "author_claim_full_imagenet_top1": 0.64
    }
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 64.0,
+   "top1": 0.63808,
+   "top1_ci95": [
+    0.633857282660136,
+    0.6422815010448343
+   ],
+   "top5": 0.85232,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py",
+   "int8_full": {
+    "top1": 0.628,
+    "delta_vs_all_pt": -1.01,
+    "delta_ci95_pt": [
+     -1.29,
+     -0.72
+    ],
+    "mcnemar_p": 3.794700006312193e-12,
+    "n": 50000
+   }
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

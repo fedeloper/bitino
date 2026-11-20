@@ -38,6 +38,20 @@
    },
    "note": "128-sample smoke test, not a full-test-set estimate"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 59.9,
+   "top1": 0.59546,
+   "top1_ci95": [
+    0.5911507489658565,
+    0.5997545833956475
+   ],
+   "top5": 0.81746,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py"
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

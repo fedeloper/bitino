@@ -34,6 +34,30 @@
    "delta_vs_reference": 0.0,
    "delta_unit": "pt"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 63.3,
+   "top1": 0.63424,
+   "top1_ci95": [
+    0.6300080526547925,
+    0.6384513210746051
+   ],
+   "top5": 0.84598,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py",
+   "int8_full": {
+    "top1": 0.61992,
+    "delta_vs_all_pt": -1.43,
+    "delta_ci95_pt": [
+     -1.71,
+     -1.15
+    ],
+    "mcnemar_p": 8.804712674439691e-24,
+    "n": 50000
+   }
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

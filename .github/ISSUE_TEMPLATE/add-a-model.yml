@@ -1,0 +1,46 @@
+name: Add a model
+description: Propose or claim a binary network with public weights for the zoo.
+title: "[model] <network name>"
+labels: ["new-model"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Candidates: [docs/wanted-models.md](https://github.com/fedeloper/bitino/blob/main/docs/wanted-models.md). How to convert: [docs/converting-a-new-bnn.md](https://github.com/fedeloper/bitino/blob/main/docs/converting-a-new-bnn.md).
+  - type: input
+    id: model
+    attributes:
+      label: Network and registry id (if it has one)
+    validations:
+      required: true
+  - type: input
+    id: paper
+    attributes:
+      label: Paper
+    validations:
+      required: true
+  - type: input
+    id: code
+    attributes:
+      label: Code repository
+    validations:
+      required: true
+  - type: input
+    id: weights
+    attributes:
+      label: Checkpoint URL
+    validations:
+      required: true
+  - type: input
+    id: licence
+    attributes:
+      label: Licence of the weights (if stated)
+  - type: dropdown
+    id: role
+    attributes:
+      label: Are you converting it?
+      options:
+        - "Yes, I am working on it"
+        - "No, just suggesting it"
+    validations:
+      required: true

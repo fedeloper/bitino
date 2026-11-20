@@ -36,34 +36,10 @@ public weights we could find.
 **343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 131 verified end to end, 1 broken upstream.
 <!-- /generated:stats -->
 
-<p align="center"><img src="docs/img/pareto_imagenet.svg" width="760" alt="ImageNet: accuracy vs latency of the converted BNNs on one phone core, with the Pareto frontier"></p>
-<p align="center"><sub>ImageNet BNNs on one core of a OnePlus Open (Snapdragon 8 Gen 2), batch 1: accuracy against measured
-latency. Every point is a published network converted from its original checkpoint.</sub></p>
-
-## Highlights
-
-- **Fast on one core.**
-  - QuickNet-Small at 4.7 ms, QuickNet at 7.4 ms and ReActNet-18 at 10.8 ms per ImageNet image on a single phone
-    core.
-  - Faster than Larq Compute Engine on every model on every core measured: **1.35×** on a Cortex-X3, 1.14× on a
-    Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×**
-    faster than daBNN on its own models.
-- **Real networks, verified.** 132 published BNNs from ten frameworks. Each conversion is checked against a float64
-  evaluation of the source model (the source framework itself wherever it has a float64 mode). The exact `neon` stage is bit-identical with the reference executor.
-- **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
-  about 0.85× the float latency on the measured phones; the accuracy change of each file is in the zoo tables.
-- **Honest numbers.** Every timing comes from real hardware: four Android phones and an x86-64 host, with date, thread
-  setting and clock state recorded. Emulators are used for correctness only, never for speed.
-- **Runs everywhere a CPU does.**
-  - Android arm64 and 32-bit armeabi-v7a, Linux aarch64 / x86-64, Python on Linux, macOS and Windows.
-  - An Android library (AAR) with a Kotlin API and two example apps.
-
-*Un bitino* is Italian for "a little bit", which is all a binary network needs per weight.
-
 ## Quickstart
 
 ```bash
-pip install "bitino[image] @ git+https://github.com/fedeloper/bitino"   # builds the native runtime (CMake + a C++17 compiler)
+pip install "bitino[image]"     # prebuilt wheels: Linux x86-64 / aarch64, macOS arm64, Windows x64
 ```
 
 ```python
@@ -75,8 +51,8 @@ print(logits.argmax(), m.benchmark(threads=1), "ms on this CPU")
 ```
 
 Or try it in the browser: [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb)
-(Colab runs on a cloud x86 server, not a phone; the phone numbers are below). Prebuilt wheels for Linux x86-64 /
-aarch64, macOS arm64 and Windows x64 will be published on PyPI; until then pip builds the runtime from this repository.
+(Colab runs on a cloud x86 server, not a phone; the phone numbers are below). On other platforms pip builds the
+runtime from the source distribution (CMake and a C++17 compiler).
 
 The same from a terminal:
 
@@ -127,6 +103,56 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
 ```
 </details>
 
+
+## Highlights
+
+- **Fast on one core.**
+  - QuickNet-Small at 4.7 ms, QuickNet at 7.4 ms and ReActNet-18 at 10.8 ms per ImageNet image on a single phone
+    core.
+  - Faster than Larq Compute Engine on every model on every core measured: **1.35×** on a Cortex-X3, 1.14× on a
+    Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×**
+    faster than daBNN on its own models.
+- **Real networks, verified.** 132 published BNNs from ten frameworks. Each conversion is checked against a float64
+  evaluation of the source model (the source framework itself wherever it has a float64 mode). The exact `neon` stage is bit-identical with the reference executor.
+- **Matches the papers.** On all 50,000 ImageNet validation images, 53 of the 55 converted classifiers are within
+  0.5 pt of their published top-1 (mean −0.06 pt). The other two are Bi-ViT, whose released code and weights do not
+  reach their published numbers.
+- **Uses every core of a phone.** The thread pool sizes each core's share of the work to its measured speed, so the slow
+  little cores help instead of holding the big ones back: the median network runs 2.6× (OnePlus Open), 3.5× (moto
+  e13) and 4.8× (Redmi 9A) faster at 8 threads than at 1, and outputs are byte-identical at every thread count.
+- **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
+  about 0.85× the float latency on the measured phones, for 0.3–3 pt of top-1 (measured per file on the 50,000
+  validation images).
+- **Honest numbers.** Every timing comes from real hardware: four Android phones and an x86-64 host, with date, thread
+  setting and clock state recorded. Emulators are used for correctness only, never for speed.
+- **Runs everywhere a CPU does.**
+  - Android arm64 and 32-bit armeabi-v7a, Linux aarch64 / x86-64, Python on Linux, macOS and Windows.
+  - An Android library (AAR) with a Kotlin API and two example apps.
+
+*Un bitino* is Italian for "a little bit", which is all a binary network needs per weight.
+
+<p align="center"><img src="docs/img/pareto_imagenet.svg" width="760" alt="ImageNet: accuracy vs latency of the converted BNNs on one phone core, with the Pareto frontier"></p>
+<p align="center"><sub>ImageNet BNNs on one core of a OnePlus Open (Snapdragon 8 Gen 2), batch 1: accuracy against measured
+latency. Every point is a published network converted from its original checkpoint.</sub></p>
+
+## Which model should I use?
+
+ImageNet top-1 measured by Bitino on all 50,000 validation images; latency on one Cortex-X3 core of a OnePlus Open
+(1 thread, batch 1, float file). Every model loads the same way: `bitino.load("<id>")`.
+
+| You want | Model id | Top-1 | ms |
+|---|---|---:|---:|
+| A model with no conversion step (converted file in the release, MIT weights) | `ab-bnn-imagenet-reactnet18` | 61.3 % | 10.8 |
+| The fastest ImageNet model | `larq-zoo-quicknet-small` | 59.5 % | 4.7 |
+| The best under 10 ms | `larq-zoo-quicknet` | 63.4 % | 7.3 |
+| The best under 15 ms | `larq-zoo-quicknet-xl-legacy` | 67.1 % | 13.0 |
+| 30 fps on one core at over 70 % | `bnext-tiny` | 72.3 % | 24.0 |
+| The most accurate | `bnext-large` | 80.5 % | 182 |
+| CIFAR-10, smallest / most accurate | `brevitas-bnn-pynq-cnv-1w1a` / `biper-resnet18-cifar10` | 84.2 / 93.8 % (published) | 0.34 / 1.99 |
+
+Need more speed? Use more cores (below) or the full-integer file (`int8_full`, about 0.85× the latency, at the
+accuracy cost listed per model in the zoo tables).
+
 ## Android apps
 
 The Android library (`android/bitino`) is an AAR for arm64-v8a and armeabi-v7a, API 24+. It wraps the runtime in a
@@ -172,6 +198,13 @@ model on only 45–66 % of the images.
 
 Tables, method, setup differences and raw data: [docs/comparison-lce-tflite.md](docs/comparison-lce-tflite.md).
 
+**Multiple threads.** Every model at 1, 2, 4 and 8 threads, pinned to the N fastest cores:
+
+<p align="center"><img src="docs/img/threads_scaling.svg" width="640" alt="Median speed-up over 1 thread at 2, 4 and 8 threads on the OnePlus Open, moto e13 and Redmi 9A"></p>
+
+Big and little cores differ by up to 5× in speed; the pool learns each core's speed per layer and gives it a matching
+share, and tunes how many threads each layer uses. How it works: [docs/threads.md](docs/threads.md).
+
 **Against daBNN.** On daBNN's own Bi-Real Net-18 models (same weights and input, 1 thread, pinned to the same core),
 Bitino is 1.60–2.05× faster on five arm64 cores (Cortex-X3, A715, A510, A75; geometric mean 1.81×) and 6.5–7.5×
 faster on a 32-bit Cortex-A53, with less peak memory. Method and data: [docs/comparison-dabnn.md](docs/comparison-dabnn.md).
@@ -180,7 +213,7 @@ faster on a 32-bit Cortex-A53, with less peak memory. Method and data: [docs/com
 <summary><b>Latency of every converted model on every phone</b></summary>
 
 <!-- generated:speed -->
-Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (CPH2551)** (Qualcomm Snapdragon 8 Gen 2 (SM8550)); 1 thread = pinned to the fastest core; int8 = the full-integer file (int8_full) where measured, else the int8 kernels on the exact file. Accuracy: the original model in its own framework → Bitino's exact stage, on the small check subset; int8_full Δ: the full-integer file's paired difference against the exact stage. Fastest first.
+Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (CPH2551)** (Qualcomm Snapdragon 8 Gen 2 (SM8550)); 1 thread = pinned to the fastest core; int8 = the full-integer file (int8_full) where measured, else the int8 kernels on the exact file. Accuracy: for ImageNet classifiers, published top-1 → Bitino's top-1 on all 50,000 validation images ("val 50k"; original JPEGs, each model's own preprocessing); otherwise the original model in its own framework → Bitino's exact stage on the small check subset. int8_full Δ: the full-integer file's paired difference on the same images (the 50,000 where measured). Fastest first.
 
 ### CIFAR-10 (23 models)
 
@@ -188,7 +221,7 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 ![CIFAR-10 int8_full: accuracy vs latency, Pareto frontier](docs/img/pareto_cifar10_int8_full.svg)
 
-| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
+| model | accuracy | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
 | `bnn-pynq-cnv-w1a1-cifar10` | 86.7% → 86.7% | +0.42 pt | 0.318 ◇ | 0.222 ◇ | 0.335 ◇ | – | 1.32 | 3.19 |
 | `brevitas-bnn-pynq-cnv-1w1a` | 85.9% → 85.9% | -0.77 pt | 0.339 ◇ | 0.215 ◇ | 0.308 ◇ | – | 1.32 | 3.17 |
@@ -220,67 +253,67 @@ Median latency of one inference (batch 1) in ms. Main columns: **OnePlus Open (C
 
 ![ImageNet int8_full: accuracy vs latency, Pareto frontier](docs/img/pareto_imagenet_int8_full.svg)
 
-| model | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
+| model | accuracy | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| `larq-zoo-quicknet-small` | 59.4% → 58.6% | – | 4.66 ◇ | 2.49 ◇ | 4.69 ◇ | 9.26 † | 23.4 | 54.7 |
-| `larq-zoo-binary-alexnet` | 28.9% → 28.9% | +0.30 pt | 5.45 ◇ | 2.69 ◇ | 3.06 ◇ | – | 29.3 | 60.0 |
-| `larq-zoo-quicknet` | 66.4% → 66.4% | -0.72 pt | 7.34 ◇ | 3.9 ◇ | 7.66 ◇ | – | 39.0 | 92.9 |
-| `larq-zoo-xnornet` | 34.4% → 34.4% | -0.36 pt | 7.82 ◇ | 4.16 ◇ | 4.18 ◇ | – | 42.0 | 93.7 |
-| `dabnn-bireal18-stem` | 58.6% → 58.6% | -0.42 pt | 7.97 ◇ | 4.25 ◇ | 6.71 ◇ | – | 45.4 | 101.8 |
-| `larq-zoo-birealnet` | 57.8% → – | -0.20 pt | 10.3 ◇ | 5.41 ◇ | 7.06 ◇ | – | 59.6 | 125.3 |
-| `dabnn-bireal18` | 58.6% → 58.6% | +0.16 pt | 10.3 ◇ | 5.39 ◇ | 8.5 ◇ | – | 60.0 | 128.0 |
-| `larq-zoo-binary-resnet-e18` | 55.5% → 55.5% | -0.92 pt | 10.3 ◇ | 5.44 ◇ | 7.34 ◇ | – | 59.6 | 127.2 |
-| `bitorch-resnete18-imagenet` | 64.8% → 62.5% | -0.84 pt | 10.4 ◇ | 5.46 ◇ | 8.08 ◇ | – | 60.1 | 129.0 |
-| `nncf-resnet18-binarization-xnor` | 61.7% → 61.7% | -0.12 pt | 10.7 ◇ | 5.54 ◇ | 7.84 ◇ | – | 59.4 | 121.8 |
-| `nncf-resnet18-binarization-dorefa` | 62.5% → 62.5% | +0.14 pt | 10.7 ◇ | 5.53 ◇ | 7.81 ◇ | – | 59.7 | 123.0 |
-| `omz-resnet18-xnor-binary-onnx-0001-fp16` | 64.1% → 64.1% | +0.00 pt | 10.7 ◇ | 5.54 ◇ | 7.57 ◇ | – | 60.0 | 124.0 |
-| `omz-resnet18-xnor-binary-onnx-0001` | 59.4% → 59.4% | – | 10.7 ◇ | 5.59 ◇ | 7.57 ◇ | – | 60.1 | 123.8 |
-| `snn-subbit-reactnet18-w1a1-imagenet` | 64.8% → 64.8% | -0.20 pt | 10.8 ◇ | 5.55 ◇ | 7.83 ◇ | – | 61.0 | 132.1 |
-| `rbonn-reactnet-resnet18-imagenet` | 65.6% → 65.6% | -0.56 pt | 10.8 ◇ | 5.53 ◇ | 7.83 ◇ | – | 61.0 | 132.5 |
-| `ab-bnn-imagenet-reactnet18` | 65.6% → 64.8% | -0.34 pt | 10.8 ◇ | 5.53 ◇ | 7.68 ◇ | 16.9 ⚠ | 61.0 | 132.7 |
-| `snn-subbit-reactnet18-w0.67a1-imagenet` | 64.1% → 64.8% | -0.68 pt | 10.8 ◇ | 5.52 ◇ | 7.83 ◇ | – | 60.9 | 132.6 |
-| `recu-resnet18-imagenet` | 59.4% → 59.4% | – | 10.9 ◇ | 5.74 ◇ | 7.52 ◇ | – | 61.0 | 133.0 |
-| `biper-resnet18-imagenet` | 59.4% → 59.4% | – | 11.0 ◇ | 5.75 ◇ | 7.51 ◇ | – | 61.0 | 132.3 |
-| `siman-resnet18-imagenet` | 54.7% → 54.7% | – | 11.0 ◇ | 6.05 ◇ | 7.49 ◇ | – | 62.1 | 139.2 |
-| `rbnn-resnet18-imagenet` | 53.1% → 53.1% | -0.90 pt | 11.4 ◇ | 6.25 ◇ | 8.29 ◇ | – | 62.9 | 144.1 |
-| `sa-bnn-resnet18-imagenet` | 61.7% → 62.5% | -0.78 pt | 11.5 ◇ | 5.79 ◇ | 8.25 ◇ | – | 61.5 | 134.2 |
-| `tensorpack-dorefa-alexnet-w1a1-g32` | 46.1% → 46.1% | -0.32 pt | 11.5 ◇ | 5.81 ◇ | 7.63 ◇ | – | 60.8 | 132.5 |
-| `larq-zoo-real-to-binary-net` | 64.8% → 64.8% | – | 12.0 ◇ | 6.44 ◇ | 9.23 ◇ | – | 65.6 | 156.0 |
-| `larq-zoo-quicknet-xl-legacy` | 64.1% → 64.8% | -0.92 pt | 13.0 ◇ | 7.39 ◇ | 13.2 ◇ | – | 67.4 | 158.9 |
-| `larq-zoo-quicknet-large` | 71.1% → 70.3% | – | 13.2 ◇ | 7.2 ◇ | 13.1 ◇ | – | 66.7 | 158.5 |
-| `bi-vit-deit-tiny` | 15.6% → 15.6% | -0.34 pt | 13.8 ◇ | 8.06 ◇ | 12.3 ◇ | 42.1 ⚠ | 67.4 | 196.2 |
-| `recu-resnet34-imagenet` | 68.8% → 68.8% | – | 17.2 ◇ | 9.12 ◇ | 13.6 ◇ | – | 89.9 | 198.5 |
-| `biper-resnet34-imagenet` | 66.4% → 66.4% | – | 17.3 ◇ | 9.11 ◇ | 13.6 ◇ | – | 89.9 | 198.2 |
-| `ab-bnn-imagenet-reactnet34` | 67.2% → 68.0% | -0.62 pt | 17.3 ◇ | 8.92 ◇ | 14.5 ◇ | 27.0 ⚠ | 90.6 | 201.6 |
-| `siman-resnet34-imagenet` | 59.4% → 60.9% | -14.10 pt | 17.8 ◇ | 9.82 ◇ | 14.7 ◇ | – | 92.6 | 209.9 |
-| `rbnn-resnet34-imagenet` | 64.1% → 63.3% | -0.52 pt | 18.1 ◇ | 10.0 ◇ | 13.4 ◇ | – | 94.2 | 215.4 |
-| `ab-bnn-imagenet-reactneta` | 66.4% → 65.6% | -0.58 pt | 19.5 ◇ | 10.0 ◇ | 19.5 ◇ | 19.6 ⚠ | 96.1 | 269.0 |
-| `larq-zoo-binary-densenet28` | 60.9% → 60.9% | -0.66 pt | 21.1 ◇ | 11.1 ◇ | 14.6 ◇ | – | 113.5 | 249.8 |
-| `bitorch-densenet28-imagenet` | 59.4% → 59.4% | -0.76 pt | 22.5 ◇ | 11.8 ◇ | 14.5 ◇ | – | 119.6 | 265.6 |
-| `larq-zoo-dorefanet` | 46.1% → 46.1% | -0.64 pt | 23.2 ◇ | 12.0 ◇ | 19.9 ◇ | – | 117.8 | 218.6 |
-| `bnext-tiny` | 69.5% → 68.0% | – | 24.1 ◇ | 12.4 ◇ | 22.1 ◇ | – | 117.4 | 344.2 |
-| `larq-zoo-binary-densenet37` | 66.4% → 65.6% | -41.28 pt | 24.3 ◇ | 12.9 ◇ | 19.8 ◇ | – | 129.0 | 286.6 |
-| `larq-zoo-meliusnet22` | 65.6% → 66.4% | -57.38 pt | 24.8 ◇ | 13.0 ◇ | 23.0 ◇ | – | 127.4 | 311.3 |
-| `bnas-d-imagenet` | 60.2% → 60.2% | -54.94 pt | 26.1 ◇ | 14.4 ◇ | 16.0 ◇ | – | 139.1 | 318.7 |
-| `bitorch-meliusnet22-imagenet` | 66.4% → 65.6% | -61.52 pt | 26.2 ◇ | 13.9 ◇ | 19.6 ◇ | – | 137.5 | 323.7 |
-| `bhvit-tiny-binary` | 64.1% → 62.5% | – | 28.4 ◇ | 14.4 ◇ | 29.0 ◇ | 46.6 ⚠ | 141.1 | 572.8 |
-| `bhvit-tiny-somefp` | 65.6% → 65.6% | -6.20 pt | 30.8 ◇ | 15.6 ◇ | 33.9 ◇ | 58.8 ⚠ | 155.0 | 595.9 |
-| `bnas-e-imagenet` | 56.2% → 56.2% | -0.92 pt | 32.5 ◇ | 18.3 ◇ | 23.3 ◇ | – | 183.2 | 393.7 |
-| `larq-zoo-binary-densenet45` | 60.9% → 61.7% | -43.86 pt | 32.5 ◇ | 17.2 ◇ | 27.0 ◇ | – | 172.4 | 382.8 |
-| `omz-resnet50-binary-0001-fp16` | 71.9% → 73.4% | – | 33.6 ◇ | 17.3 ◇ | 19.9 ◇ | – | 181.9 | 439.7 |
-| `omz-resnet50-binary-0001` | 72.7% → 73.4% | – | 33.7 ◇ | 17.3 ◇ | 19.9 ◇ | – | 182.0 | 439.6 |
-| `bi-vit-deit-small` | 11.7% → 10.9% | -0.88 pt | 35.1 ◇ | 19.6 ◇ | 32.4 ◇ | 113.1 ⚠ | 169.0 | 465.0 |
-| `bhvit-small-binary` | 68.8% → 65.6% | – | 43.6 ◇ | 22.2 ◇ | 53.5 ◇ | 85.8 ⚠ | 216.8 | 881.9 |
-| `larq-zoo-binary-densenet37-dilated` | 65.6% → 65.6% | -59.00 pt | 44.1 ◇ | 22.7 ◇ | 33.7 ◇ | – | 239.2 | 530.8 |
-| `bhvit-small-somefp` | 72.7% → 76.6% | -1.90 pt | 46.0 ◇ | 23.3 ◇ | 52.8 ◇ | 106.9 ⚠ | 230.6 | 906.4 |
-| `bnext-small` | 76.6% → 75.0% | – | 46.9 ◇ | 23.3 ◇ | 43.6 ◇ | – | 224.6 | 639.5 |
-| `bnext-middle` | 78.9% → 78.9% | – | 80.7 ◇ | 40.2 ◇ | 77.5 ◇ | – | 391.0 | 1075.4 |
-| `bnas-h-imagenet` | 60.2% → 60.2% | +0.08 pt | 107.5 ◇ | 53.3 ◇ | 68.1 ◇ | – | 562.3 | 1255.1 |
-| `bnext-large` | 79.7% → 80.5% | – | 182.4 ◇ | 90.2 ◇ | 177.8 ◇ | – | 886.3 | 2432.4 |
+| `larq-zoo-quicknet-small` | 59.4% → 59.5% (val 50k) | -2.67 pt | 4.66 ◇ | 2.49 ◇ | 4.69 ◇ | 9.26 † | 23.4 | 54.7 |
+| `larq-zoo-binary-alexnet` | 36.3% → 36.3% (val 50k) | +0.30 pt | 5.45 ◇ | 2.69 ◇ | 3.06 ◇ | – | 29.3 | 60.0 |
+| `larq-zoo-quicknet` | 63.3% → 63.4% (val 50k) | -1.43 pt | 7.34 ◇ | 3.9 ◇ | 7.66 ◇ | – | 39.0 | 92.9 |
+| `larq-zoo-xnornet` | 45.0% → 45.0% (val 50k) | -0.36 pt | 7.82 ◇ | 4.16 ◇ | 4.18 ◇ | – | 42.0 | 93.7 |
+| `dabnn-bireal18-stem` | 56.4% → 56.1% (val 50k) | -0.42 pt | 7.97 ◇ | 4.25 ◇ | 6.71 ◇ | – | 45.4 | 101.8 |
+| `larq-zoo-birealnet` | 57.5% → 57.5% (val 50k) | -0.62 pt | 10.3 ◇ | 5.41 ◇ | 7.06 ◇ | – | 59.6 | 125.3 |
+| `dabnn-bireal18` | 56.4% → 55.9% (val 50k) | -0.28 pt | 10.3 ◇ | 5.39 ◇ | 8.5 ◇ | – | 60.0 | 128.0 |
+| `larq-zoo-binary-resnet-e18` | 58.3% → 58.3% (val 50k) | -0.92 pt | 10.3 ◇ | 5.44 ◇ | 7.34 ◇ | – | 59.6 | 127.2 |
+| `bitorch-resnete18-imagenet` | 60.6% → 60.5% (val 50k) | -0.84 pt | 10.4 ◇ | 5.46 ◇ | 8.08 ◇ | – | 60.1 | 129.0 |
+| `nncf-resnet18-binarization-xnor` | 61.7% → 61.7% (val 50k) | -0.12 pt | 10.7 ◇ | 5.54 ◇ | 7.84 ◇ | – | 59.4 | 121.8 |
+| `nncf-resnet18-binarization-dorefa` | 61.6% → 61.6% (val 50k) | +0.14 pt | 10.7 ◇ | 5.53 ◇ | 7.81 ◇ | – | 59.7 | 123.0 |
+| `omz-resnet18-xnor-binary-onnx-0001-fp16` | 61.7% → 61.8% (val 50k) | +0.00 pt | 10.7 ◇ | 5.54 ◇ | 7.57 ◇ | – | 60.0 | 124.0 |
+| `omz-resnet18-xnor-binary-onnx-0001` | 61.7% → 61.8% (val 50k) | – | 10.7 ◇ | 5.59 ◇ | 7.57 ◇ | – | 60.1 | 123.8 |
+| `snn-subbit-reactnet18-w1a1-imagenet` | 65.7% → 65.8% (val 50k) | -0.20 pt | 10.8 ◇ | 5.55 ◇ | 7.83 ◇ | – | 61.0 | 132.1 |
+| `rbonn-reactnet-resnet18-imagenet` | 66.7% → 66.6% (val 50k) | -0.56 pt | 10.8 ◇ | 5.53 ◇ | 7.83 ◇ | – | 61.0 | 132.5 |
+| `ab-bnn-imagenet-reactnet18` | 61.4% → 61.3% (val 50k) | -0.95 pt | 10.8 ◇ | 5.53 ◇ | 7.68 ◇ | 16.9 ⚠ | 61.0 | 132.7 |
+| `snn-subbit-reactnet18-w0.67a1-imagenet` | 63.4% → 63.4% (val 50k) | -0.68 pt | 10.8 ◇ | 5.52 ◇ | 7.83 ◇ | – | 60.9 | 132.6 |
+| `recu-resnet18-imagenet` | 61.2% → 61.2% (val 50k) | – | 10.9 ◇ | 5.74 ◇ | 7.52 ◇ | – | 61.0 | 133.0 |
+| `biper-resnet18-imagenet` | 61.4% → 61.3% (val 50k) | – | 11.0 ◇ | 5.75 ◇ | 7.51 ◇ | – | 61.0 | 132.3 |
+| `siman-resnet18-imagenet` | 60.1% → 60.2% (val 50k) | – | 11.0 ◇ | 6.05 ◇ | 7.49 ◇ | – | 62.1 | 139.2 |
+| `rbnn-resnet18-imagenet` | 59.9% → 59.5% (val 50k) | -0.90 pt | 11.4 ◇ | 6.25 ◇ | 8.29 ◇ | – | 62.9 | 144.1 |
+| `sa-bnn-resnet18-imagenet` | 61.7% → 61.7% (val 50k) | -0.78 pt | 11.5 ◇ | 5.79 ◇ | 8.25 ◇ | – | 61.5 | 134.2 |
+| `tensorpack-dorefa-alexnet-w1a1-g32` | 48.5% → 48.7% (val 50k) | -0.32 pt | 11.5 ◇ | 5.81 ◇ | 7.63 ◇ | – | 60.8 | 132.5 |
+| `larq-zoo-real-to-binary-net` | 65.0% → 65.0% (val 50k) | – | 12.0 ◇ | 6.44 ◇ | 9.23 ◇ | – | 65.6 | 156.0 |
+| `larq-zoo-quicknet-xl-legacy` | 67.0% → 67.1% (val 50k) | -0.92 pt | 13.0 ◇ | 7.39 ◇ | 13.2 ◇ | – | 67.4 | 158.9 |
+| `larq-zoo-quicknet-large` | 66.9% → 66.7% (val 50k) | -1.62 pt | 13.2 ◇ | 7.2 ◇ | 13.1 ◇ | – | 66.7 | 158.5 |
+| `bi-vit-deit-tiny` | 28.7% → 15.6% (val 50k) | -0.34 pt | 13.8 ◇ | 8.06 ◇ | 12.3 ◇ | 42.1 ⚠ | 67.4 | 196.2 |
+| `recu-resnet34-imagenet` | 65.2% → 65.1% (val 50k) | – | 17.2 ◇ | 9.12 ◇ | 13.6 ◇ | – | 89.9 | 198.5 |
+| `biper-resnet34-imagenet` | 65.6% → 65.4% (val 50k) | – | 17.3 ◇ | 9.11 ◇ | 13.6 ◇ | – | 89.9 | 198.2 |
+| `ab-bnn-imagenet-reactnet34` | 65.2% → 64.9% (val 50k) | -0.52 pt | 17.3 ◇ | 8.92 ◇ | 14.5 ◇ | 27.0 ⚠ | 90.6 | 201.6 |
+| `siman-resnet34-imagenet` | 63.9% → 63.6% (val 50k) | -14.10 pt | 17.8 ◇ | 9.82 ◇ | 14.7 ◇ | – | 92.6 | 209.9 |
+| `rbnn-resnet34-imagenet` | 63.1% → 62.9% (val 50k) | -0.52 pt | 18.1 ◇ | 10.0 ◇ | 13.4 ◇ | – | 94.2 | 215.4 |
+| `ab-bnn-imagenet-reactneta` | 66.9% → 66.7% (val 50k) | -0.47 pt | 19.5 ◇ | 10.0 ◇ | 19.5 ◇ | 19.6 ⚠ | 96.1 | 269.0 |
+| `larq-zoo-binary-densenet28` | 60.9% → 60.9% (val 50k) | -0.66 pt | 21.1 ◇ | 11.1 ◇ | 14.6 ◇ | – | 113.5 | 249.8 |
+| `bitorch-densenet28-imagenet` | 58.7% → 58.6% (val 50k) | -0.76 pt | 22.5 ◇ | 11.8 ◇ | 14.5 ◇ | – | 119.6 | 265.6 |
+| `larq-zoo-dorefanet` | 53.4% → 53.4% (val 50k) | -0.64 pt | 23.2 ◇ | 12.0 ◇ | 19.9 ◇ | – | 117.8 | 218.6 |
+| `bnext-tiny` | 72.4% → 72.3% (val 50k) | -3.01 pt | 24.1 ◇ | 12.4 ◇ | 22.1 ◇ | – | 117.4 | 344.2 |
+| `larq-zoo-binary-densenet37` | 62.9% → 62.9% (val 50k) | -41.28 pt | 24.3 ◇ | 12.9 ◇ | 19.8 ◇ | – | 129.0 | 286.6 |
+| `larq-zoo-meliusnet22` | 62.4% → 62.6% (val 50k) | -57.38 pt | 24.8 ◇ | 13.0 ◇ | 23.0 ◇ | – | 127.4 | 311.3 |
+| `bnas-d-imagenet` | 57.7% → 57.8% (val 50k) | -54.94 pt | 26.1 ◇ | 14.4 ◇ | 16.0 ◇ | – | 139.1 | 318.7 |
+| `bitorch-meliusnet22-imagenet` | 64.3% → 64.4% (val 50k) | -61.52 pt | 26.2 ◇ | 13.9 ◇ | 19.6 ◇ | – | 137.5 | 323.7 |
+| `bhvit-tiny-binary` | 64.0% → 63.8% (val 50k) | -1.01 pt | 28.4 ◇ | 14.4 ◇ | 29.0 ◇ | 46.6 ⚠ | 141.1 | 572.8 |
+| `bhvit-tiny-somefp` | 66.0% → 65.8% (val 50k) | -6.20 pt | 30.8 ◇ | 15.6 ◇ | 33.9 ◇ | 58.8 ⚠ | 155.0 | 595.9 |
+| `bnas-e-imagenet` | 58.3% → 58.2% (val 50k) | -0.92 pt | 32.5 ◇ | 18.3 ◇ | 23.3 ◇ | – | 183.2 | 393.7 |
+| `larq-zoo-binary-densenet45` | 64.6% → 64.5% (val 50k) | -43.86 pt | 32.5 ◇ | 17.2 ◇ | 27.0 ◇ | – | 172.4 | 382.8 |
+| `omz-resnet50-binary-0001-fp16` | 70.7% → 70.8% (val 50k) | – | 33.6 ◇ | 17.3 ◇ | 19.9 ◇ | – | 181.9 | 439.7 |
+| `omz-resnet50-binary-0001` | 70.7% → 70.6% (val 50k) | -0.31 pt | 33.7 ◇ | 17.3 ◇ | 19.9 ◇ | – | 182.0 | 439.6 |
+| `bi-vit-deit-small` | 40.9% → 16.8% (val 50k) | -0.88 pt | 35.1 ◇ | 19.6 ◇ | 32.4 ◇ | 113.1 ⚠ | 169.0 | 465.0 |
+| `bhvit-small-binary` | 68.4% → 68.5% (val 50k) | – | 43.6 ◇ | 22.2 ◇ | 53.5 ◇ | 85.8 ⚠ | 216.8 | 881.9 |
+| `larq-zoo-binary-densenet37-dilated` | 64.3% → 64.3% (val 50k) | -59.00 pt | 44.1 ◇ | 22.7 ◇ | 33.7 ◇ | – | 239.2 | 530.8 |
+| `bhvit-small-somefp` | 70.1% → 70.1% (val 50k) | -1.90 pt | 46.0 ◇ | 23.3 ◇ | 52.8 ◇ | 106.9 ⚠ | 230.6 | 906.4 |
+| `bnext-small` | 76.1% → 76.0% (val 50k) | – | 46.9 ◇ | 23.3 ◇ | 43.6 ◇ | – | 224.6 | 639.5 |
+| `bnext-middle` | 78.3% → 78.1% (val 50k) | – | 80.7 ◇ | 40.2 ◇ | 77.5 ◇ | – | 391.0 | 1075.4 |
+| `bnas-h-imagenet` | 63.7% → 63.7% (val 50k) | +0.08 pt | 107.5 ◇ | 53.3 ◇ | 68.1 ◇ | – | 562.3 | 1255.1 |
+| `bnext-large` | 80.6% → 80.5% (val 50k) | – | 182.4 ◇ | 90.2 ◇ | 177.8 ◇ | – | 886.3 | 2432.4 |
 
 ### Other tasks (54 models)
 
-| model | task | accuracy (reference → Bitino) | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
+| model | task | accuracy | int8_full Δ | OnePlus Open 1 thread | OnePlus Open 4 threads | OnePlus Open int8 1 thread | Galaxy S22 1 thread | moto e13 1 thread | Redmi 9A 1 thread (32-bit) |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|
 | `brevitas-bnn-pynq-tfc-1w1a` | mnist | 96.9% → 96.9% | – | 0.001 ◇ | 0.013 ◇ | 0.006 ◇ | – | 0.004 | 0.012 |
 | `finn-examples-bnn-pynq-tfc-w1a1` | mnist | 96.9% → 96.9% | – | 0.001 ◇ | 0.012 ◇ | 0.003 ◇ | – | 0.004 | 0.012 |
@@ -346,34 +379,39 @@ The phones: `results/devices.json`. All runs with their clock state: `results/sp
 (older runtime, labelled): `results/speed_x86.json`. Method: [docs/benchmarking.md](docs/benchmarking.md).
 </details>
 
+**Your phone.** `scripts/bench_my_phone.sh` measures Bitino on any Android phone over adb (no root, about 5 minutes,
+outputs checked against the reference) and writes one JSON file for the community table (`results/community/`):
+[docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).
+
 ## Model zoo
 
 Selected models (all converted models: [docs/MODEL_ZOO.md](docs/MODEL_ZOO.md); a searchable version is on the
 [website](https://federicofontana.dev/bitino/)):
 
 <!-- generated:zoo_top -->
-| model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | fastest phone ms (1 thread) | weights licence | release |
+| model | task | framework | accuracy | eval set (n) | int8_full Δ | fastest phone ms (1 thread) | weights licence | release |
 |---|---|---|---|---|---|---|---|---|
 | `ab-bnn-cifar10-reactnet18` | cifar10-classification | pytorch | 93.8% → 93.8% | cifar10-test-first-128 (128) | +0.06 pt (cifar10-test-first-10000, n=10000) | 2.25 ◇ (OnePlus Open) | MIT (HF card) | yes |
-| `ab-bnn-imagenet-reactnet18` | imagenet-classification | pytorch | 65.6% → 64.8% | imagenet-val-subset-128 (128) | -0.34 pt (imagenet-val-subset-5000, n=5000) | 10.8 ◇ (OnePlus Open) | MIT (HF model card metadata 'license: mit'); app | yes |
-| `ab-bnn-imagenet-reactnet34` | imagenet-classification | pytorch | 67.2% → 68.0% | imagenet-val-subset-128 (128) | -0.62 pt (imagenet-val-subset-5000, n=5000) | 17.3 ◇ (OnePlus Open) | MIT (HF card) | yes |
-| `ab-bnn-imagenet-reactneta` | imagenet-classification | pytorch | 66.4% → 65.6% | imagenet-val-subset-128 (128) | -0.58 pt (imagenet-val-subset-5000, n=5000) | 19.5 ◇ (OnePlus Open) | MIT (HF card) | yes |
+| `ab-bnn-imagenet-reactnet18` | imagenet-classification | pytorch | 61.4% → 61.3% (val 50k) | ImageNet val (50000) | -0.95 pt (ImageNet val (full), n=50000) | 10.8 ◇ (OnePlus Open) | MIT (HF model card metadata 'license: mit'); app | yes |
+| `ab-bnn-imagenet-reactnet34` | imagenet-classification | pytorch | 65.2% → 64.9% (val 50k) | ImageNet val (50000) | -0.52 pt (ImageNet val (full), n=50000) | 17.3 ◇ (OnePlus Open) | MIT (HF card) | yes |
+| `ab-bnn-imagenet-reactneta` | imagenet-classification | pytorch | 66.9% → 66.7% (val 50k) | ImageNet val (50000) | -0.47 pt (ImageNet val (full), n=50000) | 19.5 ◇ (OnePlus Open) | MIT (HF card) | yes |
 | `bbcu-sr-l-x4` | single-image-super-resolution-x4 | pytorch | 27.36 dB → 27.36 dB | set5-set14-b100-x4-lr32 (64) | – | 52.7 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
-| `bhvit-tiny-binary` | imagenet-classification | pytorch | 64.1% → 62.5% | imagenet-val-subset-128 (128) | – | 28.4 ◇ (OnePlus Open) | no explicit weights licence (inherits repo MIT?  | – |
-| `bi-vit-deit-tiny` | imagenet-classification | pytorch | 15.6% → 15.6% | imagenet-val-subset-128 (128) | -0.34 pt (imagenet-val-subset-5000_bhvit, n=5000) | 13.8 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
+| `bhvit-tiny-binary` | imagenet-classification | pytorch | 64.0% → 63.8% (val 50k) | ImageNet val (50000) | -1.01 pt (ImageNet val (full), n=50000) | 28.4 ◇ (OnePlus Open) | no explicit weights licence (inherits repo MIT?  | – |
+| `bi-vit-deit-tiny` | imagenet-classification | pytorch | 28.7% → 15.6% (val 50k) | ImageNet val (50000) | -0.34 pt (imagenet-val-subset-5000_bhvit, n=5000) | 13.8 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
 | `bibert-bert-base-sst2` | glue-sst2 | pytorch | 89.8% → 89.8% | sst2-dev-128 (128) | -0.34 pt (sst2-dev-872, n=872) | 27.2 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
-| `bnext-tiny` | imagenet-classification | pytorch | 69.5% → 68.0% | imagenet-val-subset-128 (128) | – | 24.1 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
+| `bnext-tiny` | imagenet-classification | pytorch | 72.4% → 72.3% (val 50k) | ImageNet val (50000) | -3.01 pt (ImageNet val (full), n=50000) | 24.1 ◇ (OnePlus Open) | no explicit weights licence (inherits repo Apach | – |
 | `brevitas-bnn-pynq-cnv-1w1a` | cifar10-classification | pytorch+brevitas | 85.9% → 85.9% | cifar10-test-first-128 (128) | -0.77 pt (cifar10-test-first-10000, n=10000) | 0.339 ◇ (OnePlus Open) | no explicit weights licence (inherits repo licen | – |
-| `larq-zoo-birealnet` | imagenet-classification | larq_zoo | 57.8% → – | imagenet-val-subset-128 (128) | -0.20 pt (imagenet-val-subset-5000, n=5000) | 10.3 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
-| `larq-zoo-quicknet` | imagenet-classification | larq_zoo | 66.4% → 66.4% | imagenet-val-subset-128 (128) | -0.72 pt (imagenet-val-subset-5000, n=5000) | 7.34 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
-| `larq-zoo-quicknet-large` | imagenet-classification | larq_zoo | 71.1% → 70.3% | imagenet-val-subset-128 (128) | – | 13.2 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
-| `larq-zoo-quicknet-small` | imagenet-classification | larq_zoo | 59.4% → 58.6% | imagenet-val-subset-128 (128) | – | 4.66 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
-| `omz-resnet18-xnor-binary-onnx-0001` | imagenet-classification | openvino-ir | 59.4% → 59.4% | imagenet-val-subset-128 (128) | – | 10.7 ◇ (OnePlus Open) | Apache-2.0 | yes |
-| `omz-resnet50-binary-0001` | imagenet-classification | openvino-ir | 72.7% → 73.4% | imagenet-val-subset-128 (128) | – | 33.7 ◇ (OnePlus Open) | Apache-2.0 (model.yml license field points to th | yes |
+| `larq-zoo-birealnet` | imagenet-classification | larq_zoo | 57.5% → 57.5% (val 50k) | ImageNet val (50000) | -0.62 pt (ImageNet val (full), n=50000) | 10.3 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
+| `larq-zoo-quicknet` | imagenet-classification | larq_zoo | 63.3% → 63.4% (val 50k) | ImageNet val (50000) | -1.43 pt (ImageNet val (full), n=50000) | 7.34 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
+| `larq-zoo-quicknet-large` | imagenet-classification | larq_zoo | 66.9% → 66.7% (val 50k) | ImageNet val (50000) | -1.62 pt (ImageNet val (full), n=50000) | 13.2 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
+| `larq-zoo-quicknet-small` | imagenet-classification | larq_zoo | 59.4% → 59.5% (val 50k) | ImageNet val (50000) | -2.67 pt (ImageNet val (full), n=50000) | 4.66 ◇ (OnePlus Open) | No explicit weights licence (inherits repo licen | – |
+| `omz-resnet18-xnor-binary-onnx-0001` | imagenet-classification | openvino-ir | 61.7% → 61.8% (val 50k) | ImageNet val (50000) | – | 10.7 ◇ (OnePlus Open) | Apache-2.0 | yes |
+| `omz-resnet50-binary-0001` | imagenet-classification | openvino-ir | 70.7% → 70.6% (val 50k) | ImageNet val (50000) | -0.31 pt (ImageNet val (full), n=50000) | 33.7 ◇ (OnePlus Open) | Apache-2.0 (model.yml license field points to th | yes |
 <!-- /generated:zoo_top -->
 
-The accuracy columns are conversion checks on small subsets (n = 128 for most classifiers). They compare the original
-model, run by its own framework, with Bitino's exact stage; they are not new full-dataset accuracies.
+Accuracy: ImageNet classifiers show their published top-1 → Bitino's top-1 on all 50,000 validation images (original
+JPEGs, each model's own preprocessing). The other models show conversion checks on small subsets (n = 128 for most):
+the original model, run by its own framework, against Bitino's exact stage.
 
 **Weights and licences.**
 - Converted files are attached to the releases only when the weights licence is explicitly permissive (Apache-2.0 /
@@ -392,7 +430,8 @@ model, run by its own framework, with Bitino's exact stage; they are not new ful
 | **Targets** | Android arm64-v8a and armeabi-v7a (command-line runtime API 30+, AAR API 24+), Linux aarch64 and x86-64. Python on Linux x86-64 / aarch64, macOS arm64, Windows x64 (correctness-tested in CI; speed is measured on the phones and the x86 host only) |
 
 More: [architecture](docs/architecture.md) · [model format](docs/model-format.md) ·
-[numerical correctness](docs/numerical-correctness.md) · [int8](docs/int8.md) · [threads](docs/threads.md).
+[numerical correctness](docs/numerical-correctness.md) · [int8](docs/int8.md) · [threads](docs/threads.md) ·
+[reproducing every number](docs/reproduce.md).
 
 ## Add a model
 
@@ -401,8 +440,18 @@ More: [architecture](docs/architecture.md) · [model format](docs/model-format.m
 3. Validate it with `tools/validate_model.py` on the host, then on a device.
 4. `tools/build_recipes.py --artifacts <dir>` writes its fetch recipe; `tools/build_site.py` refreshes the tables.
 
-Walk-through: [docs/adding-a-model.md](docs/adding-a-model.md). Issues and pull requests are welcome, especially new
-BNNs with public weights and speed runs on phones not listed here.
+Walk-through: [docs/adding-a-model.md](docs/adding-a-model.md). Brevitas and QONNX / FINN-ONNX models can also be
+imported directly: [docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md).
+
+## Contributing
+
+The most useful contributions, in order:
+1. **Speed on your phone.** Every new phone makes the benchmark tables more useful, and it takes one command:
+   [docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).
+2. **A BNN with public weights** that is not in the zoo yet ([wanted list](docs/wanted-models.md)).
+3. **Bugs and wrong numbers.** If a model disagrees with its paper or framework, please open an issue.
+
+Questions and ideas: [Discussions](https://github.com/fedeloper/bitino/discussions). Changes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Limitations
 
@@ -416,7 +465,8 @@ BNNs with public weights and speed runs on phones not listed here.
 - **int8_full** loses accuracy on some networks (see the zoo tables); the exact `neon` / `optimized` stages match the
   source framework. Reproducing an int8 file bit for bit needs its calibration images (training split, not
   redistributed).
-- **Small accuracy subsets** (mostly 128 images): they validate conversions; they do not re-measure the papers.
+- **Accuracy beyond ImageNet.** ImageNet classifiers are measured on the full validation set; the other tasks
+  (CIFAR, restoration, deepfake detection, embeddings) only on small conversion-check subsets (mostly 128 inputs).
 - **Fetch recipes.**
   - 131 of 132 ran end to end from an empty cache. One is broken upstream: S2-BNN, whose OneDrive link has expired.
   - Google Drive can refuse a scripted download; `fetch` then prints the link to download by hand.

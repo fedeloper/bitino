@@ -36,6 +36,30 @@
    "reference_fp64": null,
    "runtime": null
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 57.47,
+   "top1": 0.57488,
+   "top1_ci95": [
+    0.570541143018399,
+    0.5792073515052697
+   ],
+   "top5": 0.79864,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py",
+   "int8_full": {
+    "top1": 0.56872,
+    "delta_vs_all_pt": -0.62,
+    "delta_ci95_pt": [
+     -0.9,
+     -0.33
+    ],
+    "mcnemar_p": 2.6705971674595893e-05,
+    "n": 50000
+   }
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

@@ -1,0 +1,38 @@
+name: Speed on my phone
+description: Submit the result of scripts/bench_my_phone.sh for the community speed table
+title: "[speed] <phone model>"
+labels: ["speed-run"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for measuring Bitino on your phone. Run `scripts/bench_my_phone.sh` (guide and privacy note:
+        [docs/benchmark-your-phone.md](https://github.com/fedeloper/bitino/blob/main/docs/benchmark-your-phone.md)),
+        then fill in the two fields below. A maintainer validates the file with `tools/ingest_community.py` and adds it
+        to `results/community/`.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Paste the contents of `bitino-bench-<phone model>-<date>.md`.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Result file
+      description: Drag and drop `bitino-bench-<phone model>-<date>.json` here (zip it first if GitHub refuses the file).
+    validations:
+      required: true
+  - type: textarea
+    id: conditions
+    attributes:
+      label: Anything unusual? (optional)
+      description: Battery saver, performance mode, custom ROM, case or cooling, charging from a wall charger, ...
+  - type: checkboxes
+    id: publish
+    attributes:
+      label: Publication
+      options:
+        - label: I agree that the numbers and the device information in the file (phone model, SoC, Android version, CPU clocks and conditions) are published in `results/community/` under the repository's licence.
+          required: true

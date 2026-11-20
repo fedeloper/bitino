@@ -42,6 +42,30 @@
    },
    "note": "128-sample smoke test, not a full-test-set estimate"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 66.89,
+   "top1": 0.66682,
+   "top1_ci95": [
+    0.6626757553226242,
+    0.6709386124182734
+   ],
+   "top5": 0.8699,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py",
+   "int8_full": {
+    "top1": 0.6621,
+    "delta_vs_all_pt": -0.47,
+    "delta_ci95_pt": [
+     -0.7,
+     -0.24
+    ],
+    "mcnemar_p": 7.63563999244589e-05,
+    "n": 50000
+   }
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

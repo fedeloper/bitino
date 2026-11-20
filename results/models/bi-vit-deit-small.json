@@ -38,6 +38,20 @@
    },
    "note": "100-class ImageNet subset (smoke/regression, not an ImageNet-1k estimate); the remaining gap to the claim is unexplained (authors' GPU numerics: normcdf GELU, TF32) and flagged in the research notes (not published)"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 40.9,
+   "top1": 0.1682,
+   "top1_ci95": [
+    0.16494687933403937,
+    0.17150410246412714
+   ],
+   "top5": 0.3551,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py"
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

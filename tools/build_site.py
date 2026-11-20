@@ -146,6 +146,11 @@ def collect() -> dict:
                         and "poolbug" not in st.get("study", "") and "prev" not in st.get("study", ""):
                     i8 = {"file": st["b"].split(":")[0], "set": st.get("eval_set"), "n": st.get("n"), "top1": st.get("b_top1"),
                           "delta": st.get("delta_pt"), "p": st.get("mcnemar_p")}
+        full = acc.get("full_val")
+        if full and full.get("int8_full"):   # the full validation set beats every subset study
+            fi = full["int8_full"]
+            i8 = {"file": "model_int8_full.bitino", "set": "ImageNet val (full)", "n": fi.get("n"), "top1": fi.get("top1"),
+                  "delta": fi.get("delta_vs_all_pt"), "p": fi.get("mcnemar_p")}
         insn = (res.get("instructions_M") or {}).get("values") or {}
         phones = {}
         for did in speed:
@@ -174,7 +179,7 @@ def collect() -> dict:
             "metric": head.get("metric"), "eval_set": re.split(r",| \(", head.get("eval_set") or "")[0], "n": head.get("n"),
             "reference_kind": head.get("reference_kind"),
             "reference": head.get("reference"), "runtime": head.get("runtime"), "delta": head.get("delta_vs_reference"),
-            "delta_unit": head.get("delta_unit"), "big": big, "int8": i8,
+            "delta_unit": head.get("delta_unit"), "big": big, "int8": i8, "full": full,
             "insn_opt": insn.get("optimized"), "insn_int8": insn.get("int8_full_log2") or insn.get("int8_full"),
             "phones": phones, "best": best, "x86_t1": round(xr[0]["median_ms"], 4) if xr else None,
             "licence_code": (m.get("license") or {}).get("code", ""), "licence_weights": (m.get("license") or {}).get("weights", ""),
@@ -384,6 +389,16 @@ def group_rows(d: dict) -> tuple[str | None, list[str], list[tuple[str, str, lis
     return pid, others, out
 
 
+def acc_cell(m: dict) -> str:
+    """Full ImageNet validation set where measured (published → Bitino), else the conversion check subset
+    (reference → Bitino)."""
+    f = m.get("full")
+    if f and isinstance(f.get("top1"), (int, float)):
+        pub = f.get("published_top1")
+        return (f"{pub:.1f}% → " if isinstance(pub, (int, float)) else "") + f"{100 * f['top1']:.1f}% (val 50k)"
+    return f"{fmt_acc(m['reference'], m['metric'])} → {fmt_acc(m['runtime'], m['metric'])}"
+
+
 def int8_delta(m: dict) -> str:
     i8 = m["int8"]
     return f"{i8['delta']:+.2f} pt" if i8 and isinstance(i8.get("delta"), (int, float)) else "–"
@@ -418,9 +433,9 @@ def readme_tables(d: dict) -> dict[str, str]:
 
     head = " | ".join(f"{devs[did].get('short') or did} ms" + a32_tag(devs[did])
                       for did in pids)
-    lines = [f"| model | task | accuracy (reference → Bitino) | {head} |", "|---|---|---|" + "---|" * len(pids)]
+    lines = [f"| model | task | accuracy | {head} |", "|---|---|---|" + "---|" * len(pids)]
     for m in hi:
-        acc = f"{fmt_acc(m['reference'], m['metric'])} → {fmt_acc(m['runtime'], m['metric'])} ({m['eval_set']}, n={m['n']})"
+        acc = acc_cell(m) if m.get("full") else f"{acc_cell(m)} ({m['eval_set']}, n={m['n']})"
         lines.append(f"| `{m['id']}` | {m['task']} | {acc} | " + " | ".join(cell(m["phones"].get(did)) for did in pids) + " |")
     devline = "; ".join(f"{devs[did].get('short') or did}: {devs[did].get('soc')}, 1 thread on the {device_pin(devs[did])}"
                         for did in pids)
@@ -439,9 +454,10 @@ def readme_tables(d: dict) -> dict[str, str]:
         pdev, ps = devs[pid], devs[pid].get("short") or pid
         speed += (f"Median latency of one inference (batch 1) in ms. Main columns: **{pdev.get('name')}** ({pdev.get('soc')}); "
                   "1 thread = pinned to the fastest core; int8 = the full-integer file (int8_full) where measured, else the "
-                  "int8 kernels on the exact file. Accuracy: the original model in its own framework → Bitino's exact stage, "
-                  "on the small check subset; int8_full Δ: the full-integer file's paired difference against the exact stage. "
-                  "Fastest first.\n")
+                  "int8 kernels on the exact file. Accuracy: for ImageNet classifiers, published top-1 → Bitino's top-1 on all "
+                  "50,000 validation images (\"val 50k\"; original JPEGs, each model's own preprocessing); otherwise the "
+                  "original model in its own framework → Bitino's exact stage on the small check subset. int8_full Δ: the "
+                  "full-integer file's paired difference on the same images (the 50,000 where measured). Fastest first.\n")
         oh = "".join(f" {devs[o].get('short') or o} 1 thread" + a32_tag(devs[o]) + " |"
                      for o in others)
         for key, title, ms_ in groups:
@@ -455,26 +471,26 @@ def readme_tables(d: dict) -> dict[str, str]:
                 img += (f"\nInteractive version (hover a dot for its numbers, click to jump to its row): "
                         f"[benchmarks page]({SITE_URL}/benchmarks.html#speed-{key}).\n")
             speed += (f"\n### {title} ({len(ms_)} models)\n{img}\n| model |" + (" task |" if task_col else "") +
-                      f" accuracy (reference → Bitino) | int8_full Δ | {ps} 1 thread | {ps} 4 threads | {ps} int8 1 thread |{oh}\n"
+                      f" accuracy | int8_full Δ | {ps} 1 thread | {ps} 4 threads | {ps} int8 1 thread |{oh}\n"
                       "|---|" + ("---|" if task_col else "") + "---|---:|---:|---:|---:|" + "---:|" * len(others) + "\n")
             for m in ms_:
                 p = m["phones"].get(pid) or {}
                 speed += (f"| `{m['id']}` |" + (f" {task_label(m)} |" if task_col else "") +
-                          f" {fmt_acc(m['reference'], m['metric'])} → {fmt_acc(m['runtime'], m['metric'])} | "
+                          f" {acc_cell(m)} | "
                           f"{int8_delta(m)} | {ms_cell(p.get('t1'))} | {ms_cell(p.get('t4'))} | {ms_cell(p.get('t1_int8'))} |"
                           + "".join(f" {ms_cell((m['phones'].get(o) or {}).get('t1'))} |" for o in others) + "\n")
         speed += ("\n" + speed_legend(d) + "\n\nEvery phone with 1 and 4 threads and int8: "
                   "[docs/SPEED.md](docs/SPEED.md)." + (" On-device correctness: " + ver + "." if ver else ""))
     else:
         speed = speed_full
-    zl = ["| model | task | framework | accuracy (reference → Bitino) | eval set (n) | int8_full Δ vs exact | fastest phone ms (1 thread) | weights licence | release |",
+    zl = ["| model | task | framework | accuracy | eval set (n) | int8_full Δ | fastest phone ms (1 thread) | weights licence | release |",
           "|---|---|---|---|---|---|---|---|---|"]
     for m in ms:
         i8 = m["int8"]
         i8s = f"{i8['delta']:+.2f} pt ({i8['set']}, n={i8['n']})" if i8 and isinstance(i8.get("delta"), (int, float)) else "–"
         t1 = m["best"].get("t1")
-        zl.append(f"| `{m['id']}` | {m['task']} | {m['framework']} | {fmt_acc(m['reference'], m['metric'])} → "
-                  f"{fmt_acc(m['runtime'], m['metric'])} | {m['eval_set']} ({m['n']}) | {i8s} | "
+        ev = "ImageNet val (50000)" if m.get("full") else f"{m['eval_set']} ({m['n']})"
+        zl.append(f"| `{m['id']}` | {m['task']} | {m['framework']} | {acc_cell(m)} | {ev} | {i8s} | "
                   f"{(fmt_ms(t1['ms']) + mark(t1) + ' (' + t1['device_short'] + ')') if t1 else '–'} | "
                   f"{(m['licence_weights'] or '?')[:48].replace('|', '/')} | {'yes' if m['release'] else '–'} |")
     zoo = "\n".join(zl)
@@ -505,14 +521,21 @@ def write_readme(d: dict) -> None:
         for fn, svg in pareto_files(d, key, title):
             with open(os.path.join(ROOT, "docs", "img", fn), "w") as f:
                 f.write(svg + "\n")
+    import threads_plot as TP   # noqa: E402  (next to this file, like pareto_plot)
+    ser = TP.collect(ROOT, d["devices"])
+    if ser:
+        with open(os.path.join(ROOT, "docs", "img", "threads_scaling.svg"), "w") as f:
+            f.write(TP.threads_svg(ser) + "\n")
     with open(os.path.join(ROOT, "docs", "SPEED.md"), "w") as f:
         f.write("# Speed: all models on all phones\n\nGenerated by `tools/build_site.py --readme-only` from `results/`. "
                 "Do not edit by hand.\n\n" + t["speed_full"] + "\n")
     z = os.path.join(ROOT, "docs", "MODEL_ZOO.md")
     zoo_doc = ("# Model zoo\n\nGenerated by `tools/build_site.py --readme-only` from `registry/` and `results/`. Do not edit by hand.\n\n"
-               + t["stats"] + "\n\nAccuracy: the headline numbers are on small smoke-test subsets (n = 128 for most "
-               "classifiers; PSNR on crops for image-to-image models), comparing the original model run by its own framework (float64 where recorded, else float32) with "
-               "Bitino's exact stage. They show conversion fidelity, not an estimate of full-dataset accuracy. The int8_full "
+               + t["stats"] + "\n\nAccuracy: ImageNet classifiers show published top-1 → Bitino's top-1 on all 50,000 "
+               "validation images (original JPEGs, each model's own preprocessing, stage all; `results/models/<id>.json` → "
+               "accuracy.full_val). Other models show conversion fidelity on small check subsets (n = 128 for most "
+               "classifiers; PSNR on crops for image-to-image models): the original model run by its own framework (float64 where recorded, else float32) → "
+               "Bitino's exact stage, not an estimate of full-dataset accuracy. The int8_full "
                "column is the paired difference of the shipped full-integer file against the exact stage on a larger "
                "set (McNemar test in `results/models/<id>.json`).\n\n" + t["zoo"] + "\n")
     open(z, "w").write(zoo_doc)
@@ -768,12 +791,13 @@ def site_benchmarks(d: dict) -> str:
         oth = "".join(f"<th class=num>{esc(devs[o].get('short') or o)} 1T{esc(a32_tag(devs[o]))}</th>" for o in gothers)
         group_html = (f"<p class=small>Median latency of one inference (batch 1) in ms. Main columns: {esc(pdev.get('name'))} "
                       f"({esc(pdev.get('soc'))}); 1T = 1 thread pinned to the fastest core, 4T = 4 threads, int8 = the "
-                      "full-integer file where measured. Accuracy on the small check subset (reference → Bitino); int8_full Δ = "
-                      "paired difference of the full-integer file against the exact stage. Fastest first.</p>")
+                      "full-integer file where measured. Accuracy: ImageNet classifiers, published top-1 → Bitino on all 50,000 validation "
+                      "images (val 50k); other models, original framework → Bitino on the small check subset. int8_full Δ = "
+                      "paired difference of the full-integer file on the same images. Fastest first.</p>")
         for key, title, ms_ in groups:
             task_col = key == "others"
             trs = "".join(f"<tr id=\"row-{esc(m['id'])}\"><td><code>{esc(m['id'])}</code></td>" + (f"<td>{esc(task_label(m))}</td>" if task_col else "") +
-                          f"<td>{esc(fmt_acc(m['reference'], m['metric']))} → {esc(fmt_acc(m['runtime'], m['metric']))}</td>"
+                          f"<td>{esc(acc_cell(m))}</td>"
                           f"<td class=num>{esc(int8_delta(m))}</td>"
                           + "".join(cell((m['phones'].get(gpid) or {}).get(k)) for k in ("t1", "t4", "t1_int8"))
                           + "".join(cell((m['phones'].get(o) or {}).get('t1')) for o in gothers) + "</tr>" for m in ms_)
@@ -781,7 +805,7 @@ def site_benchmarks(d: dict) -> str:
             group_html += f"""<h2 id="speed-{key}">{esc(title)} ({len(ms_)} models)</h2>
   {''.join('<figure class="pareto">' + fig + '<figcaption class=small>Pareto-optimal: no other model is both faster and at least as accurate. Point at a dot for its numbers; click it to jump to its row.</figcaption></figure>' for fig in figs)}
   <div class="table-wrap"><table class="bench">
-  <thead><tr><th>Model</th>{'<th>Task</th>' if task_col else ''}<th>Accuracy (reference → Bitino)</th><th class=num>int8_full Δ</th><th class=num>{ps} 1T</th><th class=num>{ps} 4T</th><th class=num>{ps} int8 1T</th>{oth}</tr></thead>
+  <thead><tr><th>Model</th>{'<th>Task</th>' if task_col else ''}<th>Accuracy</th><th class=num>int8_full Δ</th><th class=num>{ps} 1T</th><th class=num>{ps} 4T</th><th class=num>{ps} int8 1T</th>{oth}</tr></thead>
   <tbody>{trs}</tbody></table></div>"""
     pending = [devs[did].get("short") or did for did in pids if (speed[did].get("next_suite") or {}).get("status") == "pending"]
     host = x86.get("host", {})

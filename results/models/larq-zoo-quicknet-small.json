@@ -35,6 +35,30 @@
    "delta_unit": "pt",
    "note": "Bitino top-1 equals the fp64 reference; the 1-sample difference to fp32 reference is the source model's own fp32 noise floor"
   },
+  "full_val": {
+   "eval_set": "imagenet-val-50000",
+   "n": 50000,
+   "stage": "all",
+   "published_top1": 59.4,
+   "top1": 0.59538,
+   "top1_ci95": [
+    0.5910706187993838,
+    0.5996747258542957
+   ],
+   "top5": 0.81706,
+   "date": "2026-11-20",
+   "tool": "tools/accuracy_full_val.py",
+   "int8_full": {
+    "top1": 0.56872,
+    "delta_vs_all_pt": -2.67,
+    "delta_ci95_pt": [
+     -2.97,
+     -2.36
+    ],
+    "mcnemar_p": 1.2413333296956825e-65,
+    "n": 50000
+   }
+  },
   "studies": [
    {
     "a": "model.bitino:neon",

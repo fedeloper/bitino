@@ -1,0 +1,26 @@
+name: Bug or wrong number
+description: A crash, a wrong output, or a model that disagrees with its paper or framework.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Commands or code, the model id, and the input.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Output of `python -c "import bitino; print(bitino.__version__, bitino.cpu_info())"`, OS, and the phone or CPU.
+      render: text
+    validations:
+      required: true

@@ -1,0 +1,739 @@
+{
+ "schema": "bitino.qonnx_phase1.v1",
+ "networks": {
+  "brevitas-bnn-pynq-cnv-1w1a": {
+   "kind": "brevitas",
+   "eval_dir": "eval128_cifar10_brevitas",
+   "preprocess": "cifar10_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "checkpoint": "brevitas-bnn-pynq-cnv-1w1a/cnv_1w1a-758c8fef.pth",
+    "checkpoint_sha256": "758c8fefc1d4e6a3ef01d019f966213b1e0e134ac11cdaec21cf7eb440b36c93",
+    "exporter": "brevitas 0.11.0 export_qonnx (torch 2.4.1+cpu torch.onnx.export)",
+    "onnx_sha256": "a02a002f4effe1689562d649e663ca60e32a60568e40678d3bbd5fe4f8e50aa9",
+    "onnxoptimizer_shim": true
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
+    "graph_sha256": "920e0b7263483c0abc540e5b02179753a178d41705ffd74843ed48986f37b132"
+   },
+   "published_file": {
+    "data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
+    "graph_sha256": "920e0b7263483c0abc540e5b02179753a178d41705ffd74843ed48986f37b132"
+   },
+   "reimported": {
+    "data_sha256": "d7223bccd797d8cc34075b8a6d83a324bc5736f360e24dfe75422d8916532d4a",
+    "graph_sha256": "22ae302d08eb2efce21a17c03707c01bd35b0531c13f44def55b621078e2632a",
+    "bytes": 228480
+   },
+   "data_identical": true,
+   "graph_identical": false,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "renamed": {
+    "constants": 30,
+    "nodes": 14,
+    "examples": [
+     [
+      "input_2x_minus_1",
+      "input_affine"
+     ],
+     [
+      "conv_features.0",
+      "input_quant"
+     ],
+     [
+      "conv_features.1",
+      "conv0"
+     ],
+     [
+      "conv_features.4",
+      "conv1"
+     ],
+     [
+      "input/scale2",
+      "input/scale"
+     ],
+     [
+      "input/shift-1",
+      "input/shift"
+     ],
+     [
+      "conv_features.0/scale",
+      "input_quant/scale"
+     ],
+     [
+      "conv_features.0/zero_point",
+      "input_quant/zero_point"
+     ]
+    ]
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_brevitas",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 7.489995823561912e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 3.5762786865234375e-07,
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "exact_match": true
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 6.302554478310185e-09,
+     "top1_agreement": 1.0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 6.302554478310185e-09,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "DATA IDENTICAL; GRAPH IDENTICAL UP TO NAMES; OUTPUTS BIT-IDENTICAL"
+  },
+  "brevitas-bnn-pynq-lfc-1w1a": {
+   "kind": "brevitas",
+   "eval_dir": "eval128_mnist_brevitas",
+   "preprocess": "mnist_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "checkpoint": "brevitas-bnn-pynq-lfc-1w1a/lfc_1w1a-318d8bd9.pth",
+    "checkpoint_sha256": "318d8bd9cfe894c3e804b92f9003739b7871b7fbc54a26c451beac72501cd14e",
+    "exporter": "brevitas 0.11.0 export_qonnx (torch 2.4.1+cpu torch.onnx.export)",
+    "onnx_sha256": "4527391f483156e42ac3b4553ec13ee185917e682e872606bbc543942813a8a2",
+    "onnxoptimizer_shim": true
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "12198dfceb7294ede704ac12dbdf0224fc55915237629b8376f87878df8058c0",
+    "graph_sha256": "06152823517f49788066a545df3a40439040a9724cb950dda4fc153694c92e2e"
+   },
+   "published_file": {
+    "data_sha256": "12198dfceb7294ede704ac12dbdf0224fc55915237629b8376f87878df8058c0",
+    "graph_sha256": "06152823517f49788066a545df3a40439040a9724cb950dda4fc153694c92e2e"
+   },
+   "reimported": {
+    "data_sha256": "12198dfceb7294ede704ac12dbdf0224fc55915237629b8376f87878df8058c0",
+    "graph_sha256": "071fd7ca1210ad84a6aa59addc565fcb83827d0dac8a39cbb204a39c7c315b47",
+    "bytes": 400832
+   },
+   "data_identical": true,
+   "graph_identical": false,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "renamed": {
+    "constants": 13,
+    "nodes": 5,
+    "examples": [
+     [
+      "flatten",
+      "flatten_input"
+     ],
+     [
+      "features.2",
+      "dense0"
+     ],
+     [
+      "features.6",
+      "dense1"
+     ],
+     [
+      "features.10",
+      "dense2"
+     ],
+     [
+      "features.0/threshold",
+      "input/threshold"
+     ],
+     [
+      "features.2/kernel_bits",
+      "dense0/kernel_bits"
+     ],
+     [
+      "features.2/post_mul",
+      "dense0/post_mul"
+     ],
+     [
+      "features.2/post_add",
+      "dense0/post_add"
+     ]
+    ]
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_mnist_brevitas",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.5144934817357125e-07,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 2.384185791015625e-07,
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "exact_match": true
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 9.966489322721372e-08,
+     "top1_agreement": 1.0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 9.966489322721372e-08,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "DATA IDENTICAL; GRAPH IDENTICAL UP TO NAMES; OUTPUTS BIT-IDENTICAL"
+  },
+  "brevitas-bnn-pynq-sfc-1w1a": {
+   "kind": "brevitas",
+   "eval_dir": "eval128_mnist_brevitas",
+   "preprocess": "mnist_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "checkpoint": "brevitas-bnn-pynq-sfc-1w1a/sfc_1w1a-fa4b2f7f.pth",
+    "checkpoint_sha256": "fa4b2f7f077d4db4332e9eef7b214a64aca6e28d000ac666e9218d3a9e3f4037",
+    "exporter": "brevitas 0.11.0 export_qonnx (torch 2.4.1+cpu torch.onnx.export)",
+    "onnx_sha256": "40bc9952f48725945ecb15a914f6f490a547f5873eefefe5054965b34c1fbd30",
+    "onnxoptimizer_shim": true
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674",
+    "graph_sha256": "324c7b2789ba64e2dc2c5f60029214813afb084c85de8722acccf8974c01533a"
+   },
+   "published_file": {
+    "data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674",
+    "graph_sha256": "324c7b2789ba64e2dc2c5f60029214813afb084c85de8722acccf8974c01533a"
+   },
+   "reimported": {
+    "data_sha256": "aa5848d66e0dd551666045d7c94764ac2e736b5edc48ad39bfb0ef9eb43ff674",
+    "graph_sha256": "8425ae740d866673dd0108ba38efba8d3d318bc719d91a618a16fe065fbee28d",
+    "bytes": 58816
+   },
+   "data_identical": true,
+   "graph_identical": false,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "renamed": {
+    "constants": 13,
+    "nodes": 5,
+    "examples": [
+     [
+      "flatten",
+      "flatten_input"
+     ],
+     [
+      "features.2",
+      "dense0"
+     ],
+     [
+      "features.6",
+      "dense1"
+     ],
+     [
+      "features.10",
+      "dense2"
+     ],
+     [
+      "features.0/threshold",
+      "input/threshold"
+     ],
+     [
+      "features.2/kernel_bits",
+      "dense0/kernel_bits"
+     ],
+     [
+      "features.2/post_mul",
+      "dense0/post_mul"
+     ],
+     [
+      "features.2/post_add",
+      "dense0/post_add"
+     ]
+    ]
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_mnist_brevitas",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 7.502587795471527e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 2.384185791015625e-07,
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "exact_match": true
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.644290647031312e-08,
+     "top1_agreement": 1.0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 3.64429055821347e-08,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "DATA IDENTICAL; GRAPH IDENTICAL UP TO NAMES; OUTPUTS BIT-IDENTICAL"
+  },
+  "brevitas-bnn-pynq-tfc-1w1a": {
+   "kind": "brevitas",
+   "eval_dir": "eval128_mnist_brevitas",
+   "preprocess": "mnist_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "checkpoint": "brevitas-bnn-pynq-tfc-1w1a/tfc_1w1a-45185b4d.pth",
+    "checkpoint_sha256": "45185b4d33472a02e81582dad09aa48da490b0f4af9972d51be591a9e2f7f370",
+    "exporter": "brevitas 0.11.0 export_qonnx (torch 2.4.1+cpu torch.onnx.export)",
+    "onnx_sha256": "c08cc653d527b0fba167e01467f6fee912142fd64a2d275c9a367cfe1dec4246",
+    "onnxoptimizer_shim": true
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "3531cef0e4e187737b949a15151daa942681876277eba86b45d6294df51a5616",
+    "graph_sha256": "c47d1a9bc2e276c1d1dceeadd0e8c5418c5b7520c568c3e19d344e0589cb1c00"
+   },
+   "published_file": {
+    "data_sha256": "3531cef0e4e187737b949a15151daa942681876277eba86b45d6294df51a5616",
+    "graph_sha256": "c47d1a9bc2e276c1d1dceeadd0e8c5418c5b7520c568c3e19d344e0589cb1c00"
+   },
+   "reimported": {
+    "data_sha256": "3531cef0e4e187737b949a15151daa942681876277eba86b45d6294df51a5616",
+    "graph_sha256": "86d500565979dca559ea74f40222679a2fa25d8a9fc3ae3390b20d84ee34012e",
+    "bytes": 19456
+   },
+   "data_identical": true,
+   "graph_identical": false,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "renamed": {
+    "constants": 13,
+    "nodes": 5,
+    "examples": [
+     [
+      "flatten",
+      "flatten_input"
+     ],
+     [
+      "features.2",
+      "dense0"
+     ],
+     [
+      "features.6",
+      "dense1"
+     ],
+     [
+      "features.10",
+      "dense2"
+     ],
+     [
+      "features.0/threshold",
+      "input/threshold"
+     ],
+     [
+      "features.2/kernel_bits",
+      "dense0/kernel_bits"
+     ],
+     [
+      "features.2/post_mul",
+      "dense0/post_mul"
+     ],
+     [
+      "features.2/post_add",
+      "dense0/post_add"
+     ]
+    ]
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_mnist_brevitas",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 3.4033379670006525e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 2.384185791015625e-07,
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "exact_match": true
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.523387809816313e-08,
+     "top1_agreement": 1.0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 2.523388786812575e-08,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "DATA IDENTICAL; GRAPH IDENTICAL UP TO NAMES; OUTPUTS BIT-IDENTICAL"
+  },
+  "aliasgharshinwari-finn-cnv-w1a1-cifar10": {
+   "kind": "brevitas",
+   "eval_dir": "eval128_cifar10_brevitas",
+   "preprocess": "cifar10_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "checkpoint": "aliasgharshinwari-finn-cnv-w1a1-cifar10/cnv_w1a1_best.pt",
+    "checkpoint_sha256": "4166925f1a8ffe208e92b7b28d52a14f93929ba1c9417353ff4bff43fc390728",
+    "exporter": "brevitas 0.11.0 export_qonnx (torch 2.4.1+cpu torch.onnx.export)",
+    "onnx_sha256": "972094148d58d0ee37a492240d8017930fe465d4f46878a8ac5023595007910d",
+    "onnxoptimizer_shim": true
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "graph_sha256": "920e0b7263483c0abc540e5b02179753a178d41705ffd74843ed48986f37b132"
+   },
+   "published_file": {
+    "data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "graph_sha256": "920e0b7263483c0abc540e5b02179753a178d41705ffd74843ed48986f37b132"
+   },
+   "reimported": {
+    "data_sha256": "829c77f6dcf899c558fb914cc326fe1223e33a81920f1465045064381f8e014d",
+    "graph_sha256": "22ae302d08eb2efce21a17c03707c01bd35b0531c13f44def55b621078e2632a",
+    "bytes": 228480
+   },
+   "data_identical": true,
+   "graph_identical": false,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "renamed": {
+    "constants": 30,
+    "nodes": 14,
+    "examples": [
+     [
+      "input_2x_minus_1",
+      "input_affine"
+     ],
+     [
+      "conv_features.0",
+      "input_quant"
+     ],
+     [
+      "conv_features.1",
+      "conv0"
+     ],
+     [
+      "conv_features.4",
+      "conv1"
+     ],
+     [
+      "input/scale2",
+      "input/scale"
+     ],
+     [
+      "input/shift-1",
+      "input/shift"
+     ],
+     [
+      "conv_features.0/scale",
+      "input_quant/scale"
+     ],
+     [
+      "conv_features.0/zero_point",
+      "input_quant/zero_point"
+     ]
+    ]
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_brevitas",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 3.3546650124449684e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 2.384185791015625e-07,
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "exact_match": true
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 4.26171264944486e-08,
+     "top1_agreement": 1.0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 4.26171264944486e-08,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "DATA IDENTICAL; GRAPH IDENTICAL UP TO NAMES; OUTPUTS BIT-IDENTICAL"
+  },
+  "finn-examples-bnn-pynq-cnv-w1a1": {
+   "kind": "finn",
+   "eval_dir": "eval128_cifar10_finn",
+   "preprocess": "cifar10_pixels",
+   "input_domain": "uint8",
+   "source": {
+    "zip": "finn-examples-bnn-pynq-onnx/onnx-models-bnn-pynq.zip",
+    "zip_sha256": "fbb155d594178ba694caa4c5a42515fc736a5e8c9259938c1730c335d3c2165e",
+    "member": "cnv-w1a1.onnx",
+    "onnx_sha256": "47007fe69572a1c49b3d2be2607e21aaba92e2e7b8c29cb72254f22e2476c1d7"
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "602cbf84cacba1940fd5115acaadc930db7c60478afa5d8102abedcff6e07d33",
+    "graph_sha256": "22ae302d08eb2efce21a17c03707c01bd35b0531c13f44def55b621078e2632a"
+   },
+   "published_file": {
+    "data_sha256": "602cbf84cacba1940fd5115acaadc930db7c60478afa5d8102abedcff6e07d33",
+    "graph_sha256": "22ae302d08eb2efce21a17c03707c01bd35b0531c13f44def55b621078e2632a"
+   },
+   "reimported": {
+    "data_sha256": "602cbf84cacba1940fd5115acaadc930db7c60478afa5d8102abedcff6e07d33",
+    "graph_sha256": "22ae302d08eb2efce21a17c03707c01bd35b0531c13f44def55b621078e2632a",
+    "bytes": 227520
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_finn",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 7.489995823561912e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 3.5762786865234375e-07,
+    "export_check_source_f32_vs_qonnx_f32": null,
+    "export_check_source_f64_vs_qonnx_f64": null,
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "finn-examples-bnn-pynq-tfc-w1a1": {
+   "kind": "finn",
+   "eval_dir": "eval128_mnist_finn",
+   "preprocess": "mnist_pixels",
+   "input_domain": "uint8",
+   "source": {
+    "zip": "finn-examples-bnn-pynq-onnx/onnx-models-bnn-pynq.zip",
+    "zip_sha256": "fbb155d594178ba694caa4c5a42515fc736a5e8c9259938c1730c335d3c2165e",
+    "member": "tfc-w1a1.onnx",
+    "onnx_sha256": "1706b590920df2a73dc5f256725292b9a8640f904e0e0345547722b607dea6a0"
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "14c00376ac27547d1720ca5ba92b84abbd88cf42da8345a4b3185101e65f0f9a",
+    "graph_sha256": "86d500565979dca559ea74f40222679a2fa25d8a9fc3ae3390b20d84ee34012e"
+   },
+   "published_file": {
+    "data_sha256": "14c00376ac27547d1720ca5ba92b84abbd88cf42da8345a4b3185101e65f0f9a",
+    "graph_sha256": "86d500565979dca559ea74f40222679a2fa25d8a9fc3ae3390b20d84ee34012e"
+   },
+   "reimported": {
+    "data_sha256": "14c00376ac27547d1720ca5ba92b84abbd88cf42da8345a4b3185101e65f0f9a",
+    "graph_sha256": "86d500565979dca559ea74f40222679a2fa25d8a9fc3ae3390b20d84ee34012e",
+    "bytes": 18240
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_mnist_finn",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 3.4033379670006525e-08,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 2.384185791015625e-07,
+    "export_check_source_f32_vs_qonnx_f32": null,
+    "export_check_source_f64_vs_qonnx_f64": null,
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "finn-examples-cnv-w1a1-gtsrb": {
+   "kind": "finn",
+   "eval_dir": "eval128_gtsrb",
+   "preprocess": "gtsrb_totensor",
+   "input_domain": "unit8",
+   "source": {
+    "zip": "finn-examples-cnv-w1a1-gtsrb/onnx-models-gtsrb.zip",
+    "zip_sha256": "63e38f7c3de488457648c7dedb353eeeaf88eeca4eee0df8f1cbbbfbc8d04e54",
+    "member": "onnx-models-gtsrb/cnv_1w1a_gtsrb.onnx",
+    "onnx_sha256": "050a1e6e3bf65dd67a6bd024805da41e16156302ac6bb51bdf2cb76b935a7f90"
+   },
+   "import_returncode": 0,
+   "expected": {
+    "data_sha256": "19d5c56db43d02e3283d84778d2d9ddfa43cc7290e0797557ddb04cd1fd03c2c",
+    "graph_sha256": "9b7cbbec226230510571779515b4adcd5d3e52f08c3210a3eb6e2f5506e427ec"
+   },
+   "published_file": {
+    "data_sha256": "19d5c56db43d02e3283d84778d2d9ddfa43cc7290e0797557ddb04cd1fd03c2c",
+    "graph_sha256": "9b7cbbec226230510571779515b4adcd5d3e52f08c3210a3eb6e2f5506e427ec"
+   },
+   "reimported": {
+    "data_sha256": "19d5c56db43d02e3283d84778d2d9ddfa43cc7290e0797557ddb04cd1fd03c2c",
+    "graph_sha256": "9b7cbbec226230510571779515b4adcd5d3e52f08c3210a3eb6e2f5506e427ec",
+    "bytes": 229504
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "published_matches_recipe": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_gtsrb",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.292683755593771e-07,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 0,
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32_max_abs": 9.5367431640625e-07,
+    "export_check_source_f32_vs_qonnx_f32": null,
+    "export_check_source_f64_vs_qonnx_f64": null,
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 1.8437412840910383e-07,
+    "cpp_host": [
+     {
+      "stage": "reference",
+      "exact_vs_numpy": true
+     },
+     {
+      "stage": "optimized",
+      "exact_vs_numpy": true
+     }
+    ]
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  }
+ }
+}
