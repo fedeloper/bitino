@@ -17,6 +17,11 @@ All notable changes to Bitino. Dates are UTC.
   accuracy change of the headline files is now measured on the same 50,000 images.
 - **QONNX import.** Brevitas, QONNX and FINN-ONNX models import through one importer
   ([docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md)).
+- **32-bit Android release binary** (`bitino_bench-android-armv7`, `bitino-sdk-android-armv7.tar.gz`), so
+  `scripts/bench_my_phone.sh` runs on armeabi-v7a phones without a local build.
+- **Community speed table**: phones measured by users with `scripts/bench_my_phone.sh` and validated by
+  `tools/ingest_community.py` appear in the README and on the benchmarks page.
+- **Packages**: `pip install bitino` (PyPI) and `io.github.fedeloper:bitino-android` (Maven Central).
 - README: "Which model should I use?", thread-scaling chart; CONTRIBUTING.md and issue templates.
 
 ### Changed

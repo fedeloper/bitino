@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds the release binaries of bitino_bench from this tree, with SHA-256 sums and build info.
 #
-#   scripts/build_release.sh [OUT_DIR]          # default dist/bin; TARGETS="linux-x86_64 linux-aarch64 android-arm64"
+#   scripts/build_release.sh [OUT_DIR]          # default dist/bin; TARGETS="linux-x86_64 linux-aarch64 android-arm64 android-armv7"
 #   TARGETS=android-arm64 ANDROID_NDK=~/Android/Sdk/android-ndk-r27c scripts/build_release.sh
 #
 # linux-x86_64   static (glibc), portable x86-64 baseline; AVX2 / AVX-VNNI kernels are selected at run time.
@@ -9,10 +9,11 @@
 #                Else (fallback): a static Android NDK build (bionic libc, -static), which runs on any aarch64 Linux
 #                kernel; BUILDINFO.txt records which way was used.
 # android-arm64  NDK build for Android API 30+ (PIE, static libc++), plus an SDK archive (libbitino.a + headers).
+# android-armv7  the same for 32-bit armeabi-v7a phones (NEON; the AArch32 builds of the kernels).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="$(mkdir -p "${1:-$ROOT/dist/bin}" && cd "${1:-$ROOT/dist/bin}" && pwd)"
-TARGETS="${TARGETS:-linux-x86_64 linux-aarch64 android-arm64}"
+TARGETS="${TARGETS:-linux-x86_64 linux-aarch64 android-arm64 android-armv7}"
 JOBS="${JOBS:-6}"
 NDK="${ANDROID_NDK:-$HOME/Android/Sdk/android-ndk-r27c}"
 B="$ROOT/build/release"
@@ -56,19 +57,20 @@ for t in $TARGETS; do
         info "$t: static NDK build (bionic libc, -static; no aarch64 glibc toolchain on the build host). Runs on aarch64 Linux kernels; checked under qemu-aarch64 user mode. $(basename "$NDK"), commit $REV"
       fi
       ;;
-    android-arm64)
+    android-arm64|android-armv7)
       [[ -f "$NDK/build/cmake/android.toolchain.cmake" ]] || { echo "skip $t: NDK not found at $NDK" >&2; continue; }
-      configure_build "$B/$t" -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" -DANDROID_ABI=arm64-v8a \
+      if [[ "$t" == android-arm64 ]]; then abi=arm64-v8a; else abi=armeabi-v7a; fi
+      configure_build "$B/$t" -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" -DANDROID_ABI=$abi \
         -DANDROID_PLATFORM=android-30 -DANDROID_STL=c++_static -DBITINO_BUILD_JNI=OFF
       cmake --build "$B/$t" --target bitino -j "$JOBS" >/dev/null
       cp "$B/$t/bitino_bench" "$OUT/bitino_bench-$t"
       "$NDK"/toolchains/llvm/prebuilt/*/bin/llvm-strip "$OUT/bitino_bench-$t"
-      sdk="$B/$t/sdk/bitino-android-arm64"; rm -rf "$sdk"; mkdir -p "$sdk/lib" "$sdk/include"
+      sdk="$B/$t/sdk/bitino-$t"; rm -rf "$sdk"; mkdir -p "$sdk/lib" "$sdk/include"
       cp "$B/$t/libbitino.a" "$sdk/lib/"; cp -r "$ROOT/runtime/include/bitino" "$sdk/include/"
       "$NDK"/toolchains/llvm/prebuilt/*/bin/llvm-strip --strip-debug "$sdk/lib/libbitino.a"   # no build paths in the archive
       cp "$ROOT/LICENSE" "$ROOT/NOTICE" "$sdk/"
-      tar -C "$B/$t/sdk" --owner=0 --group=0 --mtime='2026-01-01' -czf "$OUT/bitino-sdk-$t.tar.gz" bitino-android-arm64
-      info "$t: Android API 30+, PIE, static libc++, $(basename "$NDK"), commit $REV; SDK: libbitino.a + headers"
+      tar -C "$B/$t/sdk" --owner=0 --group=0 --mtime='2026-01-01' -czf "$OUT/bitino-sdk-$t.tar.gz" "bitino-$t"
+      info "$t: Android API 30+ ($abi), PIE, static libc++, $(basename "$NDK"), commit $REV; SDK: libbitino.a + headers"
       ;;
     *) echo "unknown target $t" >&2; exit 2 ;;
   esac

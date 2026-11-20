@@ -211,6 +211,10 @@ share, and tunes how many threads each layer uses. How it works: [docs/threads.m
 Bitino is 1.60–2.05× faster on five arm64 cores (Cortex-X3, A715, A510, A75; geometric mean 1.81×) and 6.5–7.5×
 faster on a 32-bit Cortex-A53, with less peak memory. Method and data: [docs/comparison-dabnn.md](docs/comparison-dabnn.md).
 
+<!-- generated:community -->
+**Your phone.** No community submissions yet. One command measures any Android phone (no root): [docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).
+<!-- /generated:community -->
+
 <details>
 <summary><b>Latency of every converted model on every phone</b></summary>
 

@@ -3,8 +3,8 @@
 1. Update the data: `tools/build_recipes.py`, `tools/ingest_speed.py` (new measured runs), then
    `python3 tools/build_site.py --readme-only` and commit.
 2. Tag: `git tag v0.1.0 && git push --tags`. The `release` workflow builds `bitino_bench-linux-x86_64`,
-   `bitino_bench-linux-aarch64` (native ARM runner, static glibc), `bitino_bench-android-arm64` and
-   `bitino-sdk-android-arm64.tar.gz` from the tagged tree and attaches them, with `SHA256SUMS`, to a **draft** release.
+   `bitino_bench-linux-aarch64` (native ARM runner, static glibc), `bitino_bench-android-arm64`,
+   `bitino_bench-android-armv7`, `bitino-sdk-android-arm64.tar.gz` and `bitino-sdk-android-armv7.tar.gz` from the tagged tree and attaches them, with `SHA256SUMS`, to a **draft** release.
 3. Models: `python3 tools/release_models.py --artifacts <dir with artifacts/> --out dist/models --tag v0.1.0
    --write-registry` writes the redistributable converted files (explicit permissive weights licence only), one
    `<model-id>.LICENSE.txt` per model, `SHA256SUMS` and `manifest.json` (qualified models with the licence evidence,

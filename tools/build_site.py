@@ -500,6 +500,50 @@ def readme_tables(d: dict) -> dict[str, str]:
             "zoo": zoo}
 
 
+def community_rows() -> list[dict]:
+    """Phones measured by users with scripts/bench_my_phone.sh (results/community/index.json, tools/ingest_community.py)."""
+    idx = load(os.path.join(ROOT, "results", "community", "index.json"), {}) or {}
+    rows = []
+    for did, d in sorted((idx.get("devices") or {}).items(), key=lambda kv: (kv[1].get("headline_ms") or {}).get("model:t1_fast") or 1e9):
+        h = d.get("headline_ms") or {}
+        rows.append({"name": d.get("name") or did, "soc": d.get("soc") or "", "abi": d.get("abi") or "",
+                     "t1": h.get("model:t1_fast"), "t4": h.get("model:t4_fast"),
+                     "i1": h.get("model_int8_full:t1_fast"), "i4": h.get("model_int8_full:t4_fast"),
+                     "n": d.get("submissions"), "latest": d.get("latest")})
+    return rows
+
+
+def community_md() -> str:
+    rows = community_rows()
+    if not rows:
+        return ("**Your phone.** No community submissions yet. One command measures any Android phone (no root): "
+                "[docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).")
+    f = lambda v: fmt_ms(v) if isinstance(v, (int, float)) else "–"
+    out = ["**Community phones** (ReActNet-18, AB-BNN; measured by users with `scripts/bench_my_phone.sh`, validated by "
+           "`tools/ingest_community.py`; median over submissions). Add yours: [docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).", "",
+           "| phone | SoC | ABI | 1 thread ms | 4 threads ms | int8 1 thread ms | int8 4 threads ms | submissions | latest |",
+           "|---|---|---|---:|---:|---:|---:|---:|---|"]
+    for r in rows:
+        out.append(f"| {r['name']} | {r['soc']} | {r['abi']} | {f(r['t1'])} | {f(r['t4'])} | {f(r['i1'])} | {f(r['i4'])} | "
+                   f"{r['n'] or '–'} | {r['latest'] or '–'} |")
+    return "\n".join(out)
+
+
+def community_html() -> str:
+    rows = community_rows()
+    guide = f'<a href="{REPO_URL}/blob/main/docs/benchmark-your-phone.md">one command</a>'
+    if not rows:
+        return f"<p>No community submissions yet. Any Android phone can be measured with {guide} (no root).</p>"
+    f = lambda v: fmt_ms(v) if isinstance(v, (int, float)) else "–"
+    trs = "".join(f"<tr><td>{esc(r['name'])}</td><td>{esc(r['soc'])}</td><td>{esc(r['abi'])}</td>"
+                  + "".join(f"<td class=num>{f(r[k])}</td>" for k in ("t1", "t4", "i1", "i4"))
+                  + f"<td class=num>{esc(r['n'] or '–')}</td><td>{esc(r['latest'] or '–')}</td></tr>" for r in rows)
+    return (f"<p class=small>ReActNet-18 (AB-BNN), measured by users with {guide} and validated before publication; median "
+            "over submissions, ms.</p><div class=\"table-wrap\"><table class=\"bench\"><thead><tr><th>Phone</th><th>SoC</th>"
+            "<th>ABI</th><th class=num>1T</th><th class=num>4T</th><th class=num>int8 1T</th><th class=num>int8 4T</th>"
+            f"<th class=num>Submissions</th><th>Latest</th></tr></thead><tbody>{trs}</tbody></table></div>")
+
+
 def replace_block(text: str, name: str, body: str) -> str:
     a, b = f"<!-- generated:{name} -->", f"<!-- /generated:{name} -->"
     if a not in text:
@@ -515,6 +559,7 @@ def write_readme(d: dict) -> None:
     text = open(p).read()
     for k in ("stats", "speed", "zoo_top"):
         text = replace_block(text, k, t[k])
+    text = replace_block(text, "community", community_md())
     open(p, "w").write(text)
     os.makedirs(os.path.join(ROOT, "docs", "img"), exist_ok=True)
     for key, title in PARETO:
@@ -826,6 +871,8 @@ def site_benchmarks(d: dict) -> str:
     <li><b>Validity labels:</b> <span class="v v-clean">clean</span> every repeat ran with every readable frequency ceiling at its maximum · <span class="v v-vendor-policy">vendor-policy</span> the phone's own power policy held a ceiling below the maximum while Android reported no thermal event (stock settings, screen off; steady, recorded per run) · <span class="v v-thermal-throttled">thermal-throttled</span> at least one repeat ran under a thermal frequency cap · <span class="v v-unknown-caps">unknown-caps</span> run made before the cap check existed.</li>
     <li><b>Never published:</b> timings from emulators (qemu) or from CI machines. The emulator provides exact instruction counts, which are shown in the model zoo as a cost measure.</li>
   </ul>
+  <h2 id="community">Community phones</h2>
+  {community_html()}
   <h2>Devices</h2>
   <div class="devices">{cards or '<p>No phone runs yet.</p>'}</div>
   <h2>Status, honestly</h2>
