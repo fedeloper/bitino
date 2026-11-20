@@ -19,11 +19,8 @@ pooling, element-wise). The work is mostly reading the checkpoint and matching t
 | `hls4ml-keras-bnn-jettag`, `hls4ml-keras-3layer-binary-jettag` | jet tagging (16 features → 5 classes) | Keras (hls4ml) | binary MLPs |
 | `rajmali-zebracam-bcnn-v3` | zebra-crossing detection (80×60 grey) | PyTorch | small binary CNN |
 | `adabin-resnet20-cifar10-mindspore` | CIFAR-10 | MindSpore | AdaBin binarizer (learned per-channel centre and scale) |
-| `bmxnet-v1-resnet18-imagenet`, `bmxnet-v1-resnet18-cifar10`, `bmxnet-v1-lenet-mnist` | classification | MXNet (BMXNet) | needs an MXNet `.params` reader |
+| `bmxnet-v1-resnet18-imagenet`, `bmxnet-v1-resnet18-cifar10`, `bmxnet-v1-lenet-mnist` | classification | MXNet (BMXNet) | needs an MXNet `.params` reader (plain binary format) and BMXNet's bit-packing order |
 | `bmxnet-v2-android-resnete18`, `bmxnet-v2-android-binary-densenet28` | ImageNet | MXNet (BMXNet v2) | the networks behind BMXNet's Android demo |
-| `ebconv-expert-binary-resnet-imagenet` | ImageNet | PyTorch | expert (conditional) binary convolutions: a new operator |
-| `bcdnet-a-imagenet` | ImageNet | PyTorch | BCDNet blocks |
-| `allenai-xnor-net-alexnet-xnor` | ImageNet | Torch7 | the original XNOR-Net; non-commercial weights (fetch recipe only) |
 
 ## Multi-bit activations (binary weights)
 
@@ -45,6 +42,9 @@ through QONNX (`tools/export_brevitas_qonnx.py`).
 | `bicd-pcd`, `bicd-vl-cmu-cd` | change detection | two-image (siamese) inputs |
 | `bi-diffsr-x2`, `bi-diffsr-x4`, `monodiffuse-cifar10-w1a1-core-seed0` | diffusion | sampling loop, time embeddings |
 | `bmtnet-hybridevs`, `pathfinder-*` | demosaicing, segmentation | task-specific pre- and post-processing |
+| `ebconv-expert-binary-resnet-imagenet` | ImageNet | per-image expert selection (one of 4 weight banks per layer) |
+| `bcdnet-a-imagenet` | ImageNet | circular shifts of binary activations |
+| `allenai-xnor-net-alexnet-xnor` | ImageNet (the original XNOR-Net) | a Torch7 reader; `sign(0) = 0` gives ternary activations; non-commercial weights (fetch recipe only) |
 
 Language models with 1- or 1.58-bit weights (`microsoft-bitnet-b1.58-2b-4t`, `fbi-llm-130m`, Bonsai, BitMamba-2, …)
 are in the registry but out of scope: they need a decoder runtime (KV cache, sampling), which projects such as
