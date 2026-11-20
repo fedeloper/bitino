@@ -448,7 +448,7 @@ imported directly: [docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md).
 The most useful contributions, in order:
 1. **Speed on your phone.** Every new phone makes the benchmark tables more useful, and it takes one command:
    [docs/benchmark-your-phone.md](docs/benchmark-your-phone.md).
-2. **A BNN with public weights** that is not in the zoo yet ([wanted list](docs/wanted-models.md)).
+2. **A BNN with public weights** that is not in the zoo yet.
 3. **Bugs and wrong numbers.** If a model disagrees with its paper or framework, please open an issue.
 
 Questions and ideas: [Discussions](https://github.com/fedeloper/bitino/discussions). Changes: [CHANGELOG.md](CHANGELOG.md).

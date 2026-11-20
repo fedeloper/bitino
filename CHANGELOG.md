@@ -17,7 +17,7 @@ All notable changes to Bitino. Dates are UTC.
   accuracy change of the headline files is now measured on the same 50,000 images.
 - **QONNX import.** Brevitas, QONNX and FINN-ONNX models import through one importer
   ([docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md)).
-- README: "Which model should I use?", thread-scaling chart; CONTRIBUTING.md, issue templates, wanted-models list.
+- README: "Which model should I use?", thread-scaling chart; CONTRIBUTING.md and issue templates.
 
 ### Changed
 - `bitino_bench --affinity` warms the pinned cores up for 1 s before timing (`--prewarm-ms`), which removes the

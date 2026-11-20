@@ -24,9 +24,8 @@ apps. A run under a thermal limit is still welcome; it is labelled as such.
 
 ## A binary network that is not in the zoo
 
-[docs/wanted-models.md](docs/wanted-models.md) lists networks with public weights that are not converted yet, and
-which ones are good first conversions. Something missing from that list too? Open an **Add a model** issue with
-the paper, code and checkpoint links.
+Know a binary network with public weights that is not in the zoo? Open an **Add a model** issue with the paper,
+code and checkpoint links.
 
 To convert one:
 - **Brevitas, QONNX or FINN-ONNX models** import directly: [docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md).
