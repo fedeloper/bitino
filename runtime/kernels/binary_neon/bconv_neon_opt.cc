@@ -7,9 +7,10 @@
 //  1. f32 input -> bits with NEON compares (bitpack_neon.h); skipped for bit
 //     input. Small inputs are packed on the calling thread (one pool dispatch
 //     less per run).
-//  2. Work items = (pixel tile of mt_ pixels) x (output-channel chunk). Each of
-//     n_tasks_ tasks owns a contiguous item range and a private patch buffer
-//     (allocated in prepare), so im2col rows are built per tile (and group,
+//  2. Work items = (pixel tile of mt_ pixels) x (output-channel chunk), claimed
+//     by the pool in contiguous ranges (ThreadPool::parallel_for_slot: as fine
+//     as the balance of fast and slow cores needs). Each thread has a private
+//     patch buffer (n_slots_, allocated in prepare), so im2col rows are built per tile (and group,
 //     for grouped convolution) and stay in L1 instead of materializing the
 //     full patch matrix. Output channels are split only when there are too
 //     few pixel tiles (e.g. 7x7 layers).
@@ -1186,14 +1187,20 @@ class BConv2DNeonOpt : public Kernel {
     // Pixel tile: about 16 KB of patch rows, a multiple of the micro-tile.
     const int64_t tp = pair_ ? 8 : 4;
     mt_ = std::max<int64_t>(tp, std::min<int64_t>(64, (16384 / (kwp_ * 4)) / tp * tp));
-    n_ptiles_ = (pixels_ + mt_ - 1) / mt_;
     const int64_t threads = ctx.pool->num_threads();
+    // Several threads on a small layer (CIFAR ResNet-20: 16x16 and 8x8 pixels, 4 and 1 tiles of 64): halve the tile
+    // down to 16 pixels until there are ~8 tiles per thread, so the pool can balance cores of different speeds
+    // before output channels are split (which builds a tile's patch rows once per channel chunk). Every pixel and
+    // channel is computed the same way whatever its tile (integer dots, per-element epilogue).
+    if (threads > 1)
+      while (mt_ / 2 >= std::max<int64_t>(16, tp) && (mt_ / 2) % tp == 0 && (pixels_ + mt_ - 1) / mt_ < 8 * threads) mt_ /= 2;
+    n_ptiles_ = (pixels_ + mt_ - 1) / mt_;
     plan_chunks(threads);
     items_ = n_ptiles_ * static_cast<int64_t>(chunks_.size());
-    n_tasks_ = threads > 1 ? std::min<int64_t>(items_, ctx.pool->chunks_per_thread() * threads) : 1;
+    n_slots_ = threads;
     slot_words_ = mt_ * kwp_;
-    patches_ = aligned_alloc_shared(static_cast<size_t>(n_tasks_ * slot_words_ * 4));
-    masks_.assign(static_cast<size_t>(n_tasks_ * 2 * mt_), 0);
+    patches_ = aligned_alloc_shared(static_cast<size_t>(n_slots_ * slot_words_ * 4));
+    masks_.assign(static_cast<size_t>(n_slots_ * 2 * mt_), 0);
     epi_.prepare_epilogue(ctx, g_.oh * g_.ow);
     prepare_bit_output();
     i8_out_.parse(ctx);
@@ -1209,7 +1216,7 @@ class BConv2DNeonOpt : public Kernel {
     dot2_ = !res_.on && g_.groups == 1 && k_bits_ <= 32767 && (i8_out_.on || !direct_bits_) && !opts_dot2_off();
     // fp32 output with a chain epilogue: the epilogue runs on each 16-channel unit in registers (EltwiseProgram::store_unit16)
     unit16_ = dot2_ && !i8_out_.on && epi_.active() && g_.oc % 16 == 0 && epi_.unit16();
-    if (res2_ || dot2_) dots_ = aligned_alloc_shared(static_cast<size_t>(n_tasks_ * mt_ * 16 * 2));
+    if (res2_ || dot2_) dots_ = aligned_alloc_shared(static_cast<size_t>(n_slots_ * mt_ * 16 * 2));
 #if defined(__aarch64__)
     // fp32 two-phase output, rows of whole 128-bit steps: the 4x8 tile (dots_unit_rows8), weights by 8 channels
     // (same size: oc_pad_ == oc). BITINO_BCONV_T48=0 keeps the 4x4 tile (tests and A/B).
@@ -1277,9 +1284,7 @@ class BConv2DNeonOpt : public Kernel {
     }
     if (direct_bits_) load_output_threshold(ctx);
     if (epi_.active()) epi_.begin(ctx);
-    ctx.pool->parallel_for(n_tasks_, 1, [&](int64_t t0, int64_t t1) {
-      for (int64_t t = t0; t < t1; ++t) run_task(ctx, xb, t);
-    });
+    ctx.pool->parallel_for_slot(items_, 1, [&](int slot, int64_t i0, int64_t i1) { run_items(ctx, xb, slot, i0, i1); });
     // Fused epilogue (and bit output after it): per pixel tile inside the tasks with one channel chunk, else after them.
     if (epi_.active() && chunks_.size() > 1 && (!unit16_ || bit_out_)) {
       float* y = float_out(ctx);
@@ -1295,7 +1300,7 @@ class BConv2DNeonOpt : public Kernel {
   // Binary depthwise 1x1 (dw1_): per channel the float outputs of dot = +1 and dot = -1, computed with the general
   // path's operations (activate(act, cvt(dot) * mul + add), compute_tile_a), then per pixel and 4 channels a select
   // by the input bits XOR the weight bits (input bits: pack_row_f32_neon, the general path's binarization, or the
-  // bit input itself), and the fused epilogue per pixel tile as in run_task. larqface-binaryfacenet's two 56x56x64
+  // bit input itself), and the fused epilogue per pixel tile as in run_items. larqface-binaryfacenet's two 56x56x64
   // depthwise layers took 5 ms each on the Cortex-X3 through 64 groups of 4 padded channels.
   void run_dw1(const KernelContext& ctx) {
     const int64_t oc = g_.oc, oc4 = oc_pad4(), ic = g_.ic, words = bit_words(ic);
@@ -1511,11 +1516,11 @@ class BConv2DNeonOpt : public Kernel {
 
   // 64-byte aligned: the compiled tile loops inlined here (grouped / int8 / bit-output paths) are sensitive to their
   // placement (larqface-binaryfacenet's depthwise layers +2-3 % on the X3 when this function moved by 56 bytes mod 64)
-  __attribute__((aligned(64))) void run_task(const KernelContext& ctx, const uint32_t* xb, int64_t task) {
+  // Items [i0, i1) on the thread of `slot` (its patch rows, masks and dots).
+  __attribute__((aligned(64))) void run_items(const KernelContext& ctx, const uint32_t* xb, int slot, int64_t i0, int64_t i1) {
     const int64_t nch = static_cast<int64_t>(chunks_.size());
-    const int64_t i0 = task * items_ / n_tasks_, i1 = (task + 1) * items_ / n_tasks_;
-    uint32_t* rows = static_cast<uint32_t*>(patches_.get()) + task * slot_words_;
-    uint64_t* mask = masks_.data() + task * 2 * mt_;  // pixel masks, then tile_any (build_patches)
+    uint32_t* rows = static_cast<uint32_t*>(patches_.get()) + slot * slot_words_;
+    uint64_t* mask = masks_.data() + slot * 2 * mt_;  // pixel masks, then tile_any (build_patches)
     uint32_t* yb = bit_out_ ? ctx.out(0).data<uint32_t>() : nullptr;
     int64_t cur_pt = -1, cur_g = -1;
     for (int64_t it = i0; it < i1; ++it) {
@@ -1535,7 +1540,7 @@ class BConv2DNeonOpt : public Kernel {
         const int64_t j0 = std::max<int64_t>(0, ch.c0 - gi * ocg_);
         const int64_t j1 = std::min(ocg_, ch.c1 - gi * ocg_);
         if (res2_) {
-          int16_t* db = static_cast<int16_t*>(dots_.get()) + task * mt_ * 16;
+          int16_t* db = static_cast<int16_t*>(dots_.get()) + slot * mt_ * 16;
           if (pair_) compute_res2<true>(ctx, rows, mask, p0, p1, j0, j1, db);
           else compute_res2<false>(ctx, rows, mask, p0, p1, j0, j1, db);
           if (res_.has_lut) apply_out_lut(ctx, p0, p1, j0, j1);
@@ -1543,7 +1548,7 @@ class BConv2DNeonOpt : public Kernel {
           compute_res(ctx, rows, mask, p0, p1, gi, j0, j1);
           if (res_.has_lut) apply_out_lut(ctx, p0, p1, j0, j1);
         } else if (dot2_) {
-          int16_t* db = static_cast<int16_t*>(dots_.get()) + task * mt_ * 16;
+          int16_t* db = static_cast<int16_t*>(dots_.get()) + slot * mt_ * 16;
           if (i8_out_.on) {
             if (pair_) compute_dot2_t<true, kOutI8>(ctx, rows, mask, p0, p1, j0, j1, db);
             else compute_dot2_t<false, kOutI8>(ctx, rows, mask, p0, p1, j0, j1, db);
@@ -1572,7 +1577,7 @@ class BConv2DNeonOpt : public Kernel {
     }
   }
 
-  // I8BConv2DRes tiles, out of line so that the other output modes' code in run_task is unaffected.
+  // I8BConv2DRes tiles, out of line so that the other output modes' code in run_items is unaffected.
   __attribute__((noinline)) void compute_res(const KernelContext& ctx, const uint32_t* rows, const uint64_t* mask, int64_t p0, int64_t p1,
                                              int64_t gi, int64_t j0, int64_t j1) const {
     if (pair_) compute_tile_a<true, kOutI8Res, Activation::kNone>(ctx, rows, mask, p0, p1, gi, j0, j1);
@@ -2496,7 +2501,7 @@ class BConv2DNeonOpt : public Kernel {
             bits &= (1u << nvo) - 1;  // padded channels (jj >= nvo) stay 0
             uint32_t* wp = yb + q * out_words_ + (o >> 5);
             if (bit_rmw_) {
-              // Words zeroed per chunk in run_task; a block may straddle two words.
+              // Words zeroed per chunk in run_items; a block may straddle two words.
               const int64_t sh = o & 31;
               wp[0] |= bits << sh;
               if (sh + nvo > 32) wp[1] |= bits >> (32 - sh);
@@ -2523,7 +2528,7 @@ class BConv2DNeonOpt : public Kernel {
   bool bit_out_ = false, bit_in_ = false, pair_ = false, bit_rmw_ = false, direct_bits_ = false;
   int64_t taps_ = 0, k_words_ = 0, kwp_ = 0, steps_ = 0, out_words_ = 0, ocg_ = 0, ocg_pad_ = 0, oc_pad_ = 0, pixels_ = 0;
   int32_t k_bits_ = 0;
-  int64_t mt_ = 4, n_ptiles_ = 0, items_ = 0, n_tasks_ = 1, slot_words_ = 0;
+  int64_t mt_ = 4, n_ptiles_ = 0, items_ = 0, n_slots_ = 1, slot_words_ = 0;
   std::vector<Chunk> chunks_;
   std::shared_ptr<void> wbuf_, xbits_, patches_;
   std::shared_ptr<void> dots_;  // compute_res2: per task, mt_ x 16 int16 dot products
@@ -3573,10 +3578,10 @@ class QBConv2DNeon : public Kernel {
     mt_ = std::max<int64_t>(4, std::min<int64_t>(kQItems, 16384 / (planes_ * kwp_ * 4) / 4 * 4));
     n_ptiles_ = (pixels_ + mt_ - 1) / mt_;
     const int64_t threads = ctx.pool->num_threads();
-    n_tasks_ = threads > 1 ? std::min<int64_t>(n_ptiles_, 4 * threads) : 1;
+    n_slots_ = threads;  // one patch buffer per thread (parallel_for_slot over the pixel tiles)
     slot_words_ = mt_ * planes_ * kwp_;
-    patches_ = aligned_alloc_shared(static_cast<size_t>(n_tasks_ * slot_words_ * 4));  // row tails stay 0
-    xsum_.assign(static_cast<size_t>(n_tasks_ * mt_), 0);
+    patches_ = aligned_alloc_shared(static_cast<size_t>(n_slots_ * slot_words_ * 4));  // row tails stay 0
+    xsum_.assign(static_cast<size_t>(n_slots_ * mt_), 0);
   }
   size_t prepacked_bytes() const override { return static_cast<size_t>(oc_pad_ * kwp_ * 4); }
   std::vector<int> released_inputs() const override { return {1}; }  // weights: prepacked, not read by run()
@@ -3594,18 +3599,16 @@ class QBConv2DNeon : public Kernel {
     if (const float* d = opt_f32(ctx, 3)) std::copy_n(d, g_.oc, add_.data());
     QTile t{static_cast<const uint8_t*>(wbuf_.get()), kwp_ / 4, kwp_, g_.oc, planes_, mul_.data(), add_.data(), act_};
     float* y = ctx.out(0).data<float>();
-    ctx.pool->parallel_for(n_tasks_, 1, [&](int64_t t0, int64_t t1) {
-      for (int64_t task = t0; task < t1; ++task) run_task(t, xp, y, task);
-    });
+    ctx.pool->parallel_for_slot(n_ptiles_, 1, [&](int slot, int64_t b0, int64_t b1) { run_tiles(t, xp, y, slot, b0, b1); });
   }
 
  private:
-  void run_task(const QTile& t, const uint32_t* xp, float* y, int64_t task) {
-    uint32_t* rows = static_cast<uint32_t*>(patches_.get()) + task * slot_words_;
-    int32_t* xs = xsum_.data() + task * mt_;
+  void run_tiles(const QTile& t, const uint32_t* xp, float* y, int slot, int64_t b0, int64_t b1) {
+    uint32_t* rows = static_cast<uint32_t*>(patches_.get()) + slot * slot_words_;
+    int32_t* xs = xsum_.data() + slot * mt_;
     const int64_t plane_words = in_pix_ * L_.src_words;
     uint32x4_t pcr[kQItems * kMaxQNeonPlanes];
-    for (int64_t pt = task * n_ptiles_ / n_tasks_; pt < (task + 1) * n_ptiles_ / n_tasks_; ++pt) {
+    for (int64_t pt = b0; pt < b1; ++pt) {
       const int64_t p0 = pt * mt_, p1 = std::min(pixels_, p0 + mt_);
       int64_t ox = p0 % g_.ow, oy = (p0 / g_.ow) % g_.oh, n = p0 / (g_.ow * g_.oh);
       for (int64_t p = p0; p < p1; ++p) {
@@ -3630,7 +3633,7 @@ class QBConv2DNeon : public Kernel {
   Activation act_ = Activation::kNone;
   int planes_ = 0;
   float n_ = 1.f;
-  int64_t kwp_ = 0, oc_pad_ = 0, pixels_ = 0, in_pix_ = 0, mt_ = 4, n_ptiles_ = 0, n_tasks_ = 1, slot_words_ = 0;
+  int64_t kwp_ = 0, oc_pad_ = 0, pixels_ = 0, in_pix_ = 0, mt_ = 4, n_ptiles_ = 0, n_slots_ = 1, slot_words_ = 0;
   std::shared_ptr<void> wbuf_, xplanes_, patches_;
   std::vector<float> mul_, add_;
   std::vector<int32_t> xsum_;

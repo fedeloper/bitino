@@ -1,6 +1,7 @@
 #include "bitino/session.h"
 
 #include <algorithm>
+#include <cstdlib>
 
 #if defined(__unix__) || defined(__APPLE__)
 #include <sys/mman.h>
@@ -53,6 +54,39 @@ const KernelDef* select_kernel(const OpRegistry& reg, const Node& node, const Ke
   return best;
 }
 
+}  // namespace
+
+// SessionOptions::auto_threads, in three phases of whole runs.
+//  1. Settle: all threads until the runs took kSettleMs together (at least 3 runs, at most kSettleMaxRuns), so that
+//     clock frequencies, paused cores and caches have settled; the first runs of a session are slow and misleading.
+//  2. Rounds over the candidates (order reversed every other round): 1, 2, 4, ..., N active threads, each count > 1
+//     with the pool's weighted claims and with equal chunks; every node timed with all its regions on that candidate;
+//     per node and candidate the minimum over the rounds. A node takes the fastest candidate when it beats the default
+//     (N threads, weighted) by kMargin (relative) and kMarginMs (absolute: noise of the clock reads around tiny nodes).
+//  3. Check: pairs of whole runs, tuned counts and all threads interleaved; the tuned counts stay only if their
+//     median run is faster.
+// Rounds and check pairs: enough for ~kPhaseMs each, 3..16 rounds and 4..32 pairs.
+struct Session::ThreadTuner {
+  static constexpr double kSettleMs = 300, kPhaseMs = 60, kMargin = 0.03, kMarginMs = 0.0005;
+  static constexpr int kSettleMaxRuns = 2000;
+  struct Cand {
+    int threads;
+    bool weighted;
+  };
+  std::vector<Cand> cands;  // the last one is the default: all threads, weighted claims
+  int phase = 0, runs = 0, rounds = 3, pairs = 4;
+  double settle_ms = 0;
+  std::vector<double> recent;  // settle: run times
+  std::vector<std::vector<double>> best;  // [candidate][step] ms
+  std::vector<double> t_tuned, t_all;
+};
+
+namespace {
+double median_of(std::vector<double> v) {
+  if (v.empty()) return 0;
+  std::sort(v.begin(), v.end());
+  return v.size() % 2 ? v[v.size() / 2] : 0.5 * (v[v.size() / 2 - 1] + v[v.size() / 2]);
+}
 }  // namespace
 
 Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : model_(std::move(model)), opts_(std::move(opts)) {
@@ -316,6 +350,21 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     if (!steps_[i].node->outputs.empty() && steps_[i].node->outputs[0] >= 0)
       profile_[i].out_elems = num_elements(infos_[steps_[i].node->outputs[0]].shape);
   }
+  step_threads_.assign(steps_.size(), pool_->num_threads());
+  step_weighted_.assign(steps_.size(), 1);
+  const char* at = std::getenv("BITINO_AUTO_THREADS");
+  if (opts_.auto_threads && pool_->num_threads() > 1 && !steps_.empty() && !(at && at[0] == '0')) {
+    tuner_ = std::make_unique<ThreadTuner>();
+    const int n = pool_->num_threads();
+    const bool w = pool_->weighting_available();
+    for (int c = 1; c < n; c *= 2) {
+      tuner_->cands.push_back({c, false});
+      if (c > 1 && w) tuner_->cands.push_back({c, true});
+    }
+    if (w) tuner_->cands.push_back({n, false});
+    tuner_->cands.push_back({n, true});
+    tuner_->best.assign(tuner_->cands.size(), std::vector<double>(steps_.size(), 1e300));
+  }
   prepare_ms_ = now_ms() - t0;
 }
 
@@ -343,15 +392,140 @@ void Session::run() {
       if (on) p->set_hot(false);
     }
   } cool{pool_.get(), hot};
+  if (tuner_) {
+    tune_run();
+    return;
+  }
   if (!opts_.profile) {
-    for (Step& s : steps_) s.kernel->run(s.ctx);
+    if (pool_->num_threads() == 1) {
+      for (Step& s : steps_) s.kernel->run(s.ctx);
+      return;
+    }
+    for (size_t i = 0; i < steps_.size(); ++i) {
+      pool_->set_weight_key(static_cast<int>(i));
+      if (mixed_threads_) {
+        pool_->set_active_threads(step_threads_[i]);
+        pool_->set_weighted(step_weighted_[i] != 0);
+      }
+      steps_[i].kernel->run(steps_[i].ctx);
+    }
     return;
   }
   for (size_t i = 0; i < steps_.size(); ++i) {
+    pool_->set_weight_key(static_cast<int>(i));
+    if (mixed_threads_) {
+      pool_->set_active_threads(step_threads_[i]);
+      pool_->set_weighted(step_weighted_[i] != 0);
+    }
     double t0 = now_ms();
     steps_[i].kernel->run(steps_[i].ctx);
     profile_[i].total_ms += now_ms() - t0;
     profile_[i].calls += 1;
+  }
+}
+
+void Session::set_node_threads(const std::vector<int>& threads, const std::vector<char>& weighted) {
+  BF_CHECK(threads.size() == steps_.size(), "set_node_threads: ", threads.size(), " counts for ", steps_.size(), " nodes");
+  BF_CHECK(weighted.empty() || weighted.size() == steps_.size(), "set_node_threads: ", weighted.size(), " flags for ",
+           steps_.size(), " nodes");
+  tuner_.reset();
+  const int n = pool_->num_threads();
+  mixed_threads_ = false;
+  for (size_t i = 0; i < threads.size(); ++i) {
+    step_threads_[i] = std::min(n, std::max(1, threads[i]));
+    step_weighted_[i] = weighted.empty() ? 1 : (weighted[i] != 0);
+    mixed_threads_ = mixed_threads_ || step_threads_[i] != n || !step_weighted_[i];
+  }
+  pool_->set_active_threads(n);
+  pool_->set_weighted(true);
+}
+
+void Session::tune_run() {
+  ThreadTuner& t = *tuner_;
+  const int n = pool_->num_threads();
+  const int nc = static_cast<int>(t.cands.size());
+  const size_t ns = steps_.size();
+  ++tuning_runs_;
+  const int k = t.runs++;
+  if (t.phase == 0) {
+    pool_->set_active_threads(n);
+    const double t0 = now_ms();
+    for (size_t i = 0; i < ns; ++i) {
+      pool_->set_weight_key(static_cast<int>(i));
+      steps_[i].kernel->run(steps_[i].ctx);
+    }
+    const double ms = now_ms() - t0;
+    t.settle_ms += ms;
+    t.recent.push_back(ms);
+    if ((t.settle_ms >= ThreadTuner::kSettleMs && t.runs >= 3) || t.runs >= ThreadTuner::kSettleMaxRuns) {
+      const size_t keep = std::min<size_t>(t.recent.size(), 9);
+      const double run_ms = std::max(1e-3, median_of(std::vector<double>(t.recent.end() - keep, t.recent.end())));
+      t.rounds = std::min(16, std::max(3, static_cast<int>(ThreadTuner::kPhaseMs / (nc * run_ms)) + 1));
+      t.pairs = std::min(32, std::max(4, static_cast<int>(ThreadTuner::kPhaseMs / (2 * run_ms)) + 1));
+      t.recent.clear();
+      t.phase = 1;
+      t.runs = 0;
+    }
+    return;
+  }
+  if (t.phase == 1) {
+    const int r = k / nc, j = k % nc;
+    const int ci = r % 2 == 0 ? j : nc - 1 - j;
+    pool_->set_active_threads(t.cands[ci].threads);
+    pool_->set_weighted(t.cands[ci].weighted);
+    std::vector<double>& b = t.best[ci];
+    double prev = now_ms();
+    for (size_t i = 0; i < ns; ++i) {
+      pool_->set_weight_key(static_cast<int>(i));
+      steps_[i].kernel->run(steps_[i].ctx);
+      const double now = now_ms();
+      b[i] = std::min(b[i], now - prev);
+      prev = now;
+    }
+    pool_->set_active_threads(n);
+    pool_->set_weighted(true);
+    if (k + 1 == t.rounds * nc) {  // choose
+      bool any = false;
+      for (size_t i = 0; i < ns; ++i) {
+        int bi = nc - 1;  // the default unless another candidate is clearly faster
+        for (int c = 0; c < nc; ++c)
+          if (t.best[c][i] < t.best[bi][i]) bi = c;
+        const double all = t.best[nc - 1][i];
+        if (!(t.best[bi][i] < all * (1 - ThreadTuner::kMargin) - ThreadTuner::kMarginMs)) bi = nc - 1;
+        step_threads_[i] = t.cands[bi].threads;
+        step_weighted_[i] = t.cands[bi].weighted;
+        any = any || bi != nc - 1;
+      }
+      if (!any) {  // every node fastest with all threads
+        tuner_.reset();
+        return;
+      }
+      t.phase = 2;
+      t.runs = 0;
+    }
+    return;
+  }
+  // check: tuned / all threads interleaved, tuned first in even pairs
+  const bool tuned = (k / 2) % 2 == 0 ? k % 2 == 0 : k % 2 == 1;
+  const double t0 = now_ms();
+  for (size_t i = 0; i < ns; ++i) {
+    pool_->set_active_threads(tuned ? step_threads_[i] : n);
+    pool_->set_weighted(tuned ? step_weighted_[i] != 0 : true);
+    pool_->set_weight_key(static_cast<int>(i));
+    steps_[i].kernel->run(steps_[i].ctx);
+  }
+  (tuned ? t.t_tuned : t.t_all).push_back(now_ms() - t0);
+  pool_->set_active_threads(n);
+  pool_->set_weighted(true);
+  if (k + 1 == 2 * t.pairs) {
+    tuned_ms_ = median_of(t.t_tuned);
+    all_ms_ = median_of(t.t_all);
+    mixed_threads_ = tuned_ms_ < all_ms_;
+    if (!mixed_threads_) {
+      step_threads_.assign(ns, n);
+      step_weighted_.assign(ns, 1);
+    }
+    tuner_.reset();
   }
 }
 

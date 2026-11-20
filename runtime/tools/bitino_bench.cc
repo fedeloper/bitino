@@ -11,6 +11,8 @@
 // Timing covers Session::run() only. Model load, session creation (kernel
 // selection, weight prepacking) and correctness I/O are reported separately.
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -20,7 +22,12 @@
 #include <map>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
+
+#if defined(__linux__)
+#include <sched.h>
+#endif
 
 #include "bitino/bitino.h"
 #include "bitino/stages.h"
@@ -160,13 +167,65 @@ std::string iso_time() {
   return buf;
 }
 
+// Busy pre-warm of the --affinity cores before the session pins its threads. Android's core control pauses idle
+// cores (OnePlus Open: the Cortex-X3 at low load) and sched_setaffinity to a paused core fails; a model of ~0.02 ms
+// never loads the phone long enough for the core to be woken, so every repeat stayed unpinned. One busy thread per
+// requested CPU, unpinned, retries the pin every 0.5 ms until all of them hold their core or max_ms passed; the
+// session is created right after, while the cores are awake.
+struct Prewarm {
+  double ms = 0;
+  int cpus = 0, pinned = 0;
+};
+
+Prewarm prewarm_cores(std::vector<int> cpus, double max_ms) {
+  Prewarm r;
+#if defined(__linux__)
+  std::sort(cpus.begin(), cpus.end());
+  cpus.erase(std::unique(cpus.begin(), cpus.end()), cpus.end());
+  r.cpus = static_cast<int>(cpus.size());
+  std::atomic<int> ok{0};
+  std::atomic<bool> stop{false};
+  const double t0 = now_ms();
+  std::vector<std::thread> th;
+  for (int c : cpus)
+    th.emplace_back([&, c] {
+      bool pinned = false;
+      double last = -1;
+      volatile uint64_t sink = 0;
+      while (!stop.load(std::memory_order_relaxed)) {
+        for (int i = 0; i < 2000; ++i) sink = sink + static_cast<uint64_t>(i);
+        const double t = now_ms();
+        if (!pinned && t - last >= 0.5) {
+          last = t;
+          cpu_set_t set;
+          CPU_ZERO(&set);
+          CPU_SET(c, &set);
+          if (sched_setaffinity(0, sizeof(set), &set) == 0) {
+            pinned = true;
+            ok.fetch_add(1);
+          }
+        }
+      }
+    });
+  while (ok.load() < r.cpus && now_ms() - t0 < max_ms) std::this_thread::sleep_for(std::chrono::microseconds(200));
+  stop.store(true);
+  for (auto& t : th) t.join();
+  r.pinned = ok.load();
+  r.ms = now_ms() - t0;
+#else
+  (void)cpus;
+  (void)max_ms;
+#endif
+  return r;
+}
+
 void usage() {
   std::fprintf(stderr,
                "usage: bitino_bench --model PATH [--threads N] [--warmup W] [--iterations I]\n"
                "       [--stage reference|packed_naive|binary_scalar|neon|int8_reference|int8_neon|optimized|optimized_int8|int8_full_reference|int8_full|all]\n"
                "       [--tiers t1,t2] [--force op=kernel,...] [--affinity c0,c1,...] [--json PATH]\n"
                "       [--profile] [--inputs PATH --outputs PATH] [--no-verify-hash] [--no-reuse-memory] [--no-fuse] [--no-epilogues] [--no-bit-outputs]\n"
-               "       [--label TEXT] [--list-kernels] [--spin-us N] [--spin-run | --no-spin-run] [--no-map] [--no-release-constants] [--dump-dir DIR --dump-sample K (with --inputs, --no-reuse-memory)]\n");
+               "       [--label TEXT] [--list-kernels] [--spin-us N] [--spin-run | --no-spin-run] [--no-map] [--no-release-constants] [--prewarm-ms MS] [--no-auto-threads] [--tune-before-inputs] [--dump-dir DIR --dump-sample K (with --inputs, --no-reuse-memory)]\n");
 }
 
 }  // namespace
@@ -177,6 +236,9 @@ int main(int argc, char** argv) {
   int spin_us = 0;
   bool spin_run = true;  // SessionOptions default; --no-spin-run turns it off
   bool map_file = true, release_constants = true;  // --no-map: read the model into a heap copy
+  double prewarm_ms = 1000;
+  bool auto_threads = true;  // SessionOptions::auto_threads (--no-auto-threads)
+  bool tune_first = false;   // --tune-before-inputs: finish the per-node thread tuning before the correctness pass  // with --affinity: busy pre-warm of the cores before pinning (0 = off)
   std::string model_path, json_path, inputs_path, outputs_path, stage = "all", tiers_arg, force_arg, affinity_arg, label;
   int threads = 1, warmup = 10, iterations = 50;
   bool profile = false, verify_hash = true, reuse = true, list_kernels = false, fuse = true, host_epilogues = true, bit_outputs = true;
@@ -211,6 +273,9 @@ int main(int argc, char** argv) {
     else if (a == "--no-reuse-memory") reuse = false;
     else if (a == "--no-map") map_file = false;
     else if (a == "--no-release-constants") release_constants = false;
+    else if (a == "--prewarm-ms") prewarm_ms = std::atof(next().c_str());
+    else if (a == "--no-auto-threads") auto_threads = false;
+    else if (a == "--tune-before-inputs") tune_first = true;
     else if (a == "--no-fuse") fuse = false;
     else if (a == "--no-epilogues") host_epilogues = false;
     else if (a == "--no-bit-outputs") bit_outputs = false;
@@ -239,6 +304,7 @@ int main(int argc, char** argv) {
     opts.bit_outputs = bit_outputs;
     opts.spin_us = spin_us;
     opts.spin_run = spin_run;
+    opts.auto_threads = auto_threads;
     if (!tiers_arg.empty()) {
       for (auto& t : split(tiers_arg, ',')) opts.policy.allowed_tiers.insert(t);
       stage = "custom:" + tiers_arg;
@@ -269,9 +335,18 @@ int main(int argc, char** argv) {
     double load_ms = now_ms() - t_load0;
     int64_t rss_after_load = proc_status_kb("VmRSS:");
     BF_CHECK(dump_dir.empty() || !reuse, "--dump-dir requires --no-reuse-memory");
+    Prewarm prewarm;
+    if (!opts.affinity.empty() && prewarm_ms > 0) prewarm = prewarm_cores(opts.affinity, prewarm_ms);
     Session session(model, opts);
     int64_t rss_after_session = proc_status_kb("VmRSS:");
 
+    // --tune-before-inputs: the correctness pass then runs with the tuned per-node thread counts (tests of thread-count
+    // identity); the tuning runs see the synthetic input.
+    int tune_runs = 0;
+    while (tune_first && session.tuning_threads() && tune_runs < 100000) {
+      session.run();
+      ++tune_runs;
+    }
     // Correctness pass: run every sample once, outside of timing.
     int64_t num_samples = 0;
     if (!inputs_path.empty()) {
@@ -325,8 +400,15 @@ int main(int argc, char** argv) {
       }
     }
 
-    for (int i = 0; i < warmup; ++i) session.run();
+    // Warmup, extended while the session still times its per-node thread counts (SessionOptions::auto_threads), so
+    // the timed iterations never include tuning runs.
+    int warmup_runs = 0;
+    while (warmup_runs < warmup || (session.tuning_threads() && warmup_runs < warmup + 100000)) {
+      session.run();
+      ++warmup_runs;
+    }
     session.reset_profile();
+    session.pool().reset_stats();
     std::vector<double> lat;
     lat.reserve(iterations);
     const uint64_t calls0 = session.pool().calls(), disp0 = session.pool().dispatches();
@@ -370,7 +452,23 @@ int main(int argc, char** argv) {
     cfg["affinity"] = affinity_arg;
     cfg["affinity_errors"] = session.pool().affinity_errors();
     cfg["unpinned_threads_after"] = session.pool().unpinned_threads();  // pinning still failing after the runs (paused cores)
+    if (!opts.affinity.empty())
+      cfg["prewarm"] = Json(Json::Object{{"max_ms", Json(prewarm_ms)}, {"ms", Json(prewarm.ms)}, {"cpus", Json(prewarm.cpus)},
+                                         {"pinned", Json(prewarm.pinned)}});
     cfg["warmup"] = warmup;
+    cfg["warmup_runs"] = warmup_runs;  // warmup plus the runs the thread tuning needed beyond it
+    {
+      std::map<std::string, int> hist;  // "<threads>" (weighted claims) or "<threads>e" (equal chunks)
+      for (size_t i = 0; i < session.node_threads().size(); ++i)
+        hist[std::to_string(session.node_threads()[i]) +
+             (session.node_weighted()[i] || session.node_threads()[i] == 1 ? "" : "e")]++;
+      Json h = Json::Object{};
+      for (const auto& kv : hist) h[kv.first] = kv.second;
+      cfg["auto_threads"] = Json(Json::Object{{"enabled", Json(auto_threads)}, {"tuning_runs", Json(session.tuning_runs())},
+                                              {"tuned_run_ms", Json(session.tuned_run_ms())},
+                                              {"all_threads_run_ms", Json(session.all_threads_run_ms())},
+                                              {"node_threads", h}});
+    }
     cfg["iterations"] = iterations;
     cfg["reuse_memory"] = reuse;
     cfg["fuse"] = fuse;
@@ -398,6 +496,21 @@ int main(int argc, char** argv) {
     cfg["parallel_for_per_run"] = calls_per_run;      // structural: parallel regions per inference
     cfg["pool_dispatches_per_run"] = disp_per_run;    // of which handed to the workers (barriers)
     cfg["profile"] = profile;
+    if (session.pool().stats_enabled()) {  // BITINO_POOL_STATS=1: per-run averages over the timed iterations
+      const ThreadPool::Stats ps = session.pool().stats();
+      Json::Array busy, items, chunks;
+      for (size_t t = 0; t < ps.busy_us.size(); ++t) {
+        busy.push_back(Json(ps.busy_us[t] / iterations));
+        items.push_back(Json(static_cast<double>(ps.items[t]) / iterations));
+        chunks.push_back(Json(static_cast<double>(ps.chunks[t]) / iterations));
+      }
+      cfg["pool_stats"] = Json(Json::Object{{"regions", Json(static_cast<double>(ps.regions) / iterations)},
+                                            {"region_us", Json(ps.region_us / iterations)},
+                                            {"tail_us", Json(ps.tail_us / iterations)},
+                                            {"inline_regions", Json(static_cast<double>(ps.inline_regions) / iterations)},
+                                            {"inline_us", Json(ps.inline_us / iterations)},
+                                            {"busy_us", Json(busy)}, {"items", Json(items)}, {"chunks", Json(chunks)}});
+    }
     report["config"] = cfg;
     Json kernels = Json::Object{};
     std::map<std::string, int> kernel_counts;

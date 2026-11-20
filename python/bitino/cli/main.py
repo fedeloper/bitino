@@ -9,6 +9,9 @@ Model zoo:
                              [--threads N] [--top K] [--labels FILE]
   bitino bench MODEL_ID|FILE [--stage S] [--threads N] [--iterations I] [--warmup W] [--affinity C] [--json P]
   bitino validate MODEL_ID [--eval-dir D] [--stage S]
+  bitino import-qonnx MODEL.onnx --model-id ID --out-dir D [--eval-dir D --preprocess K] [--input-domain uint8|unit8|float32]
+                          [--bench PATH] [--python PY]   (QONNX route, docs/qonnx-frontend.md; needs onnx + qonnx,
+                          e.g. --python .cache/venv-qonnx/bin/python; `bitino import-qonnx --help` for all options)
   bitino deepfake MODEL_ID|FILE IMAGE|DIR... [--stage S] [--threads N] [--affinity C] [--repeat R]
                           ("Faster Than Lies" detectors: real/fake score and per-frame time, via bitino_deepfake)
 
@@ -407,6 +410,24 @@ def cmd_validate(a) -> int:
     return subprocess.call(argv)
 
 
+def cmd_import_qonnx(a) -> int:
+    """QONNX -> .bitino (bitino.qonnx_import). In-process when onnx is importable, else (or with --python) through
+    tools/import_qonnx.py in the given interpreter (python -I)."""
+    rest = list(a.args)
+    if rest and rest[0] == "--":
+        rest = rest[1:]
+    if a.python:
+        return subprocess.call([a.python, "-I", os.path.join(ROOT, "tools", "import_qonnx.py")] + rest)
+    try:
+        import onnx  # noqa: F401
+    except ImportError:
+        print("import-qonnx needs onnx (+ qonnx for cleanup and the float32 reference); pass --python "
+              ".cache/venv-qonnx/bin/python", file=sys.stderr)
+        return 2
+    from .. import qonnx_import
+    return qonnx_import.main(rest)
+
+
 # ------------------------------------------------------------------------------------------------ registry
 def cmd_registry_list(a) -> int:
     reg = load_registry()
@@ -557,6 +578,12 @@ def main(argv=None) -> int:
     va.add_argument("--bench")
     va.set_defaults(fn=cmd_validate)
 
+    iq = sub.add_parser("import-qonnx", add_help=False,
+                        help="import a QONNX / FINN-ONNX graph (docs/qonnx-frontend.md); `import-qonnx --help` for options")
+    iq.add_argument("--python", help="run the importer in this interpreter (e.g. .cache/venv-qonnx/bin/python)")
+    iq.add_argument("args", nargs=argparse.REMAINDER)
+    iq.set_defaults(fn=cmd_import_qonnx)
+
     r = sub.add_parser("registry", help="research registry of investigated BNNs").add_subparsers(dest="cmd", required=True)
     rl = r.add_parser("list")
     for f in ("family", "task", "precision", "license", "status"):
@@ -577,6 +604,13 @@ def main(argv=None) -> int:
     di.add_argument("--json", action="store_true")
     di.add_argument("--out", help="also write the JSON to this file")
     di.set_defaults(fn=cmd_device_inspect)
+    argv = sys.argv[1:] if argv is None else list(argv)
+    if argv and argv[0] == "import-qonnx":   # pass every option through (incl. --help) to bitino.qonnx_import
+        rest, py = argv[1:], None
+        if "--python" in rest:
+            k = rest.index("--python")
+            py, rest = rest[k + 1], rest[:k] + rest[k + 2:]
+        return cmd_import_qonnx(argparse.Namespace(python=py, args=rest))
     a = p.parse_args(argv)
     try:
         return a.fn(a)

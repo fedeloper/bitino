@@ -3,6 +3,7 @@
 #include <chrono>
 #include <cstdlib>
 #include <cstring>
+#include <random>
 #include <thread>
 
 #include "bitino/bitino.h"
@@ -93,6 +94,130 @@ BF_TEST(thread_pool_hot_mode) {
       EXPECT_EQ(pool.calls() - c0, uint64_t(300));
       EXPECT_TRUE(pool.dispatches() >= 300);
     }
+}
+
+// parallel_for_slot: exact coverage, slots in [0, threads) and never two chunks of one slot at the same time; fewer
+// active threads (set_active_threads) only use the first slots; a slow worker (its measured speed weight drops, the
+// weighted claims give it less) still leaves the coverage exact.
+BF_TEST(thread_pool_slots_active_threads_and_weights) {
+  for (int threads : {1, 2, 4, 8}) {
+    ThreadPool pool(threads, {}, 50);
+    pool.set_hot(true);
+    for (int active : {1, 2, 3, threads}) {
+      pool.set_active_threads(active);
+      EXPECT_EQ(pool.active_threads(), std::min(active, threads));
+      std::vector<std::atomic<int>> hits(1000);
+      for (auto& h : hits) h = 0;
+      std::vector<std::atomic<int>> in_slot(static_cast<size_t>(threads));
+      for (auto& s : in_slot) s = 0;
+      std::atomic<int> bad{0};
+      for (int rep = 0; rep < 100; ++rep)
+        pool.parallel_for_slot(1000, 1, [&](int slot, int64_t b, int64_t e) {
+          if (slot < 0 || slot >= std::min(active, threads) || in_slot[slot].fetch_add(1) != 0) bad++;
+          for (int64_t i = b; i < e; ++i) hits[i]++;
+          if (slot == 1) std::this_thread::sleep_for(std::chrono::microseconds(20));  // a slow core
+          in_slot[slot].fetch_sub(1);
+        });
+      EXPECT_EQ(bad.load(), 0);
+      for (auto& h : hits) EXPECT_EQ(h.load(), 100);
+    }
+    // Measured weights stay in their clamp range (whether slot 1 shows up slower depends on the host's load).
+    for (int i = 0; i < threads; ++i) EXPECT_TRUE(pool.speed_weight(i) >= 0.05f && pool.speed_weight(i) <= 8.f);
+    pool.set_hot(false);
+  }
+}
+
+// Per-node thread counts (SessionOptions::auto_threads, Session::set_node_threads) and the weighted claims never
+// change outputs: a small CNN (float conv, binary convs with float and bit outputs on 16x16 / 8x8 pixels, residual
+// add, pooling, dense) at 1/2/3/4/8 threads with the automatic counts (every run, through tuning and after it) and
+// with random per-node counts gives the 1-thread bytes.
+BF_TEST(session_thread_counts_identical_outputs) {
+  std::mt19937 rng(17);
+  std::normal_distribution<float> nd(0.f, 1.f);
+  auto fvec = [&](size_t n, float s, float o) {
+    std::vector<float> v(n);
+    for (auto& x : v) x = o + s * nd(rng);
+    return v;
+  };
+  auto bits = [&](int64_t rows, int64_t c) {
+    std::vector<int8_t> w(static_cast<size_t>(rows * c));
+    for (auto& v : w) v = rng() & 1 ? 1 : -1;
+    return bftest::pack_pm1(w, rows, c);
+  };
+  auto ints = [](std::initializer_list<int64_t> v) {
+    Json::Array a;
+    for (auto x : v) a.push_back(Json(x));
+    return Json(a);
+  };
+  bftest::ModelBuilder mb;
+  mb.input("x", DType::kF32, {1, 16, 16, 16});
+  auto w0 = fvec(32 * 9 * 16, 0.1f, 0.f), b0 = fvec(32, 0.1f, 0.f);
+  mb.constant("w0", DType::kF32, {32, 3, 3, 16}, w0.data());
+  mb.constant("b0", DType::kF32, {32}, b0.data());
+  Json same = Json::Object{{"strides", ints({1, 1})}, {"pads", ints({1, 1, 1, 1})}};
+  Json down = Json::Object{{"strides", ints({2, 2})}, {"pads", ints({1, 1, 1, 1})}};
+  mb.node("Conv2D", {"x", "w0", "b0"}, {"c0"}, same);
+  auto w1 = bits(32 * 9, 32), w2 = bits(64 * 9, 32), w3 = bits(64 * 9, 64);
+  auto m1 = fvec(32, 0.01f, 0.05f), a1 = fvec(32, 1.f, 0.f), m2 = fvec(64, 0.01f, 0.05f), a2 = fvec(64, 1.f, 0.f);
+  auto m3 = fvec(64, 0.01f, 0.05f), a3 = fvec(64, 1.f, 0.f);
+  mb.constant("w1", DType::kBit, {32, 3, 3, 32}, w1.data(), "OHWI_bit");
+  mb.constant("w2", DType::kBit, {64, 3, 3, 32}, w2.data(), "OHWI_bit");
+  mb.constant("w3", DType::kBit, {64, 3, 3, 64}, w3.data(), "OHWI_bit");
+  mb.constant("m1", DType::kF32, {32}, m1.data());
+  mb.constant("a1", DType::kF32, {32}, a1.data());
+  mb.constant("m2", DType::kF32, {64}, m2.data());
+  mb.constant("a2", DType::kF32, {64}, a2.data());
+  mb.constant("m3", DType::kF32, {64}, m3.data());
+  mb.constant("a3", DType::kF32, {64}, a3.data());
+  mb.node("BConv2D", {"c0", "w1", "m1", "a1", ""}, {"c1"}, same);
+  mb.node("Add", {"c1", "c0"}, {"r1"});
+  Json down_bit = down;
+  down_bit["output"] = "bit";
+  mb.node("BConv2D", {"r1", "w2", "m2", "a2", ""}, {"c2"}, down_bit);
+  mb.node("BConv2D", {"c2", "w3", "m3", "a3", ""}, {"c3"}, same);
+  mb.node("GlobalAvgPool", {"c3"}, {"p"}, Json(Json::Object{{"keepdims", Json(0)}}));
+  auto wd = fvec(10 * 64, 0.1f, 0.f), bd = fvec(10, 0.1f, 0.f);
+  mb.constant("wd", DType::kF32, {10, 64}, wd.data());
+  mb.constant("bd", DType::kF32, {10}, bd.data());
+  mb.node("Dense", {"p", "wd", "bd"}, {"y"});
+  mb.output("y");
+  mb.output("c3");
+  auto model = mb.build();
+  auto x = fvec(16 * 16 * 16, 1.f, 0.f);
+  auto outputs = [](const Session& s) {
+    std::vector<uint8_t> o;
+    for (size_t i = 0; i < s.num_outputs(); ++i) {
+      const auto* p = static_cast<const uint8_t*>(s.output(i).raw());
+      o.insert(o.end(), p, p + s.output(i).bytes());
+    }
+    return o;
+  };
+  SessionOptions o1;
+  Session ref(model, o1);
+  std::memcpy(ref.input(0).raw(), x.data(), x.size() * 4);
+  ref.run();
+  const std::vector<uint8_t> want = outputs(ref);
+  for (int threads : {2, 3, 4, 8}) {
+    SessionOptions o;
+    o.num_threads = threads;
+    Session s(model, o);
+    std::memcpy(s.input(0).raw(), x.data(), x.size() * 4);
+    for (int r = 0; r < 20000 && (s.tuning_threads() || r < 10); ++r) {  // through tuning, then tuned runs
+      s.run();
+      if (outputs(s) != want) throw bftest::Failure{"auto threads: output differs, threads " + std::to_string(threads) + " run " + std::to_string(r)};
+    }
+    EXPECT_TRUE(!s.tuning_threads());
+    EXPECT_EQ(s.node_threads().size(), s.kernel_choices().size());
+    for (int r = 0; r < 20; ++r) {
+      std::vector<int> t(s.node_threads().size());
+      std::vector<char> w(t.size());
+      for (auto& v : t) v = 1 + static_cast<int>(rng() % static_cast<unsigned>(threads));
+      for (auto& v : w) v = static_cast<char>(rng() & 1);
+      s.set_node_threads(t, w);
+      s.run();
+      if (outputs(s) != want) throw bftest::Failure{"random node threads: output differs, threads " + std::to_string(threads)};
+    }
+  }
 }
 
 BF_TEST(model_load_rejects_corruption) {

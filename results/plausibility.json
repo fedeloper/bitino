@@ -1,6 +1,6 @@
 {
  "schema": "bitino.results.v1.plausibility",
- "generated": "2026-11-19",
+ "generated": "2026-11-20",
  "rules": [
   "1 thread, latest run per (file, stage): a mode meant to be faster must not be more than 5 % slower than the mode it replaces: int8_full (best of its files) vs the float stage 'all'; optimized_int8 vs 'all'"
  ],
@@ -10,8 +10,8 @@
    "model_id": "adabin-resnet20-cifar10",
    "check": "optimized_int8 slower than float (all)",
    "ms": 0.999,
-   "float_ms": 0.879,
-   "ratio": 1.136,
+   "float_ms": 0.888,
+   "ratio": 1.125,
    "file": "model.bitino",
    "plan": "quick_20261113_0945_cph2551"
   },
@@ -20,7 +20,7 @@
    "model_id": "bbcu-sr-m-x4",
    "check": "optimized_int8 slower than float (all)",
    "ms": 15.951,
-   "float_ms": 14.537,
+   "float_ms": 14.535,
    "ratio": 1.097,
    "file": "model.bitino",
    "plan": "quick_20261113_0945_cph2551"
@@ -29,91 +29,71 @@
    "device": "oneplus-open",
    "model_id": "bhvit-small-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 53.289,
-   "float_ms": 43.975,
-   "ratio": 1.212,
+   "ms": 53.507,
+   "float_ms": 43.585,
+   "ratio": 1.228,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-small-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 52.662,
-   "float_ms": 46.635,
-   "ratio": 1.129,
+   "ms": 52.755,
+   "float_ms": 45.987,
+   "ratio": 1.147,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "oneplus-open",
    "model_id": "bhvit-tiny-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 33.603,
-   "float_ms": 31.045,
-   "ratio": 1.082,
+   "ms": 33.875,
+   "float_ms": 30.788,
+   "ratio": 1.1,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-mrpc",
    "check": "int8_full slower than float (all)",
-   "ms": 49.396,
-   "float_ms": 45.184,
-   "ratio": 1.093,
+   "ms": 49.24,
+   "float_ms": 45.231,
+   "ratio": 1.089,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "oneplus-open",
    "model_id": "bnn-pynq-cnv-w1a1-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.398,
-   "float_ms": 0.3,
-   "ratio": 1.325,
+   "ms": 0.335,
+   "float_ms": 0.318,
+   "ratio": 1.054,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0034_cph2551"
-  },
-  {
-   "device": "oneplus-open",
-   "model_id": "bnn-pynq-lfc-w1a1-mnist",
-   "check": "optimized_int8 slower than float (all)",
-   "ms": 0.018,
-   "float_ms": 0.017,
-   "ratio": 1.062,
-   "file": "model.bitino",
-   "plan": "quick_20261112_2324_cph2551"
-  },
-  {
-   "device": "oneplus-open",
-   "model_id": "brevitas-bnn-pynq-cnv-1w1a",
-   "check": "int8_full slower than float (all)",
-   "ms": 0.431,
-   "float_ms": 0.282,
-   "ratio": 1.529,
-   "file": "model_int8_full.bitino",
-   "plan": "int8full_20261112_1601_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "oneplus-open",
    "model_id": "brevitas-bnn-pynq-tfc-1w1a",
    "check": "optimized_int8 slower than float (all)",
    "ms": 0.006,
-   "float_ms": 0.002,
-   "ratio": 2.987,
+   "float_ms": 0.001,
+   "ratio": 5.298,
    "file": "model.bitino",
    "plan": "quick_20261112_2324_cph2551"
   },
   {
    "device": "oneplus-open",
-   "model_id": "fda-bnn-resnet20-cifar10-mindspore",
+   "model_id": "finn-examples-bnn-pynq-tfc-w1a1",
    "check": "optimized_int8 slower than float (all)",
-   "ms": 0.489,
-   "float_ms": 0.45,
-   "ratio": 1.086,
+   "ms": 0.003,
+   "float_ms": 0.001,
+   "ratio": 2.499,
    "file": "model.bitino",
-   "plan": "quick_20261113_0945_cph2551"
+   "plan": "quick_20261112_2324_cph2551"
   },
   {
    "device": "oneplus-open",
@@ -147,51 +127,21 @@
   },
   {
    "device": "oneplus-open",
-   "model_id": "rbnn-resnet20-cifar10",
-   "check": "optimized_int8 slower than float (all)",
-   "ms": 0.534,
-   "float_ms": 0.495,
-   "ratio": 1.08,
-   "file": "model.bitino",
-   "plan": "quick_20261113_0945_cph2551"
-  },
-  {
-   "device": "oneplus-open",
-   "model_id": "recu-resnet20-cifar10",
-   "check": "int8_full slower than float (all)",
-   "ms": 0.53,
-   "float_ms": 0.467,
-   "ratio": 1.136,
-   "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
-  },
-  {
-   "device": "oneplus-open",
-   "model_id": "shuaiz-bireal20-cifar10",
-   "check": "int8_full slower than float (all)",
-   "ms": 0.53,
-   "float_ms": 0.41,
-   "ratio": 1.292,
-   "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
-  },
-  {
-   "device": "oneplus-open",
    "model_id": "siman-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.56,
-   "float_ms": 0.501,
-   "ratio": 1.12,
+   "ms": 0.604,
+   "float_ms": 0.56,
+   "ratio": 1.079,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0819_cph2551"
+   "plan": "threads_20261119_2159_cph2551-v2"
   },
   {
    "device": "moto-e13",
    "model_id": "adabin-resnet20-cifar10",
    "check": "optimized_int8 slower than float (all)",
    "ms": 4.499,
-   "float_ms": 4.039,
-   "ratio": 1.114,
+   "float_ms": 4.022,
+   "ratio": 1.119,
    "file": "model.bitino",
    "plan": "quick_20261113_0826_moto-e13"
   },
@@ -199,41 +149,31 @@
    "device": "moto-e13",
    "model_id": "bhvit-small-binary",
    "check": "int8_full slower than float (all)",
-   "ms": 273.972,
-   "float_ms": 216.012,
-   "ratio": 1.268,
+   "ms": 272.695,
+   "float_ms": 216.807,
+   "ratio": 1.258,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0916_moto-e13"
+   "plan": "threads_20261119_2159_moto-e13-v2"
   },
   {
    "device": "moto-e13",
    "model_id": "bhvit-small-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 269.862,
-   "float_ms": 230.087,
-   "ratio": 1.173,
+   "ms": 271.796,
+   "float_ms": 230.645,
+   "ratio": 1.178,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0916_moto-e13"
-  },
-  {
-   "device": "moto-e13",
-   "model_id": "bhvit-tiny-binary",
-   "check": "int8_full slower than float (all)",
-   "ms": 172.702,
-   "float_ms": 140.823,
-   "ratio": 1.226,
-   "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0916_moto-e13"
+   "plan": "threads_20261119_2159_moto-e13-v2"
   },
   {
    "device": "moto-e13",
    "model_id": "bhvit-tiny-somefp",
    "check": "int8_full slower than float (all)",
-   "ms": 170.728,
-   "float_ms": 154.233,
-   "ratio": 1.107,
+   "ms": 172.053,
+   "float_ms": 155.006,
+   "ratio": 1.11,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0916_moto-e13"
+   "plan": "threads_20261119_2159_moto-e13-v2"
   },
   {
    "device": "moto-e13",
@@ -269,11 +209,11 @@
    "device": "moto-e13",
    "model_id": "siman-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.379,
-   "float_ms": 2.026,
-   "ratio": 1.174,
+   "ms": 2.434,
+   "float_ms": 1.995,
+   "ratio": 1.22,
    "file": "model_int8_full.bitino",
-   "plan": "int8full_20261113_0916_moto-e13"
+   "plan": "threads_20261119_2159_moto-e13-v2"
   },
   {
    "device": "s22",
@@ -290,10 +230,20 @@
    "model_id": "brevitas-bnn-pynq-cnv-1w1a",
    "check": "optimized_int8 slower than float (all)",
    "ms": 3.336,
-   "float_ms": 3.154,
-   "ratio": 1.058,
+   "float_ms": 3.169,
+   "ratio": 1.053,
    "file": "model.bitino",
    "plan": "quick_20261113_1255_m2006c3lg"
+  },
+  {
+   "device": "redmi-9a",
+   "model_id": "larqface-binaryfacenet-msceleb",
+   "check": "optimized_int8 slower than float (all)",
+   "ms": 105.614,
+   "float_ms": 100.338,
+   "ratio": 1.053,
+   "file": "model.bitino",
+   "plan": "quick_20261113_1301_m2006c3lg"
   }
  ]
 }

@@ -13,6 +13,17 @@
 namespace bitino {
 namespace {
 
+// Chunk timing for the speed weights: the generic timer on AArch64 (one register read), steady_clock elsewhere.
+inline uint64_t ticks() {
+#if defined(__aarch64__)
+  uint64_t v;
+  __asm__ __volatile__("isb; mrs %0, cntvct_el0" : "=r"(v));
+  return v;
+#else
+  return static_cast<uint64_t>(std::chrono::steady_clock::now().time_since_epoch().count());
+#endif
+}
+
 inline void cpu_relax() {
 #if defined(__aarch64__)
   __asm__ __volatile__("yield");
@@ -39,7 +50,21 @@ ThreadPool::ThreadPool(int num_threads, std::vector<int> affinity, int spin_us)
   chunks_per_thread_ = env_int("BITINO_POOL_CHUNKS", chunks_per_thread_, 1, 64);
   hot_grain_div_ = env_int("BITINO_POOL_HOT_GRAIN_DIV", hot_grain_div_, 1, 1 << 20);
   hot_serial_div_ = env_int("BITINO_POOL_HOT_SERIAL_DIV", hot_serial_div_, 1, 1 << 20);
+  stats_on_ = env_int("BITINO_POOL_STATS", 0, 0, 1) != 0;
+  weighted_ = env_int("BITINO_POOL_WEIGHTED", 1, 0, 1) != 0;
+  factor_ = static_cast<float>(env_int("BITINO_POOL_FACTOR", 2, 1, 64));
+  skip_ = env_int("BITINO_POOL_SKIP", 1, 0, 1) != 0;
+  inflight_ = env_int("BITINO_POOL_SKIP_INFLIGHT", 1, 0, 1) != 0;
+  skip_slack_ = static_cast<float>(env_int("BITINO_POOL_SKIP_SLACK_PCT", 100, 100, 1000)) / 100.f;
+  sizing_ = env_int("BITINO_POOL_SIZING", 1, 0, 1) != 0;
+  wrows_.emplace_back(new std::atomic<float>[static_cast<size_t>(std::max(num_threads, 1))]);
+  for (int i = 0; i < std::max(num_threads, 1); ++i) wrows_[0][i].store(1.f);
+  wfast_.reset(new std::atomic<float>[static_cast<size_t>(std::max(num_threads, 1))]);
+  for (int i = 0; i < std::max(num_threads, 1); ++i) wfast_[i].store(0.f);
+  rslot_.reset(new RegionSlot[static_cast<size_t>(std::max(num_threads, 1))]);
   BF_CHECK(num_threads >= 1, "num_threads must be >= 1, got ", num_threads);
+  tstats_.resize(static_cast<size_t>(num_threads));
+  active_ = num_threads;
   BF_CHECK(spin_us >= 0, "spin_us must be >= 0");
   if (!affinity_.empty()) {
     caller_pinned_ = pin_current_thread(affinity_[0]);
@@ -88,23 +113,118 @@ bool ThreadPool::spin_until(Pred pred) const {
   }
 }
 
-void ThreadPool::run_chunks() {
+namespace {
+inline double now_us() {
+  return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+}  // namespace
+
+ThreadPool::Stats ThreadPool::stats() const {
+  Stats s;
+  s.regions = st_regions_;
+  s.inline_regions = st_inline_;
+  s.region_us = st_region_us_;
+  s.tail_us = st_tail_us_;
+  s.inline_us = st_inline_us_;
+  for (const ThreadStats& t : tstats_) {
+    s.busy_us.push_back(t.busy_us);
+    s.items.push_back(t.items);
+    s.chunks.push_back(t.chunks);
+  }
+  return s;
+}
+
+void ThreadPool::reset_stats() {
+  st_regions_ = st_inline_ = 0;
+  st_region_us_ = st_tail_us_ = st_inline_us_ = 0;
+  for (ThreadStats& t : tstats_) t = ThreadStats{};
+}
+
+void ThreadPool::run_chunks(int self) {
   uint64_t v = claim_.load();
   while (true) {
     const uint64_t tag = v >> 32;
     Job& j = jobs_[tag & 1];
     const int64_t n = j.n.load(), chunk = j.chunk.load();
     const int64_t begin = static_cast<int64_t>(v & 0xffffffffu);
-    if (begin >= n) return;
-    const int64_t end = std::min(n, begin + chunk);
+    if (begin >= n || self >= j.active.load()) return;
+    int64_t size = chunk;
+    if (j.weighted.load()) {
+      // Weighted factoring: a claim of about rem * w / (factor * W) items lasts about the same time on every core.
+      // A worker whose chunk would end after the threads at least as fast as itself could finish all that is left
+      // (not before one chunk of the fastest thread) leaves it to them. The caller always claims: it completes
+      // every region.
+      const int64_t rem = n - begin;
+      const float w = j.w.load()[self].load(std::memory_order_relaxed), ws = j.wsum.load(), wm = j.wmax.load();
+      if (sizing_) size = std::max<int64_t>(chunk, static_cast<int64_t>(static_cast<float>(rem) * w / (factor_ * ws)));
+      if (self != 0 && skip_) {
+        const float c = static_cast<float>(std::min(size, rem)), wf = wfast_[self].load(std::memory_order_relaxed);
+        // The faster threads also have to finish the chunks they hold: all items not done yet (inflight_ mode).
+        const float left = static_cast<float>(inflight_ ? std::max<int64_t>(rem, n - done_.load(std::memory_order_relaxed)) : rem);
+        if (c / w > skip_slack_ * std::max(left / std::max(wf, 1e-3f), c / wm)) return;
+      }
+    }
+    const int64_t end = std::min(n, begin + size);
     // seq_cst: if the loads of j above saw a newer job's values, the tag has moved on and the CAS fails.
     if (!claim_.compare_exchange_weak(v, (tag << 32) | static_cast<uint64_t>(end))) continue;
-    (*j.fn.load())(begin, end);  // the job cannot change before this chunk is counted done
+    // The job cannot change before this chunk is counted done.
+    const double t0 = stats_on_ ? now_us() : 0;
+    const uint64_t k0 = weighted_ ? ticks() : 0;
+    if (const RangeFn* f = j.fn.load()) (*f)(begin, end);
+    else (*j.sfn.load())(self, begin, end);
+    if (weighted_) {  // before done_: the caller reads the slots once every item is done
+      RegionSlot& rs = rslot_[self];
+      rs.ticks.store(rs.ticks.load(std::memory_order_relaxed) + (ticks() - k0), std::memory_order_relaxed);
+      rs.items.store(rs.items.load(std::memory_order_relaxed) + (end - begin), std::memory_order_relaxed);
+    }
+    if (stats_on_) {
+      ThreadStats& ts = tstats_[static_cast<size_t>(self)];
+      ts.busy_us += now_us() - t0;
+      ts.items += static_cast<uint64_t>(end - begin);
+      ts.chunks += 1;
+    }
     if (done_.fetch_add(end - begin) + (end - begin) == n) {
       std::lock_guard<std::mutex> lk(mu_);
       if (caller_sleeping_) cv_done_.notify_one();
     }
     v = claim_.load();
+  }
+}
+
+void ThreadPool::set_weight_key(int key) {
+  const int row = key < 0 ? 0 : key + 1;
+  if (row >= static_cast<int>(wrows_.size())) wrows_.resize(static_cast<size_t>(row) + 1);
+  if (!wrows_[row]) {
+    wrows_[row].reset(new std::atomic<float>[static_cast<size_t>(num_threads_)]);
+    for (int i = 0; i < num_threads_; ++i) wrows_[row][i].store(wrows_[0][i].load(std::memory_order_relaxed));
+  }
+  wrow_ = row;
+}
+
+// After a dispatched region (caller): the items per tick of every thread that ran chunks, relative to the caller's,
+// into its weight in the region's row and in the overall row (exponential average, clamped). Regions where the
+// caller ran nothing leave the weights alone.
+void ThreadPool::update_weights(int active, std::atomic<float>* row) {
+  const int64_t i0 = rslot_[0].items.load(std::memory_order_relaxed);
+  const uint64_t k0 = rslot_[0].ticks.load(std::memory_order_relaxed);
+  if (i0 > 0 && k0 > 0) {
+    const double r0 = static_cast<double>(i0) / static_cast<double>(k0);
+    for (int i = 1; i < active; ++i) {
+      const int64_t it = rslot_[i].items.load(std::memory_order_relaxed);
+      const uint64_t kt = rslot_[i].ticks.load(std::memory_order_relaxed);
+      if (it <= 0 || kt == 0) continue;
+      const double s = std::min(8.0, std::max(0.05, static_cast<double>(it) / static_cast<double>(kt) / r0));
+      for (std::atomic<float>* r : {row, wrows_[0].get()}) {
+        const float w = r[i].load(std::memory_order_relaxed);
+        r[i].store(static_cast<float>(w + 0.125 * (s - w)), std::memory_order_relaxed);
+        if (r == wrows_[0].get()) break;
+      }
+    }
+    weight_updates_.fetch_add(1, std::memory_order_relaxed);
+  }
+  for (int i = 0; i < active; ++i) {
+    rslot_[i].items.store(0, std::memory_order_relaxed);
+    rslot_[i].ticks.store(0, std::memory_order_relaxed);
   }
 }
 
@@ -136,11 +256,17 @@ void ThreadPool::worker_loop(int index) {
       tried = run_epoch_.load(std::memory_order_relaxed);
       if ((pinned = pin_current_thread(cpu))) unpinned_.fetch_sub(1);
     }
-    run_chunks();
+    run_chunks(index);
   }
 }
 
-void ThreadPool::parallel_for(int64_t n, int64_t grain, const std::function<void(int64_t, int64_t)>& fn) {
+void ThreadPool::set_active_threads(int k) { active_ = std::min(num_threads_, std::max(1, k)); }
+
+void ThreadPool::parallel_for(int64_t n, int64_t grain, const RangeFn& fn) { dispatch(n, grain, &fn, nullptr); }
+
+void ThreadPool::parallel_for_slot(int64_t n, int64_t grain, const SlotFn& fn) { dispatch(n, grain, nullptr, &fn); }
+
+void ThreadPool::dispatch(int64_t n, int64_t grain, const RangeFn* fn, const SlotFn* sfn) {
   if (n <= 0) return;
   calls_.fetch_add(1, std::memory_order_relaxed);
   grain = std::max<int64_t>(grain, 1);
@@ -148,24 +274,56 @@ void ThreadPool::parallel_for(int64_t n, int64_t grain, const std::function<void
   // (spin_run) a dispatch costs a few microseconds instead of an OS wake-up: the serial threshold is divided by
   // hot_serial_div_ and the minimum chunk by hot_serial_div_ * hot_grain_div_. Chunking only partitions the items:
   // every kernel computes each item the same way whatever its chunk (1 and N threads give identical outputs).
-  const bool hot = num_threads_ > 1 && hot_.load(std::memory_order_relaxed);
+  const int active = active_;
+  const bool hot = active > 1 && hot_.load(std::memory_order_relaxed);
   if (hot) grain = std::max<int64_t>(1, grain / hot_serial_div_);
-  if (num_threads_ == 1 || n <= grain) {
-    fn(0, n);
+  if (active == 1 || n <= grain) {
+    const double t0 = stats_on_ ? now_us() : 0;
+    if (fn) (*fn)(0, n);
+    else (*sfn)(0, 0, n);
+    if (stats_on_) {
+      st_inline_us_ += now_us() - t0;
+      ++st_inline_;
+    }
     return;
   }
+  const double st_t0 = stats_on_ ? now_us() : 0;
   BF_CHECK(n < (int64_t(1) << 31), "parallel_for: too many items (", n, ")");
   if (hot) grain = std::max<int64_t>(1, grain / hot_grain_div_);
   // About chunks_per_thread_ chunks per thread for load balance on big.LITTLE cores (1 X2 + 3 A710: the X2
   // takes more of them; the last chunk an A710 holds bounds the region).
-  const int64_t per = chunks_per_thread_ * num_threads_;
+  const int64_t per = chunks_per_thread_ * active;
   int64_t chunk = std::max<int64_t>(grain, (n + per - 1) / per);
   const uint64_t gen = generation_.load(std::memory_order_relaxed) + 1;
   const uint64_t tag = gen & 0xffffffffu;
   Job& j = jobs_[tag & 1];
-  j.fn.store(&fn);
+  j.fn.store(fn);
+  j.sfn.store(sfn);
   j.n.store(n);
   j.chunk.store(chunk);
+  j.active.store(active);
+  std::atomic<float>* wr = wrows_[wrow_].get();
+  j.weighted.store(weighted_ && use_weighted_);
+  if (weighted_) {
+    j.w.store(wr);
+    float ws = 0, wm = 0;
+    for (int i = 0; i < active; ++i) {
+      const float w = wr[i].load(std::memory_order_relaxed);
+      ws += w;
+      wm = std::max(wm, w);
+    }
+    j.wsum.store(ws);
+    j.wmax.store(wm);
+    for (int i = 1; i < active; ++i) {
+      const float wi = wr[i].load(std::memory_order_relaxed);
+      float wf = 0;
+      for (int k = 0; k < active; ++k) {
+        const float wk = wr[k].load(std::memory_order_relaxed);
+        if (k != i && wk >= wi) wf += wk;
+      }
+      wfast_[i].store(wf, std::memory_order_relaxed);
+    }
+  }
   done_.store(0);
   claim_.store(tag << 32);                              // publishes the job to run_chunks()
   generation_.store(gen, std::memory_order_release);    // wakes the workers
@@ -173,13 +331,21 @@ void ThreadPool::parallel_for(int64_t n, int64_t grain, const std::function<void
     std::lock_guard<std::mutex> lk(mu_);
     if (sleeping_workers_ > 0) cv_start_.notify_all();
   }
-  run_chunks();
+  run_chunks(0);
+  const double st_t1 = stats_on_ ? now_us() : 0;
   auto done = [&] { return done_.load(std::memory_order_acquire) == n; };
   if (!spin_until(done)) {
     std::unique_lock<std::mutex> lk(mu_);
     caller_sleeping_ = true;
     cv_done_.wait(lk, done);
     caller_sleeping_ = false;
+  }
+  if (weighted_) update_weights(active, wr);
+  if (stats_on_) {
+    const double st_t2 = now_us();
+    ++st_regions_;
+    st_region_us_ += st_t2 - st_t0;
+    st_tail_us_ += st_t2 - st_t1;
   }
 }
 
