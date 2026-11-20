@@ -11,7 +11,16 @@ Two ways to run Bitino on Android:
 
 ### Add it to an app
 
-Until the library is on Maven Central, build it from this repository and use the AAR file (or `mavenLocal()`):
+The library is on Maven Central (`mavenCentral()` in the repositories block):
+
+```kotlin
+// app/build.gradle.kts
+dependencies {
+    implementation("io.github.fedeloper:bitino-android:0.1.0")
+}
+```
+
+To use a local build instead (e.g. with your own changes):
 
 ```bash
 android/gradlew -p android :bitino:assembleRelease        # -> android/bitino/build/outputs/aar/bitino-release.aar
@@ -19,10 +28,8 @@ android/gradlew -p android :bitino:publishToMavenLocal    # -> ~/.m2: io.github.
 ```
 
 ```kotlin
-// app/build.gradle.kts
 dependencies {
-    implementation("io.github.fedeloper:bitino-android:0.1.0")   // mavenLocal() / Maven Central once published
-    // or: implementation(files("libs/bitino-release.aar"))
+    implementation(files("libs/bitino-release.aar"))       // or the ~/.m2 copy with mavenLocal()
 }
 ```
 

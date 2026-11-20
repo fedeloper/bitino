@@ -10,6 +10,8 @@ BNNs converted from their original checkpoints.</p>
   <a href="https://github.com/fedeloper/bitino/actions/workflows/ci.yml"><img src="https://github.com/fedeloper/bitino/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/fedeloper/bitino/releases"><img src="https://img.shields.io/github/v/release/fedeloper/bitino" alt="Release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
+  <a href="https://pypi.org/project/bitino/"><img src="https://img.shields.io/pypi/v/bitino" alt="PyPI"></a>
+  <a href="https://central.sonatype.com/artifact/io.github.fedeloper/bitino-android"><img src="https://img.shields.io/maven-central/v/io.github.fedeloper/bitino-android" alt="Maven Central"></a>
   <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/platforms-Android%20%7C%20Linux%20%7C%20macOS%20%7C%20Windows-lightgrey" alt="Platforms">
   <a href="https://colab.research.google.com/github/fedeloper/bitino/blob/main/examples/colab/bitino_quickstart.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab"></a>
@@ -161,7 +163,7 @@ included.
 
 ```kotlin
 // build.gradle.kts: implementation("io.github.fedeloper:bitino-android:0.1.0")
-// (until it is on Maven Central: android/gradlew -p android :bitino:publishToMavenLocal, and add mavenLocal())
+// Maven Central (mavenCentral() in the repositories block); AAR for arm64-v8a and armeabi-v7a
 import io.github.fedeloper.bitino.Bitino
 
 val model = Bitino.load(context, "ab-bnn-imagenet-reactnet18.bitino", threads = 1)   // asset or file path
