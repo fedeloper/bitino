@@ -6,8 +6,8 @@ root); everything else runs on a Linux x86-64 host.
 
 | Claim | Data | How to re-run |
 |---|---|---|
-| A converted model matches its source framework | `results/models/<id>.json` → `accuracy.headline` | `bitino fetch <id>` then `bitino validate <id>` (source model in float64 vs the converted graph vs the C++ runtime) |
-| A fetch recipe rebuilds the published file | `registry/recipes.json` → `expected` | `bitino fetch <id>` prints `IDENTICAL` when the data section matches bit for bit |
+| A converted model matches its source framework | `results/models/<id>.json` → `accuracy.headline` | `bitino fetch <id> --legacy` then `bitino validate <id>` (source model in float64 vs the converted graph vs the C++ runtime; the legacy converter's cross-check run computes the source outputs) |
+| A fetch recipe rebuilds the published files through QONNX | `registry/recipes.json` → `expected`, `registry/recipes_verified.json` → `verified_qonnx` | `bitino fetch <id>` (checkpoint → `<stem>.qonnx.onnx` → import with no argument → `<stem>.bitino`) prints `IDENTICAL` when the data section and the graph match bit for bit |
 | ImageNet top-1 on the full validation set, int8_full accuracy change | `results/models/<id>.json` → `accuracy.full_val`; `reports/accuracy_full50k/original_resolution/summary.md` | `tools/accuracy_full_val.py manifest --copy original --val-dir <ILSVRC2012 val>` then `run` and `summarize` (about a day on 8 cores; resumable) |
 | Latency of every model on a phone (1 and 4 threads) | `results/speed_<device>.json` | `tools/benchmark.py` with the plan of [benchmarking.md](benchmarking.md); then `tools/report_benchmarks.py` and `tools/ingest_speed.py` |
 | Thread scaling (1, 2, 4, 8 threads) | `results/speed_<device>.json`, plans `threads_*` | `ANDROID_SERIAL=<serial> CORES=<cores, fastest first> scripts/device_threads_bench.sh` |

@@ -107,16 +107,28 @@ def published_files(model_id: str, artifacts: str) -> list:
     return [f for f in ("model.bitino", "model_sign_zero.bitino") if os.path.exists(os.path.join(artifacts, model_id, f))]
 
 
-def local_paths(model_id: str, cache: str) -> dict:
-    """Checkpoint, source trees and extra downloads of a recipe in the checkout's cache (the converters' inputs)."""
+def legacy_steps(rec: dict) -> list:
+    """The recipe's legacy converter steps (registry/recipes.json -> crosscheck.steps; before the QONNX build path
+    became the recipes' steps they were the recipe's steps)."""
+    return (rec.get("crosscheck") or {}).get("steps") or rec["steps"]
+
+
+def local_paths(model_id: str, cache: str, over: dict | None = None) -> dict:
+    """Checkpoint, source trees and extra downloads of a recipe in the checkout's cache (the converters' inputs).
+    over (bitino fetch: the recipe's own downloads and source trees): {"weights": path, "sources": {name: dir},
+    "downloads": {name: path}} replace the cache layout."""
+    over = over or {}
     rec = recipes()[model_id]
     reg = {m["model_id"]: m for m in json.load(open(os.path.join(ROOT, "registry", "models.json")))["models"]}[model_id]
     lc = reg["checkpoint"]["local_cache_path"]
     weights = os.path.join(cache, lc[len(".cache/"):]) if lc.startswith(".cache/") else os.path.join(ROOT, lc)
+    weights = over.get("weights") or weights
     srcs = {}
     for s in rec.get("sources", []):
         name = REPOS.get(s.get("repo", ""))
-        if name and os.path.isdir(os.path.join(cache, "repos", name)):
+        if s["name"] in (over.get("sources") or {}):
+            srcs[s["name"]] = over["sources"][s["name"]]
+        elif name and os.path.isdir(os.path.join(cache, "repos", name)):
             srcs[s["name"]] = os.path.join(cache, "repos", name)
         else:    # fetched into its own directory by tools/qonnx_step3_acceptance.py (bitino.fetch.get_source)
             nm = s["repo"].rstrip("/").split("github.com/")[-1].replace("/", "-") + "-" + s["commit"][:12]
@@ -125,20 +137,21 @@ def local_paths(model_id: str, cache: str) -> dict:
     for d in rec.get("downloads", []):
         if d["name"] == "bnext_weights":
             size = {"t": "tiny", "s": "small", "m": "middle"}[model_id.split("-bnext-")[1][0]]
-            extra["bnext_weights"] = os.path.join(cache, "checkpoints", f"bnext-{size}", "checkpoint.pth.tar")
+            extra["bnext_weights"] = ((over.get("downloads") or {}).get("bnext_weights")
+                                      or os.path.join(cache, "checkpoints", f"bnext-{size}", "checkpoint.pth.tar"))
             extra["bnext_weights_sha256"] = d["sha256"]
     return {"weights": weights, "checkpoint_sha256": reg["checkpoint"]["sha256"], "sources": srcs, "license": reg.get("license", {}),
             **extra}
 
 
 # ================================================================================================ stage 1: rebuild
-def rebuild(model_id: str, file: str, cache: str, threads: int):
-    """(deployed IR graph, provenance) rebuilt from the checkpoint exactly as the recipe's steps do."""
+def rebuild(model_id: str, file: str, cache: str, threads: int, over: dict | None = None, eval_dir: str | None = None):
+    """(deployed IR graph, provenance) rebuilt from the checkpoint exactly as the recipe's legacy steps do."""
     import torch
     from bitino import passes
     fam = family_of(model_id)
     rec = recipes()[model_id]
-    paths = local_paths(model_id, cache)
+    paths = local_paths(model_id, cache, over)
     ck = sha256_file(paths["weights"])
     if ck != paths["checkpoint_sha256"]:
         raise SystemExit(f"checkpoint hash mismatch: {ck} vs registry {paths['checkpoint_sha256']}")
@@ -150,8 +163,9 @@ def rebuild(model_id: str, file: str, cache: str, threads: int):
     prov = {"family": fam, "legacy_converter": rec["converter"], "checkpoint_file": os.path.basename(paths["weights"]),
             "checkpoint_sha256": ck, "torch": torch.__version__, "torch_threads": threads, "binarize": binarize}
     ev = rec["eval"]
-    eval_dir = os.path.join(cache, "data", ev["dir"])
-    flags = {a for a in rec["steps"][0]["args"] if a.startswith("--")}
+    eval_dir = eval_dir or os.path.join(cache, "data", ev["dir"])
+    steps = legacy_steps(rec)
+    flags = {a for a in steps[0]["args"] if a.startswith("--")}
     unknown = flags - KNOWN_FLAGS[fam]
     if unknown:
         raise SystemExit(f"{model_id}: converter flags {sorted(unknown)} are not reproduced by this exporter")
@@ -217,14 +231,14 @@ def rebuild(model_id: str, file: str, cache: str, threads: int):
     else:
         raise AssertionError(fam)
     derived = []
-    if file == "model.bitino" and rec["steps"][1:]:
+    if file == "model.bitino" and steps[1:]:
         # tools/derive_variant.py reads the converter's file: the same graph with a fresh unique-name counter
         import tempfile
         from bitino import format as bfformat
         with tempfile.TemporaryDirectory() as td:
             bfformat.write(g, os.path.join(td, "m.bitino"))
             g = bfformat.read(os.path.join(td, "m.bitino"))
-        for st in rec["steps"][1:]:
+        for st in steps[1:]:
             if st["tool"] != "tools/derive_variant.py":
                 raise SystemExit(f"recipe step {st['tool']} is not reproduced by this exporter")
             a = st["args"]
@@ -248,13 +262,13 @@ def stage1(args) -> int:
     rec = recipes()[args.model_id]
     os.makedirs(args.out_dir, exist_ok=True)
     threads = args.threads or THREADS[fam]
-    g, prov = rebuild(args.model_id, args.file, args.cache_dir, threads)
+    over = fetch_overrides(args)
+    g, prov = rebuild(args.model_id, args.file, args.cache_dir, threads, over, args.eval_dir)
     tmp = os.path.join(args.out_dir, "rebuilt.bitino")
     g.manifest = {}
     bfformat.write(g, tmp)
-    pub = os.path.join(args.artifacts_dir, args.model_id, args.file)
     rebuilt = {"data_sha256": data_sha256(tmp), "graph_sha256": graph_sha256(tmp)}
-    published = {"data_sha256": data_sha256(pub), "graph_sha256": graph_sha256(pub)}
+    published = expected_hashes(args.model_id, args.file, args.artifacts_dir, args.expect_recipe)
     os.remove(tmp)
     prov["rebuilt_vs_published"] = {"rebuilt": rebuilt, "published": published, "identical": rebuilt == published}
     print(f"rebuilt {args.model_id}/{args.file}: data {rebuilt['data_sha256'][:16]} graph {rebuilt['graph_sha256'][:16]} "
@@ -267,7 +281,7 @@ def stage1(args) -> int:
     spec, rep = qg.write_spec(g)
     reg = {m["model_id"]: m for m in json.load(open(os.path.join(ROOT, "registry", "models.json")))["models"]}[args.model_id]
     ev = rec["eval"]
-    em = json.load(open(os.path.join(args.cache_dir, "data", ev["dir"], "manifest.json")))
+    em = json.load(open(os.path.join(args.eval_dir or os.path.join(args.cache_dir, "data", ev["dir"]), "manifest.json")))
     pre = em["preprocessing"][ev["preprocess"]]
     if fam == "bibert":
         word = next(n for n in g.nodes if n.op == "Gather" and n.inputs[1] == "input_ids")
@@ -318,6 +332,8 @@ def stage1(args) -> int:
     qg.save_spec(spec, os.path.join(args.out_dir, "spec"))
     art = os.path.join(args.artifacts_dir, args.model_id)
     logits = {}
+    if args.expect_recipe:      # bitino fetch: no published conversion to read source logits from
+        art = os.path.join(args.out_dir, "_no_published_files")
     for a, b in (("reference_logits.f32", "source_logits.f32"), ("reference_logits_f64.f64", "source_logits_f64.f64")):
         if os.path.exists(os.path.join(art, a)):
             shutil.copyfile(os.path.join(art, a), os.path.join(args.out_dir, b))
@@ -368,6 +384,27 @@ def assemble(out_dir: str, keep_spec: bool) -> int:
     return 0
 
 
+def fetch_overrides(args) -> dict:
+    """--weights / --source NAME=DIR / --download NAME=PATH (bitino fetch) -> local_paths overrides."""
+    def kv(items):
+        return dict(i.split("=", 1) for i in items or [])
+    return {"weights": args.weights, "sources": kv(args.source), "downloads": kv(args.download)}
+
+
+def expected_hashes(model_id: str, file: str, artifacts: str, from_recipe: bool) -> dict:
+    """The data + graph SHA-256 the rebuilt graph must have: the published file's (artifacts/, read only) or, with
+    --expect-recipe (bitino fetch, no published files), the recipe's recorded hashes (registry/recipes.json ->
+    expected[file])."""
+    from bitino.fetch import data_sha256, graph_sha256
+    if from_recipe:
+        exp = recipes()[model_id].get("expected", {}).get(file)
+        if not exp:
+            raise SystemExit(f"{model_id}/{file}: no recorded hashes in registry/recipes.json -> expected")
+        return {"data_sha256": exp["data_sha256"], "graph_sha256": exp["graph_sha256"]}
+    pub = os.path.join(artifacts, model_id, file)
+    return {"data_sha256": data_sha256(pub), "graph_sha256": graph_sha256(pub)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--model-id")
@@ -377,6 +414,12 @@ def main() -> int:
     ap.add_argument("--cache-dir", default=os.path.join(ROOT, ".cache"))
     ap.add_argument("--artifacts-dir", default=os.path.join(ROOT, "artifacts"), help="published files (read only)")
     ap.add_argument("--qonnx-python")
+    ap.add_argument("--weights", help="checkpoint (default: the registry's local_cache_path under --cache-dir)")
+    ap.add_argument("--source", action="append", metavar="NAME=DIR", help="source tree of the recipe (default: under --cache-dir)")
+    ap.add_argument("--download", action="append", metavar="NAME=PATH", help="other download of the recipe (bnext_weights)")
+    ap.add_argument("--eval-dir", help="eval set (default <cache>/data/<recipe eval dir>)")
+    ap.add_argument("--expect-recipe", action="store_true",
+                    help="compare the rebuilt graph with the recipe's recorded hashes instead of artifacts/ (bitino fetch)")
     ap.add_argument("--threads", type=int, default=0, help="torch threads (default: the recorded conversion's)")
     ap.add_argument("--allow-mismatch", action="store_true", help="write the spec even if the rebuilt graph != published (debug)")
     ap.add_argument("--keep-spec", action="store_true")

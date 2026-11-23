@@ -21,7 +21,7 @@ All notable changes to Bitino. Dates are UTC.
   QONNX file written in standard ONNX + QONNX operators only, and `tools/build_from_qonnx.py` builds every file from
   it: all 486 files (296 published, 190 derived) come out with the published data and graph SHA-256
   ([docs/qonnx-standard.md](docs/qonnx-standard.md), profile and checker: [docs/qonnx-profile.md](docs/qonnx-profile.md),
-  `tools/check_qonnx.py`). `bitino fetch` still uses the per-framework converters, kept as cross-checks.
+  `tools/check_qonnx.py`).
 - **Full ImageNet int8_full accuracy for all 50 ImageNet int8_full files** (`accuracy.full_val.int8_full`): 48 lose a
   median 0.84 pt; BNAS-D and the bitorch MeliusNet-22 int8_full files collapse to chance level and should not be
   used (their float files are unaffected).
@@ -33,6 +33,13 @@ All notable changes to Bitino. Dates are UTC.
 - README: "Which model should I use?", thread-scaling chart; CONTRIBUTING.md and issue templates.
 
 ### Changed
+- **`bitino fetch` builds through QONNX.** Each recipe runs the network's QONNX writer on the authors' checkpoint
+  (canonical file `<stem>.qonnx.onnx`, kept in the model directory), imports it with no import argument and derives
+  the other files; every built file (all 486 files of the 132 recipes now have recorded data and graph SHA-256) is
+  compared with the published one. The per-framework converters are a cross-check (`fetch --legacy`, which also
+  computes the source-framework outputs `bitino validate` needs). `fetch --int8` writes the int8 QONNX file of the
+  quantizer output and requires its re-import to equal it. The writers need the `qonnx` environment (and `qonnx2` for
+  PyTorch networks) next to the source framework's ([docs/qonnx-standard.md](docs/qonnx-standard.md)).
 - `bitino_bench --affinity` warms the pinned cores up for 1 s before timing (`--prewarm-ms`), which removes the
   first-run outliers on very small models.
 

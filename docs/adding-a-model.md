@@ -58,10 +58,12 @@ The calibration set must come from the training split (disjoint from every eval 
 ## 5. Recipe, results, tables
 
 ```bash
-python3 tools/build_recipes.py --artifacts <dir containing artifacts/>   # registry/recipes.json
-BITINO_HOME=$(mktemp -d) bitino fetch <id> --python <env>=<python>
+python3 tools/build_from_qonnx.py --write-routes  # registry/qonnx_routes.json: the writer of every file
+python3 tools/build_recipes.py --artifacts <dir containing artifacts/>   # registry/recipes.json (steps = the QONNX
+                                                 # route: writer -> <stem>.qonnx.onnx -> import -> <stem>.bitino)
+BITINO_HOME=$(mktemp -d) bitino fetch <id> --python <env>=<python> --python qonnx=<python>
                                                  # run the recipe end to end from an empty cache; then record it
-                                                 # in registry/recipes_verified.json ("verified", or
+                                                 # in registry/recipes_verified.json ("verified_qonnx", or
                                                  # "needs_manual_step" / "broken" with the reason)
 python3 tools/ingest_speed.py --device <phone id> <benchmark output dirs>  # measured phone runs (tools/benchmark.py;
                                                  # phone ids in results/devices.json)

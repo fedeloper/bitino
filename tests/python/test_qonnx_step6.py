@@ -176,6 +176,6 @@ def test_routes_cover_every_recipe():
                 assert not f["canonical"]["writer"].startswith("tools/convert_")
             else:
                 assert f.get("derived_from") in r["files"] or f.get("canonical")
-        for fn in recs[mid].get("expected", {}):
-            assert fn in r["files"] and r["files"][fn]["role"] == "published"
+        # the recipes (bitino fetch builds through QONNX) record the hashes of every file the route builds
+        assert set(recs[mid].get("expected", {})) == set(r["files"]), mid
     assert n_pub == routes["counts"]["published_files"] == 296

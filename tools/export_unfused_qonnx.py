@@ -115,12 +115,13 @@ def rebuild(args) -> tuple:
     entry = models()[rec.get("registry_model_id", args.model_id)]
     lc = entry["checkpoint"]["local_cache_path"]
     weights = os.path.join(args.cache_dir, lc[len(".cache/"):]) if lc.startswith(".cache/") else os.path.join(ROOT, lc)
+    weights = args.weights or weights
     ck = sha256_file(weights)
     if ck != entry["checkpoint"]["sha256"]:
         raise SystemExit(f"checkpoint hash mismatch: {ck} vs registry {entry['checkpoint']['sha256']}")
     binarize = "sign_zero" if args.file.startswith("model_sign_zero") else "ge"
     ev = rec["eval"]
-    eval_dir = os.path.join(args.cache_dir, "data", ev["dir"])
+    eval_dir = args.eval_dir or os.path.join(args.cache_dir, "data", ev["dir"])
     prov = {"legacy_converter": rec["converter"], "kind": kind, "checkpoint_file": os.path.basename(weights), "checkpoint_sha256": ck,
             "binarize": binarize}
     if kind in ("torch_cnn", "bnas", "adabin") or kind.startswith("restoration"):
@@ -183,7 +184,7 @@ def rebuild(args) -> tuple:
         import convert_omz as co
         from bitino.adapters import openvino_ir as oi
         sub, prec, stem = co.MODELS[args.model_id]
-        d = os.path.join(args.cache_dir, "checkpoints", sub, prec)
+        d = os.path.join(args.checkpoint_dir or os.path.join(args.cache_dir, "checkpoints"), sub, prec)
         xml, binf = os.path.join(d, stem + ".xml"), os.path.join(d, stem + ".bin")
         prov["checkpoint_sha256"] = {os.path.basename(binf): sha256_file(binf), os.path.basename(xml): sha256_file(xml)}
         ir = oi.IRModel(xml, binf)
@@ -193,7 +194,8 @@ def rebuild(args) -> tuple:
         import export_ir_qonnx as eiq
         from bitino.adapters import finn_bnn
         ns = types.SimpleNamespace(model_id=args.model_id, cache_dir=args.cache_dir, eval_dir=eval_dir, no_source_logits=True,
-                                   tmp_dir=args.tmp_dir, threads=args.threads, max_samples=0)
+                                   tmp_dir=args.tmp_dir, threads=args.threads, max_samples=0, weights=args.weights,
+                                   theano_python=args.theano_python, lasagne_dir=args.lasagne_dir, bnnpynq_dir=args.bnnpynq_dir)
         em = json.load(open(os.path.join(eval_dir, "manifest.json")))
         pre = em["preprocessing"][ev["preprocess"]]
         x = np.fromfile(os.path.join(eval_dir, pre["file"]), np.float32).reshape(pre["shape"])[:1]
@@ -219,9 +221,9 @@ def stage1(args) -> int:
     tmp = os.path.join(args.out_dir, "rebuilt.bitino")
     g.manifest = {}
     bfformat.write(g, tmp)
-    pub = os.path.join(args.artifacts_dir, args.model_id, args.file)
     rebuilt = {"data_sha256": data_sha256(tmp), "graph_sha256": graph_sha256(tmp)}
-    published = {"data_sha256": data_sha256(pub), "graph_sha256": graph_sha256(pub)}
+    from export_groups_qonnx import expected_hashes
+    published = expected_hashes(args.model_id, args.file, args.artifacts_dir, args.expect_recipe)
     os.remove(tmp)
     prov["rebuilt_vs_published"] = {"rebuilt": rebuilt, "published": published, "identical": rebuilt == published}
     print(f"rebuilt {args.model_id}/{args.file}: {'= published' if rebuilt == published else '!= published'}", flush=True)
@@ -233,7 +235,7 @@ def stage1(args) -> int:
     spec, rep = qg.write_spec(g)
     entry = models()[rec.get("registry_model_id", args.model_id)]
     ev = rec["eval"]
-    em = json.load(open(os.path.join(args.cache_dir, "data", ev["dir"], "manifest.json")))
+    em = json.load(open(os.path.join(args.eval_dir or os.path.join(args.cache_dir, "data", ev["dir"]), "manifest.json")))
     pre = em["preprocessing"][ev["preprocess"]]
     va = ev.get("validate_args", [])
     if "--output-kind" in va and va[va.index("--output-kind") + 1] == "image":
@@ -283,6 +285,15 @@ def main() -> int:
     ap.add_argument("--qonnx-python", help="interpreter of stage 2 (default <cache>/venv-qonnx/bin/python)")
     ap.add_argument("--threads", type=int, default=4, help="torch CPU threads")
     ap.add_argument("--tmp-dir", default=os.environ.get("TMPDIR", "/tmp"), help="scratch (the BNN-PYNQ Theano run)")
+    # bitino fetch: the recipe's own downloads and source trees instead of the checkout's cache layout
+    ap.add_argument("--weights", help="checkpoint (default: the registry's local_cache_path under --cache-dir)")
+    ap.add_argument("--eval-dir", help="eval set (default <cache>/data/<recipe eval dir>)")
+    ap.add_argument("--checkpoint-dir", help="OpenVINO IR root <dir>/<model>/<precision>/ (default <cache>/checkpoints)")
+    ap.add_argument("--theano-python", help="BNN-PYNQ: Python 2.7 Theano interpreter (default <cache>/env-theano27/bin/python)")
+    ap.add_argument("--lasagne-dir", help="BNN-PYNQ: Lasagne source tree")
+    ap.add_argument("--bnnpynq-dir", help="BNN-PYNQ: bnn/src/training of the BNN-PYNQ source tree")
+    ap.add_argument("--expect-recipe", action="store_true",
+                    help="compare the rebuilt graph with the recipe's recorded hashes instead of artifacts/ (bitino fetch)")
     args = ap.parse_args()
     return stage1(args)
 

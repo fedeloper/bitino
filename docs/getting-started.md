@@ -52,22 +52,32 @@ From the original source, `fetch`
 1. downloads the authors' weights into a new empty directory under `~/.cache/bitino/downloads/<model>/`
    (`$BITINO_HOME` moves the cache) and checks the recorded SHA-256 while streaming;
 2. downloads the authors' model code at the recorded commit (GitHub archive or PyPI wheel, archive members checked);
-3. runs the converter of that framework with `python -I` in an empty work directory; checkpoints are only read
-   with `torch.load(weights_only=True)` (or the framework's own weight loader for `.h5`, IR, ONNX);
-4. compares the converted file's data section with the published conversion and prints `IDENTICAL` or `DIFFERS`.
+3. builds the model through QONNX: the network's QONNX writer reads the checkpoint in the source framework
+   (`python -I`, checkpoints only read with `torch.load(weights_only=True)` or the framework's own weight loader for
+   `.h5`, IR, ONNX) and writes the canonical QONNX file `model.qonnx.onnx`; `tools/import_qonnx.py` imports it with no
+   import argument into `model.bitino`; the other files of the model (`model_sign_zero`, `*_unfused`, ...) follow the
+   same way. The QONNX files stay in the model directory next to the `.bitino` files;
+4. compares every built file's data section and graph with the published conversion and prints `IDENTICAL` or
+   `DIFFERS` (`fetch_record.json` keeps the comparison and the SHA-256 of every QONNX file).
 
-Converters need the source framework. `bitino fetch` tells you which environment a model needs (`envs/`) and
-how to pass it:
+The writers need the source framework and the importer needs `onnx`. `bitino fetch` tells you which environments a
+model needs (`bitino info <id>` -> `recipe.envs`, requirement files under `envs/`) and how to pass them:
 
 ```bash
 python3.11 -m venv ~/.venvs/bitino-larq && ~/.venvs/bitino-larq/bin/pip install -r envs/larq-zoo-requirements.txt
-bitino fetch larq-zoo-quicknet-small --python larq=$HOME/.venvs/bitino-larq/bin/python
+python3.12 -m venv ~/.venvs/bitino-qonnx && ~/.venvs/bitino-qonnx/bin/pip install -r envs/qonnx-freeze.txt
+bitino fetch larq-zoo-quicknet-small --python larq=$HOME/.venvs/bitino-larq/bin/python \
+    --python qonnx=$HOME/.venvs/bitino-qonnx/bin/python
 ```
 
-The converters also compute reference outputs. Datasets are not redistributed, so by default `fetch` makes a small
-synthetic eval set (seeded random inputs of the right shape). That is enough for the conversion and for the
-runtime-vs-reference checks; to reproduce the published accuracy, build the real eval set with
-`tools/build_eval_set.py` from your copy of the dataset and pass `--eval-dir`.
+(PyTorch networks use the `qonnx2` environment, `envs/qonnx2-freeze.txt`: torch + onnx for `torch.onnx.export`.)
+
+The writers read an eval set for the input shape and the preprocessing. Datasets are not redistributed, so by
+default `fetch` makes a small synthetic eval set (seeded random inputs of the right shape): the build is the same.
+`--legacy` also runs the original converter of the recipe (`tools/convert_*.py`) into `<model dir>/legacy/`: a
+cross-check whose files are compared with the QONNX-built ones, and which computes the source framework's reference
+outputs that `bitino validate` compares the runtime against. To reproduce the published accuracy, build the real
+eval set with `tools/build_eval_set.py` from your copy of the dataset and pass `--eval-dir`.
 
 Each recipe has a state (`bitino list --converted`, `bitino info <id>`): `verified` (run end to end from a clean
 cache: the converted data section was identical to the published conversion), `needs-manual-step` (verified, but
@@ -80,8 +90,10 @@ file in a browser and pass it with `--file NAME=PATH`.
 
 Other options: `--file weights=PATH` (use a file you downloaded by hand, e.g. from Google Drive; its SHA-256 is
 still checked), `--source repo=DIR` (local source tree), `--int8 --calib-dir DIR` (also build the int8_full file
-with the recorded quantizer flags), `--threads N` (worker processes and framework threads of the converter,
-default 4), `--dry-run` (print the recipe).
+with the recorded quantizer flags from your calibration images: the quantizer output is written as its int8 QONNX
+file `model_int8_full.qonnx.onnx` and re-imported, and the re-import must equal the quantizer output; it equals the
+published int8 file only with the recorded calibration samples), `--legacy` (the cross-check above),
+`--threads N` (worker processes and framework threads, default 4), `--dry-run` (print the recipe).
 
 ## 4. Run, time, validate
 

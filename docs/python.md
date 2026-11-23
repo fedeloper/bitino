@@ -32,11 +32,22 @@ aarch64 Linux, see below).
   `~/.cache/bitino`), where `bitino fetch` writes converted files. If it is not there:
   * models whose **weights licence is explicitly permissive** (MIT / Apache-2.0 / BSD stated for the weights: the
     rule of `bitino list --release`) are downloaded from the GitHub release, SHA-256 checked;
-  * the others are not redistributed. They are converted from the authors' original checkpoint by their fetch
-    recipe, which needs the converters of a source checkout and, for some, the source framework (TensorFlow/Larq,
-    MindSpore, ...). In a source checkout `load()` runs the recipe like `bitino fetch <id>`; from an installed
-    wheel it raises `PermissionError` with the command to run. Once converted, `bitino.load("<id>")` finds the
-    file from any installation that shares `BITINO_HOME`.
+  * the others are not redistributed. They are built from the authors' original checkpoint by their fetch recipe,
+    which needs the QONNX writers of a source checkout and the reference environments of the recipe (the source
+    framework, e.g. TensorFlow/Larq or PyTorch, plus `qonnx` for the importer; `recipes.json` → `envs`). In a source
+    checkout `load()` runs the recipe like `bitino fetch <id>`; from an installed wheel it raises
+    `PermissionError` with the command to run. Once built, `bitino.load("<id>")` finds the file from any
+    installation that shares `BITINO_HOME`.
+
+  `bitino fetch <id>` builds every file of the model through QONNX: the network's writer turns the original
+  checkpoint into the canonical QONNX file `<stem>.qonnx.onnx` (kept in the model directory, with the writer's
+  record `<stem>.qonnx.json`), `tools/import_qonnx.py` imports it with no import argument into `<stem>.bitino`, and
+  the derived files follow (`*_unfused`: the `--no-fold` import of the parent's canonical file, or a canonical file
+  of its own). Every file's data and graph SHA-256 are compared with the recorded ones (`fetch_record.json`).
+  `--legacy` also runs the legacy converter (`tools/convert_*.py`) into `<model dir>/legacy/` as a cross-check; its
+  source-framework reference outputs are what `bitino validate` needs. `--int8 --calib-dir D` quantizes with your
+  calibration images, writes the int8 canonical QONNX file of the quantizer output and re-imports it (the re-import
+  must equal the quantizer output; it equals the published int8 file only with the recorded calibration samples).
 
   `download=False` never downloads or converts. `variant="int8"` / `"int8_log2"` selects the full-integer files of a
   zoo model (`model_int8_full*.bitino`).

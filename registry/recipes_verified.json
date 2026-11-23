@@ -1194,5 +1194,3970 @@
    "instructions": "ask the authors (Zhiqiang Shen; https://github.com/szq0214/S2-BNN) for a renewed link to S2BNN_for_share/Distillation_only/step2/checkpoint_0199.pth.tar, then run `bitino fetch s2bnn-reacta-distill-only --file weights=PATH` (SHA-256 882b5825f471d936b2bdca9a02f924717ed452f11bf2512bae88205fb9b08ea8 is checked)",
    "note": "with the original checkpoint supplied through --file weights=PATH the rest of the recipe converts to an identical file (data + graph; checked 2026-11-12 with the copy from the published conversion)"
   }
- }
+ },
+ "verified_qonnx": {
+  "ab-bnn-cifar10-reactnet18": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 14.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared",
+   "legacy_crosscheck": {
+    "agree": true,
+    "files": {
+     "model.bitino": true,
+     "model_sign_zero.bitino": true,
+     "model_sign_zero_unfused.bitino": true,
+     "model_unfused.bitino": true
+    }
+   }
+  },
+  "ab-bnn-cifar10-reactneta": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 29.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ab-bnn-cifar100-reactnet18": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ab-bnn-cifar100-reactneta": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 27.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ab-bnn-imagenet-reactnet18": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ab-bnn-imagenet-reactnet34": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 19.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ab-bnn-imagenet-reactneta": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 25.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "adabin-resnet20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 15.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "aliasgharshinwari-finn-cnv-w1a1-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "brevitas",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 5.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-deblocking": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 13.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-denoise": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 20.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-sr-l-x2": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-sr-l-x4": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-sr-m-x2": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bbcu-sr-m-x4": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 13.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bhvit-small-binary": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "bhvit",
+    "qonnx"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 34.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bhvit-small-somefp": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "bhvit",
+    "qonnx"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 23.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bhvit-tiny-binary": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "bhvit",
+    "qonnx"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 34.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bhvit-tiny-somefp": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "bhvit",
+    "qonnx"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 16.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bi-vit-deit-small": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 22.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bi-vit-deit-tiny": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 31.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bibert-bert-base-mnli": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "1 / 1 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 15.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bibert-bert-base-mrpc": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "1 / 1 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 16.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bibert-bert-base-qqp": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "1 / 1 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 17.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bibert-bert-base-sst2": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "1 / 1 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 22.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bimatting-bimobilenet-backbone": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "biper-resnet18-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "biper-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 11.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "biper-resnet20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "biper-resnet34-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 28.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "biper-vgg-small-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bitorch-densenet28-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 6.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bitorch-meliusnet22-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 7.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bitorch-resnete18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 5.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnas-a-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 24.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnas-d-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 53.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnas-e-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 46.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnas-h-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 192.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnext-large": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 255.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnext-middle": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 93.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnext-small": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 61.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnext-tiny": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 38.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnn-pynq-cnv-w1a1-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx",
+    "theano27"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 40.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnn-pynq-cnv-w1a1-gtsrb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx",
+    "theano27"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 22.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bnn-pynq-lfc-w1a1-mnist": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx",
+    "theano27"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 14.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brevitas-bnn-pynq-cnv-1w1a": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "brevitas",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brevitas-bnn-pynq-lfc-1w1a": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "brevitas",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brevitas-bnn-pynq-sfc-1w1a": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "brevitas",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brevitas-bnn-pynq-tfc-1w1a": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "brevitas",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared",
+   "legacy_crosscheck": {
+    "agree": true,
+    "files": {
+     "model.bitino": true,
+     "model_unfused.bitino": true
+    }
+   }
+  },
+  "brillsson-binarydensenet28": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 24.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brillsson-meliusnet22": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 30.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "brillsson-quicknet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 17.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bsrc2023-binary-sr-x2-v0": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bsrc2023-binary-sr-x2-v1": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 15.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bsrc2023-binary-sr-x4-v0": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "bsrc2023-binary-sr-x4-v1": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 13.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "burn-reacta-stage2": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 22.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "dabnn-bireal18": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 4.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "dabnn-bireal18-stem": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 4.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "fda-bnn-resnet20-cifar10-mindspore": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "finn-examples-bnn-pynq-cnv-w1a1": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 1.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "finn-examples-bnn-pynq-tfc-w1a1": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 2.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "finn-examples-cnv-w1a1-gtsrb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 1.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-cifake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 42.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-cifake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 47.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-cocofake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 45.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-cocofake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "base",
+    "ftl",
+    "qonnx"
+   ],
+   "result": "6 / 6 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_features.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_network.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 97.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-dffd": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 43.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-m-dffd-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 57.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-cifake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 49.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-cifake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 32.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-cocofake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 27.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-cocofake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "base",
+    "ftl",
+    "qonnx"
+   ],
+   "result": "6 / 6 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_features.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_network.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 59.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-dffd": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 27.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-s-dffd-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 32.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-cifake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 20.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-cifake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 20.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-cocofake": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 19.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-cocofake-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "base",
+    "ftl",
+    "qonnx"
+   ],
+   "result": "6 / 6 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_features.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_network.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": null
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 55.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-dffd": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 18.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ftl-deepfake-bnext-t-dffd-unfrozen": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "ftl",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 20.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "gsb-deit-s-cifar100-stage2": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "groups",
+   "envs": [
+    "qonnx",
+    "torch"
+   ],
+   "result": "3 / 3 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 3,
+   "seconds": 23.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "ida-det-bires18-imagenet-backbone": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 18.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-alexnet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 43.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-densenet28": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 18.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-densenet37": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 22.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-densenet37-dilated": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 30.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-densenet45": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 23.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-binary-resnet-e18": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-birealnet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-dorefanet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 20.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-meliusnet22": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 16.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-quicknet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 13.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-quicknet-large": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 18.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-quicknet-small": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 24.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared",
+   "legacy_crosscheck": {
+    "agree": true,
+    "files": {
+     "model.bitino": true,
+     "model_unfused.bitino": true
+    }
+   }
+  },
+  "larq-zoo-quicknet-xl-legacy": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 19.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-real-to-binary-net": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 14.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larq-zoo-xnornet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 27.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larqface-binarydensenet28-msceleb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 11.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larqface-binarydensenet37-msceleb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 14.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larqface-binarydensenet45-msceleb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 17.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larqface-binaryfacenet-msceleb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "larqface-quicknet-msceleb": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "keras",
+   "envs": [
+    "larq",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 23.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "nncf-resnet18-binarization-dorefa": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "nncf",
+    "qonnx",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 10.9,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "nncf-resnet18-binarization-xnor": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "nncf",
+    "qonnx",
+    "torch"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 18.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "openvino",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 7.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "omz-resnet18-xnor-binary-onnx-0001-fp16": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "openvino",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 3.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "omz-resnet50-binary-0001": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "openvino",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "omz-resnet50-binary-0001-fp16": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "openvino",
+    "qonnx"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.1,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-resnet18-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.2,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-resnet20-bireal-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 5.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-resnet20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 5.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-resnet34-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 12.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbnn-vgg-small-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 6.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "rbonn-reactnet-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "recu-resnet18-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "recu-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "recu-resnet20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared",
+   "legacy_crosscheck": {
+    "agree": true,
+    "files": {
+     "model.bitino": true,
+     "model_sign_zero.bitino": true,
+     "model_sign_zero_unfused.bitino": true,
+     "model_unfused.bitino": true
+    }
+   },
+   "int8": {
+    "model_int8_full.bitino": {
+     "calibration": "cifar10-train-calib-512 rebuilt with tools/eval_sets/cifar10_normalized.py --split train (tensor SHA-256 = the recorded faaf8baf...)",
+     "reimport_equals_quantizer_output": true,
+     "identical_data": true,
+     "identical_graph": true
+    }
+   }
+  },
+  "recu-resnet34-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 16.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "recu-vgg-small-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 10.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "s2bnn-reacta-distill-only": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 27.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared",
+   "note": "the recipe is broken upstream (expired download link); run with the local copy of the file via --file"
+  },
+  "sa-bnn-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 9.7,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "shuaiz-bireal20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2",
+    "torch"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero_unfused.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_unfused.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 4,
+   "seconds": 14.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "siman-resnet18-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 14.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "siman-resnet18-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 15.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "siman-resnet20-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 8.5,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "siman-resnet34-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 20.8,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "siman-vgg-small-cifar10": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 11.4,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "snn-subbit-reactnet18-w0.67a1-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 16.6,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "snn-subbit-reactnet18-w1a1-imagenet": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "pytorch",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "4 / 4 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_sign_zero.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_sign_zero_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model_sign_zero.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 2,
+   "seconds": 15.0,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  },
+  "tensorpack-dorefa-alexnet-w1a1-g32": {
+   "date": "2026-11-23",
+   "build": "qonnx",
+   "front_end": "ir",
+   "envs": [
+    "qonnx",
+    "qonnx2"
+   ],
+   "result": "2 / 2 files identical (data + graph)",
+   "files": {
+    "model.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    },
+    "model_unfused.bitino": {
+     "identical_data": true,
+     "identical_graph": true,
+     "canonical_qonnx": "model.qonnx.onnx"
+    }
+   },
+   "canonical_qonnx_files": 1,
+   "seconds": 76.3,
+   "check": "bitino fetch (QONNX steps of the recipe, python -I) into a fresh BITINO_HOME; the recorded downloads staged from local copies of the original files (SHA-256 checked by fetch; the 2026-11-12 legacy verification downloaded them from the original URLs), source trees local where present, else cloned at the recorded commit; synthetic eval set; every expected non-int8 file compared"
+  }
+ },
+ "note_qonnx": "verified_qonnx: the recipes' QONNX build steps (writer -> <stem>.qonnx.onnx -> tools/import_qonnx.py with no import argument -> <stem>.bitino, then the derivations) run end to end by `bitino fetch`; every listed file has the recorded data and graph SHA-256. int8: fetch --int8 with the recorded calibration set."
 }

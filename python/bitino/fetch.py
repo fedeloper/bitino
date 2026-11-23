@@ -1,23 +1,39 @@
-"""`bitino fetch`: download a model's ORIGINAL weights and code, verify them, convert locally.
+"""`bitino fetch`: download a model's ORIGINAL weights and code, verify them, build the model locally through QONNX.
 
 The recipe (registry/recipes.json, built by tools/build_recipes.py) is data: downloads with SHA-256, source
-trees pinned to a commit, the reference environment and the converter command. This module only executes it:
+trees pinned to a commit, the reference environments and the build steps. This module only executes it:
 
   1. every download goes into a new, empty directory  <home>/downloads/<model-id>/  and is hashed while it
      streams; a SHA-256 mismatch deletes the file and stops;
   2. source trees are GitHub archives of the recorded commit (or a PyPI wheel), extracted with tar/zip member
      checks into <home>/src/ (read only afterwards);
-  3. the converter runs as a subprocess with ``python -I`` (isolated: no user site, no PYTHONPATH, no current
-     directory on sys.path) in an empty work directory; checkpoints are only ever read with
-     ``torch.load(weights_only=True)`` by the converters;
-  4. the converted file's data section is compared with the recorded data_sha256: equal means the weights and
-     constants are bit-identical to the published conversion (the JSON manifest differs: it records the date
-     and library versions of *your* conversion).
+  3. the build (recipe "build": "qonnx", docs/qonnx-standard.md): per file, the network's QONNX writer reads the
+     original checkpoint in the source framework's reference environment and writes the canonical QONNX file
+     <stem>.qonnx.onnx into the model directory (it stays there, with the writer's record <stem>.qonnx.json);
+     tools/import_qonnx.py imports it with NO import argument (the file determines its .bitino); the derived files
+     follow (*_unfused.bitino: the --no-fold import of the parent's canonical file, or a canonical file of its own;
+     the detector stages: tools/ftl_deepfake_submodels.py). Every step runs as a subprocess with ``python -I``
+     (isolated: no user site, no PYTHONPATH, no current directory on sys.path) in a work directory; checkpoints are
+     only ever read with ``torch.load(weights_only=True)``;
+  4. every built file's data section and graph are compared with the recorded data_sha256 / graph_sha256: equal
+     means the weights, constants and graph are bit-identical to the published file (the JSON manifest differs: it
+     records the date and library versions of *your* build). fetch_record.json lists the downloads, the commands,
+     the canonical QONNX files with their SHA-256 and the comparison of every file.
 
-The converters also produce reference outputs on an evaluation set. Datasets are not redistributed, so unless
-``--eval-dir`` points at a real eval set, a small synthetic one (seeded random inputs with the model's input
-shape and preprocessing key) is generated: conversion and runtime-vs-numpy checks work the same, accuracy
-numbers are meaningless on it.
+``--legacy`` also runs the legacy converter of the recipe (tools/convert_*.py, ``crosscheck.steps``) into
+<model dir>/legacy/ as a cross-check: its files are compared with the QONNX-built ones, and its reference outputs
+(the source framework's logits) are what ``bitino validate`` compares the runtime against.
+
+``--int8`` quantizes the built model.bitino with YOUR calibration images (tools/quantize_int8_full.py; the
+recorded calibration images are not redistributed), writes the int8 canonical QONNX file of the quantizer output
+(tools/export_int8_qonnx.py --source) and re-imports it; the re-import must equal the quantizer output (data +
+graph SHA-256). The comparison with the published int8 file is reported: equal only with the recorded calibration
+samples and quantizer version.
+
+The writers read an evaluation set for the input shape and the preprocessing metadata. Datasets are not
+redistributed, so unless ``--eval-dir`` points at a real eval set, a small synthetic one (seeded random inputs with
+the model's input shape and preprocessing key) is generated: the build is the same, accuracy numbers are
+meaningless on it.
 """
 from __future__ import annotations
 
@@ -403,9 +419,66 @@ def fetch_prebuilt(model_id: str) -> dict:
     return record
 
 
+def _compare(p: str, exp: dict | None) -> dict:
+    """data / graph SHA-256 of a built file against the recorded ones."""
+    got, g = data_sha256(p), graph_sha256(p)
+    exp = exp or {}
+    same = got == exp.get("data_sha256") if exp.get("data_sha256") else None
+    gsame = g == exp.get("graph_sha256") if exp.get("graph_sha256") else None
+    return {"data_sha256": got, "graph_sha256": g, "expected": exp.get("data_sha256"), "expected_graph": exp.get("graph_sha256"),
+            "identical_data": same, "identical_graph": gsame, "file_sha256": sha256_file(p)}
+
+
+def _identity_words(r: dict) -> str:
+    d, g = r.get("identical_data"), r.get("identical_graph")
+    return (f"data section {'IDENTICAL to' if d else 'DIFFERS from' if d is False else 'not recorded for'} the published "
+            f"conversion ({r['data_sha256'][:16]}); graph {'identical' if g else 'differs' if g is False else 'not recorded'}")
+
+
+def run_steps(steps: list, ctx: dict, python: dict, env: dict, cwd: str, out_dir: str, record: dict, label: str = "") -> None:
+    """Runs recipe steps: each is ``python -I <tool> <args>`` in the step's reference environment, the {placeholders}
+    filled from ctx ({python:ENV} = the interpreter of a second environment). A step's ``outputs`` maps a file the
+    tool writes (a template, under {work}) to its name in the model directory (or to another template path): stale
+    copies are removed before the step, the files are moved after it, and their SHA-256 are recorded."""
+    for step in steps:
+        py = resolve_python(step["env"], python)
+        ctx_py = {f"python:{k}": resolve_python(k, python)
+                  for a in step["args"] for k in re.findall(r"\{python:([\w-]+)\}", a)}
+        full = ctx | ctx_py
+        argv = [py, "-I", os.path.join(zoo.ROOT, step["tool"])] + [_fmt(a, full) for a in step["args"]]
+        outs = {_fmt(src, full): (_fmt(dst, full) if "{" in dst else os.path.join(out_dir, dst))
+                for src, dst in (step.get("outputs") or {}).items()}
+        for src in outs:
+            if os.path.exists(src):
+                os.remove(src)
+            os.makedirs(os.path.dirname(src), exist_ok=True)
+        log(f"{label}run " + " ".join(argv))
+        record["commands"].append(argv)
+        r = subprocess.run(argv, cwd=cwd, env=env)
+        if r.returncode != 0:
+            raise FetchError(f"step {step['tool']}" + (f" ({step['file']})" if step.get("file") else "")
+                             + f" failed with exit code {r.returncode}")
+        for src, dst in outs.items():
+            if not os.path.exists(src):
+                if dst.endswith(".json"):
+                    continue
+                raise FetchError(f"step {step['tool']} did not write {src}")
+            os.makedirs(os.path.dirname(dst), exist_ok=True)
+            shutil.move(src, dst)
+            record.setdefault("outputs", {})[os.path.relpath(dst, out_dir) if dst.startswith(out_dir + os.sep) else dst] = {
+                "sha256": sha256_file(dst), "bytes": os.path.getsize(dst), "step": step["tool"], "role": step.get("role")}
+
+
 def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = None, sources: dict | None = None,
           python: dict | None = None, int8: bool = False, calib_dir: str | None = None, synthetic_n: int = 8,
-          dry_run: bool = False, threads: int = 4) -> dict:
+          dry_run: bool = False, threads: int = 4, legacy: bool = False) -> dict:
+    """Runs the recipe of model_id: downloads (SHA-256 checked), source trees, then the build steps. For a QONNX
+    recipe (rec["build"] == "qonnx") every file is built as original checkpoint -> canonical QONNX file
+    (<stem>.qonnx.onnx, kept in the model directory) -> tools/import_qonnx.py with no import argument -> <stem>.bitino,
+    plus the derivations; every built file is compared with the recorded data and graph SHA-256. legacy=True also runs
+    the legacy converter (crosscheck.steps) into <model dir>/legacy/ and compares its files with the QONNX-built ones.
+    int8=True quantizes model.bitino with the calibration images of calib_dir, writes the int8 canonical QONNX file
+    of the quantizer output, re-imports it, and requires the re-import to equal the quantizer output."""
     rec = zoo.recipes().get(model_id)
     if not rec:
         raise FetchError(f"no recipe for {model_id!r} (see `bitino list --converted`)")
@@ -414,7 +487,10 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
     dl_dir = os.path.join(home, "downloads", model_id)
     out_dir = zoo.model_dir(model_id)
     work = os.path.join(home, "work", model_id)
-    log(f"{model_id}: recipe state {rec['state']}, env {rec['env']}, converter {rec['converter']}")
+    qonnx_build = rec.get("build") == "qonnx"
+    log(f"{model_id}: recipe state {rec['state']}, build {'QONNX (' + rec['qonnx']['front_end'] + ' writer)' if qonnx_build else 'legacy converter'}, "
+        f"environments {', '.join(rec.get('envs') or [rec['env']])}; legacy converter {rec['converter']}"
+        + (" (cross-check)" if qonnx_build else ""))
     for n in rec.get("notes", []):
         log(f"note: {n}")
     if rec["state"] == "broken":
@@ -425,15 +501,16 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
     if rec["state"] == "needs-manual-step" and (rec.get("manual_step") or {}).get("instructions"):
         log(f"manual step: {rec['manual_step']['instructions']}")
     ctx = {"model_id": model_id, "downloads": dl_dir, "out_dir": out_dir, "work": work, "threads": str(max(1, threads))}
-    record = {"model_id": model_id, "recipe_state": rec["state"], "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    record = {"model_id": model_id, "recipe_state": rec["state"], "build": rec.get("build", "legacy"),
+              "date_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
               "downloads": [], "sources": [], "commands": []}
     if dry_run:
         print(json.dumps(rec, indent=1))
         return record
     if not zoo.source_checkout():
-        raise FetchError(f"converting {model_id} from its original source runs the converters of a source checkout "
-                         f"(tools/) in the reference environment of the recipe ({rec['env']}); they are not part of the "
-                         f"installed package. Clone {zoo.REPO_URL}, `pip install -e .` there and run "
+        raise FetchError(f"converting {model_id} from its original source runs the writers / converters of a source "
+                         f"checkout (tools/) in the reference environments of the recipe ({', '.join(rec.get('envs') or [rec['env']])}); "
+                         f"they are not part of the installed package. Clone {zoo.REPO_URL}, `pip install -e .` there and run "
                          f"`bitino fetch {model_id}`: the converted file lands in {out_dir}, where "
                          f"bitino.load('{model_id}') finds it.")
     new_dl = not os.path.isdir(dl_dir)
@@ -492,52 +569,115 @@ def fetch(model_id: str, *, eval_dir: str | None = None, files: dict | None = No
     env = dict(os.environ, OMP_NUM_THREADS=str(threads), MKL_NUM_THREADS=str(threads), OPENBLAS_NUM_THREADS=str(threads),
                PYTHONDONTWRITEBYTECODE="1", CUDA_VISIBLE_DEVICES="",
                TF_NUM_INTRAOP_THREADS=str(threads), TF_NUM_INTEROP_THREADS="1")
-    for step in rec["steps"]:
-        py = resolve_python(step["env"], python)
-        # {python:ENV} placeholders (a second reference environment the converter calls, e.g. Python 2.7 Theano)
-        ctx_py = {f"python:{k}": resolve_python(k, python)
-                  for a in step["args"] for k in re.findall(r"\{python:([\w-]+)\}", a)}
-        argv = [py, "-I", os.path.join(zoo.ROOT, step["tool"])] + [_fmt(a, ctx | ctx_py) for a in step["args"]]
-        log("run " + " ".join(argv))
-        record["commands"].append(argv)
-        r = subprocess.run(argv, cwd=work, env=env)
-        if r.returncode != 0:
-            raise FetchError(f"step {step['tool']} failed with exit code {r.returncode}")
-    record["results"] = {}
     int8_files = {q["file"] for q in rec.get("int8", [])}
-    for fn, exp in rec.get("expected", {}).items():
-        if fn in int8_files:
-            continue   # checked after quantization (--int8)
+    built = [fn for fn in rec.get("expected", {}) if fn not in int8_files]
+    if qonnx_build:   # files of an earlier run are rebuilt, never compared stale
+        for fn in built + [st["outputs"][k] for st in rec["steps"] for k in (st.get("outputs") or {})]:
+            if "{" not in fn and os.path.exists(os.path.join(out_dir, fn)):
+                os.remove(os.path.join(out_dir, fn))
+    run_steps(rec["steps"], ctx, python, env, work, out_dir, record)
+    record["results"] = {}
+    for fn in built:
         p = os.path.join(out_dir, fn)
         if not os.path.exists(p):
+            if qonnx_build:
+                raise FetchError(f"{fn}: the recipe's steps did not build it")
             continue
-        got = data_sha256(p)
-        same = got == exp.get("data_sha256")
-        gsame = graph_sha256(p) == exp.get("graph_sha256") if exp.get("graph_sha256") else None
-        record["results"][fn] = {"data_sha256": got, "expected": exp.get("data_sha256"), "identical_data": same,
-                                 "identical_graph": gsame, "file_sha256": sha256_file(p)}
-        log(f"{fn}: data section {'IDENTICAL to' if same else 'DIFFERS from'} the published conversion ({got[:16]}); "
-            f"graph {'identical' if gsame else 'differs' if gsame is False else 'not recorded'}")
+        r = _compare(p, rec["expected"].get(fn))
+        if qonnx_build:
+            q = (rec.get("qonnx") or {}).get("files", {}).get(fn, {})
+            r["built_by"] = q.get("derivation") or "QONNX import (no import argument)"
+            if q.get("canonical"):
+                r["canonical_qonnx"] = q["canonical"]
+                r["canonical_qonnx_sha256"] = (record.get("outputs") or {}).get(q["canonical"], {}).get("sha256")
+        record["results"][fn] = r
+        log(f"{fn}: {_identity_words(r)}")
+    if qonnx_build:
+        record["qonnx_files"] = {k: v for k, v in (record.get("outputs") or {}).items() if k.endswith(".qonnx.onnx")}
+    if legacy:
+        record["crosscheck"] = crosscheck(rec, ctx, python, env, out_dir, work, record)
     if int8:
         if not calib_dir:
             raise FetchError("--int8 needs --calib-dir (calibration images from the training split; see docs/int8.md)")
         for q in rec.get("int8", []):
-            argv = [sys.executable, "-I", os.path.join(zoo.ROOT, "tools", "quantize_int8_full.py")] + [_fmt(a, ctx) for a in q["args"]]
-            log("run " + " ".join(argv))
-            record["commands"].append(argv)
-            r = subprocess.run(argv, cwd=work, env=env)
-            if r.returncode != 0:
-                raise FetchError(f"quantization of {q['file']} failed with exit code {r.returncode}")
-            p = os.path.join(out_dir, q["file"])
-            got = data_sha256(p)
-            exp = rec.get("expected", {}).get(q["file"], {}).get("data_sha256")
-            gx = rec.get("expected", {}).get(q["file"], {}).get("graph_sha256")
-            record["results"][q["file"]] = {"data_sha256": got, "expected": exp, "identical_data": got == exp,
-                                            "identical_graph": (graph_sha256(p) == gx) if gx else None}
-            g = record['results'][q['file']]['identical_graph']
-            log(f"{q['file']}: data section {'IDENTICAL to' if got == exp else 'DIFFERS from'} the published file; "
-                f"graph {'identical' if g else 'differs' if g is False else 'not recorded'}")
+            record["results"][q["file"]] = quantize(rec, q, ctx, python, env, out_dir, work, record, qonnx_build)
     record["bytes_downloaded"] = BYTES_DOWNLOADED[0]
     with open(os.path.join(out_dir, "fetch_record.json"), "w") as f:
         json.dump(record, f, indent=1)
     return record
+
+
+def crosscheck(rec: dict, ctx: dict, python: dict, env: dict, out_dir: str, work: str, record: dict) -> dict:
+    """fetch --legacy: the recipe's legacy converter steps (crosscheck.steps) into <out_dir>/legacy/, every file they
+    write compared with the recorded hashes and with the QONNX-built file of the same name. The converters also write
+    the source framework's reference outputs there (what `bitino validate` compares the runtime against)."""
+    steps = (rec.get("crosscheck") or {}).get("steps")
+    if not steps:
+        raise FetchError(f"{rec['model_id']}: the recipe has no legacy cross-check steps")
+    ldir, lwork = os.path.join(out_dir, "legacy"), os.path.join(work, "legacy")
+    shutil.rmtree(ldir, ignore_errors=True)
+    os.makedirs(ldir)
+    os.makedirs(lwork, exist_ok=True)
+    lctx = dict(ctx, out_dir=ldir, work=lwork)
+    run_steps(steps, lctx, python, env, lwork, ldir, record, label="[legacy] ")
+    res = {"dir": ldir, "converter": rec["converter"], "files": {}}
+    for fn in sorted(os.listdir(ldir)):
+        if not fn.endswith(".bitino"):
+            continue
+        r = _compare(os.path.join(ldir, fn), rec.get("expected", {}).get(fn))
+        q = os.path.join(out_dir, fn)
+        if os.path.exists(q):
+            r["equals_qonnx_build"] = (r["data_sha256"], r["graph_sha256"]) == (data_sha256(q), graph_sha256(q))
+        res["files"][fn] = r
+        log(f"[legacy] {fn}: {_identity_words(r)}; = QONNX build: {r.get('equals_qonnx_build', 'not built')}")
+    res["agree"] = bool(res["files"]) and all(v.get("equals_qonnx_build", True) is not False for v in res["files"].values())
+    return res
+
+
+def quantize(rec: dict, q: dict, ctx: dict, python: dict, env: dict, out_dir: str, work: str, record: dict,
+             qonnx_build: bool) -> dict:
+    """fetch --int8, one int8 file: tools/quantize_int8_full.py on the built model.bitino with the user's calibration
+    images. QONNX recipe: the quantizer writes {work}/int8/<file>; its canonical QONNX file is written from that output
+    (tools/export_int8_qonnx.py --source) into the model directory and re-imported (no import argument) as <file>, which
+    must equal the quantizer output (data + graph SHA-256), else the fetch fails. The comparison with the recorded
+    (published) hashes is reported: equal only with the recorded calibration samples and quantizer version."""
+    fn = q["file"]
+    i8 = os.path.join(work, "int8")
+    os.makedirs(i8, exist_ok=True)
+    qout = os.path.join(i8, fn) if qonnx_build else os.path.join(out_dir, fn)
+    for p in (qout, qout + ".report.json", os.path.join(out_dir, fn)):
+        if os.path.exists(p):
+            os.remove(p)
+    argv = [sys.executable, "-I", os.path.join(zoo.ROOT, "tools", "quantize_int8_full.py")] + [_fmt(a, ctx) for a in q["args"]]
+    log("run " + " ".join(argv))
+    record["commands"].append(argv)
+    r = subprocess.run(argv, cwd=work, env=env)
+    if r.returncode != 0 or not os.path.exists(qout):
+        raise FetchError(f"quantization of {fn} failed with exit code {r.returncode}")
+    exp = rec.get("expected", {}).get(fn)
+    if not qonnx_build:
+        res = _compare(qout, exp)
+        log(f"{fn}: {_identity_words(res)}")
+        return res
+    if os.path.exists(qout + ".report.json"):
+        shutil.copyfile(qout + ".report.json", os.path.join(out_dir, fn[: -len(".bitino")] + ".quantize.json"))
+    run_steps(q["qonnx_steps"], ctx, python, env, work, out_dir, record)
+    p = os.path.join(out_dir, fn)
+    res = _compare(p, exp)
+    quant = {"data_sha256": data_sha256(qout), "graph_sha256": graph_sha256(qout)}
+    res["quantizer_output"] = quant
+    res["reimport_equals_quantizer_output"] = quant == {"data_sha256": res["data_sha256"], "graph_sha256": res["graph_sha256"]}
+    canon = fn[: -len(".bitino")] + ".qonnx.onnx"
+    res["canonical_qonnx"] = canon
+    res["canonical_qonnx_sha256"] = (record.get("outputs") or {}).get(canon, {}).get("sha256")
+    res["built_by"] = "quantizer (your calibration images) -> int8 canonical QONNX file -> QONNX import (no import argument)"
+    record.setdefault("qonnx_files", {})[canon] = (record.get("outputs") or {}).get(canon)
+    if not res["reimport_equals_quantizer_output"]:
+        bad = os.path.join(i8, "reimport_" + fn)
+        shutil.move(p, bad)
+        raise FetchError(f"{fn}: the re-import of its canonical QONNX file differs from the quantizer output "
+                         f"({quant} vs {res['data_sha256']} / {res['graph_sha256']}); kept as {bad}")
+    log(f"{fn}: re-import of {canon} = quantizer output (data + graph); {_identity_words(res)}"
+        + ("" if res["identical_data"] and res["identical_graph"] else
+           " (expected unless the calibration samples and the quantizer are the recorded ones)"))
+    return res

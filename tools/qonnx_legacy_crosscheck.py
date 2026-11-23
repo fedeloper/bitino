@@ -5,7 +5,7 @@ Since step 6 the published files are built by tools/build_from_qonnx.py (checkpo
 bitino.qonnx_import). The IR-emitting converters tools/convert_*.py are kept, unchanged, as LEGACY CROSS-CHECKS: this
 tool builds a network both ways from the same local checkpoint and compares the results:
 
-  legacy   the recipe's own steps (registry/recipes.json -> steps: tools/convert_*.py [+ tools/derive_variant.py]) in
+  legacy   the recipe's legacy steps (registry/recipes.json -> crosscheck.steps: tools/convert_*.py [+ tools/derive_variant.py]) in
            the recipe's reference environment, python -I, into <work>/<id>/legacy/
   qonnx    tools/build_from_qonnx.py (the route of registry/qonnx_routes.json) into <work>/<id>/qonnx/
 
@@ -42,6 +42,12 @@ ENVS = {"torch": "~/anaconda3/bin/python", "brevitas": "{cache}/venv-brevitas/bi
         "openvino": "{cache}/venv-openvino/bin/python", "nncf": "{cache}/venv-nncf/bin/python"}
 
 
+def legacy_steps(rec: dict) -> list:
+    """The recipe's legacy converter steps: registry/recipes.json -> crosscheck.steps (the recipe's steps are the QONNX
+    build path since `bitino fetch` builds through QONNX)."""
+    return (rec.get("crosscheck") or {}).get("steps") or rec["steps"]
+
+
 def legacy_build(mid: str, ctx, routes: dict, pyover: dict, out_dir: str, log: str) -> int:
     """Runs the recipe's steps with the local checkpoint / source tree (the paths tools/build_from_qonnx.py uses)."""
     rec = ctx.recipes[mid]
@@ -60,7 +66,7 @@ def legacy_build(mid: str, ctx, routes: dict, pyover: dict, out_dir: str, log: s
         fill["repo"] = ctx.fill(wargs[wargs.index("--repo") + 1], mid)
     os.makedirs(out_dir, exist_ok=True)
     os.makedirs(fill["work"], exist_ok=True)
-    for st in rec["steps"]:
+    for st in legacy_steps(rec):
         py = os.path.expanduser((pyover.get(st["env"]) or ENVS[st["env"]]).replace("{cache}", ctx.cache))
         args = []
         for a in st["args"]:
@@ -103,7 +109,7 @@ def main() -> int:
         os.makedirs(base, exist_ok=True)
         log = os.path.join(base, "crosscheck.log")
         row = {"model_id": mid, "legacy_converter": ctx.recipes[mid]["converter"], "front_end": routes[mid]["front_end"],
-               "legacy_steps": [s["tool"] for s in ctx.recipes[mid]["steps"]]}
+               "legacy_steps": [s["tool"] for s in legacy_steps(ctx.recipes[mid])]}
         leg_dir = os.path.join(base, "legacy")
         rc = legacy_build(mid, ctx, routes, pyover, leg_dir, log)
         row["legacy_returncode"] = rc

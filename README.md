@@ -4,7 +4,7 @@
 
 <p align="center"><b>1-bit neural networks that keep your phone cool.</b><br>
 A fast, dependency-free runtime for binary neural networks on phone and laptop CPUs, with a zoo of 132 published
-BNNs converted from their original checkpoints.</p>
+BNNs read from their original checkpoints and stored in one standard format, QONNX.</p>
 
 <p align="center">
   <a href="https://github.com/fedeloper/bitino/actions/workflows/ci.yml"><img src="https://github.com/fedeloper/bitino/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -30,9 +30,16 @@ BNNs converted from their original checkpoints.</p>
 
 Bitino runs **binary neural networks** (BNNs: 1-bit weights and activations) on the CPU of an Android phone or a
 laptop. It is a C++17 runtime with no dependencies, with hand-written NEON kernels (ARMv8 dotprod / i8mm, ARMv7) and
-AVX2 / AVX-VNNI kernels. It comes with converters that read networks from their authors' **original** checkpoints
-(Larq, PyTorch, OpenVINO, ONNX, Brevitas, MindSpore, …), a full-integer int8 path, and a curated zoo of every BNN with
-public weights we could find.
+AVX2 / AVX-VNNI kernels. It reads networks from their authors' **original** checkpoints (Larq, PyTorch, OpenVINO,
+ONNX, Brevitas, MindSpore, …) and writes each one as a **standard [QONNX](https://github.com/fastmachinelearning/qonnx)
+file**, standard ONNX + QONNX operators only, with no custom operator; one importer compiles every QONNX file into
+Bitino's phone format. It has a full-integer int8 path and a curated zoo of every BNN with public weights we could find.
+
+```
+original checkpoint ──(front-end writer)──► QONNX file ──(Bitino importer)──► .bitino ──► runtime (NEON / AVX2)
+ Larq, PyTorch, OpenVINO,    standard ONNX + BipolarQuant /     one importer, no         phones and
+ Brevitas, MindSpore, …      IntQuant, float and int8_full      per-model options        laptops
+```
 
 <!-- generated:stats -->
 **343** binary networks investigated, **223** with verified public weights, **132** converted and validated against their original framework, **11** redistributable as converted files (explicit permissive weights licence). Fetch recipes: 131 verified end to end, 1 broken upstream.
@@ -76,7 +83,7 @@ pip install -e .                                           # the bitino CLI and 
 cmake -S . -B build/host -G Ninja -DCMAKE_BUILD_TYPE=Release && cmake --build build/host
 
 bitino fetch ab-bnn-imagenet-reactnet18 --prebuilt         # converted file from the release (permissive licence)
-bitino fetch ab-bnn-imagenet-reactnet18                    # or: original weights + code, SHA-256 check, local conversion
+bitino fetch ab-bnn-imagenet-reactnet18 --legacy           # or: original weights + code, SHA-256 check, QONNX build (+ legacy cross-check)
 bitino bench ab-bnn-imagenet-reactnet18 --threads 4
 bitino validate ab-bnn-imagenet-reactnet18                 # runtime vs numpy executor vs source framework
 ```
@@ -84,12 +91,16 @@ bitino validate ab-bnn-imagenet-reactnet18                 # runtime vs numpy ex
 How `fetch` works:
 - It downloads the weights from where the authors published them, into a fresh directory, and checks their SHA-256.
 - It downloads the authors' model code, pinned to the recorded commit.
-- It runs the converter with `python -I`; checkpoints are read with `torch.load(weights_only=True)` only.
-- The converted data section is compared with the published conversion: `IDENTICAL` means bit-identical weights and
-  constants.
+- It builds through QONNX: the network's writer reads the checkpoint (`python -I`; checkpoints are read with
+  `torch.load(weights_only=True)` only) and writes the canonical QONNX file `model.qonnx.onnx`, which
+  `bitino import-qonnx` turns into `model.bitino` with no import argument. The QONNX files stay next to the `.bitino`
+  files.
+- Every built file's data section and graph are compared with the published conversion: `IDENTICAL` means
+  bit-identical weights, constants and graph.
 
-Converters run in the source framework's environment (`envs/`). Without a dataset, `fetch` generates a small synthetic
-eval set: enough for conversion and runtime checks, not for accuracy numbers.
+Writers run in the source framework's environment, the importer in `qonnx` (`envs/`). Without a dataset, `fetch`
+generates a small synthetic eval set: enough for the build, not for accuracy numbers. `--legacy` also runs the original
+converter as a cross-check and computes the source framework's outputs that `bitino validate` compares against.
 </details>
 
 <details>
@@ -114,6 +125,10 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
   - Faster than Larq Compute Engine on every model on every core measured: **1.35×** on a Cortex-X3, 1.14× on a
     Cortex-A715, 1.24× on a Cortex-A510, 1.12× on a Cortex-A75, 1.11× on a 32-bit Cortex-A53; and **1.6–2.05×**
     faster than daBNN on its own models.
+- **One standard format.** All 132 networks, float and full-integer, are QONNX files in standard operators only.
+  One importer builds every file of the zoo from them: all 486 files come out identical in data and graph to the
+  published ones ([docs/qonnx-standard.md](docs/qonnx-standard.md)). A new network needs a QONNX file, not a new
+  converter.
 - **Real networks, verified.** 132 published BNNs from ten frameworks. Each conversion is checked against a float64
   evaluation of the source model (the source framework itself wherever it has a float64 mode). The exact `neon` stage is bit-identical with the reference executor.
 - **Matches the papers.** On all 50,000 ImageNet validation images, 53 of the 55 converted classifiers are within
@@ -123,8 +138,8 @@ adb shell /data/local/tmp/bitino_bench --model /data/local/tmp/model.bitino --th
   little cores help instead of holding the big ones back: the median network runs 2.6× (OnePlus Open), 3.5× (moto
   e13) and 4.8× (Redmi 9A) faster at 8 threads than at 1, and outputs are byte-identical at every thread count.
 - **Full-integer path.** `int8_full` runs the whole network in integers (binary convs, int8 everything else). That is
-  about 0.85× the float latency on the measured phones, for 0.3–3 pt of top-1 (measured per file on the 50,000
-  validation images).
+  about 0.85× the float latency on the measured phones, for a median 0.84 pt of top-1 on 48 of the 50 ImageNet
+  files (measured per file on the 50,000 validation images; two files collapse, see [Limitations](#limitations)).
 - **Honest numbers.** Every timing comes from real hardware: four Android phones and an x86-64 host, with date, thread
   setting and clock state recorded. Emulators are used for correctness only, never for speed.
 - **Runs everywhere a CPU does.**
@@ -429,6 +444,7 @@ the original model, run by its own framework, against Bitino's exact stage.
 
 | | |
 |---|---|
+| **Model format** | QONNX (profile `bitino-qonnx/1`: standard ONNX opsets 17–21 + `BipolarQuant` / `IntQuant`; [docs/qonnx-profile.md](docs/qonnx-profile.md)), checked by `bitino check-qonnx`, compiled by `bitino import-qonnx` into `.bitino` |
 | **Checkpoint formats** | Larq Zoo and Keras/Larq `.h5`; PyTorch state dicts and Lightning checkpoints (AB-BNN, ReActNet / Bi-Real / IR-Net families, BNext, bitorch, BNAS, BHViT, Bi-ViT, BiBERT, restoration and super-resolution BNNs, …); OpenVINO IR; ONNX (daBNN); FINN-ONNX / QONNX; Brevitas; NNCF; MindSpore; tensorpack and Theano/Lasagne `.npz` |
 | **Operators** | Binary Conv2D / Dense / MatMul with exact padding correction and fused thresholds; float Conv2D / depthwise / Dense / pooling / elementwise; transformer blocks (attention, LayerNorm, GELU, softmax); full-integer `I8*` operators ([docs/operators.md](docs/operators.md)) |
 | **Kernels** | Scalar reference for every op; NEON (`binary_neon`, `float_opt`, `int8_neon` with SDOT / SMMLA) on arm64 and AArch32; x86-64 AVX2 / AVX-VNNI. Selected at run time from the CPU features |
@@ -441,15 +457,19 @@ More: [architecture](docs/architecture.md) · [model format](docs/model-format.m
 
 ## Add a model
 
-1. Add the network to `registry/models.json`: checkpoint URL, SHA-256, licences, provenance.
-2. Convert it with the closest converter in `tools/convert_*.py`, or write an adapter in `python/bitino/adapters/`.
-3. Validate it with `tools/validate_model.py` on the host, then on a device.
-4. `tools/build_recipes.py --artifacts <dir>` writes its fetch recipe; `tools/build_site.py` refreshes the tables.
+A new network needs a QONNX file, not a converter.
 
-Walk-through: [docs/adding-a-model.md](docs/adding-a-model.md). Brevitas and QONNX / FINN-ONNX models can also be
-imported directly: [docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md). Every network in the zoo also has a
-canonical QONNX file (standard ONNX + QONNX operators) from which its `.bitino` files are built byte for byte:
-[docs/qonnx-standard.md](docs/qonnx-standard.md).
+1. Add the network to `registry/models.json`: checkpoint URL, SHA-256, licences, provenance.
+2. Write its QONNX file: Brevitas and FINN export QONNX directly; PyTorch, Keras / Larq and the other front ends have a
+   writer (`tools/export_*_qonnx.py`). `bitino check-qonnx model.onnx` checks it against the profile.
+3. `bitino import-qonnx model.onnx --model-id ID --out-dir DIR` compiles it into `.bitino`; validate it with `tools/validate_model.py` on the host,
+   then on a device.
+4. Add its route and recipe (`tools/build_from_qonnx.py --write-routes`, `tools/build_recipes.py --artifacts <dir>`);
+   `tools/build_site.py` refreshes the tables.
+
+Guides: [docs/qonnx-standard.md](docs/qonnx-standard.md) (the standard),
+[docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md) (step by step),
+[docs/adding-a-model.md](docs/adding-a-model.md).
 
 ## Contributing
 
@@ -480,6 +500,9 @@ Questions and ideas: [Discussions](https://github.com/fedeloper/bitino/discussio
   (CIFAR, restoration, deepfake detection, embeddings) only on small conversion-check subsets (mostly 128 inputs).
 - **Fetch recipes.**
   - 131 of 132 ran end to end from an empty cache. One is broken upstream: S2-BNN, whose OneDrive link has expired.
+  - All 132 were rebuilt through the QONNX path with the recorded files (S2-BNN from a local copy): 385 of 385 float
+    and derived files identical in data and graph. The int8 files need your calibration images; with the recorded
+    CIFAR-10 calibration set, ReCU ResNet-20's int8 file came out identical too.
   - Google Drive can refuse a scripted download; `fetch` then prints the link to download by hand.
   - Some recipes need a second environment, listed in `envs/`.
 - **File format v1** keeps the on-disk magic `BFMODEL1` from the format's original name, so older files stay readable

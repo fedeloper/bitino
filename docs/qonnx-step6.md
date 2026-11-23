@@ -214,6 +214,9 @@ Nothing of the five tasks is open; every file is identical. Points that are scop
    files and needs the writers' environments (`.cache/venv-qonnx2`, `venv-larq`, the conda envs of step 3) in the
    recipe environments. The QONNX route is recorded separately in `registry/qonnx_routes.json` and run by
    `tools/build_from_qonnx.py`. Switch `fetch` (and publish the writers), or keep fetch as the public legacy path?
+   **Switched (2026-11-23, development tree only, nothing exported):** the recipes' `steps` are the QONNX route and
+   the converters are `crosscheck.steps` (`fetch --legacy`); see
+   [qonnx-standard.md § bitino fetch](qonnx-standard.md#bitino-fetch-the-users-build-path).
 2. **The `*_unfused` files are converter by-products, not derivations** (§ 1). 91 are the `--no-fold` import of the
    parent's canonical file; 93 have canonical files of their own written from the legacy adapter's pre-pass graph
    (the step-3 precedent). Keep both forms, or redefine the unfused files as the importer's pre-pass graph (`--no-fold`

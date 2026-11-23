@@ -100,6 +100,11 @@ def step4_models() -> list:
     return [k for k, v in recipes().items() if v.get("converter") in FAMILIES]
 
 
+def checkpoint_of(args) -> str:
+    """The checkpoint: --weights (bitino fetch: the recipe's download) or the registry's local cache path."""
+    return getattr(args, "weights", None) or local_checkpoint(args.model_id, args.cache_dir)
+
+
 def local_checkpoint(model_id: str, cache: str) -> str:
     rec = recipes()[model_id]
     models = {m["model_id"]: m for m in json.load(open(os.path.join(ROOT, "registry", "models.json")))["models"]}
@@ -124,7 +129,7 @@ def src_dabnn(args, rec, entry, x):
 
     import convert_dabnn as cd
     from bitino.adapters import onnx_dabnn
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     model = onnx.load(ck)
     g0, info = onnx_dabnn.convert(model, binarize="ge", pad_value=-1)        # the published variant (convert_dabnn main)
     out = {"framework": "onnx (daBNN model zoo)", "framework_version": f"onnx {onnx.__version__}",
@@ -156,8 +161,8 @@ def src_fdabnn(args, rec, entry, x):
     import convert_s12_cifar as cs
     from bitino.adapters import mindspore_ckpt, mindspore_fdabnn
     torch.set_num_threads(args.threads)
-    ck = local_checkpoint(args.model_id, args.cache_dir)
-    repo = os.path.join(args.cache_dir, "repos", "mindspore-models-FDA-BNN")
+    ck = checkpoint_of(args)
+    repo = getattr(args, "fdabnn_src", None) or os.path.join(args.cache_dir, "repos", "mindspore-models-FDA-BNN")
     params = mindspore_ckpt.read(ck)
     want = {d["file"]: d["sha256"] for d in rec.get("downloads", []) if d["name"] in ("quan", "resnet")}
     got = {f: sha256_file(os.path.join(repo, f)) for f in want}
@@ -193,7 +198,7 @@ def src_tensorpack(args, rec, entry, x):
     import dorefa_alexnet_reference as port
     from bitino.adapters import tensorpack_dorefa
     torch.set_num_threads(args.threads)
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     params = port.load(ck)
     g0, info = tensorpack_dorefa.convert(params, args.model_id)
     p = {k[:-2] if k.endswith(":0") else k: v for k, v in params.items()}
@@ -234,11 +239,11 @@ def src_nncf(args, rec, entry, x):
     from bitino.adapters import torch_nncf
     torch.set_num_threads(args.threads)
     mode = cn.MODELS[args.model_id]
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     ck_sha = sha256_file(ck)
-    state = os.path.join(args.cache_dir, "derived-nncf", f"resnet18_{mode}.state.pt")
-    cfg = os.path.join(args.cache_dir, "repos", "nncf-v2.5.0", "examples", "torch", "classification", "configs", "binarization",
-                       f"resnet18_imagenet_binarization_{mode}.json")
+    state = getattr(args, "nncf_state", None) or os.path.join(args.cache_dir, "derived-nncf", f"resnet18_{mode}.state.pt")
+    cfg = os.path.join(getattr(args, "nncf_repo", None) or os.path.join(args.cache_dir, "repos", "nncf-v2.5.0"), "examples", "torch",
+                       "classification", "configs", "binarization", f"resnet18_imagenet_binarization_{mode}.json")
     model, meta, n_loaded, n_state = cn.build_model(state, cfg)
     if meta["source_sha256"] != ck_sha:
         raise SystemExit("derived NNCF state was not extracted from the checkpoint")
@@ -277,7 +282,7 @@ def src_omz(args, rec, entry, x):
     from bitino import passes
     from bitino.adapters import openvino_ir as oi
     sub, prec, stem = co.MODELS[args.model_id]
-    d = os.path.join(args.cache_dir, "checkpoints", sub, prec)
+    d = os.path.join(getattr(args, "checkpoint_dir", None) or os.path.join(args.cache_dir, "checkpoints"), sub, prec)
     xml, binf = os.path.join(d, stem + ".xml"), os.path.join(d, stem + ".bin")
     m = re.search(r"sha256 ([0-9a-f]{64})", entry["checkpoint"].get("download_status", ""))
     xml_sha, bin_sha = sha256_file(xml), sha256_file(binf)
@@ -347,7 +352,7 @@ def src_finn(args, rec, entry, x):
     from bitino import passes
     from bitino.adapters import finn_bnn, finn_onnx
     cfg = cf.MODELS[args.model_id]
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     raw = zipfile.ZipFile(io.BytesIO(open(ck, "rb").read())).read(cfg["member"])
     if hashlib.sha256(raw).hexdigest() != cfg["member_sha256"]:
         raise SystemExit(f"{cfg['member']}: SHA-256 differs from {cfg['member_sha256']}")
@@ -392,7 +397,7 @@ def src_bnnpynq(args, rec, entry, x):
     from bitino import passes
     from bitino.adapters import bnn_pynq_npz, finn_bnn
     cfg = cb.MODELS[args.model_id]
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     with np.load(ck, allow_pickle=False) as f:
         arrs = [np.asarray(f[f"arr_{i}"]) for i in range(len(f.files))]
     ev = rec["eval"]
@@ -400,10 +405,10 @@ def src_bnnpynq(args, rec, entry, x):
     pre = json.load(open(os.path.join(eval_dir, "manifest.json")))["preprocessing"][cfg["pre"]]
     x_file = os.path.join(eval_dir, pre["file"])
     tdir = tempfile.mkdtemp(prefix="bnnpynq_s4_", dir=args.tmp_dir)
-    targs = argparse.Namespace(theano_python=os.path.join(args.cache_dir, "env-theano27", "bin", "python"),
+    targs = argparse.Namespace(theano_python=getattr(args, "theano_python", None) or os.path.join(args.cache_dir, "env-theano27", "bin", "python"),
                                theano_compiledir=os.path.join(args.tmp_dir, "theanoc"), npz=ck,
-                               lasagne_dir=os.path.join(args.cache_dir, "downloads-s7", "lasagne", "Lasagne-master"),
-                               bnnpynq_dir=os.path.join(args.cache_dir, "repos", "bnn-pynq", "bnn", "src", "training"))
+                               lasagne_dir=getattr(args, "lasagne_dir", None) or os.path.join(args.cache_dir, "downloads-s7", "lasagne", "Lasagne-master"),
+                               bnnpynq_dir=getattr(args, "bnnpynq_dir", None) or os.path.join(args.cache_dir, "repos", "bnn-pynq", "bnn", "src", "training"))
     os.makedirs(targs.theano_compiledir, exist_ok=True)
     d32 = cb.theano_run(targs, cfg, x_file, pre["shape"], "float32", os.path.join(tdir, "f32.npz"))
     wq32 = [d32[f"wq_{k}"] for k in range(len([k for k in d32 if k.startswith("wq_")]))]
@@ -495,7 +500,7 @@ def src_brevitas(args, rec, entry, x):
     from bitino.adapters import brevitas_bnn
     torch.set_num_threads(args.threads)
     cfg_name, _, _ = cv.MODELS[args.model_id]
-    ck = local_checkpoint(args.model_id, args.cache_dir)
+    ck = checkpoint_of(args)
     model, src_hashes, cfg_dict, n_tensors = cv.load_model(cfg_name, ck)
     gf, _ = brevitas_bnn.convert(model, args.model_id, fused=True)       # also the adapter's module / quantizer checks
     passes.optimize(gf, fold=False)
@@ -600,7 +605,7 @@ def stage1(args) -> int:
         os.makedirs(sdir, exist_ok=True)
         np.savez(os.path.join(sdir, "spec.npz"), **{f"i{j}": v for j, v in enumerate(spec.inits.values())})
         exp = {"model_id": args.model_id, "family": fam, "file": var["file"], "legacy_converter": rec["converter"],
-               "adapter": rec.get("adapter"), "checkpoint_file": os.path.basename(local_checkpoint(args.model_id, args.cache_dir)),
+               "adapter": rec.get("adapter"), "checkpoint_file": os.path.basename(checkpoint_of(args)),
                "checkpoint_sha256": ck, "framework": f"{src['framework_version']}, numpy {np.__version__}, python {platform.python_version()}",
                "exporter": f"tools/export_ir_qonnx.py@{commit or 'unknown'} direct writer ({fam})",
                "source": src.get("source"), "import_args": [], "import_options": opts, "writer": w.report, "ir_nodes": len(g0.nodes),
@@ -686,6 +691,15 @@ def main() -> int:
     ap.add_argument("--tmp-dir", default=os.environ.get("TMPDIR", "/tmp"), help="scratch directory (Theano compile cache: no spaces)")
     ap.add_argument("--assemble", metavar="DIR", help="stage 2 only (venv-qonnx): assemble DIR/spec into DIR/model.onnx")
     ap.add_argument("--list", action="store_true", help="print the step-4 model ids and their stage-1 environments")
+    # bitino fetch: the recipe's own downloads and source trees instead of the checkout's cache layout
+    ap.add_argument("--weights", help="checkpoint (default: the registry's local_cache_path under --cache-dir)")
+    ap.add_argument("--checkpoint-dir", help="omz: OpenVINO IR root <dir>/<model>/<precision>/ (default <cache>/checkpoints)")
+    ap.add_argument("--fdabnn-src", help="fdabnn: directory with the official src/quan.py and src/resnet.py")
+    ap.add_argument("--nncf-state", help="nncf: tensors-only state of the checkpoint (tools/nncf_extract_state.py)")
+    ap.add_argument("--nncf-repo", help="nncf: NNCF source tree (v2.5.0) with the binarization configs")
+    ap.add_argument("--theano-python", help="bnnpynq: Python 2.7 Theano interpreter (default <cache>/env-theano27/bin/python)")
+    ap.add_argument("--lasagne-dir", help="bnnpynq: Lasagne source tree")
+    ap.add_argument("--bnnpynq-dir", help="bnnpynq: bnn/src/training of the BNN-PYNQ source tree")
     args = ap.parse_args()
     if args.list:
         for m in step4_models():

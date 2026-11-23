@@ -4,7 +4,7 @@ Model zoo:
   bitino list [--task T] [--family F] [--framework F] [--converted] [--strict] [--release] [--json]
   bitino info MODEL_ID
   bitino fetch MODEL_ID [--eval-dir D] [--python ENV=PY] [--file NAME=PATH] [--source NAME=DIR]
-                          [--int8 --calib-dir D] [--dry-run]
+                          [--int8 --calib-dir D] [--legacy] [--dry-run]
   bitino run MODEL_ID|FILE [--image F.jpg ... | --input X.f32 | --random N] [--bench] [--int8] [--stage S]
                              [--threads N] [--top K] [--labels FILE]
   bitino bench MODEL_ID|FILE [--stage S] [--threads N] [--iterations I] [--warmup W] [--affinity C] [--json P]
@@ -155,17 +155,24 @@ def cmd_fetch(a) -> int:
         else:
             rec = F.fetch(a.model_id, eval_dir=a.eval_dir, files=kv_list(a.file), sources=kv_list(a.source),
                           python=kv_list(a.python), int8=a.int8, calib_dir=a.calib_dir, synthetic_n=a.synthetic_n,
-                          dry_run=a.dry_run, threads=a.threads)
+                          dry_run=a.dry_run, threads=a.threads, legacy=a.legacy)
     except F.FetchError as e:
         print(f"fetch failed: {e}", file=sys.stderr)
         return 1
     if a.dry_run:
         return 0
     res = rec.get("results", {})
-    print(json.dumps({"model_id": a.model_id, "dir": zoo.model_dir(a.model_id), "files": res}, indent=1))
-    bad = [k for k, v in res.items() if not v.get("identical_data")]
+    out = {"model_id": a.model_id, "dir": zoo.model_dir(a.model_id), "build": rec.get("build"), "files": res}
+    if rec.get("qonnx_files"):
+        out["qonnx_files"] = rec["qonnx_files"]
+    if rec.get("crosscheck"):
+        out["crosscheck"] = rec["crosscheck"]
+    print(json.dumps(out, indent=1))
+    bad = [k for k, v in res.items() if not (v.get("identical_data") and v.get("identical_graph") is not False)]
     if bad:
-        print(f"note: data section differs from the published conversion for {bad}", file=sys.stderr)
+        print(f"note: data section or graph differs from the published conversion for {bad}", file=sys.stderr)
+    if rec.get("crosscheck") and not rec["crosscheck"].get("agree"):
+        print("note: the legacy converter's files differ from the QONNX-built ones (see crosscheck)", file=sys.stderr)
     return 0 if res else 1
 
 
@@ -396,10 +403,20 @@ def cmd_validate(a) -> int:
     if not os.path.isdir(d):
         print(f"{a.model_id} not fetched; run `bitino fetch {a.model_id}`", file=sys.stderr)
         return 3
+    if not os.path.exists(os.path.join(d, "reference_logits.f32")):
+        # the QONNX build checks identity with the published file; the source framework's reference outputs come from
+        # the legacy converter's cross-check run (fetch --legacy), whose model files are compared with the QONNX ones
+        ld = os.path.join(d, "legacy")
+        if not os.path.exists(os.path.join(ld, "reference_logits.f32")):
+            print(f"{a.model_id}: no reference outputs of the source framework in {d}; the QONNX build checks identity "
+                  f"with the published file only. Run `bitino fetch {a.model_id} --legacy` (the legacy converter computes "
+                  f"them into {ld})", file=sys.stderr)
+            return 3
+        d = ld
     bench = bench_or_die(a.bench)
     eval_dir = a.eval_dir
     if not eval_dir:
-        with open(os.path.join(d, "fetch_record.json")) as f:
+        with open(os.path.join(zoo.model_dir(a.model_id), "fetch_record.json")) as f:
             fr = json.load(f)
         eval_dir = next((c[c.index("--eval-dir") + 1] for c in fr["commands"] if "--eval-dir" in c), None)
     argv = [sys.executable, "-I", os.path.join(ROOT, "tools", "validate_model.py"), "--artifacts", d, "--eval-dir", eval_dir,
@@ -547,13 +564,16 @@ def main(argv=None) -> int:
     inf.add_argument("model_id")
     inf.set_defaults(fn=cmd_info)
 
-    fe = sub.add_parser("fetch", help="download the original weights, verify, convert locally")
+    fe = sub.add_parser("fetch", help="download the original weights, verify, build locally through QONNX")
     fe.add_argument("model_id")
     fe.add_argument("--eval-dir", help="real eval set (default: a small synthetic one)")
     fe.add_argument("--python", action="append", metavar="ENV=PATH", help="python of a reference env, e.g. larq=/venv/bin/python")
     fe.add_argument("--file", action="append", metavar="NAME=PATH", help="use an already downloaded file (SHA-256 still checked)")
     fe.add_argument("--source", action="append", metavar="NAME=DIR", help="use a local source tree instead of downloading it")
-    fe.add_argument("--int8", action="store_true", help="also quantize to int8_full with the recorded flags")
+    fe.add_argument("--int8", action="store_true", help="also quantize to int8_full with the recorded flags (your calibration "
+                    "images), write its canonical QONNX file and re-import it (must equal the quantizer output)")
+    fe.add_argument("--legacy", action="store_true", help="also run the legacy converter (tools/convert_*.py) as a cross-check "
+                    "into <model dir>/legacy/ (and its source-framework reference outputs, used by `bitino validate`)")
     fe.add_argument("--calib-dir", help="calibration set for --int8 (training split; not redistributed)")
     fe.add_argument("--synthetic-n", type=int, default=8)
     fe.add_argument("--threads", type=int, default=4)

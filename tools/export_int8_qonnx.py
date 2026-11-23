@@ -16,6 +16,16 @@ registry/recipes.json -> expected[<file>]. The model metadata (§ 6) comes from 
 source code, eval set), registry/eval_sets via the eval manifest (preprocessing) and the file's own manifest
 (framework, checkpoint SHA-256). The written file is refused unless it passes check-qonnx with no error and no
 warning.
+
+`bitino fetch --int8` (python/bitino/fetch.py) uses --source instead: the source is the quantizer output of the
+user's own run (tools/quantize_int8_full.py with the user's calibration images), written as is; its hashes are
+recorded and compared with the recipe's (equal only when the calibration samples and the quantizer are the recorded
+ones), never required. The calibration metadata then comes from that file's own manifest (quantization.calibration),
+the preprocessing from --eval-dir. fetch re-imports the canonical file and requires the result to equal the
+quantizer output (data + graph SHA-256).
+
+  .cache/venv-qonnx/bin/python -I tools/export_int8_qonnx.py --model-id ID --file model_int8_full.bitino \
+      --source <quantizer output> --eval-dir <eval set> --out model.onnx [--json export.json]
 """
 from __future__ import annotations
 
@@ -70,11 +80,12 @@ def labels_of(em: dict, n_out: int) -> str:
     return json.dumps({"num_classes": n_out, "set": name}) if n_out > 1 else "none"
 
 
-def model_metadata(mid: str, fn: str, g, cache: str, shapes: dict) -> dict:
-    """bitino.* model metadata (docs/qonnx-profile.md § 6) of the canonical int8_full file."""
+def model_metadata(mid: str, fn: str, g, cache: str, shapes: dict, eval_dir: str | None = None, from_source: bool = False) -> dict:
+    """bitino.* model metadata (docs/qonnx-profile.md § 6) of the canonical int8_full file. from_source: the file is a
+    quantizer output of this machine (bitino fetch --int8): its own manifest's calibration, not the recipe's."""
     rec = recipes()[mid]
     ev = rec["eval"]
-    em = json.load(open(os.path.join(cache, "data", ev["dir"], "manifest.json")))
+    em = json.load(open(os.path.join(eval_dir or os.path.join(cache, "data", ev["dir"]), "manifest.json")))
     pre = em["preprocessing"][ev["preprocess"]]
     man = g.manifest or {}
     src = man.get("source", {})
@@ -82,6 +93,11 @@ def model_metadata(mid: str, fn: str, g, cache: str, shapes: dict) -> dict:
     q = man.get("quantization", {})
     entry = next(e for e in rec.get("int8", []) if e["file"] == fn)
     cal = entry["calibration"]
+    if from_source:
+        mc = q.get("calibration") or {}
+        cal = {"set": mc.get("set") or "unknown", "split": mc.get("split") or "unknown", "n": int(mc.get("n") or 0),
+               "tensor_sha256": mc.get("tensor_sha256") or "unknown", "range": mc.get("range", "?"),
+               "preprocessing": mc.get("preprocessing", "?")}
     gathers = {n.inputs[1]: g.constants[n.inputs[0]].shape[0] for n in g.nodes
                if n.op == "I8Gather" and len(n.inputs) > 1 and n.inputs[0] in g.constants}
     if len(g.inputs) == 1 and g.inputs[0]["dtype"] == "f32":
@@ -106,7 +122,7 @@ def model_metadata(mid: str, fn: str, g, cache: str, shapes: dict) -> dict:
                                f"bitino.qonnx_int8 group mapping)",
             "bitino.calibration": json.dumps({"set": cal["set"], "split": cal["split"], "n": int(cal["n"]),
                                               "tensor_sha256": cal["tensor_sha256"]}),
-            "bitino.notes": (f"published file {fn} (quantized {q.get('date', entry.get('date', '?'))}, "
+            "bitino.notes": (f"{'quantizer output' if from_source else 'published file'} {fn} (quantized {q.get('date', entry.get('date', '?'))}, "
                              f"{q.get('scheme', 'int8_full')[:60]}...; options {json.dumps(entry.get('options', {}), sort_keys=True)}); "
                              f"calibration range {cal.get('range', '?')}, preprocessing {cal.get('preprocessing', '?')}; "
                              f"group mapping (one ONNX group per int8 IR node, bitino.import)")}
@@ -118,23 +134,26 @@ def model_metadata(mid: str, fn: str, g, cache: str, shapes: dict) -> dict:
     return meta
 
 
-def export(mid: str, fn: str, out: str, artifacts: str, cache: str, shapes_kinds=None) -> dict:
+def export(mid: str, fn: str, out: str, artifacts: str, cache: str, shapes_kinds=None, source: str | None = None,
+           eval_dir: str | None = None) -> dict:
     """Write the canonical file; returns the export record (raises if the published file does not have the recipe's
-    hashes or the written file does not pass check-qonnx)."""
+    hashes or the written file does not pass check-qonnx). source: a quantizer output to write instead of the
+    published file (bitino fetch --int8); its hashes are recorded and compared with the recipe's, not required."""
     import onnx
 
     from bitino import format as bff, qonnx_int8 as qi
     from bitino.fetch import data_sha256, graph_sha256
     from bitino.qonnx_profile import check_model
-    pub = os.path.join(artifacts, mid, fn)
+    pub = source or os.path.join(artifacts, mid, fn)
     exp = recipes()[mid]["expected"][fn]
     hp = {"data_sha256": data_sha256(pub), "graph_sha256": graph_sha256(pub)}
-    if hp["data_sha256"] != exp["data_sha256"] or hp["graph_sha256"] != exp["graph_sha256"]:
+    same = hp["data_sha256"] == exp["data_sha256"] and hp["graph_sha256"] == exp["graph_sha256"]
+    if not same and not source:
         raise RuntimeError(f"{mid}/{fn}: the published file does not have the recipe's expected hashes")
     g = bff.read(pub)
     shapes, kinds = shapes_kinds or qi.ir_shapes_kinds(g)
     spec, rep = qi.write_spec_int8(g, shapes, kinds)
-    meta = model_metadata(mid, fn, g, cache, shapes)
+    meta = model_metadata(mid, fn, g, cache, shapes, eval_dir, from_source=bool(source))
     spec.meta.update(meta)
     m = qi.build_model(spec, "bitino tools/export_int8_qonnx.py", extra_meta={"bitino.exporter": meta["bitino.exporter"]
                                                                              + f"; onnx {onnx.__version__}"})
@@ -144,10 +163,13 @@ def export(mid: str, fn: str, out: str, artifacts: str, cache: str, shapes_kinds
         raise RuntimeError(f"{mid}/{fn}: the written file does not pass check-qonnx: "
                          + "; ".join(f"{f.code} {f.message[:160]}" for f in cr.errors + cr.warnings))
     onnx.save(m, out)
-    rec = {"model_id": mid, "file": fn, "published": hp, "writer": rep, "ir_nodes": len(g.nodes), "ir_constants": len(g.constants),
+    rec = {"model_id": mid, "file": fn, ("source" if source else "published"): hp, "writer": rep, "ir_nodes": len(g.nodes), "ir_constants": len(g.constants),
            "onnx_file": os.path.basename(out), "onnx_sha256": sha256_file(out), "onnx_bytes": os.path.getsize(out),
            "onnx_nodes": len(m.graph.node), "onnx": onnx.__version__, "metadata": meta,
            "profile_check": {"passed": True, "summary": cr.summary, "warnings": []}}
+    if source:
+        rec["source_file"] = os.path.abspath(source)
+        rec["source_equals_recipe"] = same
     return rec
 
 
@@ -159,8 +181,10 @@ def main() -> int:
     ap.add_argument("--artifacts-dir", default=os.path.join(ROOT, "artifacts"))
     ap.add_argument("--cache-dir", default=os.path.join(ROOT, ".cache"))
     ap.add_argument("--json", help="export record (JSON)")
+    ap.add_argument("--source", help="write this quantizer output instead of the published file (bitino fetch --int8)")
+    ap.add_argument("--eval-dir", help="eval set for the preprocessing metadata (default <cache>/data/<recipe eval dir>)")
     a = ap.parse_args()
-    rec = export(a.model_id, a.file, a.out, a.artifacts_dir, a.cache_dir)
+    rec = export(a.model_id, a.file, a.out, a.artifacts_dir, a.cache_dir, source=a.source, eval_dir=a.eval_dir)
     if a.json:
         json.dump(rec, open(a.json, "w"), indent=1, default=str)
     print(f"exported {a.model_id}/{a.file} -> {a.out} ({rec['onnx_bytes']} bytes, sha256 {rec['onnx_sha256'][:16]}, "

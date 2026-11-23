@@ -98,7 +98,8 @@ def recipe_of(model_id: str) -> dict:
 
 
 def recipe_args(rec: dict) -> dict:
-    a = rec["steps"][0]["args"]
+    """Arguments of the recipe's legacy converter step (crosscheck.steps; the recipe's steps before the QONNX build path)."""
+    a = ((rec.get("crosscheck") or {}).get("steps") or rec["steps"])[0]["args"]
     out = {}
     i = 0
     while i < len(a):
