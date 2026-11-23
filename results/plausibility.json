@@ -1,6 +1,6 @@
 {
  "schema": "bitino.results.v1.plausibility",
- "generated": "2026-11-20",
+ "generated": "2026-11-23",
  "rules": [
   "1 thread, latest run per (file, stage): a mode meant to be faster must not be more than 5 % slower than the mode it replaces: int8_full (best of its files) vs the float stage 'all'; optimized_int8 vs 'all'"
  ],
@@ -59,11 +59,11 @@
    "device": "oneplus-open",
    "model_id": "bibert-bert-base-mrpc",
    "check": "int8_full slower than float (all)",
-   "ms": 49.24,
-   "float_ms": 45.231,
-   "ratio": 1.089,
+   "ms": 49.146,
+   "float_ms": 45.171,
+   "ratio": 1.088,
    "file": "model_int8_full.bitino",
-   "plan": "threads_20261119_2159_cph2551-v2"
+   "plan": "threads_20261120_1359_cph2551-fix20-fix"
   },
   {
    "device": "oneplus-open",
@@ -129,11 +129,11 @@
    "device": "oneplus-open",
    "model_id": "siman-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 0.604,
-   "float_ms": 0.56,
-   "ratio": 1.079,
+   "ms": 0.636,
+   "float_ms": 0.528,
+   "ratio": 1.204,
    "file": "model_int8_full.bitino",
-   "plan": "threads_20261119_2159_cph2551-v2"
+   "plan": "threads_20261120_1350_cph2551-fix20-fix"
   },
   {
    "device": "moto-e13",
@@ -209,11 +209,11 @@
    "device": "moto-e13",
    "model_id": "siman-resnet20-cifar10",
    "check": "int8_full slower than float (all)",
-   "ms": 2.434,
-   "float_ms": 1.995,
-   "ratio": 1.22,
+   "ms": 2.444,
+   "float_ms": 1.992,
+   "ratio": 1.227,
    "file": "model_int8_full.bitino",
-   "plan": "threads_20261119_2159_moto-e13-v2"
+   "plan": "threads_20261120_1353_moto-e13-fix20-v2"
   },
   {
    "device": "s22",

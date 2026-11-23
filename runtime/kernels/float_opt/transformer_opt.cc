@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 #include "kernels/bitpack.h"
@@ -1156,6 +1157,20 @@ bool reduce_mean_fast_supported(const KernelContext& ctx) {
   return split_axis(ctx.in(0).shape(), ctx.attrs().get_int("axis", -1)).inner == 1 && ctx.in(0).size() > 0;
 }
 
+// BinarizeThreshold (fold_runtime_thresholds, src/graph_rewrite.h): the threshold vector of a run-time scalar b, so
+// that x >= t (gt: x > t) is exactly fl(x + b) >= 0 (> 0) for every x (ops/op_defs_fused.cc).
+class BinarizeThresholdOpt : public Kernel {
+ public:
+  void run(const KernelContext& ctx) override {
+    const float b = ctx.in(0).data<float>()[0];
+    const bool gt = ctx.attrs().get_string("input_binarize", "ge") == "gt";
+    float t = -b;
+    if (!gt && !std::isfinite(b)) t = b > 0 ? -std::numeric_limits<float>::max() : std::numeric_limits<float>::quiet_NaN();
+    Tensor& y = ctx.out(0);
+    std::fill_n(y.data<float>(), y.size(), t);
+  }
+};
+
 // PackBits (shared binarization of a tensor read by several binary layers): the packing of the binary kernels'
 // inputs, NEON on AArch64 (bdense.neon pack_rows: whole words when C % 32 == 0 and no threshold), else
 // pack_row_f32. Bit-identical to what each consumer would pack.
@@ -1221,6 +1236,8 @@ void register_float_opt_transformer_kernels(OpRegistry& reg) {
   reg.add_kernel({"LayerNorm", "layernorm.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, nullptr, make_kernel<LayerNormFast>});
   reg.add_kernel({"Softmax", "softmax.float_fast", "float_opt", kFloatFastPriority, kFloatOptFeatures, nullptr, make_kernel<SoftmaxFast>});
   reg.add_kernel({"PackBits", "pack_bits.float_opt", "float_opt", 40, kFloatOptFeatures, nullptr, make_kernel<PackBitsOpt>});
+  reg.add_kernel({"BinarizeThreshold", "binarize_threshold.float_opt", "float_opt", 40, kFloatOptFeatures, nullptr,
+                  make_kernel<BinarizeThresholdOpt>});
 #if !BF_FLOAT_OPT_NEON32
   // Not on 32-bit ARM: AArch32 NEON flushes denormals, so GELU's tiny negative results (x << 0) become +-0 and the
   // output sign (which BiBERT binarizes) would differ from the reference; the float_opt GELU stays in use there.

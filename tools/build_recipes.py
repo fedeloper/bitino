@@ -106,6 +106,9 @@ ENVS = {
                     "Faster Than Lies model.py and the BNext definition import them)"},
     "nncf": {"python": "3.10", "requirements": "envs/nncf-requirements.txt", "note": "nncf 2.9.0 + torch 2.1.2"},
     "qonnx": {"python": "3.12", "requirements": "envs/qonnx-freeze.txt", "note": "qonnx 1.0.0 + onnx + onnxruntime"},
+    "qonnx2": {"python": "3.12", "requirements": "envs/qonnx2-freeze.txt",
+               "note": "torch 2.6.0+cpu + torchvision 0.21.0+cpu + onnx 1.17.0 + timm 1.0.27 (QONNX phase 2: "
+                       "tools/export_torch_qonnx.py; torch.onnx.export needs the onnx package, which the torch env does not have)"},
     "theano27": {"python": "2.7", "requirements": "envs/theano27-conda-export.txt",
                  "note": "Python 2.7 + Theano 1.0.4 + Lasagne (BNN-PYNQ reference)"},
     "mindspore": {"python": "3.11", "requirements": None, "note": "MindSpore CPU (FDA-BNN official logits step)"},

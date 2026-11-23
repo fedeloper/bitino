@@ -12,6 +12,8 @@ Model zoo:
   bitino import-qonnx MODEL.onnx --model-id ID --out-dir D [--eval-dir D --preprocess K] [--input-domain uint8|unit8|float32]
                           [--bench PATH] [--python PY]   (QONNX route, docs/qonnx-frontend.md; needs onnx + qonnx,
                           e.g. --python .cache/venv-qonnx/bin/python; `bitino import-qonnx --help` for all options)
+  bitino check-qonnx MODEL.onnx [...] [--json OUT|-] [--strict] [--python PY]
+                          (validate against the Bitino QONNX profile v1, docs/qonnx-profile.md; needs onnx)
   bitino deepfake MODEL_ID|FILE IMAGE|DIR... [--stage S] [--threads N] [--affinity C] [--repeat R]
                           ("Faster Than Lies" detectors: real/fake score and per-frame time, via bitino_deepfake)
 
@@ -410,6 +412,35 @@ def cmd_validate(a) -> int:
     return subprocess.call(argv)
 
 
+def _onnx_python(py: str | None) -> str | None:
+    """Interpreter for the onnx-based subcommands: --python, else None when onnx is importable here, else
+    .cache/venv-qonnx/bin/python of the checkout when it exists."""
+    if py:
+        return py
+    try:
+        import onnx  # noqa: F401
+        return None
+    except ImportError:
+        cand = os.path.join(ROOT, ".cache", "venv-qonnx", "bin", "python")
+        return cand if os.path.exists(cand) else ""
+
+
+def cmd_check_qonnx(a) -> int:
+    """Profile check of QONNX files (bitino.qonnx_profile). In-process when onnx is importable, else through
+    tools/check_qonnx.py in --python or .cache/venv-qonnx/bin/python (python -I)."""
+    rest = list(a.args)
+    if rest and rest[0] == "--":
+        rest = rest[1:]
+    py = _onnx_python(a.python)
+    if py:
+        return subprocess.call([py, "-I", os.path.join(ROOT, "tools", "check_qonnx.py")] + rest)
+    if py == "":
+        print("check-qonnx needs onnx; pass --python .cache/venv-qonnx/bin/python", file=sys.stderr)
+        return 2
+    from .. import qonnx_profile
+    return qonnx_profile.main(rest)
+
+
 def cmd_import_qonnx(a) -> int:
     """QONNX -> .bitino (bitino.qonnx_import). In-process when onnx is importable, else (or with --python) through
     tools/import_qonnx.py in the given interpreter (python -I)."""
@@ -584,6 +615,13 @@ def main(argv=None) -> int:
     iq.add_argument("args", nargs=argparse.REMAINDER)
     iq.set_defaults(fn=cmd_import_qonnx)
 
+    cq = sub.add_parser("check-qonnx", add_help=False,
+                        help="check QONNX files against the Bitino QONNX profile v1 (docs/qonnx-profile.md)")
+    cq.add_argument("--python", help="run the checker in this interpreter (default: here if onnx is importable, "
+                                     "else .cache/venv-qonnx/bin/python)")
+    cq.add_argument("args", nargs=argparse.REMAINDER)
+    cq.set_defaults(fn=cmd_check_qonnx)
+
     r = sub.add_parser("registry", help="research registry of investigated BNNs").add_subparsers(dest="cmd", required=True)
     rl = r.add_parser("list")
     for f in ("family", "task", "precision", "license", "status"):
@@ -611,6 +649,12 @@ def main(argv=None) -> int:
             k = rest.index("--python")
             py, rest = rest[k + 1], rest[:k] + rest[k + 2:]
         return cmd_import_qonnx(argparse.Namespace(python=py, args=rest))
+    if argv and argv[0] == "check-qonnx":    # pass every option through (incl. --help) to bitino.qonnx_profile
+        rest, py = argv[1:], None
+        if "--python" in rest:
+            k = rest.index("--python")
+            py, rest = rest[k + 1], rest[:k] + rest[k + 2:]
+        return cmd_check_qonnx(argparse.Namespace(python=py, args=rest))
     a = p.parse_args(argv)
     try:
         return a.fn(a)

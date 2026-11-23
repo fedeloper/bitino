@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Convert an IR-Net-family checkpoint (ReCU, RBNN, SiMaN, BiPer; adapter torch_irnet) to .bitino and validate it.
 
   python3 tools/convert_irnet.py <recu|rbnn|siman|biper> --model-id ... --repo ... --weights ... \\

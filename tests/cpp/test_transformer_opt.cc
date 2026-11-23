@@ -457,6 +457,89 @@ BF_TEST(threshold_folding_bit_exact) {
   EXPECT_EQ(r.folded, 1);
 }
 
+BF_TEST(runtime_threshold_folding_bit_exact) {
+  // AddBroadcast(x, b), b one value computed at run time (here a graph input; RBNN: -mean(x)), feeding only the
+  // ge / gt binarization of BConv2D and BDense: replaced by BinarizeThreshold (graph_rewrite.cc
+  // fold_runtime_thresholds). Every b including +-0, +-inf, NaN and denormals, and x with ties x == -b, values one ulp
+  // away, +-0, +-inf, NaN and denormals: bit-identical with the reference graph.
+  const float inf = std::numeric_limits<float>::infinity(), nan = std::numeric_limits<float>::quiet_NaN();
+  for (const char* mode : {"ge", "gt"}) {
+    for (float b : {0.37f, -1.25f, 0.f, -0.f, inf, -inf, nan, 1e-40f, -1e-40f}) {
+      const int64_t c = 40, o = 24;
+      std::vector<int8_t> w(o * 9 * c), wd(o * c);
+      std::mt19937 rng(11);
+      for (auto& v : w) v = rng() & 1 ? 1 : -1;
+      for (auto& v : wd) v = rng() & 1 ? 1 : -1;
+      auto wb = bftest::pack_pm1(w, o * 9, c);
+      auto wdb = bftest::pack_pm1(wd, o, c);
+      auto mul = randn(o, 3);
+      const Shape s = {1, 6, 7, c};
+      std::vector<float> x = randn(num_elements(s), 5);
+      const float tie = std::isfinite(b) ? -b : 0.5f;
+      for (size_t i = 0; i < x.size(); ++i) {
+        switch (i % 11) {
+          case 0: x[i] = tie; break;
+          case 1: x[i] = std::nextafter(tie, 1e30f); break;
+          case 2: x[i] = std::nextafter(tie, -1e30f); break;
+          case 3: x[i] = (i & 16) ? 0.f : -0.f; break;
+          case 4: x[i] = (i & 16) ? inf : -inf; break;
+          case 5: x[i] = (i & 16) ? nan : 1e-41f; break;
+          case 6: x[i] = (i & 16) ? -1e-41f : std::numeric_limits<float>::max(); break;
+          default: break;
+        }
+      }
+      bftest::ModelBuilder mb;
+      mb.constant("w", DType::kBit, {o, 3, 3, c}, wb.data());
+      mb.constant("wd", DType::kBit, {o, c}, wdb.data());
+      mb.constant("mul", DType::kF32, {o}, mul.data());
+      mb.input("x", DType::kF32, s);
+      mb.input("b", DType::kF32, {1, 1});
+      mb.node("AddBroadcast", {"x", "b"}, {"t"});
+      Json a = Json::Object{{"pads", ints({1, 1, 1, 1})}, {"input_binarize", mode}};
+      mb.node("BConv2D", {"t", "w", "mul"}, {"y1"}, a);
+      mb.node("BDense", {"t", "wd", "mul"}, {"y2"}, Json(Json::Object{{"input_binarize", mode}}));
+      mb.node("Add", {"y1", "y2"}, {"y"});
+      mb.output("y");
+      auto m = mb.build();
+      const Out ref = run(m, tiers(kRef), {x, {b}});
+      for (int threads : {1, 2, 3}) {
+        SessionOptions so;
+        so.num_threads = threads;
+        so.policy = tiers(kOpt);
+        Session se(m, so);
+        std::memcpy(se.input(0).raw(), x.data(), x.size() * sizeof(float));
+        std::memcpy(se.input(1).raw(), &b, sizeof(float));
+        se.run();
+        EXPECT_EQ(se.runtime_thresholds(), 1);
+        const Tensor& y = se.output(0);
+        expect_identical(std::vector<float>(y.data<float>(), y.data<float>() + y.size()), ref.y,
+                         std::string("runtime threshold ") + mode + " b=" + std::to_string(b));
+      }
+    }
+  }
+  // Not folded: a second use of the sum that is not a binarization, a sign_zero consumer, a b with several values.
+  const int64_t c = 8;
+  std::vector<int8_t> wd(4 * c, 1);
+  auto wdb = bftest::pack_pm1(wd, 4, c);
+  for (int k = 0; k < 3; ++k) {
+    bftest::ModelBuilder mb;
+    mb.constant("wd", DType::kBit, {4, c}, wdb.data());
+    mb.input("x", DType::kF32, {3, c});
+    mb.input("b", DType::kF32, k == 2 ? Shape{3, 1} : Shape{1, 1});
+    mb.node("AddBroadcast", {"x", "b"}, {"t"});
+    mb.node("BDense", {"t", "wd"}, {"y"}, Json(Json::Object{{"input_binarize", k == 1 ? "sign_zero" : "ge"}}));
+    mb.output("y");
+    if (k == 0) {
+      mb.node("Activation", {"t"}, {"y3"}, Json(Json::Object{{"type", "relu"}}));
+      mb.output("y3");
+    }
+    SessionOptions so;
+    so.policy = tiers(kOpt);
+    Session se(mb.build(), so);
+    EXPECT_EQ(se.runtime_thresholds(), 0);
+  }
+}
+
 BF_TEST(scaled_threshold_folding_bit_exact) {
   // ChannelAffine(scale, bias) -> BConv2D / BDense (ge, gt): folded into per-channel thresholds found by bisection
   // (graph_rewrite.cc fold_scaled_thresholds); channels with a negative scale are binarized negated and the

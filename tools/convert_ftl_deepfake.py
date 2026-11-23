@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Convert a "Faster Than Lies" deepfake detector checkpoint (Lanzino et al., CVPRW 2024, arXiv:2406.04932;
 https://github.com/fedeloper/binary_deepfake_detection, BNext4DFR in model.py) to .bitino and validate it.
 

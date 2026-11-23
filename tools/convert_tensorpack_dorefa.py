@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Converter for the tensorpack DoReFa-Net AlexNet W1A1 (``AlexNet-1,1,32.npz``, slice S12).
 
   python3 -I tools/convert_tensorpack_dorefa.py --model-id tensorpack-dorefa-alexnet-w1a1-g32 \

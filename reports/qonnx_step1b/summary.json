@@ -1,0 +1,4957 @@
+{
+ "schema": "bitino.qonnx_step1b.v1",
+ "networks": {
+  "bbcu-denoise:ge": {
+   "model_id": "bbcu-denoise",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval68_cbsd68_sigma25_c96",
+   "preprocess": "bbcu_denoise_s25",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "b3d297c49ff64568cd4530901c6ff24715688e7b03d3794ad79e6a504ff7a47d",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "208f9135441481f4736e435d67f75f101b6e91273cd910708d34045b16b31e29",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 20,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.02966105975565425,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.551115123125783e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.029660940170288086,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 223,
+     "groups": 114,
+     "explicit_binary_pads": 18,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 223,
+     "initializers": 167,
+     "op_counts": {
+      "Mul": 20,
+      "Conv": 20,
+      "Relu": 1,
+      "Add": 72,
+      "qonnx.custom_op.general:BipolarQuant": 36,
+      "Pad": 18,
+      "Cast": 19,
+      "Unsqueeze": 18,
+      "PRelu": 18,
+      "Sub": 1
+     },
+     "binarizers": {
+      "ge": 18
+     },
+     "binary_layers": 18,
+     "named_nodes": 168,
+     "activation_nodes": 168,
+     "groups": 114,
+     "sha256": "208f9135441481f4736e435d67f75f101b6e91273cd910708d34045b16b31e29"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "b78cd07d3f3d8bdcd2f5d754b2bc0cb0f17a404dcbf238a01b15015965f57de0",
+    "graph_sha256": "595484b44d48bbbc92b9868f7f145c6c2dcc7a047b8e2589cb94ff2fc6b358ac"
+   },
+   "recipe_expected": {
+    "data_sha256": "b78cd07d3f3d8bdcd2f5d754b2bc0cb0f17a404dcbf238a01b15015965f57de0",
+    "graph_sha256": "595484b44d48bbbc92b9868f7f145c6c2dcc7a047b8e2589cb94ff2fc6b358ac"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "b78cd07d3f3d8bdcd2f5d754b2bc0cb0f17a404dcbf238a01b15015965f57de0",
+    "graph_sha256": "595484b44d48bbbc92b9868f7f145c6c2dcc7a047b8e2589cb94ff2fc6b358ac",
+    "bytes": 166784
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 68,
+    "eval_set": "eval68_cbsd68_sigma25_c96",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 64,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 6.923439713021025e-08,
+      "max_abs_pre_at_first_flip": 1.2869132888226886e-06,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1880064,
+      "pixels_deviating": 2062,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.010054749015508013
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 62.04698819370145,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.01649778204435004,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0000 dB) <= float32 noise floor (0.0000 dB) + 0.02 dB and min per-sample PSNR vs float64 (62.0 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 19,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.029661059379577637,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 9.992007221626409e-16,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 2,
+    "Relu -> Activation(relu)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 54,
+    "binarizer (ge) of a float tensor": 18,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 18,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 18,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 18,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 18,
+    "affine -> binary epilogue post_mul": 18,
+    "PRelu -> Activation(prelu)": 18,
+    "Add of runtime tensors -> Add": 18,
+    "Sub of runtime tensors -> ChannelAffine(-1) + Add (exact: fl(-w) = -w)": 1
+   },
+   "seconds": 249.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-denoise:sign_zero": {
+   "model_id": "bbcu-denoise",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval68_cbsd68_sigma25_c96",
+   "preprocess": "bbcu_denoise_s25",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "b3d297c49ff64568cd4530901c6ff24715688e7b03d3794ad79e6a504ff7a47d",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "0b3aecebca4b67c850412ba456da7e56d1a3eaa36473ef34a9c03eb6a65cd44f",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 20,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.02966105975565425,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.551115123125783e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.029660940170288086,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 223,
+     "groups": 114,
+     "explicit_binary_pads": 18,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 223,
+     "initializers": 167,
+     "op_counts": {
+      "Mul": 20,
+      "Conv": 20,
+      "Relu": 1,
+      "Add": 72,
+      "Sign": 18,
+      "qonnx.custom_op.general:BipolarQuant": 18,
+      "Pad": 18,
+      "Cast": 19,
+      "Unsqueeze": 18,
+      "PRelu": 18,
+      "Sub": 1
+     },
+     "binarizers": {
+      "sign_zero": 18
+     },
+     "binary_layers": 18,
+     "named_nodes": 168,
+     "activation_nodes": 168,
+     "groups": 114,
+     "sha256": "0b3aecebca4b67c850412ba456da7e56d1a3eaa36473ef34a9c03eb6a65cd44f"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "b78cd07d3f3d8bdcd2f5d754b2bc0cb0f17a404dcbf238a01b15015965f57de0",
+    "graph_sha256": "e35fd4a48cf97960ff61b117d5ac87de6944ef88180094e2cdcfcaa4796b19e7"
+   },
+   "reimported": {
+    "data_sha256": "b78cd07d3f3d8bdcd2f5d754b2bc0cb0f17a404dcbf238a01b15015965f57de0",
+    "graph_sha256": "e35fd4a48cf97960ff61b117d5ac87de6944ef88180094e2cdcfcaa4796b19e7",
+    "bytes": 166912
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "outputs_check_set": {
+    "n_samples": 68,
+    "eval_set": "eval68_cbsd68_sigma25_c96",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 64,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 6.923439713021025e-08,
+      "max_abs_pre_at_first_flip": 1.2869132888226886e-06,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1880064,
+      "pixels_deviating": 2062,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.010054749015508013
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 62.04698819370145,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.026588768115243577,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0001 dB) <= float32 noise floor (0.0000 dB) + 0.02 dB and min per-sample PSNR vs float64 (62.0 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 19,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.029661059379577637,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 9.992007221626409e-16,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 2,
+    "Relu -> Activation(relu)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 54,
+    "binarizer (sign_zero) of a float tensor": 18,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 18,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 18,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 18,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 18,
+    "affine -> binary epilogue post_mul": 18,
+    "PRelu -> Activation(prelu)": 18,
+    "Add of runtime tensors -> Add": 18,
+    "Sub of runtime tensors -> ChannelAffine(-1) + Add (exact: fl(-w) = -w)": 1
+   },
+   "seconds": 363.8,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-deblocking:ge": {
+   "model_id": "bbcu-deblocking",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval68_jpeg_y_q10q40_c96",
+   "preprocess": "bbcu_jpeg_y",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "f30dabf4b2f1c485693ecce08f3b19fd70a6f7efdd742d27dbb8475a9449bb28",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "ce4588f0cd3c042d3ad47246e39a84c2088064d6910a24f260128588f3c8248d",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 8,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.032693361011068456,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.220446049250313e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.03269338607788086,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 241,
+     "groups": 114,
+     "explicit_binary_pads": 18,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 241,
+     "initializers": 187,
+     "op_counts": {
+      "Mul": 20,
+      "Conv": 20,
+      "Relu": 1,
+      "Add": 90,
+      "qonnx.custom_op.general:BipolarQuant": 36,
+      "Pad": 18,
+      "Cast": 19,
+      "Unsqueeze": 18,
+      "PRelu": 18,
+      "Sub": 1
+     },
+     "binarizers": {
+      "ge": 18
+     },
+     "binary_layers": 18,
+     "named_nodes": 186,
+     "activation_nodes": 186,
+     "groups": 114,
+     "sha256": "ce4588f0cd3c042d3ad47246e39a84c2088064d6910a24f260128588f3c8248d"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "graph_sha256": "b55294e00bf32f526c940fd34ec053b7c3791013debaa3ba61c55335ebe68173"
+   },
+   "recipe_expected": {
+    "data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "graph_sha256": "b55294e00bf32f526c940fd34ec053b7c3791013debaa3ba61c55335ebe68173"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "graph_sha256": "b55294e00bf32f526c940fd34ec053b7c3791013debaa3ba61c55335ebe68173",
+    "bytes": 158336
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 68,
+    "eval_set": "eval68_jpeg_y_q10q40_c96",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 61,
+      "deviating": 7,
+      "with_flip": 7,
+      "max_rel_pre_at_first_flip": 6.112210121819219e-08,
+      "max_abs_pre_at_first_flip": 9.779009246813075e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 626688,
+      "pixels_deviating": 2102,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.0066216644978920325
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 63.64571197325736,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.012453653541472098,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0000 dB) <= float32 noise floor (0.0003 dB) + 0.02 dB and min per-sample PSNR vs float64 (63.6 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 39,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.03269338607788086,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 3.3306690738754696e-16,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 2,
+    "Relu -> Activation(relu)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 54,
+    "binarizer (ge) of a float tensor": 18,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 18,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 18,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 18,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 18,
+    "Add of the binary operator's naming group -> epilogue post_add": 18,
+    "affine -> binary epilogue post_mul/post_add": 18,
+    "PRelu -> Activation(prelu)": 18,
+    "Add of runtime tensors -> Add": 18,
+    "Sub of runtime tensors -> ChannelAffine(-1) + Add (exact: fl(-w) = -w)": 1
+   },
+   "seconds": 693.4,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-deblocking:sign_zero": {
+   "model_id": "bbcu-deblocking",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval68_jpeg_y_q10q40_c96",
+   "preprocess": "bbcu_jpeg_y",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "f30dabf4b2f1c485693ecce08f3b19fd70a6f7efdd742d27dbb8475a9449bb28",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "aed340e75ea9f5e9c0b8bb611249ae6be30a9eba4473bd100c5b4e94cc64265c",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 8,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 721944576,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.032693361011068456,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.220446049250313e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.03269338607788086,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 241,
+     "groups": 114,
+     "explicit_binary_pads": 18,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 241,
+     "initializers": 187,
+     "op_counts": {
+      "Mul": 20,
+      "Conv": 20,
+      "Relu": 1,
+      "Add": 90,
+      "Sign": 18,
+      "qonnx.custom_op.general:BipolarQuant": 18,
+      "Pad": 18,
+      "Cast": 19,
+      "Unsqueeze": 18,
+      "PRelu": 18,
+      "Sub": 1
+     },
+     "binarizers": {
+      "sign_zero": 18
+     },
+     "binary_layers": 18,
+     "named_nodes": 186,
+     "activation_nodes": 186,
+     "groups": 114,
+     "sha256": "aed340e75ea9f5e9c0b8bb611249ae6be30a9eba4473bd100c5b4e94cc64265c"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "graph_sha256": "4b71e1179e7bf92b24e0b703e9578620bdc33dbd649fbf2779b3668e1afe39c3"
+   },
+   "reimported": {
+    "data_sha256": "6b6f9d3421974b59383097ca8d48810c185d889e008e0afcce80cac8818ad461",
+    "graph_sha256": "4b71e1179e7bf92b24e0b703e9578620bdc33dbd649fbf2779b3668e1afe39c3",
+    "bytes": 158464
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 68,
+    "eval_set": "eval68_jpeg_y_q10q40_c96",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 61,
+      "deviating": 7,
+      "with_flip": 7,
+      "max_rel_pre_at_first_flip": 6.112210121819219e-08,
+      "max_abs_pre_at_first_flip": 9.779009246813075e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 626688,
+      "pixels_deviating": 2102,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.0066216644978920325
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 63.64571197325736,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.012453653541472098,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0000 dB) <= float32 noise floor (0.0004 dB) + 0.02 dB and min per-sample PSNR vs float64 (63.6 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 39,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.03269338607788086,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 3.3306690738754696e-16,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 2,
+    "Relu -> Activation(relu)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 54,
+    "binarizer (sign_zero) of a float tensor": 18,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 18,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 18,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 18,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 18,
+    "Add of the binary operator's naming group -> epilogue post_add": 18,
+    "affine -> binary epilogue post_mul/post_add": 18,
+    "PRelu -> Activation(prelu)": 18,
+    "Add of runtime tensors -> Add": 18,
+    "Sub of runtime tensors -> ChannelAffine(-1) + Add (exact: fl(-w) = -w)": 1
+   },
+   "seconds": 910.0,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-l-x2:ge": {
+   "model_id": "bbcu-sr-l-x2",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "3d5fc132d1dd34d6d38f2df38e1f5865a388d1f87aedef1e44608a6fbcba29ad",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "a92dcf37e3d2fdd9175f1ae251695b44a8252e4dc0e0a26e43b9e72b5d7775a2",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 2,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.047505760566897315,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.047505706548690796,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 404,
+     "groups": 206,
+     "explicit_binary_pads": 32,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 404,
+     "initializers": 306,
+     "op_counts": {
+      "Mul": 34,
+      "Conv": 37,
+      "LeakyRelu": 3,
+      "Add": 129,
+      "qonnx.custom_op.general:BipolarQuant": 64,
+      "Pad": 32,
+      "Cast": 33,
+      "Unsqueeze": 32,
+      "PRelu": 32,
+      "Reshape": 5,
+      "Transpose": 2,
+      "Gather": 1
+     },
+     "binarizers": {
+      "ge": 32
+     },
+     "binary_layers": 32,
+     "named_nodes": 307,
+     "activation_nodes": 307,
+     "groups": 206,
+     "sha256": "a92dcf37e3d2fdd9175f1ae251695b44a8252e4dc0e0a26e43b9e72b5d7775a2"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "graph_sha256": "4722dc435fe27c05ee7b7f77f9072aff2868adfb0098e0a72c88426bb6a50aae"
+   },
+   "recipe_expected": {
+    "data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "graph_sha256": "4722dc435fe27c05ee7b7f77f9072aff2868adfb0098e0a72c88426bb6a50aae"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "graph_sha256": "4722dc435fe27c05ee7b7f77f9072aff2868adfb0098e0a72c88426bb6a50aae",
+    "bytes": 1039936
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 63,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 2.7633005517632797e-09,
+      "max_abs_pre_at_first_flip": 5.588237872444779e-09,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1769472,
+      "pixels_deviating": 9525,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.004001679978103634
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 50.93496186817951,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.030064217536782345,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0003 dB) <= float32 noise floor (0.0003 dB) + 0.02 dB and min per-sample PSNR vs float64 (50.9 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 13,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.04750579595565796,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.9868619869088953e-09,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 5,
+    "LeakyRelu -> Activation(leaky_relu)": 3,
+    "affine (scale 1) -> ChannelAffine(bias)": 96,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 32,
+    "affine -> binary epilogue post_mul": 32,
+    "PRelu -> Activation(prelu)": 32,
+    "Add of runtime tensors -> Add": 33,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 1
+   },
+   "seconds": 1083.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-l-x2:sign_zero": {
+   "model_id": "bbcu-sr-l-x2",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "3d5fc132d1dd34d6d38f2df38e1f5865a388d1f87aedef1e44608a6fbcba29ad",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "973d4219938908e75df1e3948ae5ff1fbf748cb2393e1bb65523e20d064e2227",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 2,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.047505760566897315,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.047505706548690796,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 404,
+     "groups": 206,
+     "explicit_binary_pads": 32,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 404,
+     "initializers": 306,
+     "op_counts": {
+      "Mul": 34,
+      "Conv": 37,
+      "LeakyRelu": 3,
+      "Add": 129,
+      "Sign": 32,
+      "qonnx.custom_op.general:BipolarQuant": 32,
+      "Pad": 32,
+      "Cast": 33,
+      "Unsqueeze": 32,
+      "PRelu": 32,
+      "Reshape": 5,
+      "Transpose": 2,
+      "Gather": 1
+     },
+     "binarizers": {
+      "sign_zero": 32
+     },
+     "binary_layers": 32,
+     "named_nodes": 307,
+     "activation_nodes": 307,
+     "groups": 206,
+     "sha256": "973d4219938908e75df1e3948ae5ff1fbf748cb2393e1bb65523e20d064e2227"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "graph_sha256": "130e06caeb56eaff3bf1ddb6883117a9b455ecc1e19edf604546395cedd91793"
+   },
+   "reimported": {
+    "data_sha256": "ae386457eb9ba698b92d56a9224445f95c7471cce8924d31bd069fbbf97b22e4",
+    "graph_sha256": "130e06caeb56eaff3bf1ddb6883117a9b455ecc1e19edf604546395cedd91793",
+    "bytes": 1040256
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 63,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 2.7633005517632797e-09,
+      "max_abs_pre_at_first_flip": 5.588237872444779e-09,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1769472,
+      "pixels_deviating": 9525,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.004001679978103634
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 50.93496186817951,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.030064217536782345,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0003 dB) <= float32 noise floor (0.0004 dB) + 0.02 dB and min per-sample PSNR vs float64 (50.9 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 13,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.04750579595565796,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.9868619869088953e-09,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 5,
+    "LeakyRelu -> Activation(leaky_relu)": 3,
+    "affine (scale 1) -> ChannelAffine(bias)": 96,
+    "binarizer (sign_zero) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 32,
+    "affine -> binary epilogue post_mul": 32,
+    "PRelu -> Activation(prelu)": 32,
+    "Add of runtime tensors -> Add": 33,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 1
+   },
+   "seconds": 1189.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-l-x4:ge": {
+   "model_id": "bbcu-sr-l-x4",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "5d6c2a63607cd173ce2d62cae4f865b2c716b1d806a49fe3572dd4abd3a6ef15",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "7018c179a6809cb5db00ff46e266d875e048fd7848f9949bc6ec847fbc0ae727",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 134217728,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 134217728,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.050526327375649105,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.050526440143585205,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 409,
+     "groups": 209,
+     "explicit_binary_pads": 32,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 409,
+     "initializers": 310,
+     "op_counts": {
+      "Mul": 34,
+      "Conv": 38,
+      "LeakyRelu": 4,
+      "Add": 129,
+      "qonnx.custom_op.general:BipolarQuant": 64,
+      "Pad": 32,
+      "Cast": 33,
+      "Unsqueeze": 32,
+      "PRelu": 32,
+      "Reshape": 7,
+      "Transpose": 3,
+      "Gather": 1
+     },
+     "binarizers": {
+      "ge": 32
+     },
+     "binary_layers": 32,
+     "named_nodes": 312,
+     "activation_nodes": 312,
+     "groups": 209,
+     "sha256": "7018c179a6809cb5db00ff46e266d875e048fd7848f9949bc6ec847fbc0ae727"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "06e59d1b01cf1b6e7bcf04f9250fb80bea2972c041a6da05c2b6f4ba307721d6",
+    "graph_sha256": "5de8ead37059de4c4b847950ade4d438374ff8586ed51a0cfcbc48c471706fe1"
+   },
+   "recipe_expected": {
+    "data_sha256": "06e59d1b01cf1b6e7bcf04f9250fb80bea2972c041a6da05c2b6f4ba307721d6",
+    "graph_sha256": "5de8ead37059de4c4b847950ade4d438374ff8586ed51a0cfcbc48c471706fe1"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "06e59d1b01cf1b6e7bcf04f9250fb80bea2972c041a6da05c2b6f4ba307721d6",
+    "graph_sha256": "5de8ead37059de4c4b847950ade4d438374ff8586ed51a0cfcbc48c471706fe1",
+    "bytes": 1630528
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 63,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 2.5119159714603392e-08,
+      "max_abs_pre_at_first_flip": 5.6044640928121225e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 3145728,
+      "pixels_deviating": 40048,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.016693509438261867
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 54.70800102078786,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.025839717694893127,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0003 dB) <= float32 noise floor (0.0005 dB) + 0.02 dB and min per-sample PSNR vs float64 (54.7 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 5,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.050526320934295654,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 4.756286697826795e-09,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 6,
+    "LeakyRelu -> Activation(leaky_relu)": 4,
+    "affine (scale 1) -> ChannelAffine(bias)": 96,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 32,
+    "affine -> binary epilogue post_mul": 32,
+    "PRelu -> Activation(prelu)": 32,
+    "Add of runtime tensors -> Add": 33,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 3,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 1
+   },
+   "seconds": 1571.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-l-x4:sign_zero": {
+   "model_id": "bbcu-sr-l-x4",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "5d6c2a63607cd173ce2d62cae4f865b2c716b1d806a49fe3572dd4abd3a6ef15",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "7ac3f504fbb350330a6e34ce7d204a7604506aa5fe6f98fa16d60abdb8dd7982",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 134217728,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 134217728,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.050526327375649105,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.050526440143585205,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 409,
+     "groups": 209,
+     "explicit_binary_pads": 32,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 409,
+     "initializers": 310,
+     "op_counts": {
+      "Mul": 34,
+      "Conv": 38,
+      "LeakyRelu": 4,
+      "Add": 129,
+      "Sign": 32,
+      "qonnx.custom_op.general:BipolarQuant": 32,
+      "Pad": 32,
+      "Cast": 33,
+      "Unsqueeze": 32,
+      "PRelu": 32,
+      "Reshape": 7,
+      "Transpose": 3,
+      "Gather": 1
+     },
+     "binarizers": {
+      "sign_zero": 32
+     },
+     "binary_layers": 32,
+     "named_nodes": 312,
+     "activation_nodes": 312,
+     "groups": 209,
+     "sha256": "7ac3f504fbb350330a6e34ce7d204a7604506aa5fe6f98fa16d60abdb8dd7982"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "06e59d1b01cf1b6e7bcf04f9250fb80bea2972c041a6da05c2b6f4ba307721d6",
+    "graph_sha256": "53fe136a5b1240c148047fab1ba4c6600fac4d4f333225c75a888e69ea3565de"
+   },
+   "reimported": {
+    "data_sha256": "06e59d1b01cf1b6e7bcf04f9250fb80bea2972c041a6da05c2b6f4ba307721d6",
+    "graph_sha256": "53fe136a5b1240c148047fab1ba4c6600fac4d4f333225c75a888e69ea3565de",
+    "bytes": 1630848
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 63,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 2.5119159714603392e-08,
+      "max_abs_pre_at_first_flip": 5.6044640928121225e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 3145728,
+      "pixels_deviating": 40048,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.016693509438261867
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 54.70800102078786,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.025839717694893127,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0003 dB) <= float32 noise floor (0.0005 dB) + 0.02 dB and min per-sample PSNR vs float64 (54.7 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 5,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.050526320934295654,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 4.756286697826795e-09,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 6,
+    "LeakyRelu -> Activation(leaky_relu)": 4,
+    "affine (scale 1) -> ChannelAffine(bias)": 96,
+    "binarizer (sign_zero) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 32,
+    "affine -> binary epilogue post_mul": 32,
+    "PRelu -> Activation(prelu)": 32,
+    "Add of runtime tensors -> Add": 33,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 3,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 1
+   },
+   "seconds": 1668.4,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-m-x2:ge": {
+   "model_id": "bbcu-sr-m-x2",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "8916d9bd447f30c7ede67a3f584013c52940f8eb59a20e692ee66ba57601d56b",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "7b4d480ade794aaefb1b6edc2a565a1f48e51de8c2c7ed7cc5178a11a27805f7",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 349175808,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 349175808,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.04716183736281243,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.04921165108680725,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 427,
+     "groups": 216,
+     "explicit_binary_pads": 34,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 427,
+     "initializers": 322,
+     "op_counts": {
+      "Mul": 36,
+      "Conv": 37,
+      "LeakyRelu": 2,
+      "Add": 137,
+      "qonnx.custom_op.general:BipolarQuant": 68,
+      "Pad": 34,
+      "Cast": 35,
+      "Unsqueeze": 34,
+      "PRelu": 34,
+      "Reshape": 6,
+      "Transpose": 2,
+      "Gather": 2
+     },
+     "binarizers": {
+      "ge": 34
+     },
+     "binary_layers": 34,
+     "named_nodes": 324,
+     "activation_nodes": 324,
+     "groups": 216,
+     "sha256": "7b4d480ade794aaefb1b6edc2a565a1f48e51de8c2c7ed7cc5178a11a27805f7"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "graph_sha256": "796211b8b0dd9cc2152d711bd56d780e093f8f312fac4a8ef2baae361b854f15"
+   },
+   "recipe_expected": {
+    "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "graph_sha256": "796211b8b0dd9cc2152d711bd56d780e093f8f312fac4a8ef2baae361b854f15"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "graph_sha256": "796211b8b0dd9cc2152d711bd56d780e093f8f312fac4a8ef2baae361b854f15",
+    "bytes": 370624
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 60,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 3.5600216743902355e-08,
+      "max_abs_pre_at_first_flip": 2.5646782475519103e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1769472,
+      "pixels_deviating": 33189,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.03022584767311609
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 49.04770235936901,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.05019069100321577,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0005 dB) <= float32 noise floor (0.0002 dB) + 0.02 dB and min per-sample PSNR vs float64 (49.0 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 13,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.04921162128448486,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.701678603056479e-10,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 3,
+    "LeakyRelu -> Activation(leaky_relu)": 2,
+    "affine (scale 1) -> ChannelAffine(bias)": 102,
+    "binarizer (ge) of a float tensor": 34,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 34,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 34,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 34,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 34,
+    "affine -> binary epilogue post_mul": 34,
+    "PRelu -> Activation(prelu)": 34,
+    "Add of runtime tensors -> Add": 35,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 2
+   },
+   "seconds": 515.8,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-m-x2:sign_zero": {
+   "model_id": "bbcu-sr-m-x2",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "8916d9bd447f30c7ede67a3f584013c52940f8eb59a20e692ee66ba57601d56b",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "3b81707bc98b316b7c90cb6a05a6aa9516c53551dadd8feed120a471525bef49",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 349175808,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 349175808,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.04716183736281243,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.04921165108680725,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 427,
+     "groups": 216,
+     "explicit_binary_pads": 34,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 427,
+     "initializers": 322,
+     "op_counts": {
+      "Mul": 36,
+      "Conv": 37,
+      "LeakyRelu": 2,
+      "Add": 137,
+      "Sign": 34,
+      "qonnx.custom_op.general:BipolarQuant": 34,
+      "Pad": 34,
+      "Cast": 35,
+      "Unsqueeze": 34,
+      "PRelu": 34,
+      "Reshape": 6,
+      "Transpose": 2,
+      "Gather": 2
+     },
+     "binarizers": {
+      "sign_zero": 34
+     },
+     "binary_layers": 34,
+     "named_nodes": 324,
+     "activation_nodes": 324,
+     "groups": 216,
+     "sha256": "3b81707bc98b316b7c90cb6a05a6aa9516c53551dadd8feed120a471525bef49"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "graph_sha256": "857d22e1a5f6ed7a606f26b796033fe7aca72d8dfd28bde88d7e3ba22252380a"
+   },
+   "reimported": {
+    "data_sha256": "3eb11a461e786add5e5bedaea832b7a62be6d81271be36d12753e03a7f4efc15",
+    "graph_sha256": "857d22e1a5f6ed7a606f26b796033fe7aca72d8dfd28bde88d7e3ba22252380a",
+    "bytes": 371008
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 60,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 3.5600216743902355e-08,
+      "max_abs_pre_at_first_flip": 2.5646782475519103e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 1769472,
+      "pixels_deviating": 33189,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.03022584767311609
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 49.04770235936901,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.05019069100321577,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0005 dB) <= float32 noise floor (0.0002 dB) + 0.02 dB and min per-sample PSNR vs float64 (49.0 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 14,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.04921162128448486,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.701678603056479e-10,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 3,
+    "LeakyRelu -> Activation(leaky_relu)": 2,
+    "affine (scale 1) -> ChannelAffine(bias)": 102,
+    "binarizer (sign_zero) of a float tensor": 34,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 34,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 34,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 34,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 34,
+    "affine -> binary epilogue post_mul": 34,
+    "PRelu -> Activation(prelu)": 34,
+    "Add of runtime tensors -> Add": 35,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 2
+   },
+   "seconds": 583.6,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-m-x4:ge": {
+   "model_id": "bbcu-sr-m-x4",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "0945812132e2d6cc7130a1eafaf006f66fab69a22678727549f20a22ebded99f",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "0c6083f3144ec5d84e6278afbb0732876b5470e1cc0f7e0a022a0dc1b6f49a0e",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 222298112,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 222298112,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.0711987301259207,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.07993799448013306,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 444,
+     "groups": 224,
+     "explicit_binary_pads": 35,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 444,
+     "initializers": 335,
+     "op_counts": {
+      "Mul": 37,
+      "Conv": 38,
+      "LeakyRelu": 2,
+      "Add": 141,
+      "qonnx.custom_op.general:BipolarQuant": 70,
+      "Pad": 35,
+      "Cast": 36,
+      "Unsqueeze": 35,
+      "PRelu": 35,
+      "Reshape": 9,
+      "Transpose": 3,
+      "Gather": 3
+     },
+     "binarizers": {
+      "ge": 35
+     },
+     "binary_layers": 35,
+     "named_nodes": 338,
+     "activation_nodes": 338,
+     "groups": 224,
+     "sha256": "0c6083f3144ec5d84e6278afbb0732876b5470e1cc0f7e0a022a0dc1b6f49a0e"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "4b11feb2661e5faa6e71544b577b2278c4cd32bd31c9696d50c776b09e02b839",
+    "graph_sha256": "7353cb8a0271cf20b11b2b157e6507a26b0ebd132b0a9cdb5091bdf05a0ffeb2"
+   },
+   "recipe_expected": {
+    "data_sha256": "4b11feb2661e5faa6e71544b577b2278c4cd32bd31c9696d50c776b09e02b839",
+    "graph_sha256": "7353cb8a0271cf20b11b2b157e6507a26b0ebd132b0a9cdb5091bdf05a0ffeb2"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "4b11feb2661e5faa6e71544b577b2278c4cd32bd31c9696d50c776b09e02b839",
+    "graph_sha256": "7353cb8a0271cf20b11b2b157e6507a26b0ebd132b0a9cdb5091bdf05a0ffeb2",
+    "bytes": 440256
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 61,
+      "deviating": 3,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 1.5214221611152172e-08,
+      "max_abs_pre_at_first_flip": 3.377514801172765e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 3145728,
+      "pixels_deviating": 19765,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.03222098773796378
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 58.70115369532864,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.03222098710810717,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0000 dB) <= float32 noise floor (0.0020 dB) + 0.02 dB and min per-sample PSNR vs float64 (58.7 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 7,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.07993799448013306,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 0.00806490231994822,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 3,
+    "LeakyRelu -> Activation(leaky_relu)": 2,
+    "affine (scale 1) -> ChannelAffine(bias)": 105,
+    "binarizer (ge) of a float tensor": 35,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 35,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 35,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 35,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 35,
+    "affine -> binary epilogue post_mul": 35,
+    "PRelu -> Activation(prelu)": 35,
+    "Add of runtime tensors -> Add": 36,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 3,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 3
+   },
+   "seconds": 453.7,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bbcu-sr-m-x4:sign_zero": {
+   "model_id": "bbcu-sr-m-x4",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_unit",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "0945812132e2d6cc7130a1eafaf006f66fab69a22678727549f20a22ebded99f",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bbcu'",
+    "onnx_sha256": "ee3bf665d93f1723a3fcd40aff8465d4c3c8bff56625ad703969ea2840b53ea5",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 1,
+      "n_binarized": 222298112,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 222298112,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 0.0711987301259207,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-16,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 0.07119870185852051,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 444,
+     "groups": 224,
+     "explicit_binary_pads": 35,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 444,
+     "initializers": 335,
+     "op_counts": {
+      "Mul": 37,
+      "Conv": 38,
+      "LeakyRelu": 2,
+      "Add": 141,
+      "Sign": 35,
+      "qonnx.custom_op.general:BipolarQuant": 35,
+      "Pad": 35,
+      "Cast": 36,
+      "Unsqueeze": 35,
+      "PRelu": 35,
+      "Reshape": 9,
+      "Transpose": 3,
+      "Gather": 3
+     },
+     "binarizers": {
+      "sign_zero": 35
+     },
+     "binary_layers": 35,
+     "named_nodes": 338,
+     "activation_nodes": 338,
+     "groups": 224,
+     "sha256": "ee3bf665d93f1723a3fcd40aff8465d4c3c8bff56625ad703969ea2840b53ea5"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "4b11feb2661e5faa6e71544b577b2278c4cd32bd31c9696d50c776b09e02b839",
+    "graph_sha256": "f1df1e68c761303a1b2b7b6fe59e9595cb190489fa10040d67efb800b0e6e38d"
+   },
+   "reimported": {
+    "data_sha256": "4b11feb2661e5faa6e71544b577b2278c4cd32bd31c9696d50c776b09e02b839",
+    "graph_sha256": "f1df1e68c761303a1b2b7b6fe59e9595cb190489fa10040d67efb800b0e6e38d",
+    "bytes": 440640
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": "/usr/bin/python3",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 61,
+      "deviating": 3,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 1.5214221611152172e-08,
+      "max_abs_pre_at_first_flip": 3.377514801172765e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (1) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 1.0,
+      "pixels": 3145728,
+      "pixels_deviating": 19765,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.03222098773796378
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 58.70115369532864,
+     "numpy_f32_vs_qonnx_f64_max_abs": 0.03222098710810717,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0000 dB) <= float32 noise floor (0.0018 dB) + 0.02 dB and min per-sample PSNR vs float64 (58.7 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 7,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 0.07119870185852051,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 0.00806490231994822,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (shift 0) -> ChannelAffine(scale)": 2,
+    "Conv (float) -> Conv2D": 3,
+    "LeakyRelu -> Activation(leaky_relu)": 2,
+    "affine (scale 1) -> ChannelAffine(bias)": 105,
+    "binarizer (sign_zero) of a float tensor": 35,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 35,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 35,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 35,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 35,
+    "affine -> binary epilogue post_mul": 35,
+    "PRelu -> Activation(prelu)": 35,
+    "Add of runtime tensors -> Add": 36,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 3,
+    "row gather (Reshape [1,C,H*W] + Gather axis 2) -> Reshape [H*W,C] + Gather(i32) + Reshape": 3
+   },
+   "seconds": 483.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bsrc2023-binary-sr-x2-v0:ge": {
+   "model_id": "bsrc2023-binary-sr-x2-v0",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_255",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "24036a6c479d27ca9a790e08debfe3f034ee3ad9e276f0ba0236441023ad5146",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bsrc'",
+    "onnx_sha256": "2f989e03d0a2cb9521e55cce3f475f8c20638f604fce31d72e21bc52045af76f",
+    "binarizer": {
+     "option": "ge",
+     "source": "ge",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 2,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 301989888,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 5.282155851981059,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.1368683772161603e-13,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 5.28216552734375,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 394,
+     "groups": 136,
+     "explicit_binary_pads": 32,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 394,
+     "initializers": 301,
+     "op_counts": {
+      "Add": 99,
+      "Conv": 36,
+      "qonnx.custom_op.general:BipolarQuant": 64,
+      "Pad": 32,
+      "Cast": 32,
+      "Mul": 64,
+      "Unsqueeze": 32,
+      "PRelu": 32,
+      "Reshape": 2,
+      "Transpose": 1
+     },
+     "binarizers": {
+      "ge": 32
+     },
+     "binary_layers": 32,
+     "named_nodes": 298,
+     "activation_nodes": 298,
+     "groups": 136,
+     "sha256": "2f989e03d0a2cb9521e55cce3f475f8c20638f604fce31d72e21bc52045af76f"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "f3d859ab8ac0365069f2c5679d2ca3dd700ea28f8f98441208cbe0533e3cb697",
+    "graph_sha256": "15d7d0d22af1f589b6e4c60f53b60af91a70897de8a5143bb7a6d631a268f5e2"
+   },
+   "recipe_expected": {
+    "data_sha256": "f3d859ab8ac0365069f2c5679d2ca3dd700ea28f8f98441208cbe0533e3cb697",
+    "graph_sha256": "15d7d0d22af1f589b6e4c60f53b60af91a70897de8a5143bb7a6d631a268f5e2"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "f3d859ab8ac0365069f2c5679d2ca3dd700ea28f8f98441208cbe0533e3cb697",
+    "graph_sha256": "15d7d0d22af1f589b6e4c60f53b60af91a70897de8a5143bb7a6d631a268f5e2",
+    "bytes": 992000
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 62,
+      "deviating": 2,
+      "with_flip": 2,
+      "max_rel_pre_at_first_flip": 1.3007189064727809e-08,
+      "max_abs_pre_at_first_flip": 9.81393313281842e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (255) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 255.0,
+      "pixels": 1769472,
+      "pixels_deviating": 5022,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.7191850494640164
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 64.52844025148354,
+     "numpy_f32_vs_qonnx_f64_max_abs": 3.587807392614934,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (-0.0000 dB) <= float32 noise floor (0.0002 dB) + 0.02 dB and min per-sample PSNR vs float64 (64.5 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 15,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 5.2821807861328125,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.5579538487363607e-13,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (scale 1) -> ChannelAffine(bias)": 2,
+    "Conv (float) -> Conv2D": 4,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 32,
+    "Add of the binary operator's naming group -> epilogue post_add": 32,
+    "affine -> binary epilogue post_mul/post_add": 32,
+    "affine -> ChannelAffine": 32,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 32,
+    "PRelu -> Activation(prelu)": 32,
+    "Add of runtime tensors -> Add": 33,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 1
+   },
+   "seconds": 0.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bsrc2023-binary-sr-x2-v1:ge": {
+   "model_id": "bsrc2023-binary-sr-x2-v1",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x2_lr48",
+   "preprocess": "sr_x2_255",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "7415d7b34bb4bc5c4350d243f0cbafe6022829f57abd5d4cf2d77eb3319620a1",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bsrc'",
+    "onnx_sha256": "a7e84b7a34bf55c48f8e7149bd569b9ef50f05c91307e5f00d0e51656c55db32",
+    "binarizer": {
+     "option": "ge",
+     "source": "ge",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 226492416,
+      "binarizer_output_ne_claimed": 0,
+      "lab_exact_ties": 10
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 226492416,
+      "binarizer_output_ne_claimed": 0,
+      "lab_exact_ties": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 1.7269674322122341,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.1368683772161603e-13,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 1.6680221557617188,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 482,
+     "groups": 264,
+     "explicit_binary_pads": 24,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 482,
+     "initializers": 344,
+     "op_counts": {
+      "Add": 127,
+      "Conv": 132,
+      "Relu": 4,
+      "Greater": 24,
+      "Where": 24,
+      "qonnx.custom_op.general:BipolarQuant": 24,
+      "Pad": 24,
+      "Cast": 24,
+      "Mul": 48,
+      "Unsqueeze": 24,
+      "PRelu": 24,
+      "Reshape": 2,
+      "Transpose": 1
+     },
+     "binarizers": {
+      "gt": 24
+     },
+     "binary_layers": 24,
+     "named_nodes": 410,
+     "activation_nodes": 410,
+     "groups": 264,
+     "sha256": "a7e84b7a34bf55c48f8e7149bd569b9ef50f05c91307e5f00d0e51656c55db32"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "50dfdf8743ffd15ffe882e5e2510a89e473e9c1b82d17e388f19404db2aa8b4f",
+    "graph_sha256": "551cd8c1e71e3ff19b159f1ae374bdfb66dde152649b0c789d76010a5b789dcb"
+   },
+   "recipe_expected": {
+    "data_sha256": "50dfdf8743ffd15ffe882e5e2510a89e473e9c1b82d17e388f19404db2aa8b4f",
+    "graph_sha256": "551cd8c1e71e3ff19b159f1ae374bdfb66dde152649b0c789d76010a5b789dcb"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "50dfdf8743ffd15ffe882e5e2510a89e473e9c1b82d17e388f19404db2aa8b4f",
+    "graph_sha256": "551cd8c1e71e3ff19b159f1ae374bdfb66dde152649b0c789d76010a5b789dcb",
+    "bytes": 3607296
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x2_lr48",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 61,
+      "deviating": 3,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 3.562327482813665e-08,
+      "max_abs_pre_at_first_flip": 8.319607758267011e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (255) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 255.0,
+      "pixels": 1769472,
+      "pixels_deviating": 13743,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 0.5485066872681728
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 66.04153046836399,
+     "numpy_f32_vs_qonnx_f64_max_abs": 1.0876474732601196,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0001 dB) <= float32 noise floor (0.0001 dB) + 0.02 dB and min per-sample PSNR vs float64 (66.0 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 35,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 1.72698974609375,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.2737367544323206e-13,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (scale 1) -> ChannelAffine(bias)": 2,
+    "Conv (float) -> Conv2D": 108,
+    "Relu -> Activation(relu)": 4,
+    "Add of runtime tensors -> Add": 77,
+    "binarizer (gt) of a float tensor": 24,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 24,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 24,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 24,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 24,
+    "Add of the binary operator's naming group -> epilogue post_add": 24,
+    "affine -> binary epilogue post_mul/post_add": 24,
+    "affine -> ChannelAffine": 24,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 24,
+    "PRelu -> Activation(prelu)": 24,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 1
+   },
+   "seconds": 0.4,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bsrc2023-binary-sr-x4-v0:ge": {
+   "model_id": "bsrc2023-binary-sr-x4-v0",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_255",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "1e8b1e060ad8db1e4745cf0e1493f61a73f7a579c0376bce8a76bbb40be7c646",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bsrc'",
+    "onnx_sha256": "ace07e094a1131e3ca8b29b3e0070bff255797e99b9e68d0266337c1b972404e",
+    "binarizer": {
+     "option": "ge",
+     "source": "ge",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 41943040,
+      "binarizer_output_ne_claimed": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 41943040,
+      "binarizer_output_ne_claimed": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 4.042539391066924,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.9895196601282805e-13,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 4.042549133300781,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 147,
+     "groups": 55,
+     "explicit_binary_pads": 10,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 147,
+     "initializers": 117,
+     "op_counts": {
+      "Add": 34,
+      "Cast": 13,
+      "Mul": 23,
+      "Conv": 15,
+      "Unsqueeze": 13,
+      "PRelu": 13,
+      "qonnx.custom_op.general:BipolarQuant": 20,
+      "Pad": 10,
+      "Reshape": 4,
+      "Transpose": 2
+     },
+     "binarizers": {
+      "ge": 10
+     },
+     "binary_layers": 10,
+     "named_nodes": 111,
+     "activation_nodes": 111,
+     "groups": 55,
+     "sha256": "ace07e094a1131e3ca8b29b3e0070bff255797e99b9e68d0266337c1b972404e"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "ad035e0e97ef30940efbe9155adc90f8ccdde3029e001ffae6370e245aa5a020",
+    "graph_sha256": "86dc51ea07fc1563b497c708bb2a8e2c7f625852822acb58b859353464a4868e"
+   },
+   "recipe_expected": {
+    "data_sha256": "ad035e0e97ef30940efbe9155adc90f8ccdde3029e001ffae6370e245aa5a020",
+    "graph_sha256": "86dc51ea07fc1563b497c708bb2a8e2c7f625852822acb58b859353464a4868e"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "ad035e0e97ef30940efbe9155adc90f8ccdde3029e001ffae6370e245aa5a020",
+    "graph_sha256": "86dc51ea07fc1563b497c708bb2a8e2c7f625852822acb58b859353464a4868e",
+    "bytes": 1539328
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 64,
+      "deviating": 0,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (255) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 255.0,
+      "pixels": 3145728,
+      "pixels_deviating": 0,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 2.5400386647334017e-05
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 148.83867982290965,
+     "numpy_f32_vs_qonnx_f64_max_abs": 5.1174620580241026e-05,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0000 dB) <= float32 noise floor (0.0000 dB) + 0.02 dB and min per-sample PSNR vs float64 (148.8 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 0,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 4.042610168457031,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 3.126388037344441e-13,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine (scale 1) -> ChannelAffine(bias)": 1,
+    "affine (shift 0) -> ChannelAffine(scale)": 1,
+    "Conv (float) -> Conv2D": 5,
+    "PRelu -> Activation(prelu)": 13,
+    "binarizer (ge) of a float tensor": 10,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 10,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 10,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 10,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 10,
+    "Add of the binary operator's naming group -> epilogue post_add": 10,
+    "affine -> binary epilogue post_mul/post_add": 10,
+    "affine -> ChannelAffine": 12,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 12,
+    "Add of runtime tensors -> Add": 11,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2
+   },
+   "seconds": 0.5,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bsrc2023-binary-sr-x4-v1:ge": {
+   "model_id": "bsrc2023-binary-sr-x4-v1",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval64_sr_x4_lr32",
+   "preprocess": "sr_x4_255",
+   "output_kind": "image",
+   "export": {
+    "checkpoint_sha256": "9b54eab388d06b9025ee2febda8096e09e9f06b71b682d56dbf1047accc16213",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bsrc'",
+    "onnx_sha256": "c9ef428789141d09d3fe1ebd37625fa9bc709abfd47e183ef5441dfe4af9fecc",
+    "binarizer": {
+     "option": "ge",
+     "source": "ge",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": null,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 41943040,
+      "binarizer_output_ne_claimed": 0,
+      "lab_exact_ties": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 41943040,
+      "binarizer_output_ne_claimed": 0,
+      "lab_exact_ties": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": null,
+    "source_f32_vs_f64_max_abs": 5.880066521653532,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.5579538487363607e-13,
+     "f64_top1_disagreements": null,
+     "f32_max_abs": 2.7149887084960938,
+     "f32_top1_disagreements": null
+    },
+    "canonical": {
+     "nodes": 202,
+     "groups": 102,
+     "explicit_binary_pads": 10,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 202,
+     "initializers": 156,
+     "op_counts": {
+      "Conv": 55,
+      "Unsqueeze": 13,
+      "PRelu": 13,
+      "Greater": 10,
+      "Where": 10,
+      "qonnx.custom_op.general:BipolarQuant": 10,
+      "Pad": 10,
+      "Cast": 12,
+      "Mul": 21,
+      "Add": 42,
+      "Reshape": 4,
+      "Transpose": 2
+     },
+     "binarizers": {
+      "gt": 10
+     },
+     "binary_layers": 10,
+     "named_nodes": 167,
+     "activation_nodes": 167,
+     "groups": 102,
+     "sha256": "c9ef428789141d09d3fe1ebd37625fa9bc709abfd47e183ef5441dfe4af9fecc"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "ad6f72b94ee11e71f4c3a6992c538a1edd0b87a0f025a0dc712a1a4468b838be",
+    "graph_sha256": "6090e93a18728c75b560c73e6dafd8dfb863dd946f7c7e065eabbed74caa6e08"
+   },
+   "recipe_expected": {
+    "data_sha256": "ad6f72b94ee11e71f4c3a6992c538a1edd0b87a0f025a0dc712a1a4468b838be",
+    "graph_sha256": "6090e93a18728c75b560c73e6dafd8dfb863dd946f7c7e065eabbed74caa6e08"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "ad6f72b94ee11e71f4c3a6992c538a1edd0b87a0f025a0dc712a1a4468b838be",
+    "graph_sha256": "6090e93a18728c75b560c73e6dafd8dfb863dd946f7c7e065eabbed74caa6e08",
+    "bytes": 1811776
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 64,
+    "eval_set": "eval64_sr_x4_lr32",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 64,
+      "deviating": 0,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "images: a pixel deviating by > 1e-06 x range (255) needs a first flip at |pre| <= 0.001 x median |pre| of its binarizer, or (no flip) |delta| <= 1e-05 x range",
+      "output_range": 255.0,
+      "pixels": 3145728,
+      "pixels_deviating": 0,
+      "pixels_deviating_in_samples_without_flip": 0,
+      "max_abs_ir_f64_vs_qonnx_f64": 3.657869342532649e-06
+     }
+    },
+    "informational": {
+     "numpy_f32_vs_qonnx_f64_psnr_min_db": 63.139753289010116,
+     "numpy_f32_vs_qonnx_f64_max_abs": 2.228959971112886,
+     "validate_model": {
+      "acceptance": {
+       "criterion": "task PSNR drop vs the float64 reference (+0.0000 dB) <= float32 noise floor (0.0001 dB) + 0.02 dB and min per-sample PSNR vs float64 (63.1 dB) >= 30.0 dB and bit-exact with the numpy executor",
+       "passed": true
+      }
+     }
+    },
+    "binarization_flip_samples": 33,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 4.144012451171875,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 7.958078640513122e-13,
+    "export_check_source_f64_vs_qonnx_f64_top1": null,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 45,
+    "PRelu -> Activation(prelu)": 13,
+    "binarizer (gt) of a float tensor": 10,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 10,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 10,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 10,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 10,
+    "Add of the binary operator's naming group -> epilogue post_add": 10,
+    "affine -> binary epilogue post_mul/post_add": 10,
+    "affine -> ChannelAffine": 11,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 11,
+    "Add of runtime tensors -> Add": 21,
+    "PixelShuffle (Reshape rank 6 + Transpose + Reshape) -> Reshape [1,H,W,C,r,r] + Transpose + Reshape": 2
+   },
+   "seconds": 0.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bimatting-bimobilenet-backbone:ge": {
+   "model_id": "bimatting-bimobilenet-backbone",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "e6209045ac16fbc1ba47c854f0daa4ccbc32b79066197de4e8d25651fb02427d",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'reacta'",
+    "onnx_sha256": "d26fa45e2647269ccf193aaedcd68255048a97023b75d349d43809c8ff270500",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.53125,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 0,
+      "binary_activation_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 0,
+      "binary_activation_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 29,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.1316282072803006e-14,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 5.626209259033203,
+     "f32_top1_disagreements": 29
+    },
+    "canonical": {
+     "nodes": 704,
+     "groups": 267,
+     "explicit_binary_pads": 17,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 704,
+     "initializers": 358,
+     "op_counts": {
+      "Conv": 47,
+      "Cast": 196,
+      "Mul": 47,
+      "Add": 198,
+      "qonnx.custom_op.general:BipolarQuant": 92,
+      "Pad": 17,
+      "Unsqueeze": 34,
+      "PRelu": 34,
+      "Concat": 10,
+      "AveragePool": 11,
+      "Reshape": 10,
+      "Transpose": 5,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 46
+     },
+     "binary_layers": 46,
+     "named_nodes": 428,
+     "activation_nodes": 428,
+     "groups": 267,
+     "sha256": "d26fa45e2647269ccf193aaedcd68255048a97023b75d349d43809c8ff270500"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
+    "graph_sha256": "ca0d23aa81f1ae95b81ec3f7aa82625578a1a5d1852519fc1bdc46609b378325"
+   },
+   "recipe_expected": {
+    "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
+    "graph_sha256": "ca0d23aa81f1ae95b81ec3f7aa82625578a1a5d1852519fc1bdc46609b378325"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
+    "graph_sha256": "ca0d23aa81f1ae95b81ec3f7aa82625578a1a5d1852519fc1bdc46609b378325",
+    "bytes": 4747136
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 110,
+      "deviating": 18,
+      "with_flip": 10,
+      "max_rel_pre_at_first_flip": 3.358782502983662e-07,
+      "max_abs_pre_at_first_flip": 3.4066877674376883e-07,
+      "without_flip": 8,
+      "max_rel_delta_without_flip": 9.039277339851131e-08,
+      "max_abs_delta_without_flip": 1.300296517570132e-06,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 16,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 5.6262102127075195,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.1316282072803006e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "affine -> ChannelAffine": 1,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 102,
+    "binarizer (ge) of a float tensor": 46,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 17,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 46,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 46,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 46,
+    "Add of the binary operator's naming group -> epilogue post_add": 46,
+    "affine -> binary epilogue post_mul/post_add": 46,
+    "Add of runtime tensors -> Add": 49,
+    "PRelu -> Activation(prelu)": 34,
+    "Concat (channels) -> Concat": 10,
+    "AveragePool -> AvgPool2D": 11,
+    "channel split (Reshape [1,k,C/k,HW] + Transpose [0,2,3,1]) -> Reshape [1,HW,k,C/k]": 5,
+    "spatial-only Reshape [1,C,a,b] -> [1,C,a',b'] -> Reshape (NHWC order unchanged)": 5,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 970.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bimatting-bimobilenet-backbone:sign_zero": {
+   "model_id": "bimatting-bimobilenet-backbone",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "e6209045ac16fbc1ba47c854f0daa4ccbc32b79066197de4e8d25651fb02427d",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'reacta'",
+    "onnx_sha256": "5d2a1b861b00a9b4de274c590e6ffd3fa040c36a3051018d5e5942d779059e5e",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.53125,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 0,
+      "binary_activation_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 0,
+      "binary_activation_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 29,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.1316282072803006e-14,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 5.680319786071777,
+     "f32_top1_disagreements": 28
+    },
+    "canonical": {
+     "nodes": 704,
+     "groups": 267,
+     "explicit_binary_pads": 17,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 704,
+     "initializers": 358,
+     "op_counts": {
+      "Conv": 47,
+      "Cast": 196,
+      "Mul": 47,
+      "Add": 198,
+      "Sign": 46,
+      "qonnx.custom_op.general:BipolarQuant": 46,
+      "Pad": 17,
+      "Unsqueeze": 34,
+      "PRelu": 34,
+      "Concat": 10,
+      "AveragePool": 11,
+      "Reshape": 10,
+      "Transpose": 5,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 46
+     },
+     "binary_layers": 46,
+     "named_nodes": 428,
+     "activation_nodes": 428,
+     "groups": 267,
+     "sha256": "5d2a1b861b00a9b4de274c590e6ffd3fa040c36a3051018d5e5942d779059e5e"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
+    "graph_sha256": "876516b82ec6d88fc6f4d7ce8500f8e510bfc46f2f5c0255e6ecd5313b0dfdc0"
+   },
+   "reimported": {
+    "data_sha256": "86f157b0389c7603126282061d42967d993747a5acdc5d2bca0ed41247059adb",
+    "graph_sha256": "876516b82ec6d88fc6f4d7ce8500f8e510bfc46f2f5c0255e6ecd5313b0dfdc0",
+    "bytes": 4747648
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 110,
+      "deviating": 18,
+      "with_flip": 10,
+      "max_rel_pre_at_first_flip": 3.358782502983662e-07,
+      "max_abs_pre_at_first_flip": 3.4066877674376883e-07,
+      "without_flip": 8,
+      "max_rel_delta_without_flip": 9.039277339851131e-08,
+      "max_abs_delta_without_flip": 1.300296517570132e-06,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 0.9921875,
+      "n_top1_disagreements": 1
+     }
+    },
+    "binarization_flip_samples": 17,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 5.680319786071777,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 2.1316282072803006e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "affine -> ChannelAffine": 1,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 102,
+    "binarizer (sign_zero) of a float tensor": 46,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 17,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 46,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 46,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 46,
+    "Add of the binary operator's naming group -> epilogue post_add": 46,
+    "affine -> binary epilogue post_mul/post_add": 46,
+    "Add of runtime tensors -> Add": 49,
+    "PRelu -> Activation(prelu)": 34,
+    "Concat (channels) -> Concat": 10,
+    "AveragePool -> AvgPool2D": 11,
+    "channel split (Reshape [1,k,C/k,HW] + Transpose [0,2,3,1]) -> Reshape [1,HW,k,C/k]": 5,
+    "spatial-only Reshape [1,C,a,b] -> [1,C,a',b'] -> Reshape (NHWC order unchanged)": 5,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 975.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-a-cifar10:ge": {
+   "model_id": "bnas-a-cifar10",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128_cifar10_darts",
+   "preprocess": "cifar10_darts_norm",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "81439c9016150c0d5fc4c4c96492494094783c5d4fcbd000be20a2bd396ea340",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "cb9b00d9226870106fa4e19e4e93726c9f33d7890dd00b2217e5b7379fd8bef0",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.9375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 9437184,
+      "n_binarized": 523763712
+     },
+     "f64": {
+      "sign_input_exact_zero": 9437184,
+      "n_binarized": 523763712
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 7.105427357601002e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.701751708984375,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 706,
+     "groups": 293,
+     "explicit_binary_pads": 38,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 706,
+     "initializers": 314,
+     "op_counts": {
+      "Cast": 153,
+      "Mul": 95,
+      "Add": 97,
+      "Conv": 77,
+      "Relu": 75,
+      "qonnx.custom_op.general:BipolarQuant": 144,
+      "Pad": 38,
+      "Concat": 20,
+      "MaxPool": 2,
+      "Sign": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 72,
+      "sign_zero": 2
+     },
+     "binary_layers": 74,
+     "named_nodes": 481,
+     "activation_nodes": 481,
+     "groups": 293,
+     "sha256": "cb9b00d9226870106fa4e19e4e93726c9f33d7890dd00b2217e5b7379fd8bef0"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "033607629e4de3468c60e087b1e15b3524035352b60797c2e57009ca7d23b120",
+    "graph_sha256": "e54ad33a2eb8f2c52677bfb1ecd72828d1138421d43688d4bfc589f2d577ac3d"
+   },
+   "recipe_expected": {
+    "data_sha256": "033607629e4de3468c60e087b1e15b3524035352b60797c2e57009ca7d23b120",
+    "graph_sha256": "e54ad33a2eb8f2c52677bfb1ecd72828d1138421d43688d4bfc589f2d577ac3d"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "033607629e4de3468c60e087b1e15b3524035352b60797c2e57009ca7d23b120",
+    "graph_sha256": "e54ad33a2eb8f2c52677bfb1ecd72828d1138421d43688d4bfc589f2d577ac3d",
+    "bytes": 5729664
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_darts",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 127,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 1.4510671388448183e-07,
+      "max_abs_pre_at_first_flip": 3.04417611118879e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 10,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.7017555236816406,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 7.105427357601002e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine -> ChannelAffine": 3,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 3,
+    "Conv (float) -> Conv2D": 3,
+    "Relu -> Activation(relu)": 75,
+    "affine (scale 1) -> ChannelAffine(bias)": 74,
+    "binarizer (ge) of a float tensor": 72,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 72,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 72,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 72,
+    "affine -> binary epilogue post_mul": 72,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 38,
+    "affine (shift 0) -> ChannelAffine(scale)": 20,
+    "Concat (channels) -> Concat": 20,
+    "Add of runtime tensors -> Add": 19,
+    "MaxPool -> MaxPool2D": 2,
+    "Add of a constant [1, C, H, W] map -> Add(x, map NHWC)": 1,
+    "binarizer (sign_zero) of a float tensor": 2,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 931.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-a-cifar10:sign_zero": {
+   "model_id": "bnas-a-cifar10",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128_cifar10_darts",
+   "preprocess": "cifar10_darts_norm",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "81439c9016150c0d5fc4c4c96492494094783c5d4fcbd000be20a2bd396ea340",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "379b51f2c049c9279d752b2ad8b8ebb69c40c108d71b374aacc21c2bb593a7e0",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.9375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 9437184,
+      "n_binarized": 523763712
+     },
+     "f64": {
+      "sign_input_exact_zero": 9437184,
+      "n_binarized": 523763712
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 7.105427357601002e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.701751708984375,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 704,
+     "groups": 292,
+     "explicit_binary_pads": 38,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 704,
+     "initializers": 313,
+     "op_counts": {
+      "Cast": 152,
+      "Mul": 95,
+      "Add": 96,
+      "Conv": 77,
+      "Relu": 75,
+      "Sign": 74,
+      "qonnx.custom_op.general:BipolarQuant": 72,
+      "Pad": 38,
+      "Concat": 20,
+      "MaxPool": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 74
+     },
+     "binary_layers": 74,
+     "named_nodes": 480,
+     "activation_nodes": 480,
+     "groups": 292,
+     "sha256": "379b51f2c049c9279d752b2ad8b8ebb69c40c108d71b374aacc21c2bb593a7e0"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "940f478b12ee6bf28e31feac58a1ac11c2064f992b18e3dbcdf59c2eccd6fce7",
+    "graph_sha256": "6d718a1495289c27278a74aa9f886d379e2e04a6ad0e85bc3eb5e317a2770f52"
+   },
+   "reimported": {
+    "data_sha256": "940f478b12ee6bf28e31feac58a1ac11c2064f992b18e3dbcdf59c2eccd6fce7",
+    "graph_sha256": "6d718a1495289c27278a74aa9f886d379e2e04a6ad0e85bc3eb5e317a2770f52",
+    "bytes": 5656768
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_darts",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 127,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 1.4510671388448183e-07,
+      "max_abs_pre_at_first_flip": 3.04417611118879e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 12,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.7017555236816406,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 7.105427357601002e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "affine -> ChannelAffine": 3,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 3,
+    "Conv (float) -> Conv2D": 3,
+    "Relu -> Activation(relu)": 75,
+    "affine (scale 1) -> ChannelAffine(bias)": 74,
+    "binarizer (sign_zero) of a float tensor": 74,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 72,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 72,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 72,
+    "affine -> binary epilogue post_mul": 72,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 38,
+    "affine (shift 0) -> ChannelAffine(scale)": 20,
+    "Concat (channels) -> Concat": 20,
+    "Add of runtime tensors -> Add": 19,
+    "MaxPool -> MaxPool2D": 2,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 930.0,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-d-imagenet:ge": {
+   "model_id": "bnas-d-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3688c16aeb2f37bf9016de8b49b411558cc835662a3fe8d8d72efa03630eec18",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "ba678f1ff84580f2de7fb06c0737acca6a81f9c72a6211d7ac405ff9926a0e76",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.609375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 714506240
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 714506240
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 1,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.9807510375976562,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 1068,
+     "groups": 419,
+     "explicit_binary_pads": 89,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1068,
+     "initializers": 526,
+     "op_counts": {
+      "Conv": 115,
+      "Cast": 228,
+      "Mul": 113,
+      "Add": 174,
+      "Relu": 112,
+      "qonnx.custom_op.general:BipolarQuant": 216,
+      "Pad": 89,
+      "Concat": 12,
+      "MaxPool": 4,
+      "Sign": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 108,
+      "sign_zero": 2
+     },
+     "binary_layers": 110,
+     "named_nodes": 732,
+     "activation_nodes": 732,
+     "groups": 419,
+     "sha256": "ba678f1ff84580f2de7fb06c0737acca6a81f9c72a6211d7ac405ff9926a0e76"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "10286fbf95def160f0ecfb8351a0bc094872b1160bbc54e64bdebd98ff38f45c",
+    "graph_sha256": "382074cf06ce898a2e0f078cd7dac2e9df9970a60b3f8051e33f303293c47674"
+   },
+   "recipe_expected": {
+    "data_sha256": "10286fbf95def160f0ecfb8351a0bc094872b1160bbc54e64bdebd98ff38f45c",
+    "graph_sha256": "382074cf06ce898a2e0f078cd7dac2e9df9970a60b3f8051e33f303293c47674"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "10286fbf95def160f0ecfb8351a0bc094872b1160bbc54e64bdebd98ff38f45c",
+    "graph_sha256": "382074cf06ce898a2e0f078cd7dac2e9df9970a60b3f8051e33f303293c47674",
+    "bytes": 22779008
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 125,
+      "deviating": 3,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 7.919271151162141e-08,
+      "max_abs_pre_at_first_flip": 1.2268897364720033e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 5,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.980751395225525,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.199040866595169e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 112,
+    "affine (scale 1) -> ChannelAffine(bias)": 110,
+    "binarizer (ge) of a float tensor": 108,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 108,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 108,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 108,
+    "affine -> binary epilogue post_mul": 108,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 89,
+    "Add of runtime tensors -> Add": 59,
+    "Concat (channels) -> Concat": 12,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (sign_zero) of a float tensor": 2,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 2588.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-d-imagenet:sign_zero": {
+   "model_id": "bnas-d-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3688c16aeb2f37bf9016de8b49b411558cc835662a3fe8d8d72efa03630eec18",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "2f650603c2550c1673e735164e1a5353e27480883a0d151260bfe176c2eb0963",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.609375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 714506240
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 714506240
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 1,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 4.440892098500626e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.9807510375976562,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 1068,
+     "groups": 419,
+     "explicit_binary_pads": 89,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1068,
+     "initializers": 526,
+     "op_counts": {
+      "Conv": 115,
+      "Cast": 228,
+      "Mul": 113,
+      "Add": 174,
+      "Relu": 112,
+      "Sign": 110,
+      "qonnx.custom_op.general:BipolarQuant": 108,
+      "Pad": 89,
+      "Concat": 12,
+      "MaxPool": 4,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 110
+     },
+     "binary_layers": 110,
+     "named_nodes": 732,
+     "activation_nodes": 732,
+     "groups": 419,
+     "sha256": "2f650603c2550c1673e735164e1a5353e27480883a0d151260bfe176c2eb0963"
+    },
+    "warnings": [],
+    "errors": [],
+    "note": "recorded (--rejudge; canonical file removed after the run, SHA-256 in export)"
+   },
+   "published": {
+    "data_sha256": "10286fbf95def160f0ecfb8351a0bc094872b1160bbc54e64bdebd98ff38f45c",
+    "graph_sha256": "e0cce52e172029e5a479e19a6b58466e32c5f1f67eeab3e93722618ff7336e63"
+   },
+   "reimported": {
+    "data_sha256": "10286fbf95def160f0ecfb8351a0bc094872b1160bbc54e64bdebd98ff38f45c",
+    "graph_sha256": "e0cce52e172029e5a479e19a6b58466e32c5f1f67eeab3e93722618ff7336e63",
+    "bytes": 22781120
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 125,
+      "deviating": 3,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 7.919271151162141e-08,
+      "max_abs_pre_at_first_flip": 1.2268897364720033e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 6,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.980310559272766,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.199040866595169e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 112,
+    "affine (scale 1) -> ChannelAffine(bias)": 110,
+    "binarizer (sign_zero) of a float tensor": 110,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 108,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 108,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 108,
+    "affine -> binary epilogue post_mul": 108,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 89,
+    "Add of runtime tensors -> Add": 59,
+    "Concat (channels) -> Concat": 12,
+    "MaxPool -> MaxPool2D": 4,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 0.1,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-e-imagenet:ge": {
+   "model_id": "bnas-e-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3434d4b3f6b430941205f8a34cd248148f8cb1852aee2a86a316e60b25245c26",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "2bc74ccd8dda93cd534685b533ee8f1b6bdfb3106f774e6c23bc2df7ae073976",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.5546875,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 759162880
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 759162880
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.329070518200751e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.31154727935791,
+     "f32_top1_disagreements": 2
+    },
+    "canonical": {
+     "nodes": 1068,
+     "groups": 419,
+     "explicit_binary_pads": 89,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1068,
+     "initializers": 526,
+     "op_counts": {
+      "Conv": 115,
+      "Cast": 228,
+      "Mul": 113,
+      "Add": 174,
+      "Relu": 112,
+      "qonnx.custom_op.general:BipolarQuant": 216,
+      "Pad": 89,
+      "Concat": 12,
+      "MaxPool": 4,
+      "Sign": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 108,
+      "sign_zero": 2
+     },
+     "binary_layers": 110,
+     "named_nodes": 732,
+     "activation_nodes": 732,
+     "groups": 419,
+     "sha256": "2bc74ccd8dda93cd534685b533ee8f1b6bdfb3106f774e6c23bc2df7ae073976"
+    },
+    "warnings": [],
+    "errors": [],
+    "note": "recorded (--rejudge; canonical file removed after the run, SHA-256 in export)"
+   },
+   "published": {
+    "data_sha256": "65f304d596f75b722598aee66b91d3b5c218467e206d3369cc0b377b888469a2",
+    "graph_sha256": "050c1c0fced2c654e05c93bda2255f4c60ed73710ed26134627001d4d802af8e"
+   },
+   "recipe_expected": {
+    "data_sha256": "65f304d596f75b722598aee66b91d3b5c218467e206d3369cc0b377b888469a2",
+    "graph_sha256": "050c1c0fced2c654e05c93bda2255f4c60ed73710ed26134627001d4d802af8e"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "65f304d596f75b722598aee66b91d3b5c218467e206d3369cc0b377b888469a2",
+    "graph_sha256": "050c1c0fced2c654e05c93bda2255f4c60ed73710ed26134627001d4d802af8e",
+    "bytes": 25716736
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 124,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 1.5977932802436582e-07,
+      "max_abs_pre_at_first_flip": 8.079035183072847e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 12,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.0148690938949585,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.2878587085651816e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 112,
+    "affine (scale 1) -> ChannelAffine(bias)": 110,
+    "binarizer (ge) of a float tensor": 108,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 108,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 108,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 108,
+    "affine -> binary epilogue post_mul": 108,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 89,
+    "Add of runtime tensors -> Add": 59,
+    "Concat (channels) -> Concat": 12,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (sign_zero) of a float tensor": 2,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 0.0,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-e-imagenet:sign_zero": {
+   "model_id": "bnas-e-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3434d4b3f6b430941205f8a34cd248148f8cb1852aee2a86a316e60b25245c26",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "bace7b1717c3b8149382b886499014bcbef49afa2c9d915d8ea77e3a5b20f9bf",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.5546875,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 759162880
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 759162880
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.329070518200751e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.31154727935791,
+     "f32_top1_disagreements": 2
+    },
+    "canonical": {
+     "nodes": 1068,
+     "groups": 419,
+     "explicit_binary_pads": 89,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1068,
+     "initializers": 526,
+     "op_counts": {
+      "Conv": 115,
+      "Cast": 228,
+      "Mul": 113,
+      "Add": 174,
+      "Relu": 112,
+      "Sign": 110,
+      "qonnx.custom_op.general:BipolarQuant": 108,
+      "Pad": 89,
+      "Concat": 12,
+      "MaxPool": 4,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 110
+     },
+     "binary_layers": 110,
+     "named_nodes": 732,
+     "activation_nodes": 732,
+     "groups": 419,
+     "sha256": "bace7b1717c3b8149382b886499014bcbef49afa2c9d915d8ea77e3a5b20f9bf"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "published": {
+    "data_sha256": "65f304d596f75b722598aee66b91d3b5c218467e206d3369cc0b377b888469a2",
+    "graph_sha256": "d07ef8c5081994813341e04b905a59161d9ba316792e13cc3fa992c58717acb3"
+   },
+   "reimported": {
+    "data_sha256": "65f304d596f75b722598aee66b91d3b5c218467e206d3369cc0b377b888469a2",
+    "graph_sha256": "d07ef8c5081994813341e04b905a59161d9ba316792e13cc3fa992c58717acb3",
+    "bytes": 25718784
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true,
+    "note": "recorded (--rejudge)"
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 124,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 1.5977932802436582e-07,
+      "max_abs_pre_at_first_flip": 8.079035183072847e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 15,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.263399124145508,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.2878587085651816e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 112,
+    "affine (scale 1) -> ChannelAffine(bias)": 110,
+    "binarizer (sign_zero) of a float tensor": 110,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 108,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 108,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 108,
+    "affine -> binary epilogue post_mul": 108,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 89,
+    "Add of runtime tensors -> Add": 59,
+    "Concat (channels) -> Concat": 12,
+    "MaxPool -> MaxPool2D": 4,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 1.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-h-imagenet:ge": {
+   "model_id": "bnas-h-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3e126167ed43e68ef76dcbd4b4ba03b6a35444465f019fadb3e5494b21dd8826",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "ffa5de7bc2365275a12dbed3a8da9cbd56e84c12750e363f595dd7f1b9807e11",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.609375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 1840054272
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 1840054272
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 9,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.329070518200751e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 3.583815336227417,
+     "f32_top1_disagreements": 7
+    },
+    "canonical": {
+     "nodes": 1444,
+     "groups": 563,
+     "explicit_binary_pads": 121,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1444,
+     "initializers": 710,
+     "op_counts": {
+      "Conv": 155,
+      "Cast": 308,
+      "Mul": 153,
+      "Add": 234,
+      "Relu": 152,
+      "qonnx.custom_op.general:BipolarQuant": 296,
+      "Pad": 121,
+      "Concat": 16,
+      "MaxPool": 4,
+      "Sign": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 148,
+      "sign_zero": 2
+     },
+     "binary_layers": 150,
+     "named_nodes": 988,
+     "activation_nodes": 988,
+     "groups": 563,
+     "sha256": "ffa5de7bc2365275a12dbed3a8da9cbd56e84c12750e363f595dd7f1b9807e11"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06",
+    "graph_sha256": "921e8dcf918aa061f5ee0abc5fb59c0bc7d22bf38848a7f5ac955298586002f0"
+   },
+   "recipe_expected": {
+    "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06",
+    "graph_sha256": "921e8dcf918aa061f5ee0abc5fb59c0bc7d22bf38848a7f5ac955298586002f0"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06",
+    "graph_sha256": "921e8dcf918aa061f5ee0abc5fb59c0bc7d22bf38848a7f5ac955298586002f0",
+    "bytes": 88385984
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 1,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 116,
+      "deviating": 12,
+      "with_flip": 12,
+      "max_rel_pre_at_first_flip": 4.527252989539617e-07,
+      "max_abs_pre_at_first_flip": 1.472551502956776e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (5) + 1",
+      "passed": false
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 0.9765625,
+      "n_top1_disagreements": 3
+     }
+    },
+    "binarization_flip_samples": 28,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.9658040404319763,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.5987211554602254e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 152,
+    "affine (scale 1) -> ChannelAffine(bias)": 150,
+    "binarizer (ge) of a float tensor": 148,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 148,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 148,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 148,
+    "affine -> binary epilogue post_mul": 148,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 121,
+    "Add of runtime tensors -> Add": 79,
+    "Concat (channels) -> Concat": 16,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (sign_zero) of a float tensor": 2,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 9876.7,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "bnas-h-imagenet:sign_zero": {
+   "model_id": "bnas-h-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "3e126167ed43e68ef76dcbd4b4ba03b6a35444465f019fadb3e5494b21dd8826",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'bnas'",
+    "onnx_sha256": "b34d26d6407cad8f7e8aa1c0c383fe735c0a4c39a255066a96957b66a0558fe8",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.609375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 1840054272
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 1840054272
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 9,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 5.329070518200751e-15,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 3.583815336227417,
+     "f32_top1_disagreements": 7
+    },
+    "canonical": {
+     "nodes": 1444,
+     "groups": 563,
+     "explicit_binary_pads": 121,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 1444,
+     "initializers": 710,
+     "op_counts": {
+      "Conv": 155,
+      "Cast": 308,
+      "Mul": 153,
+      "Add": 234,
+      "Relu": 152,
+      "Sign": 150,
+      "qonnx.custom_op.general:BipolarQuant": 148,
+      "Pad": 121,
+      "Concat": 16,
+      "MaxPool": 4,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 150
+     },
+     "binary_layers": 150,
+     "named_nodes": 988,
+     "activation_nodes": 988,
+     "groups": 563,
+     "sha256": "b34d26d6407cad8f7e8aa1c0c383fe735c0a4c39a255066a96957b66a0558fe8"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06",
+    "graph_sha256": "02d478707b7a93a3f1b31ccdffc4cd684e404faec4c064516e889dafe9190d6b"
+   },
+   "reimported": {
+    "data_sha256": "e4c7c10f5cfa33d2d7b52d664231ed69de8c35c098621ae1975bced0067bba06",
+    "graph_sha256": "02d478707b7a93a3f1b31ccdffc4cd684e404faec4c064516e889dafe9190d6b",
+    "bytes": 88388928
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 1,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 116,
+      "deviating": 12,
+      "with_flip": 12,
+      "max_rel_pre_at_first_flip": 4.527252989539617e-07,
+      "max_abs_pre_at_first_flip": 1.472551502956776e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (6) + 1",
+      "passed": false
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 0.96875,
+      "n_top1_disagreements": 4
+     }
+    },
+    "binarization_flip_samples": 30,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 2.9658040404319763,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.5987211554602254e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 5,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 5,
+    "Relu -> Activation(relu)": 152,
+    "affine (scale 1) -> ChannelAffine(bias)": 150,
+    "binarizer (sign_zero) of a float tensor": 150,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 148,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 148,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 148,
+    "affine -> binary epilogue post_mul": 148,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 121,
+    "Add of runtime tensors -> Add": 79,
+    "Concat (channels) -> Concat": 16,
+    "MaxPool -> MaxPool2D": 4,
+    "Conv(Bin(x), float W) declared bitino.float_layer -> Activation(sign) + Conv2D": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 9136.8,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "adabin-resnet20-cifar10:ge": {
+   "model_id": "adabin-resnet20-cifar10",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128_cifar10_norm",
+   "preprocess": "cifar10_imagenet_norm",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "d5cd1cb55c4d768db02b1321a2b5ff1e7e4250fed1a59f2e4a5cf68a92b1c3bc",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'adabin'",
+    "onnx_sha256": "4e142e96234838502d6bac6754a34126f079f5728a8ebf9529d4784f91c87021",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.9140625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 23592960,
+      "gradient_approx_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 23592960,
+      "gradient_approx_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.0658141036401503e-14,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 9.5367431640625e-06,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 310,
+     "groups": 177,
+     "explicit_binary_pads": 0,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17,
+      "qonnx.custom_op.general": 1
+     },
+     "nodes": 310,
+     "initializers": 143,
+     "op_counts": {
+      "Conv": 19,
+      "Cast": 40,
+      "Mul": 95,
+      "Add": 75,
+      "Relu": 38,
+      "Sub": 18,
+      "qonnx.custom_op.general:BipolarQuant": 18,
+      "AveragePool": 2,
+      "Pad": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "ge": 18
+     },
+     "binary_layers": 0,
+     "adabin_convs": 18,
+     "named_nodes": 270,
+     "activation_nodes": 270,
+     "groups": 177,
+     "sha256": "4e142e96234838502d6bac6754a34126f079f5728a8ebf9529d4784f91c87021"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "f5eda3ecf8d2105add76660ae9b58ddfbd2fbd3bf9c1b05359e17ce63544e814",
+    "graph_sha256": "b8c4e322cbd7c63061c9a2ce3083dc7c57df944ddc62836302f0c0ccdb9cc89a"
+   },
+   "recipe_expected": {
+    "data_sha256": "f5eda3ecf8d2105add76660ae9b58ddfbd2fbd3bf9c1b05359e17ce63544e814",
+    "graph_sha256": "b8c4e322cbd7c63061c9a2ce3083dc7c57df944ddc62836302f0c0ccdb9cc89a"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "f5eda3ecf8d2105add76660ae9b58ddfbd2fbd3bf9c1b05359e17ce63544e814",
+    "graph_sha256": "b8c4e322cbd7c63061c9a2ce3083dc7c57df944ddc62836302f0c0ccdb9cc89a",
+    "bytes": 828800
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_norm",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 17,
+      "deviating": 111,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 111,
+      "max_rel_delta_without_flip": 3.375283120392066e-07,
+      "max_abs_delta_without_flip": 1.7126752123175493e-06,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 2,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 1.9054045677185059,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.5987211554602254e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "affine -> ChannelAffine": 2,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 2,
+    "Relu -> Activation(relu)": 38,
+    "affine (shift 0) -> ChannelAffine(scale)": 57,
+    "Add of runtime tensors -> Add": 37,
+    "AdaBin conv (Bin(x - beta) + beta) * alpha, two-level weights [+ affine] -> BConv2D x2 + Conv2D 1x1 + Add + Add(map)": 18,
+    "AveragePool -> AvgPool2D": 2,
+    "Pad -> Pad": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 149.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "adabin-resnet20-cifar10:sign_zero": {
+   "model_id": "adabin-resnet20-cifar10",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128_cifar10_norm",
+   "preprocess": "cifar10_imagenet_norm",
+   "output_kind": "logits",
+   "export": {
+    "checkpoint_sha256": "d5cd1cb55c4d768db02b1321a2b5ff1e7e4250fed1a59f2e4a5cf68a92b1c3bc",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'adabin'",
+    "onnx_sha256": "62934a71801a7c48707adddfac709419f6b6fd2e284d91544e16d81540905fc2",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none"
+    ],
+    "source_top1": 0.9140625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 23592960,
+      "gradient_approx_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 23592960,
+      "gradient_approx_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "source_f32_vs_f64_max_abs": null,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.0658141036401503e-14,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 9.5367431640625e-06,
+     "f32_top1_disagreements": 0
+    },
+    "canonical": {
+     "nodes": 310,
+     "groups": 177,
+     "explicit_binary_pads": 0,
+     "ir_version": 10,
+     "ir_unique_counter": null
+    }
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "summary": {
+     "ir_version": 10,
+     "opsets": {
+      "ai.onnx": 17
+     },
+     "nodes": 310,
+     "initializers": 142,
+     "op_counts": {
+      "Conv": 19,
+      "Cast": 40,
+      "Mul": 95,
+      "Add": 75,
+      "Relu": 38,
+      "Sub": 18,
+      "Sign": 18,
+      "AveragePool": 2,
+      "Pad": 2,
+      "GlobalAveragePool": 1,
+      "Flatten": 1,
+      "Gemm": 1
+     },
+     "binarizers": {
+      "sign_zero": 18
+     },
+     "binary_layers": 0,
+     "adabin_convs": 18,
+     "named_nodes": 270,
+     "activation_nodes": 270,
+     "groups": 177,
+     "sha256": "62934a71801a7c48707adddfac709419f6b6fd2e284d91544e16d81540905fc2"
+    },
+    "warnings": [],
+    "errors": []
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "f5eda3ecf8d2105add76660ae9b58ddfbd2fbd3bf9c1b05359e17ce63544e814",
+    "graph_sha256": "b62e8705f944249079921dc5244b25eabf8f57e888d5f71818d67a40fbb3ea8f"
+   },
+   "reimported": {
+    "data_sha256": "f5eda3ecf8d2105add76660ae9b58ddfbd2fbd3bf9c1b05359e17ce63544e814",
+    "graph_sha256": "b62e8705f944249079921dc5244b25eabf8f57e888d5f71818d67a40fbb3ea8f",
+    "bytes": 828800
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "validate_model": {
+    "python": ".cache/venv-qonnx/bin/python",
+    "returncode": 0,
+    "stderr_tail": []
+   },
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_cifar10_norm",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "samples_within_dev_threshold": 17,
+      "deviating": 111,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 111,
+      "max_rel_delta_without_flip": 3.375283120392066e-07,
+      "max_abs_delta_without_flip": 1.7126752123175493e-06,
+      "flip_list_complete": true,
+      "passed": true,
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |logit|"
+     }
+    },
+    "informational": {
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     },
+     "numpy_f32_vs_qonnx_f64": {
+      "top1_agreement": 1.0,
+      "n_top1_disagreements": 0
+     }
+    },
+    "binarization_flip_samples": 2,
+    "export_check_source_f32_vs_qonnx_f32_max_abs": 1.9054045677185059,
+    "export_check_source_f64_vs_qonnx_f64_max_abs": 1.5987211554602254e-14,
+    "export_check_source_f64_vs_qonnx_f64_top1": 1.0,
+    "cpp_host_reference_exact_vs_numpy": true
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "affine -> ChannelAffine": 2,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 2,
+    "Relu -> Activation(relu)": 38,
+    "affine (shift 0) -> ChannelAffine(scale)": 57,
+    "Add of runtime tensors -> Add": 37,
+    "AdaBin conv (Bin(x - beta) + beta) * alpha, two-level weights [+ affine] -> BConv2D x2 + Conv2D 1x1 + Add + Add(map)": 18,
+    "AveragePool -> AvgPool2D": 2,
+    "Pad -> Pad": 2,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 201.5,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  }
+ }
+}

@@ -1,6 +1,6 @@
 # Full ImageNet-1k validation accuracy (50,000 images)
 
-Generated 2026-11-20 by `tools/accuracy_full_val.py summarize` from `.cache/full50k/results/`. Eval set `imagenet-val-50000` (`.cache/full50k_orig/manifest50k.json`, SHA-256 `8fc65aac0d6ecfbe…`). Host runtime `build/host/bitino_bench`, 1 thread per process. 95 % Wilson intervals; int8 Δ = paired difference int8_full − all on the same images, 95 % CI, exact McNemar p.
+Generated 2026-11-22 by `tools/accuracy_full_val.py summarize` from `.cache/full50k_orig/results/`. Eval set `imagenet-val-50000` (`.cache/full50k_orig/manifest50k.json`, SHA-256 `8fc65aac0d6ecfbe…`). Host runtime `build/host/bitino_bench`, 1 thread per process. 95 % Wilson intervals; int8 Δ = paired difference int8_full − all on the same images, 95 % CI, exact McNemar p.
 
 **Data caveat.** Full validation set at original resolution; each model's own evaluation preprocessing is applied.
 
@@ -9,58 +9,58 @@ Generated 2026-11-20 by `tools/accuracy_full_val.py summarize` from `.cache/full
 | `ab-bnn-imagenet-reactnet18` ★ | torchvision_imagenet | 61.39 | 61.26 [60.8, 61.7] | 83.01 | -0.13 | 60.31 | -0.95 [-1.21, -0.69] | 1.1e-12 | 50,000 |
 | `ab-bnn-imagenet-reactnet34` ★ | torchvision_imagenet | 65.19 | 64.93 [64.5, 65.3] | 85.90 | -0.26 | 64.41 | -0.52 [-0.76, -0.28] | 2.4e-05 | 50,000 |
 | `ab-bnn-imagenet-reactneta` ★ | torchvision_imagenet | 66.89 | 66.68 [66.3, 67.1] | 86.99 | -0.21 | 66.21 | -0.47 [-0.70, -0.24] | 7.6e-05 | 50,000 |
-| `bhvit-small-binary` | bhvit | 68.40 | 68.47 [68.1, 68.9] | 88.09 | +0.07 | not run | – | – | 50,000 |
-| `bhvit-small-somefp` | bhvit | 70.10 | 70.13 [69.7, 70.5] | 89.26 | +0.03 | not run | – | – | 50,000 |
+| `bhvit-small-binary` | bhvit | 68.40 | 68.47 [68.1, 68.9] | 88.09 | +0.07 | 65.77 | -2.70 [-2.99, -2.41] | 5.3e-74 | 50,000 |
+| `bhvit-small-somefp` | bhvit | 70.10 | 70.13 [69.7, 70.5] | 89.26 | +0.03 | 68.68 | -1.45 [-1.70, -1.20] | 3e-29 | 50,000 |
 | `bhvit-tiny-binary` ★ | bhvit | 64.00 | 63.81 [63.4, 64.2] | 85.23 | -0.19 | 62.80 | -1.01 [-1.29, -0.72] | 3.8e-12 | 50,000 |
-| `bhvit-tiny-somefp` | bhvit | 66.00 | 65.75 [65.3, 66.2] | 86.36 | -0.25 | not run | – | – | 50,000 |
-| `bi-vit-deit-small` | bhvit | 40.90 | 16.82 [16.5, 17.2] | 35.51 | -24.08 | not run | – | – | 50,000 |
-| `bi-vit-deit-tiny` | bhvit | 28.70 | 15.57 [15.3, 15.9] | 34.09 | -13.13 | not run | – | – | 50,000 |
-| `biper-resnet18-imagenet` | torchvision_imagenet | 61.40 | 61.26 [60.8, 61.7] | 82.96 | -0.14 | not run | – | – | 50,000 |
-| `biper-resnet34-imagenet` | torchvision_imagenet | 65.63 | 65.37 [65.0, 65.8] | 86.15 | -0.26 | not run | – | – | 50,000 |
-| `bitorch-densenet28-imagenet` | bitorch_imagenet | 58.69 | 58.61 [58.2, 59.0] | 81.14 | -0.08 | not run | – | – | 50,000 |
-| `bitorch-meliusnet22-imagenet` | bitorch_imagenet | 64.35 | 64.41 [64.0, 64.8] | 85.39 | +0.06 | not run | – | – | 50,000 |
-| `bitorch-resnete18-imagenet` | bitorch_imagenet | 60.58 | 60.51 [60.1, 60.9] | 82.75 | -0.07 | not run | – | – | 50,000 |
-| `bnas-d-imagenet` | torchvision_imagenet | 57.71 | 57.80 [57.4, 58.2] | 80.18 | +0.09 | not run | – | – | 50,000 |
-| `bnas-e-imagenet` | torchvision_imagenet | 58.32 | 58.16 [57.7, 58.6] | 80.25 | -0.16 | not run | – | – | 50,000 |
-| `bnas-h-imagenet` | torchvision_imagenet | 63.74 | 63.72 [63.3, 64.1] | 84.52 | -0.02 | not run | – | – | 50,000 |
-| `bnext-large` | timm_bicubic_crop095 | 80.60 | 80.47 [80.1, 80.8] | 95.16 | -0.13 | not run | – | – | 50,000 |
-| `bnext-middle` | timm_bicubic_crop095 | 78.30 | 78.13 [77.8, 78.5] | 94.05 | -0.17 | not run | – | – | 50,000 |
-| `bnext-small` | timm_bicubic_crop095 | 76.10 | 76.00 [75.6, 76.4] | 92.89 | -0.10 | not run | – | – | 50,000 |
+| `bhvit-tiny-somefp` | bhvit | 66.00 | 65.75 [65.3, 66.2] | 86.36 | -0.25 | 60.87 | -4.89 [-5.21, -4.57] | 3.9e-197 | 50,000 |
+| `bi-vit-deit-small` | bhvit | 40.90 | 16.82 [16.5, 17.2] | 35.51 | -24.08 | 15.43 | -1.39 [-1.67, -1.12] | 4.9e-23 | 50,000 |
+| `bi-vit-deit-tiny` | bhvit | 28.70 | 15.57 [15.3, 15.9] | 34.09 | -13.13 | 16.32 | +0.76 [+0.46, +1.05] | 4.4e-07 | 50,000 |
+| `biper-resnet18-imagenet` | torchvision_imagenet | 61.40 | 61.26 [60.8, 61.7] | 82.96 | -0.14 | 60.18 | -1.08 [-1.37, -0.79] | 5.3e-13 | 50,000 |
+| `biper-resnet34-imagenet` | torchvision_imagenet | 65.63 | 65.37 [65.0, 65.8] | 86.15 | -0.26 | 64.63 | -0.74 [-1.02, -0.46] | 2.2e-07 | 50,000 |
+| `bitorch-densenet28-imagenet` | bitorch_imagenet | 58.69 | 58.61 [58.2, 59.0] | 81.14 | -0.08 | 57.67 | -0.94 [-1.20, -0.68] | 1.1e-12 | 50,000 |
+| `bitorch-meliusnet22-imagenet` | bitorch_imagenet | 64.35 | 64.41 [64.0, 64.8] | 85.39 | +0.06 | 0.32 | -64.10 [-64.52, -63.68] | 0 | 50,000 |
+| `bitorch-resnete18-imagenet` | bitorch_imagenet | 60.58 | 60.51 [60.1, 60.9] | 82.75 | -0.07 | 59.77 | -0.74 [-1.00, -0.47] | 6.8e-08 | 50,000 |
+| `bnas-d-imagenet` | torchvision_imagenet | 57.71 | 57.80 [57.4, 58.2] | 80.18 | +0.09 | 0.34 | -57.46 [-57.90, -57.03] | 0 | 50,000 |
+| `bnas-e-imagenet` | torchvision_imagenet | 58.32 | 58.16 [57.7, 58.6] | 80.25 | -0.16 | 56.45 | -1.71 [-2.01, -1.41] | 4.1e-29 | 50,000 |
+| `bnas-h-imagenet` | torchvision_imagenet | 63.74 | 63.72 [63.3, 64.1] | 84.52 | -0.02 | 63.32 | -0.41 [-0.67, -0.14] | 0.0029 | 50,000 |
+| `bnext-large` | timm_bicubic_crop095 | 80.60 | 80.47 [80.1, 80.8] | 95.16 | -0.13 | 79.59 | -0.87 [-1.09, -0.66] | 5.9e-16 | 50,000 |
+| `bnext-middle` | timm_bicubic_crop095 | 78.30 | 78.13 [77.8, 78.5] | 94.05 | -0.17 | 77.03 | -1.10 [-1.32, -0.88] | 6.4e-23 | 50,000 |
+| `bnext-small` | timm_bicubic_crop095 | 76.10 | 76.00 [75.6, 76.4] | 92.89 | -0.10 | 73.99 | -2.01 [-2.25, -1.77] | 5.8e-59 | 50,000 |
 | `bnext-tiny` ★ | timm_bicubic_crop095 | 72.40 | 72.30 [71.9, 72.7] | 90.58 | -0.10 | 69.28 | -3.01 [-3.30, -2.73] | 3.2e-95 | 50,000 |
 | `dabnn-bireal18` ★ | torchvision_imagenet | 56.40 | 55.92 [55.5, 56.4] | 78.91 | -0.48 | 55.65 | -0.28 [-0.56, +0.00] | 0.054 | 50,000 |
-| `dabnn-bireal18-stem` | torchvision_imagenet | 56.40 | 56.09 [55.7, 56.5] | 79.27 | -0.31 | not run | – | – | 50,000 |
-| `larq-zoo-binary-alexnet` | larq_zoo | 36.30 | 36.30 [35.9, 36.7] | 61.54 | +0.00 | not run | – | – | 50,000 |
-| `larq-zoo-binary-densenet28` | larq_zoo | 60.91 | 60.90 [60.5, 61.3] | 82.79 | -0.01 | not run | – | – | 50,000 |
+| `dabnn-bireal18-stem` | torchvision_imagenet | 56.40 | 56.09 [55.7, 56.5] | 79.27 | -0.31 | 56.03 | -0.06 [-0.35, +0.22] | 0.68 | 50,000 |
+| `larq-zoo-binary-alexnet` | larq_zoo | 36.30 | 36.30 [35.9, 36.7] | 61.54 | +0.00 | 36.05 | -0.26 [-0.55, +0.03] | 0.085 | 50,000 |
+| `larq-zoo-binary-densenet28` | larq_zoo | 60.91 | 60.90 [60.5, 61.3] | 82.79 | -0.01 | 60.26 | -0.64 [-0.89, -0.39] | 6.8e-07 | 50,000 |
 | `larq-zoo-binary-densenet37` | larq_zoo | 62.89 | 62.86 [62.4, 63.3] | 84.19 | -0.03 | no file | – | – | 50,000 |
 | `larq-zoo-binary-densenet37-dilated` | larq_zoo | 64.34 | 64.35 [63.9, 64.8] | 85.25 | +0.01 | no file | – | – | 50,000 |
 | `larq-zoo-binary-densenet45` | larq_zoo | 64.59 | 64.54 [64.1, 65.0] | 85.24 | -0.05 | no file | – | – | 50,000 |
-| `larq-zoo-binary-resnet-e18` | larq_zoo | 58.32 | 58.31 [57.9, 58.7] | 80.87 | -0.01 | not run | – | – | 50,000 |
+| `larq-zoo-binary-resnet-e18` | larq_zoo | 58.32 | 58.31 [57.9, 58.7] | 80.87 | -0.01 | 57.42 | -0.89 [-1.17, -0.62] | 1.9e-10 | 50,000 |
 | `larq-zoo-birealnet` ★ | larq_zoo | 57.47 | 57.49 [57.1, 57.9] | 79.86 | +0.02 | 56.87 | -0.62 [-0.90, -0.33] | 2.7e-05 | 50,000 |
-| `larq-zoo-dorefanet` | larq_zoo | 53.39 | 53.43 [53.0, 53.9] | 76.55 | +0.04 | not run | – | – | 50,000 |
+| `larq-zoo-dorefanet` | larq_zoo | 53.39 | 53.43 [53.0, 53.9] | 76.55 | +0.04 | 52.79 | -0.65 [-0.90, -0.40] | 4e-07 | 50,000 |
 | `larq-zoo-meliusnet22` | larq_zoo | 62.40 | 62.56 [62.1, 63.0] | 83.82 | +0.16 | no file | – | – | 50,000 |
 | `larq-zoo-quicknet` ★ | larq_zoo | 63.30 | 63.42 [63.0, 63.8] | 84.60 | +0.12 | 61.99 | -1.43 [-1.71, -1.15] | 8.8e-24 | 50,000 |
 | `larq-zoo-quicknet-large` ★ | larq_zoo | 66.90 | 66.67 [66.3, 67.1] | 86.98 | -0.23 | 65.04 | -1.62 [-1.91, -1.33] | 2.4e-28 | 50,000 |
 | `larq-zoo-quicknet-small` ★ | larq_zoo | 59.40 | 59.54 [59.1, 60.0] | 81.71 | +0.14 | 56.87 | -2.67 [-2.97, -2.36] | 1.2e-65 | 50,000 |
-| `larq-zoo-quicknet-xl-legacy` | larq_zoo | 67.00 | 67.13 [66.7, 67.5] | 87.44 | +0.13 | not run | – | – | 50,000 |
-| `larq-zoo-real-to-binary-net` | larq_zoo | 65.01 | 65.04 [64.6, 65.5] | 85.71 | +0.03 | not run | – | – | 50,000 |
-| `larq-zoo-xnornet` | larq_zoo | 44.96 | 45.00 [44.6, 45.4] | 69.17 | +0.04 | not run | – | – | 50,000 |
-| `nncf-resnet18-binarization-dorefa` | torchvision_imagenet | 61.63 | 61.60 [61.2, 62.0] | 83.47 | -0.03 | not run | – | – | 50,000 |
-| `nncf-resnet18-binarization-xnor` | torchvision_imagenet | 61.67 | 61.73 [61.3, 62.2] | 83.51 | +0.06 | not run | – | – | 50,000 |
-| `omz-resnet18-xnor-binary-onnx-0001` | omz_bgr | 61.71 | 61.77 [61.3, 62.2] | 83.60 | +0.06 | not run | – | – | 50,000 |
-| `omz-resnet18-xnor-binary-onnx-0001-fp16` | omz_bgr | 61.71 | 61.81 [61.4, 62.2] | 83.58 | +0.10 | not run | – | – | 50,000 |
+| `larq-zoo-quicknet-xl-legacy` | larq_zoo | 67.00 | 67.13 [66.7, 67.5] | 87.44 | +0.13 | 65.17 | -1.97 [-2.26, -1.67] | 3.2e-39 | 50,000 |
+| `larq-zoo-real-to-binary-net` | larq_zoo | 65.01 | 65.04 [64.6, 65.5] | 85.71 | +0.03 | 63.57 | -1.46 [-1.73, -1.19] | 5e-26 | 50,000 |
+| `larq-zoo-xnornet` | larq_zoo | 44.96 | 45.00 [44.6, 45.4] | 69.17 | +0.04 | 44.63 | -0.37 [-0.65, -0.09] | 0.0092 | 50,000 |
+| `nncf-resnet18-binarization-dorefa` | torchvision_imagenet | 61.63 | 61.60 [61.2, 62.0] | 83.47 | -0.03 | 61.45 | -0.15 [-0.41, +0.12] | 0.28 | 50,000 |
+| `nncf-resnet18-binarization-xnor` | torchvision_imagenet | 61.67 | 61.73 [61.3, 62.2] | 83.51 | +0.06 | 61.47 | -0.26 [-0.52, +0.01] | 0.059 | 50,000 |
+| `omz-resnet18-xnor-binary-onnx-0001` | omz_bgr | 61.71 | 61.77 [61.3, 62.2] | 83.60 | +0.06 | 61.40 | -0.37 [-0.64, -0.10] | 0.0084 | 50,000 |
+| `omz-resnet18-xnor-binary-onnx-0001-fp16` | omz_bgr | 61.71 | 61.81 [61.4, 62.2] | 83.58 | +0.10 | 61.31 | -0.49 [-0.76, -0.23] | 0.00029 | 50,000 |
 | `omz-resnet50-binary-0001` ★ | omz_bgr | 70.69 | 70.57 [70.2, 71.0] | 89.22 | -0.12 | 70.26 | -0.31 [-0.55, -0.07] | 0.013 | 50,000 |
-| `omz-resnet50-binary-0001-fp16` | omz_bgr | 70.69 | 70.82 [70.4, 71.2] | 89.29 | +0.13 | not run | – | – | 50,000 |
-| `rbnn-resnet18-imagenet` | torchvision_imagenet | 59.90 | 59.55 [59.1, 60.0] | 81.75 | -0.35 | not run | – | – | 50,000 |
-| `rbnn-resnet34-imagenet` | torchvision_imagenet | 63.10 | 62.86 [62.4, 63.3] | 84.32 | -0.24 | not run | – | – | 50,000 |
-| `rbonn-reactnet-resnet18-imagenet` | torchvision_imagenet | 66.70 | 66.59 [66.2, 67.0] | 86.97 | -0.11 | not run | – | – | 50,000 |
-| `recu-resnet18-imagenet` | torchvision_imagenet | 61.20 | 61.18 [60.8, 61.6] | 82.95 | -0.02 | not run | – | – | 50,000 |
-| `recu-resnet34-imagenet` | torchvision_imagenet | 65.25 | 65.08 [64.7, 65.5] | 85.77 | -0.17 | not run | – | – | 50,000 |
-| `sa-bnn-resnet18-imagenet` | torchvision_imagenet | 61.70 | 61.69 [61.3, 62.1] | 82.75 | -0.01 | not run | – | – | 50,000 |
-| `siman-resnet18-imagenet` | torchvision_imagenet | 60.10 | 60.20 [59.8, 60.6] | 82.24 | +0.10 | not run | – | – | 50,000 |
+| `omz-resnet50-binary-0001-fp16` | omz_bgr | 70.69 | 70.82 [70.4, 71.2] | 89.29 | +0.13 | 70.48 | -0.34 [-0.58, -0.10] | 0.0064 | 50,000 |
+| `rbnn-resnet18-imagenet` | torchvision_imagenet | 59.90 | 59.55 [59.1, 60.0] | 81.75 | -0.35 | 58.94 | -0.60 [-0.88, -0.33] | 1.7e-05 | 50,000 |
+| `rbnn-resnet34-imagenet` | torchvision_imagenet | 63.10 | 62.86 [62.4, 63.3] | 84.32 | -0.24 | 62.62 | -0.24 [-0.49, +0.02] | 0.07 | 50,000 |
+| `rbonn-reactnet-resnet18-imagenet` | torchvision_imagenet | 66.70 | 66.59 [66.2, 67.0] | 86.97 | -0.11 | 65.78 | -0.81 [-1.07, -0.56] | 3.7e-10 | 50,000 |
+| `recu-resnet18-imagenet` | torchvision_imagenet | 61.20 | 61.18 [60.8, 61.6] | 82.95 | -0.02 | 59.74 | -1.44 [-1.73, -1.14] | 1.8e-21 | 50,000 |
+| `recu-resnet34-imagenet` | torchvision_imagenet | 65.25 | 65.08 [64.7, 65.5] | 85.77 | -0.17 | 60.81 | -4.27 [-4.60, -3.95] | 2.8e-150 | 50,000 |
+| `sa-bnn-resnet18-imagenet` | torchvision_imagenet | 61.70 | 61.69 [61.3, 62.1] | 82.75 | -0.01 | 61.20 | -0.48 [-0.74, -0.23] | 0.00025 | 50,000 |
+| `siman-resnet18-imagenet` | torchvision_imagenet | 60.10 | 60.20 [59.8, 60.6] | 82.24 | +0.10 | 56.99 | -3.21 [-3.52, -2.91] | 4.9e-96 | 50,000 |
 | `siman-resnet34-imagenet` | torchvision_imagenet | 63.90 | 63.64 [63.2, 64.1] | 84.78 | -0.26 | no file | – | – | 50,000 |
-| `snn-subbit-reactnet18-w0.67a1-imagenet` | torchvision_imagenet | 63.40 | 63.39 [63.0, 63.8] | 84.67 | -0.01 | not run | – | – | 50,000 |
-| `snn-subbit-reactnet18-w1a1-imagenet` | torchvision_imagenet | 65.70 | 65.80 [65.4, 66.2] | 86.34 | +0.10 | not run | – | – | 50,000 |
-| `tensorpack-dorefa-alexnet-w1a1-g32` | tensorpack_bgr | 48.50 | 48.66 [48.2, 49.1] | 72.32 | +0.16 | not run | – | – | 50,000 |
+| `snn-subbit-reactnet18-w0.67a1-imagenet` | torchvision_imagenet | 63.40 | 63.39 [63.0, 63.8] | 84.67 | -0.01 | 62.27 | -1.12 [-1.38, -0.87] | 4.8e-18 | 50,000 |
+| `snn-subbit-reactnet18-w1a1-imagenet` | torchvision_imagenet | 65.70 | 65.80 [65.4, 66.2] | 86.34 | +0.10 | 64.89 | -0.91 [-1.16, -0.66] | 1.6e-12 | 50,000 |
+| `tensorpack-dorefa-alexnet-w1a1-g32` | tensorpack_bgr | 48.50 | 48.66 [48.2, 49.1] | 72.32 | +0.16 | 48.61 | -0.05 [-0.35, +0.24] | 0.73 | 50,000 |
 
 ★ headline network (paper Table tab:acc).
 

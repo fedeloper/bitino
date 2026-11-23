@@ -276,9 +276,11 @@ def simam(x, lam: float, ft) -> np.ndarray:
 
 
 def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = False,
-        float_dtype=np.float32, post_hook=None) -> dict[str, np.ndarray]:
+        float_dtype=np.float32, post_hook=None, keep: set | None = None) -> dict[str, np.ndarray]:
     """float_dtype=np.float64 keeps all intermediates in float64 (semantic check against a
-    float64 evaluation of the source model); np.float32 mirrors the C++ runtime."""
+    float64 evaluation of the source model); np.float32 mirrors the C++ runtime. keep: a set of tensor names
+    to return together with the outputs; every other intermediate is freed after its last use (peak memory of
+    the large image models); the values are those of a full run."""
     ft = float_dtype
     env: dict[str, np.ndarray] = {}
     # Unpacked / converted constants are cached on the graph object (per float dtype) and
@@ -299,7 +301,19 @@ def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = F
     def get(name):
         return env[name] if name else None
 
-    for node in graph.nodes:
+    free_after: dict = {}
+    if keep is not None:
+        retain = set(keep) | set(graph.outputs) | set(graph.constants) | {i["name"] for i in graph.inputs}
+        last: dict = {}
+        for j, node in enumerate(graph.nodes):
+            for i in node.inputs:
+                if i:
+                    last[i] = j
+        for t, j in last.items():
+            if t not in retain:
+                free_after.setdefault(j, []).append(t)
+
+    for j_node, node in enumerate(graph.nodes):
         a = node.attrs
         ins = [get(i) for i in node.inputs]
         op = node.op
@@ -481,6 +495,10 @@ def run(graph: Graph, feeds: dict[str, np.ndarray], keep_intermediates: bool = F
         if post_hook is not None:  # diagnostics (e.g. simulated quantization of selected tensors)
             y = post_hook(node.outputs[0], y)
         env[node.outputs[0]] = y
+        for t in free_after.get(j_node, ()):
+            env.pop(t, None)
+    if keep is not None:
+        return {k: v for k, v in env.items() if k in keep or k in graph.outputs}
     if keep_intermediates:
         return env
     return {o: env[o] for o in graph.outputs}

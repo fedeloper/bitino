@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Convert a verified AB-BNN (A&B BNN, CVPR'24) checkpoint (ImageNet / CIFAR-10 / CIFAR-100) to .bitino and validate it.
 
 Runs in a plain PyTorch environment (CPU). The official model definition is imported from

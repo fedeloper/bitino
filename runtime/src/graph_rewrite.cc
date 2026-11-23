@@ -99,6 +99,72 @@ int fold_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, co
   return folded;
 }
 
+// ------------------------------------------------- runtime scalar thresholds
+// AddBroadcast(x, b), b one f32 value computed at run time (RBNN / SiMaN: b = -mean(x) over the whole sample, the
+// centering before every binary convolution), whose output only feeds the binarized f32 input 0 of BConv2D / BDense
+// nodes (ge / gt, no threshold input, no w_zero) is removed: an internal BinarizeThreshold node at its place turns b
+// into the threshold vector t[C] (C = x's last dimension) and the consumers binarize x against it. The AddBroadcast
+// was a serial pass over the whole tensor (one ~16K-element region on the caller, CIFAR ResNet-20).
+// Exact for every x and b (ops/op_defs_fused.cc, BinarizeThreshold): fl(x + b) >= 0 <=> x >= -b and
+// fl(x + b) > 0 <=> x > -b for finite b (with gradual underflow fl(x + b) = 0 only if x = -b, and rounding keeps the
+// sign; x = +-inf or NaN compare the same way on both sides); gt: t = -b also for b = +-inf or NaN; ge: b = +inf
+// gives t = -FLT_MAX (true for every x but -inf and NaN), b = -inf or NaN give t = NaN (never true).
+int fold_runtime_thresholds(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& outputs) {
+  int folded = 0;
+  const Uses u = compute_uses(nodes, infos.size(), outputs);
+  std::vector<std::pair<size_t, Node>> replace;  // AddBroadcast position -> BinarizeThreshold node
+  for (size_t n = 0; n < nodes.size(); ++n) {
+    const Node& ab = nodes[n];
+    if (ab.op != "AddBroadcast" || ab.inputs.size() != 2 || ab.outputs.size() != 1) continue;
+    const int x = ab.inputs[0], b = ab.inputs[1], t = ab.outputs[0];
+    if (x < 0 || b < 0 || x == b || u.is_output[t] || u.count[t] == 0) continue;
+    if (infos[x].dtype != DType::kF32 || infos[b].dtype != DType::kF32 || infos[x].shape.empty() ||
+        num_elements(infos[b].shape) != 1 || infos[t].shape != infos[x].shape)
+      continue;
+    std::vector<size_t> cons;
+    std::string mode;
+    bool ok = true;
+    for (size_t c = n + 1; c < nodes.size() && ok; ++c) {
+      const Node& cn = nodes[c];
+      bool uses_t = false;
+      for (int id : cn.inputs) uses_t |= id == t;
+      if (!uses_t) continue;
+      const std::string m = cn.attrs.get_string("input_binarize", "ge");
+      // before fusion: BConv2D has at most its 5 fixed inputs; BDense input 5 is w_zero
+      ok = (cn.op == "BConv2D" || cn.op == "BDense") && in_at(cn, 0) == t && in_at(cn, 4) < 0 && cn.inputs.size() <= 5 &&
+           (m == "ge" || m == "gt") && (mode.empty() || m == mode);
+      for (size_t i = 1; i < cn.inputs.size() && ok; ++i) ok = cn.inputs[i] != t;
+      if (ok) {
+        cons.push_back(c);
+        mode = m;
+      }
+    }
+    if (!ok || static_cast<int>(cons.size()) != u.count[t]) continue;
+    TensorInfo ti;
+    ti.name = infos[t].name + "/threshold";
+    ti.dtype = DType::kF32;
+    ti.shape = Shape{infos[x].shape.back()};
+    const int thr = static_cast<int>(infos.size());
+    infos.push_back(std::move(ti));
+    Node bt;
+    bt.name = ab.name + "/threshold";
+    bt.op = "BinarizeThreshold";
+    bt.inputs = {b};
+    bt.outputs = {thr};
+    bt.attrs = Json(Json::Object{{"input_binarize", Json(mode)}, {"channels", Json(infos[x].shape.back())}});
+    for (size_t c : cons) {
+      Node& cn = nodes[c];
+      if (cn.inputs.size() < 5) cn.inputs.resize(5, -1);
+      cn.inputs[0] = x;
+      cn.inputs[4] = thr;
+    }
+    replace.push_back({n, std::move(bt)});
+    ++folded;
+  }
+  for (auto& [pos, bt] : replace) nodes[pos] = std::move(bt);
+  return folded;
+}
+
 // ------------------------------------------------- scaled threshold folding
 // ChannelAffine(x, scale s, bias b or none) whose output only feeds the binarized f32 input 0 of BConv2D / BDense
 // nodes (ge / gt, no threshold input, no w_zero) is removed (DenseNet / MeliusNet batch norms before each binary
@@ -782,6 +848,7 @@ int shared_binarizations(std::vector<Node>& nodes, std::vector<TensorInfo>& info
 RewriteStats rewrite_graph(std::vector<Node>& nodes, std::vector<TensorInfo>& infos, const std::vector<int>& graph_outputs,
                            const RewriteOptions& opts) {
   RewriteStats st;
+  if (opts.fold_thresholds && opts.runtime_thresholds) st.runtime_thresholds = fold_runtime_thresholds(nodes, infos, graph_outputs);
   if (opts.fold_thresholds) st.thresholds_folded = fold_thresholds(nodes, infos, graph_outputs);
   if (opts.fold_thresholds) st.thresholds_folded += fold_scaled_thresholds(nodes, infos, graph_outputs);
   if (opts.fuse_elementwise) {

@@ -255,6 +255,7 @@ const char* bf_session_describe(bf_session* s) {
     o["plan_rewrites"] = Json(Json::Object{{"fused_nodes", Json(se.fused_nodes())},
                                            {"absorbed_nodes", Json(se.absorbed_nodes())},
                                            {"folded_thresholds", Json(se.folded_thresholds())},
+                                             {"runtime_thresholds", Json(se.runtime_thresholds())},
                                            {"hosted_epilogues", Json(se.hosted_epilogues())},
                                            {"bit_outputs", Json(se.bit_outputs())},
                                            {"shared_binarizations", Json(se.shared_binarizations())},

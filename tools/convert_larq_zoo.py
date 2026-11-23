@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Convert a verified Larq Zoo checkpoint to .bitino and produce reference outputs.
 
 Runs inside the Larq reference environment (envs/larq-zoo-requirements.txt):

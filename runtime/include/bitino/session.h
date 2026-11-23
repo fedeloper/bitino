@@ -114,6 +114,8 @@ class Session {
   // int8_full rewrites (src/graph_rewrite_i8.h): composed / folded / removed I8Lut nodes, twin nodes created, nodes merged
   const std::vector<int>& i8_rewrites() const { return i8_rewrites_; }
   int folded_thresholds() const { return folded_thresholds_; }
+  // AddBroadcast nodes of a run-time scalar folded into the binarization thresholds of their consumers.
+  int runtime_thresholds() const { return runtime_thresholds_; }
   int hosted_epilogues() const { return hosted_epilogues_; }
   int bit_outputs() const { return bit_outputs_; }
   int shared_binarizations() const { return shared_binarizations_; }  // PackBits nodes (one packing, several BDense)
@@ -168,7 +170,7 @@ class Session {
   size_t released_bytes_ = 0;
   int absorbed_luts_ = 0;
   std::vector<int> i8_rewrites_ = std::vector<int>(8, 0);
-  int fused_nodes_ = 0, absorbed_nodes_ = 0, folded_thresholds_ = 0, aliased_reshapes_ = 0, hosted_epilogues_ = 0, bit_outputs_ = 0;
+  int fused_nodes_ = 0, absorbed_nodes_ = 0, folded_thresholds_ = 0, runtime_thresholds_ = 0, aliased_reshapes_ = 0, hosted_epilogues_ = 0, bit_outputs_ = 0;
   int shared_binarizations_ = 0;
 };
 

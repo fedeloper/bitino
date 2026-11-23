@@ -1,0 +1,921 @@
+{
+ "schema": "bitino.qonnx_phase2.v1",
+ "networks": {
+  "ab-bnn-imagenet-reactnet18:ge": {
+   "model_id": "ab-bnn-imagenet-reactnet18",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "807030d146adbd691cb78a7e04e0046e8be4ca223e413b4a1ac41912f5a20db9",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'abbnn'",
+    "onnx_sha256": "c8e5b529e1569d35c3293c3cd6521bb631d36fc2a9456a9de1a86a1cf6682531",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.65625,
+    "source_exact_zeros": {
+     "f32": {
+      "move0_out_exact_zero": 82,
+      "sign_input_exact_zero": 82,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "move0_out_exact_zero": 0,
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 1,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.61226515384436,
+     "f64_top1_disagreements": 1,
+     "f32_max_abs": 3.3072757720947266,
+     "f32_top1_disagreements": 0
+    }
+   },
+   "published": {
+    "data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
+    "graph_sha256": "8fd2a98bd119c235a41b4759dd5dd5ef0228f0762ed5a41a930f058806fc8cd8"
+   },
+   "recipe_expected": {
+    "data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
+    "graph_sha256": "8fd2a98bd119c235a41b4759dd5dd5ef0228f0762ed5a41a930f058806fc8cd8"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
+    "graph_sha256": "8fd2a98bd119c235a41b4759dd5dd5ef0228f0762ed5a41a930f058806fc8cd8",
+    "bytes": 4273536
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.2079226507921703e-13,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 16,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.0705318450927734,
+     "top1_agreement": 0.984375
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.3450374603271484,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.6122651538443673,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "MaxPool -> MaxPool2D": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 48,
+    "binarizer (ge) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "PRelu -> Activation(prelu)": 16,
+    "AveragePool -> AvgPool2D": 3,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "ab-bnn-imagenet-reactnet18:sign_zero": {
+   "model_id": "ab-bnn-imagenet-reactnet18",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "807030d146adbd691cb78a7e04e0046e8be4ca223e413b4a1ac41912f5a20db9",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'abbnn'",
+    "onnx_sha256": "6ca231fff3bb4202ff5c6a682b1173ae1633d17de28e6216b25a6aaf022bd0d7",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.65625,
+    "source_exact_zeros": {
+     "f32": {
+      "move0_out_exact_zero": 82,
+      "sign_input_exact_zero": 82,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "move0_out_exact_zero": 0,
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 1,
+    "exportable_vs_source": {
+     "f64_max_abs": 2.61226515384436,
+     "f64_top1_disagreements": 1,
+     "f32_max_abs": 4.235218048095703,
+     "f32_top1_disagreements": 0
+    }
+   },
+   "published": {
+    "data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
+    "graph_sha256": "888e734a95b0e9c6a5fb3588cb4dc4544db7a787c2c5cf0612f53c0d580f4120"
+   },
+   "reimported": {
+    "data_sha256": "ecce5fe851958c0699860361af3f4277223eda1d2d07e4d44503b308acd74abc",
+    "graph_sha256": "888e734a95b0e9c6a5fb3588cb4dc4544db7a787c2c5cf0612f53c0d580f4120",
+    "bytes": 4273600
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.2079226507921703e-13,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 21,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.571744918823242,
+     "top1_agreement": 1.0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.2352142333984375,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.6122651538443673,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "MaxPool -> MaxPool2D": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 48,
+    "binarizer (sign_zero) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "PRelu -> Activation(prelu)": 16,
+    "AveragePool -> AvgPool2D": 3,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "rbonn-reactnet-resnet18-imagenet:ge": {
+   "model_id": "rbonn-reactnet-resnet18-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "f06f6b4ca0cb68eb3eecf9d3cc9837d4ee7f2bfc388cfd8481a4dcdef39f036b",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'rbonn'",
+    "onnx_sha256": "4c33eb55ca487d5ef44d86a4f1582673a85cac75906e788550d4c112cf02d7e0",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.6640625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 3,
+      "n_binarized": 215154688,
+      "sign_module_output_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688,
+      "sign_module_output_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "exportable_vs_source": {
+     "f64_max_abs": 6.580153928326331,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 6.580157279968262,
+     "f32_top1_disagreements": 0
+    }
+   },
+   "published": {
+    "data_sha256": "c6bdc47b26fe67843518de81f4246dca88c0b66f2feb0433d4f912241ccfd5db",
+    "graph_sha256": "14d7eb5f7845faadc899a3e81b3d76ecf76adaa08f0234ed09a97c3d3e9abdea"
+   },
+   "recipe_expected": {
+    "data_sha256": "c6bdc47b26fe67843518de81f4246dca88c0b66f2feb0433d4f912241ccfd5db",
+    "graph_sha256": "14d7eb5f7845faadc899a3e81b3d76ecf76adaa08f0234ed09a97c3d3e9abdea"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "c6bdc47b26fe67843518de81f4246dca88c0b66f2feb0433d4f912241ccfd5db",
+    "graph_sha256": "14d7eb5f7845faadc899a3e81b3d76ecf76adaa08f0234ed09a97c3d3e9abdea",
+    "bytes": 4293120
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.7602219431981376,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 16,
+    "binarization_flip_samples": 12,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 6.850337982177734,
+     "top1_agreement": 1.0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 6.850334167480469,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 6.580153928326329,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 20,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 20,
+    "MaxPool -> MaxPool2D": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 48,
+    "binarizer (ge) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "PRelu -> Activation(prelu)": 16,
+    "AveragePool -> AvgPool2D": 3,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "rbonn-reactnet-resnet18-imagenet:sign_zero": {
+   "model_id": "rbonn-reactnet-resnet18-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "f06f6b4ca0cb68eb3eecf9d3cc9837d4ee7f2bfc388cfd8481a4dcdef39f036b",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'rbonn'",
+    "onnx_sha256": "e38252f7b5433bb22d961c077d65e9640b1439a975ea0e842de753f0079ec70b",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.6640625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 3,
+      "n_binarized": 215154688,
+      "sign_module_output_ne_torch_sign": 0
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688,
+      "sign_module_output_ne_torch_sign": 0
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "exportable_vs_source": {
+     "f64_max_abs": 6.580153928326331,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 6.580157279968262,
+     "f32_top1_disagreements": 0
+    }
+   },
+   "published": {
+    "data_sha256": "c6bdc47b26fe67843518de81f4246dca88c0b66f2feb0433d4f912241ccfd5db",
+    "graph_sha256": "7ad97ac3b034a0facc1143ba5877bb547be782732b250d024e11a584b467c620"
+   },
+   "reimported": {
+    "data_sha256": "c6bdc47b26fe67843518de81f4246dca88c0b66f2feb0433d4f912241ccfd5db",
+    "graph_sha256": "7ad97ac3b034a0facc1143ba5877bb547be782732b250d024e11a584b467c620",
+    "bytes": 4293248
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.7602219431981376,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 16,
+    "binarization_flip_samples": 15,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 8.881969451904297,
+     "top1_agreement": 1.0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 6.850334167480469,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 6.580153928326329,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 20,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 20,
+    "MaxPool -> MaxPool2D": 1,
+    "affine (scale 1) -> ChannelAffine(bias)": 48,
+    "binarizer (sign_zero) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "PRelu -> Activation(prelu)": 16,
+    "AveragePool -> AvgPool2D": 3,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "recu-resnet18-imagenet:ge": {
+   "model_id": "recu-resnet18-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "3be9ceb7b3904d1a59ca4674da6ad08e500df79e4ea1f739f698e08eeccc0367",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'recu'",
+    "onnx_sha256": "5d7b6d15c55c36119953d1b69a976e6b09393d221a5a6d493b007dea0a77dda1",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.59375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 3,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.455986727999985,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 1.9255905151367188,
+     "f32_top1_disagreements": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569"
+   },
+   "recipe_expected": {
+    "data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569",
+    "bytes": 4221568
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.8977638619041928,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 123,
+    "binarization_flip_samples": 16,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.3002052307128906,
+     "top1_agreement": 1.0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.3002052307128906,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.4559867279999845,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 21,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 21,
+    "Clip -> Activation(hardtanh)": 17,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (ge) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "recu-resnet18-imagenet:sign_zero": {
+   "model_id": "recu-resnet18-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "3be9ceb7b3904d1a59ca4674da6ad08e500df79e4ea1f739f698e08eeccc0367",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'recu'",
+    "onnx_sha256": "8f159c4fed740566d666c984269959f34bb04c2adcef9173375c5c11bce3582c",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.59375,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 3,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 0,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.455986727999985,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 1.9255905151367188,
+     "f32_top1_disagreements": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "graph_sha256": "31b75adb9d274afdf5e6d3c3b2f53e34ac427ff37008662ebf3cc27c86a5da17"
+   },
+   "reimported": {
+    "data_sha256": "15848412289bd57fc6274bf4453d68b2d93673c9f473d07968536ac09d21177b",
+    "graph_sha256": "31b75adb9d274afdf5e6d3c3b2f53e34ac427ff37008662ebf3cc27c86a5da17",
+    "bytes": 4221696
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.8977638619041928,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 123,
+    "binarization_flip_samples": 16,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 1.8770973235368729,
+     "top1_agreement": 0.9921875
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.186863899230957,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.4559867279999845,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 21,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 21,
+    "Clip -> Activation(hardtanh)": 17,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (sign_zero) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "biper-resnet18-imagenet:ge": {
+   "model_id": "biper-resnet18-imagenet",
+   "variant": "ge",
+   "published_file": "model.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "e7b3cf0533b856c1a0aef14fe6bb7299a5a2af7bab1212cff8d3e5ab63a70413",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'biper'",
+    "onnx_sha256": "dce0cbb6bb94ac58c3676efc09ea7fe63a985f4ef5e703adf67d9502bd8609c2",
+    "binarizer": {
+     "option": "ge",
+     "source": "sign_zero",
+     "exported": "ge",
+     "onnx_op": "BipolarQuant",
+     "note": "deployable choice (0 -> +1) of the legacy converter; differs from the source only for activations exactly 0 at a binarization point (counted in source_exact_zeros)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.6015625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 8,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.932576948578928,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.1222236156463623,
+     "f32_top1_disagreements": 4
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "a5f2c2ad0720c4b3006f0de5d6bdd2845e35c6208ff6f672e5f0c5a680ab3696",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569"
+   },
+   "recipe_expected": {
+    "data_sha256": "a5f2c2ad0720c4b3006f0de5d6bdd2845e35c6208ff6f672e5f0c5a680ab3696",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "a5f2c2ad0720c4b3006f0de5d6bdd2845e35c6208ff6f672e5f0c5a680ab3696",
+    "graph_sha256": "2b3d61bcc3bcdb55b9ec2831810e70e374d60c4e9d8d083c725c21e3855e2569",
+    "bytes": 4221376
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.3228019388632508,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 97,
+    "binarization_flip_samples": 21,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.446957588195801,
+     "top1_agreement": 0.984375
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.792126417160034,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.9325769485789226,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 21,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 21,
+    "Clip -> Activation(hardtanh)": 17,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (ge) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  },
+  "biper-resnet18-imagenet:sign_zero": {
+   "model_id": "biper-resnet18-imagenet",
+   "variant": "sign_zero",
+   "published_file": "model_sign_zero.bitino",
+   "eval_dir": "eval128",
+   "preprocess": "torchvision_imagenet",
+   "export": {
+    "checkpoint_sha256": "e7b3cf0533b856c1a0aef14fe6bb7299a5a2af7bab1212cff8d3e5ab63a70413",
+    "exporter": "torch 2.6.0+cpu torch.onnx.export (TorchScript, opset 17) + tools/export_torch_qonnx.py hook 'biper'",
+    "onnx_sha256": "1ac33d8beb8152de9900a7cfc7c9b03bfe6df6baaf2c9369cffc9767d11f5421",
+    "binarizer": {
+     "option": "source",
+     "source": "sign_zero",
+     "exported": "sign_zero",
+     "onnx_op": "Sign",
+     "note": "the authors' binarizer (exact)"
+    },
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep"
+    ],
+    "source_top1": 0.6015625,
+    "source_exact_zeros": {
+     "f32": {
+      "sign_input_exact_zero": 8,
+      "n_binarized": 215154688
+     },
+     "f64": {
+      "sign_input_exact_zero": 0,
+      "n_binarized": 215154688
+     }
+    },
+    "source_f32_vs_f64_top1_disagreements": 2,
+    "exportable_vs_source": {
+     "f64_max_abs": 1.932576948578928,
+     "f64_top1_disagreements": 0,
+     "f32_max_abs": 2.2831058502197266,
+     "f32_top1_disagreements": 5
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "a5f2c2ad0720c4b3006f0de5d6bdd2845e35c6208ff6f672e5f0c5a680ab3696",
+    "graph_sha256": "31b75adb9d274afdf5e6d3c3b2f53e34ac427ff37008662ebf3cc27c86a5da17"
+   },
+   "reimported": {
+    "data_sha256": "a5f2c2ad0720c4b3006f0de5d6bdd2845e35c6208ff6f672e5f0c5a680ab3696",
+    "graph_sha256": "31b75adb9d274afdf5e6d3c3b2f53e34ac427ff37008662ebf3cc27c86a5da17",
+    "bytes": 4221504
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "graph_identical_up_to_names": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+     "passed": true
+    },
+    "semantic_f64_max_abs": 1.3228019388632508,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 97,
+    "binarization_flip_samples": 24,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.4759864807128906,
+     "top1_agreement": 0.9765625
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.792126417160034,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.9325769485789226,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "cleanup_effect_raw_f64_vs_clean_f64_max_abs": 0.0,
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 21,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 21,
+    "Clip -> Activation(hardtanh)": 17,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (sign_zero) of a float tensor": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv zero padding of a binarized tensor -> binary pad_value 0": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "GlobalAveragePool + flatten -> GlobalAvgPool(keepdims 0)": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "status": "IDENTICAL FILE (data + graph)"
+  }
+ }
+}

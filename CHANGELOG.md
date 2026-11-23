@@ -17,6 +17,14 @@ All notable changes to Bitino. Dates are UTC.
   accuracy change of the headline files is now measured on the same 50,000 images.
 - **QONNX import.** Brevitas, QONNX and FINN-ONNX models import through one importer
   ([docs/converting-a-new-bnn.md](docs/converting-a-new-bnn.md)).
+- **QONNX as the standard format of every network.** All 132 networks, float and int8_full files, have a canonical
+  QONNX file written in standard ONNX + QONNX operators only, and `tools/build_from_qonnx.py` builds every file from
+  it: all 486 files (296 published, 190 derived) come out with the published data and graph SHA-256
+  ([docs/qonnx-standard.md](docs/qonnx-standard.md), profile and checker: [docs/qonnx-profile.md](docs/qonnx-profile.md),
+  `tools/check_qonnx.py`). `bitino fetch` still uses the per-framework converters, kept as cross-checks.
+- **Full ImageNet int8_full accuracy for all 50 ImageNet int8_full files** (`accuracy.full_val.int8_full`): 48 lose a
+  median 0.84 pt; BNAS-D and the bitorch MeliusNet-22 int8_full files collapse to chance level and should not be
+  used (their float files are unaffected).
 - **32-bit Android release binary** (`bitino_bench-android-armv7`, `bitino-sdk-android-armv7.tar.gz`), so
   `scripts/bench_my_phone.sh` runs on armeabi-v7a phones without a local build.
 - **Community speed table**: phones measured by users with `scripts/bench_my_phone.sh` and validated by

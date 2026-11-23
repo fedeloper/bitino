@@ -1,8 +1,22 @@
-# QONNX as Bitino's model interface (proposal)
+# QONNX as Bitino's model interface
 
-Status: **proposal**, nothing below is implemented yet except where marked *today*. Decided (2026-11-19): QONNX is the
-**default route for new models**; existing families move to it only when the new route reproduces their files. Companion guide:
-[converting-a-new-bnn.md](converting-a-new-bnn.md).
+Status: **done (step 6, 2026-11-21): QONNX is THE build path.** Every published file of the 132 networks (195 float
+files, 101 int8_full files) and every derived file is built checkpoint → canonical QONNX file → `bitino.qonnx_import`
+→ `.bitino` by `tools/build_from_qonnx.py` (routes: `registry/qonnx_routes.json`) with the published data and graph
+SHA-256; the IR-emitting converters `tools/convert_*.py` are legacy cross-checks (`tools/qonnx_legacy_crosscheck.py`).
+Overview of the standard: [qonnx-standard.md](qonnx-standard.md); step-6 report: [qonnx-step6.md](qonnx-step6.md).
+History: decided 2026-11-19: QONNX is the default route for new models. Decided 2026-11-20:
+**QONNX is the standard format of every Bitino network**: all 132, float files and int8_full files. Each network gets
+one canonical QONNX file per shipped `.bitino` file, and the `.bitino` is derived from it by one importer. The standard
+is [qonnx-profile.md](qonnx-profile.md) (Bitino QONNX profile v1: standard ONNX + QONNX operators only, required
+metadata, naming metadata, verification contract), checked by `bitino check-qonnx`. Phase 1 (importer, 8 networks) is
+done: [qonnx-phase1.md](qonnx-phase1.md); phase 2 (plain-PyTorch exporter, 4 families byte-identical): [qonnx-phase2.md](qonnx-phase2.md); step 1 (canonical PyTorch files, 43 networks byte-identical): [qonnx-step1.md](qonnx-step1.md); step 2 (Keras / Larq): [qonnx-step2.md](qonnx-step2.md); step 3 (transformers, image features): [qonnx-step3.md](qonnx-step3.md); step 5 (int8_full files): [qonnx-step5.md](qonnx-step5.md). Companion guide: [converting-a-new-bnn.md](converting-a-new-bnn.md).
+
+**Acceptance bar.** A family moves to the QONNX route only when the `.bitino` rebuilt from its canonical QONNX file is
+**byte-identical** to the published one: the same data SHA-256 and graph SHA-256 (`registry/recipes.json` →
+`expected`), including node and constant names, node order and constant order. Bit-identical outputs alone are not
+enough. Decided 2026-11-20: data + graph SHA-256 identity is sufficient; whole-file / manifest identity (converter name,
+timestamps, provenance fields) is not required.
 
 ## Why
 
@@ -33,13 +47,15 @@ export it, and FINN and hls4ml import it. With QONNX in the middle:
 * **The environment already exists.** *Today* `.cache/venv-qonnx` has qonnx 1.0.0 and onnxruntime 1.31.1, used by
   `tools/convert_finn_onnx.py` for three FINN/QONNX networks.
 
-Nothing changes for the runtime, the file format, the int8_full quantizer or the published files.
+Nothing changes for the runtime, the file format or the published files. The int8_full quantizer will write its
+graphs as canonical QONNX files too (step 5).
 
 ## The kernel set
 
 The importer targets the operators that the 132 converted networks actually use: 29 operator types in total. The
-`I8*` full-integer operators are not imported; `tools/quantize_int8_full.py` generates them from the float graph, as
-today.
+`I8*` full-integer operators come from `tools/quantize_int8_full.py` today; in step 5 they get canonical QONNX files of
+their own, written with standard integer operators (`ConvInteger`, `MatMulInteger`, integer epilogues, `Gather` tables),
+patterns in [qonnx-profile.md § 5](qonnx-profile.md#5-int8_full-files).
 
 Each IR operator has several kernels, selected at run time by stage and CPU features (`docs/operators.md`). The table
 lists, for each operator, how often the zoo uses it and the QONNX / ONNX pattern the importer maps onto it.
@@ -56,10 +72,10 @@ A per-channel constant subtracted before `Bin` (ReActNet's learned sign threshol
 
 | IR op | zoo use (nodes / models) | QONNX / ONNX pattern | notes |
 |---|---:|---|---|
-| `BConv2D` | 3207 / 119 | `Conv(Bin(x), W)` where `W` is `Bin(W_latent)` or a constant whose values per output channel are `±α[o]`; optional `Pad(value v)` before `Conv`; per-channel `Mul`/`Add`/`BatchNormalization` after | `Conv`'s own zero padding of a ±1 tensor = binary `pad_value 0`; an explicit `Pad(1)` / `Pad(−1)` = `pad_value ±1`; `α[o]` and the affine fold into the epilogue `mul`/`add`; groups supported |
+| `BConv2D` | 3207 / 119 | `Conv(Bin(x), W)` where `W` is `Bin(W_latent)` or a constant whose values per output channel are `±α[o]`; optional `Pad(value v)` before `Conv`; per-channel `Mul`/`Add` after (BatchNorm folded in float64) | canonical files pad a ±1 tensor only with an explicit `Pad(v ∈ {−1, 0, +1})` (the phase-1 importer also reads `Conv`'s own zero padding as `pad_value 0`); canonical weights are ±1 with `α[o]` as a `Mul` after; groups supported |
 | `BDense` | 1084 / 23 | `Gemm` / `MatMul(+Add)` with the same binarized operands | ternary weights (`w_zero`): `IntQuant(W, bitwidth 2, narrow)` |
 | `BMatMul` | 642 / 11 | `MatMul(Bin(a), Bin(b))`, both runtime tensors | BiBERT `{0,1}` binarizer: `Relu(Sign(x))` → mode `gt0` |
-| `QBConv2D` / `QBDense` | 4 / 1 + 2 / 1 | `Conv(IntQuant(x, bits ≤ 8, signed 0), Bin(W))` | DoReFa k-bit activations |
+| `QBConv2D` / `QBDense` | 4 / 1 + 2 / 1 | `Conv(Round(Mul(Clip(x, 0, 1), 2^k − 1)), Bin(W))` | DoReFa k-bit activations as integer levels (bit-exact; `IntQuant(x, 1/n)` is not, since `x / fl(1/n) ≠ x · n` in fp32) |
 
 ### Float compute
 
@@ -73,8 +89,8 @@ A per-channel constant subtracted before `Bin` (ReActNet's learned sign threshol
 
 | IR op | zoo use | pattern | notes |
 |---|---:|---|---|
-| `ChannelAffine` | 8658 / 119 | `BatchNormalization` (inference), `Mul`/`Add` with a `[1,C,1,1]` constant | folded into neighbours by the existing passes |
-| `Activation` | 2675 / 101 | `Relu`, `Clip`, `PRelu`, `LeakyRelu`, `Sigmoid`, `Tanh`, `HardSwish`, `Gelu` (opset 20) or the `Erf` decomposition, `Sign` not feeding a binary op | RPReLU = `Add` + `PRelu` + `Add` |
+| `ChannelAffine` | 8658 / 119 | `Mul`/`Add` with a `[1,C,1,1]` constant (BatchNorm folded in float64 by the exporter; `BatchNormalization` itself only in non-canonical inputs) | folded into neighbours by the existing passes |
+| `Activation` | 2675 / 101 | `Relu`, `Clip`, `PRelu`, `LeakyRelu`, `Sigmoid`, `Tanh`, `Gelu` (opset 20) or the `Erf` decomposition, `Sign` not feeding a binary op | RPReLU = `Add` + `PRelu` + `Add` |
 | `Add` | 5453 / 104 | `Add` of equal shapes | residuals |
 | `AddBroadcast` | 447 / 19 | `Add` with broadcasting | attention masks |
 | `Mul` | 228 / 27 | `Mul` of runtime tensors | |
@@ -90,24 +106,27 @@ A per-channel constant subtracted before `Bin` (ReActNet's learned sign threshol
 | `Concat` / `Reshape` / `Transpose` / `Pad` / `Gather` | 737, 3077, 468, 70, 1017 nodes | `Concat`, `Reshape`/`Flatten`/`Squeeze`/`Unsqueeze`, `Transpose`, `Pad`, `Gather` |
 | `LayerNorm` / `Softmax` | 434 / 11, 175 / 22 | `LayerNormalization` (opset 17) or its `ReduceMean`/`Sub`/`Pow`/`Sqrt`/`Div` decomposition, `Softmax` |
 
-### Image features (custom domain)
+### Image features (standard-op subgraphs)
 
 | IR op | zoo use | pattern |
 |---|---:|---|
-| `ImageGrayU8`, `FftLogMagnitude`, `LocalBinaryPattern` | 18 / 18 each | nodes in an `ai.bitino` custom domain, with the same attributes as `docs/operators_image_features.md` (the Faster-Than-Lies detectors compute these features inside the model) |
+| `ImageGrayU8`, `FftLogMagnitude`, `LocalBinaryPattern` | 18 / 18 each | subgraphs of standard ONNX operators that the importer matches back onto the fused kernels (the Faster-Than-Lies detectors compute these features inside the model): gray conversion with `Mul` / `Floor` / `Clip` / integer `Mul` / `ReduceSum` / `BitShift` (bit-exact), LBP with `Pad` / `Slice` / DOUBLE arithmetic / comparisons (bit-exact), the FFT feature as a double-precision DFT (`MatMul` on float64 cos / sin tables) under the float contract, not bit-exact (decided 2026-11-20) |
 
-The `ai.bitino` domain is the escape hatch for any operator that standard ONNX + QONNX cannot express. Every node in
-it must have a numpy reference implementation registered with the importer, so the QONNX graph stays executable for
-verification.
+There is no private domain. Every Bitino operator, including the fused full-integer kernels, is written with
+standard ONNX + QONNX operators; [qonnx-profile.md](qonnx-profile.md) gives each pattern and says whether it is
+bit-exact with the kernel and why. A construct whose exact standard-op form is not established is an open question of
+the profile, not a reason for a custom operator.
 
 ## Semantics the profile fixes
 
-These are the points where frameworks disagree and where today's converters each carry their own logic:
+These are the points where frameworks disagree and where today's converters each carry their own logic. The binding
+rules are [qonnx-profile.md § 3](qonnx-profile.md#3-semantic-rules); in short:
 
 1. **`sign(0)`.** `BipolarQuant` maps 0 to +1 and ONNX `Sign` maps 0 to 0. The importer keeps whichever the model
    uses, and never silently replaces one with the other.
-2. **Binary padding.** ONNX `Conv` pads its input with 0. After a binarizer, that is the binary-domain value 0 (the
-   PyTorch / Larq default). Padding with ±1 must be an explicit `Pad` node.
+2. **Binary padding.** A binarized tensor is padded only by an explicit `Pad` with a value in {−1, 0, +1}, and the
+   `Conv` reading it has `pads = 0` (canonical files). The phase-1 importer also reads `Conv`'s own zero padding of a
+   ±1 tensor as the binary value 0 (the PyTorch / Larq default).
 3. **Layout.** QONNX graphs are NCHW, and the importer converts to NHWC itself. `qonnx-to-channels-last` is not
    required.
 4. **Weights.** Latent float weights followed by `Bin`, or constants already in `{±α[o]}`, are both accepted. The
@@ -117,6 +136,8 @@ These are the points where frameworks disagree and where today's converters each
    kernel implements them.
 6. **Constant folding.** `qonnx-cleanup` may fold `Bin(W_latent)` into a ±1 constant, which rule 4 accepts. Folding
    across a binarizer of a *runtime* tensor is not allowed, and the importer checks for it.
+7. **BatchNorm** is folded by the exporter in float64 into `Mul` / `Add` whose constants are float64 initializers read
+   through `Cast(to FLOAT)` (ONNX `BatchNormalization` stores epsilon as float32).
 
 ## Verification (unchanged rules, new references)
 
@@ -125,25 +146,24 @@ agreement ≥ 98 %, at most the source's own float32 disagreements plus max(1, 1
 
 * **float32:** `qonnx.core.onnx_exec.execute_onnx` on the exported graph (onnxruntime for standard nodes, qonnx's
   numpy for its quantizers).
-* **float64:** a general numpy evaluator of the QONNX graph (onnxruntime has no float64 Conv), generalizing *today's*
-  `OnnxNumpy` to the patterns above.
+* **float64:** `bitino.onnx_f64.OnnxF64`, a general numpy evaluator of the QONNX graph (onnxruntime has no float64
+  Conv); float64 carriers `Cast(DOUBLE, FLOAT)` are read at their float64 value.
+* **int8_full files:** the QONNX graph in its declared integer / float types must be bit-identical to the `.bitino`
+  (all their patterns are exact; [qonnx-profile.md § 8](qonnx-profile.md#8-verification-contract)).
 * **The source framework itself** in float32 (and float64 where it has a mode for it), compared with the exported
   QONNX graph. This checks the *export*, a step that does not exist today.
 
 ## Plan
 
-| phase | work | done when |
+| step | work | done when |
 |---|---|---|
-| 0 | this document + guide | agreed |
-| 1 (**done** 2026-11-19, [qonnx-phase1.md](qonnx-phase1.md): 3 identical files, 5 identical data + bit-identical outputs, graphs equal up to node names) | `python/bitino/qonnx_import.py` for the binary, float, element-wise and pooling sets; general float64 evaluator; `bitino import-qonnx` CLI | the 3 FINN/QONNX and 5 Brevitas networks re-imported through QONNX give files with the **same data and graph SHA-256** as the published conversions (or, if the graph differs, bit-identical outputs on the check set) |
-| 2 | plain-PyTorch export path (exportable binarizer modules, `torch.onnx.export`) | one network per PyTorch family (ReActNet / AB-BNN, Bi-Real, RBONN, BNext, ReCU, AdaBin, BiPer, ...) reproduces its published file or outputs |
-| 3 | transformers (BMatMul, LayerNorm, Gather) and the `ai.bitino` image-feature domain | BiBERT, BHViT and a Faster-Than-Lies detector reproduce |
-| 4 | Larq / Keras via tf2onnx (`ste_sign` → `BipolarQuant` pattern) | Larq Zoo QuickNet and Bi-Real reproduce |
-| 5 | retire each converter whose family reproduces; keep the others as legacy front ends that write QONNX | `tools/convert_*.py` count shrinks; every recipe still rebuilds identical files |
+| done before (phase 1, 2026-11-19) | `python/bitino/qonnx_import.py` (binary, float, element-wise, pooling sets), `OnnxF64`, `bitino import-qonnx`; [qonnx-phase1.md](qonnx-phase1.md) | 3 FINN / QONNX files identical; 5 Brevitas files with identical data, graphs equal up to names |
+| **0** (**done** 2026-11-20) | the standard: [qonnx-profile.md](qonnx-profile.md) (opsets, allowed operators and the pattern of every IR operator with its exactness, semantic rules, metadata, naming / order metadata, verification contract, open questions) and its checker `python/bitino/qonnx_profile.py` / `tools/check_qonnx.py` / `bitino check-qonnx` | the profile is agreed (open questions answered); the checker runs on every canonical file |
+| 1 (**done** 2026-11-21 with step 1b ([qonnx-step1b.md](qonnx-step1b.md)): all 59 PyTorch CNN networks; first slice 2026-11-20: 43 networks, every published float file byte-identical from a profile-conformant canonical file: IR-Net family (22), AB-BNN ReActNet-18/34 (4), ReActNet-A (5), RBONN / SNN / IDa-Det (4), SA-BNN, BNext (4), bitorch (3), 81 of the 83 files also fully verified (BNext-L: identity only, memory); open: BBCU, BSRC, BNAS, BiMatting, AdaBin: [qonnx-step1.md](qonnx-step1.md)) | PyTorch CNNs: exportable binarizer modules + `torch.onnx.export`, rewritten to the profile (explicit binary `Pad`, BN folded in float64, ±1 weights + `Mul(α)`), names annotated from the published graphs; the importer reads the naming metadata and writes first-use constant order | every PyTorch CNN family (ReActNet / AB-BNN, Bi-Real, RBONN, BNext, ReCU, AdaBin, BiPer, IR-Net family, ...) rebuilds its published `model.bitino` byte for byte from its canonical file; the 8 phase-1 networks get canonical files too |
+| 2 (**done** 2026-11-21: all 23 Keras / Larq networks, see [qonnx-step2.md](qonnx-step2.md)) | Larq / Keras: a direct writer from the Keras model to the profile (`ste_sign` → `BipolarQuant`, `pad_values` → explicit `Pad`), no tf2onnx in the identity path: `tools/export_keras_qonnx.py` | Larq Zoo and the other Keras families rebuild byte for byte |
+| 3 (**done** 2026-11-21: all 29 networks, 39 float files, see [qonnx-step3.md](qonnx-step3.md)) | transformers (BMatMul, LayerNorm, Gather, BiBERT's `Relu(Sign)`) and the image-feature subgraphs: one ONNX group per IR node of the deployed graph (`python/bitino/qonnx_groups.py`, `tools/export_groups_qonnx.py`), import mode recorded in the file (`bitino.import`) | BiBERT, Bi-ViT, BHViT, GSB and the 18 Faster-Than-Lies detectors rebuild byte for byte (the FFT feature: DOUBLE `MatMul` DFT, float contract, decided 2026-11-20) |
+| 4 (**done** 2026-11-21: all 21 networks, 22 float files, see [qonnx-step4.md](qonnx-step4.md)) | front ends without an ONNX exporter write the profile themselves: OpenVINO IR (`BinaryConvolution`), daBNN ONNX, NNCF, MindSpore, tensorpack, Theano / Lasagne, and the FINN / Brevitas networks whose phase-1 files were not canonical: a direct writer from each legacy adapter's parse (`tools/export_ir_qonnx.py`, `tools/qonnx_ir_writer.py`), import layout recorded in the file (`bitino.import` mapping `patterns`) | each of their networks rebuilds byte for byte |
+| 5 (**done** 2026-11-21: all 101 published int8_full files, see [qonnx-step5.md](qonnx-step5.md)) | int8_full as QONNX: the writer (`tools/export_int8_qonnx.py`, `python/bitino/qonnx_int8.py`) writes canonical int8_full files from the published int8_full graphs (INT8 tensors, `ConvInteger` / `MatMulInteger`, integer epilogues, `Gather` tables, the l8 code); the importer maps them onto the `I8*` operators | every published `model_int8_full*.bitino` rebuilds byte for byte, and its QONNX file is bit-identical to it on the check sets |
+| 6 (**done** 2026-11-21, see [qonnx-step6.md](qonnx-step6.md)) | every recipe builds through checkpoint → QONNX → `.bitino`: one entry point `tools/build_from_qonnx.py` and per-recipe routes (`registry/qonnx_routes.json`: the writer of each file's canonical file, or the derivation of a derived file); the step-1 / 1b / 2 import arguments moved into the files (`bitino.import`), so every canonical file determines its `.bitino` alone; L8ENC as the exact 7-step bisection; the IR-emitting converters kept, marked, as legacy cross-checks (`tools/qonnx_legacy_crosscheck.py`) | all 296 published files and the derived files rebuild through the entry point with the published data and graph SHA-256. `bitino fetch` (public recipes) still runs the legacy converters, which stay as cross-checks; switching it is a later step (qonnx-step6.md) |
 
-Shipped files never change because of the migration. A family moves to the QONNX path only when the new path
-reproduces its files or its outputs exactly.
-
-**Expected to stay outside** (front ends that build the graph themselves, emitting QONNX instead of IR):
-* OpenVINO IR: its `BinaryConvolution` has no ONNX exporter.
-* MindSpore, tensorpack and Theano/Lasagne checkpoints, which have no live exporter.
+Shipped files never change because of the migration: a family switches only when its files reproduce byte for byte.

@@ -125,11 +125,14 @@ Session::Session(std::shared_ptr<const Model> model, SessionOptions opts) : mode
     ro.bit_bdense = ro.host_bdense;
     ro.pool_fused = opts_.policy.force.count("GlobalAvgPool") == 0;  // a forced pool kernel would no longer run
     ro.pool_prelu = opts_.policy.force.count("AvgPool2D") == 0 && opts_.policy.force.count("Activation") == 0;
+    const char* rt = std::getenv("BITINO_RUNTIME_THRESHOLDS");  // 0: keep the AddBroadcast passes (A/B runs)
+    ro.runtime_thresholds = !(rt && rt[0] == '0');
     RewriteStats st = rewrite_graph(nodes_, infos_, g.outputs, ro);
     fused_nodes_ = st.fused_nodes;
     hosted_epilogues_ = st.hosted_epilogues;
     absorbed_nodes_ = st.absorbed_nodes;
     folded_thresholds_ = st.thresholds_folded;
+    runtime_thresholds_ = st.runtime_thresholds;
     bit_outputs_ = st.bit_outputs;
     shared_binarizations_ = st.shared_binarizations;
     for (const Node& node : nodes_) {

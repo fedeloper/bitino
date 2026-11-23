@@ -113,6 +113,7 @@ class ThreadPool {
     std::atomic<float> wsum{1.f}, wmax{1.f};  // speed weights of the active threads (weighted claims)
     std::atomic<std::atomic<float>*> w{nullptr};  // the weight row of the region
     std::atomic<bool> weighted{false};             // weighted claims in this region
+    std::atomic<bool> timed{false};                // chunks timed for the speed weights in this region
   };
   void dispatch(int64_t n, int64_t grain, const RangeFn* fn, const SlotFn* sfn);
   void worker_loop(int index);
@@ -125,7 +126,8 @@ class ThreadPool {
   int num_threads_;
   int active_ = 1;  // set_active_threads (caller thread only)
   int spin_us_;
-  int chunks_per_thread_ = 16;  // BITINO_POOL_CHUNKS
+  int chunks_per_thread_ = 16;  // BITINO_POOL_CHUNKS: minimum chunk of weighted claims = n / (this * active)
+  int equal_chunks_per_thread_ = 8;  // BITINO_POOL_EQUAL_CHUNKS: equal chunks (weighted claims off)
   int hot_serial_div_ = 4;     // BITINO_POOL_HOT_SERIAL_DIV: serial threshold = grain / this while hot
   int hot_grain_div_ = 16;     // BITINO_POOL_HOT_GRAIN_DIV: minimum chunk = grain / (serial div * this) while hot
   std::vector<int> affinity_;
@@ -157,11 +159,12 @@ class ThreadPool {
     uint64_t items = 0, chunks = 0;
   };
   // Heterogeneous cores (weighted claims, BITINO_POOL_WEIGHTED=0 turns them off). w[i] = speed of thread i
-  // relative to the caller, measured: every chunk is timed, and after each dispatched region the caller compares the
-  // items per tick of each thread with its own (exponential average). A claim takes about remaining * w_i /
-  // (factor * sum of w) items (at least the minimum chunk), so that every claim lasts about the same time whatever
-  // the core; a worker skips the rest of a region when its chunk would end later than the threads at least as fast
-  // as itself (the slower ones skip as well) could finish all that is left.
+  // relative to the caller, measured: the chunks of a region are timed (every region of a weight row's first 16, then
+  // one in time_every_), and after such a region the caller compares the items per tick of each thread with its own
+  // (exponential average). A claim takes about remaining * w_i / (factor * sum of w) items (at least the minimum
+  // chunk), so that every claim lasts about the same time whatever the core; a worker skips the rest of a region when
+  // its chunk would end later than the threads at least as fast as itself (the slower ones skip as well) could finish
+  // all that is left. Regions whose active threads all measure within sym_tol_ of each other use equal chunks.
   struct alignas(64) RegionSlot {
     std::atomic<int64_t> items{0};
     std::atomic<uint64_t> ticks{0};
@@ -172,6 +175,9 @@ class ThreadPool {
   bool inflight_ = true;  // BITINO_POOL_SKIP_INFLIGHT: the skip rule counts every item not done, not only unclaimed ones
   float skip_slack_ = 1.f;  // BITINO_POOL_SKIP_SLACK_PCT / 100 (100): skip only when the chunk would end this many times later
   bool sizing_ = true;  // BITINO_POOL_SIZING: weighted claim sizes (0: fixed chunks, skip rule only)
+  int time_every_ = 8;  // BITINO_POOL_TIME_EVERY: after a row's first 16 regions, one in this many is timed
+  std::vector<uint32_t> row_visits_;  // regions per weight row (caller thread only)
+  float sym_tol_ = 0.2f;  // BITINO_POOL_SYM_PCT / 100 (20): equal chunks when the active threads' speeds are this close
   float factor_ = 2.f;  // BITINO_POOL_FACTOR
   std::vector<std::unique_ptr<std::atomic<float>[]>> wrows_;  // [0]: all regions, [key + 1]: set_weight_key
   int wrow_ = 0;  // current row (caller thread only)

@@ -71,6 +71,16 @@ the same IEEE operations in the same order per element, so outputs are bit-ident
   weights, so every product is unchanged. `BConv2D` consumers with negated channels need `groups == 1` and
   `pad_value == 0` (a padded tap cannot be negated); channels with `s == 0`, non-finite parameters or a
   constant binarization keep the node. Exact for finite inputs (NaN inputs of negated channels would differ).
+* **Run-time scalar thresholds.** `AddBroadcast(x, b)` with `b` a single value computed at run time (RBNN /
+  SiMaN: `b = −mean(x)` over the whole sample, `ReduceMean` + `ChannelAffine(−1)`, before every binary
+  convolution) whose output only feeds the `ge` / `gt` input 0 of `BConv2D` / `BDense` (no threshold, no `w_zero`)
+  is replaced by the internal `BinarizeThreshold(b) → t f32[C]` node; the consumers binarize `x` against `t`.
+  `t = −b`, except for `ge` with `b = +inf` (`t = −FLT_MAX`) and `b = −inf` or NaN (`t = NaN`), so `x ≥ t`
+  (`x > t`) equals `fl(x + b) ≥ 0` (`> 0`) for every `x` and `b`, infinities, NaN and denormals included (with
+  gradual underflow `fl(x + b) = 0` only when `x = −b`). The `AddBroadcast` was a serial pass over the sample
+  (CIFAR ResNet-20: 16K elements, one region on the caller): RBNN ResNet-20 at 4 threads on the OnePlus Open
+  0.393 → 0.360 ms. `BITINO_RUNTIME_THRESHOLDS=0` keeps the `AddBroadcast` (A/B). The mean itself stays a
+  `ReduceMean` (its float sum order is part of the result).
 * **Elementwise fusion.** Maximal trees of `ChannelAffine`, `Add` (+relu/relu6), `Mul`, `Activation`
   (relu, relu6, hardtanh, prelu, leaky_relu, sign, sign_zero) and `ChannelGate` whose inner tensors have one
   consumer become one internal `FusedElementwise` node (`runtime/ops/fused_elementwise.h`): a stack program,

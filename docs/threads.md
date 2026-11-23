@@ -28,8 +28,11 @@ limit while the pool is **hot**, then blocks on a condition variable. Every 1024
 | setting | default | meaning |
 |---|---|---|
 | `SessionOptions::spin_run` | **true** (was false) | hot during `Session::run`: no OS wake-up between the regions of one inference; workers block again after the run (after `spin_us`). `bitino_bench --no-spin-run` turns it off. |
-| chunks per thread | **16** (8 until 2026-11-19, 4 before 2026-11-04) | `BITINO_POOL_CHUNKS`: the minimum chunk is n / (16 × active threads) items (or the kernel's grain); weighted claims take larger ones first (below) |
+| chunks per thread | weighted claims **16**, equal chunks **8** (8 until 2026-11-19, 4 before 2026-11-04; equal chunks back to 8 on 2026-11-20) | `BITINO_POOL_CHUNKS`: the minimum chunk of weighted claims is n / (16 × active threads) items (or the kernel's grain); weighted claims take larger ones first (below). `BITINO_POOL_EQUAL_CHUNKS`: regions with equal chunks (weighted claims off by the tuning, symmetric cores, `BITINO_POOL_WEIGHTED=0`) use n / (8 × active threads), as the pool before weighted claims |
 | weighted claims | **on** (per node: on or off, tuned) | `BITINO_POOL_WEIGHTED=0` turns them off everywhere (equal chunks, no speed measurement); `BITINO_POOL_SIZING=0` keeps equal chunk sizes with the skip rule, `BITINO_POOL_SKIP=0` the sizes without it, `BITINO_POOL_SKIP_INFLIGHT=0` counts only unclaimed items in the skip rule, `BITINO_POOL_SKIP_SLACK_PCT` (100) skips only when the chunk would end that much later, `BITINO_POOL_FACTOR` (2) the claim factor |
+| symmetric cores | **20 %** | `BITINO_POOL_SYM_PCT`: a region whose active threads' measured speeds are within 20 % of each other (one cluster) takes equal chunks without the skip rule; 0 turns the rule off |
+| speed timing | first 16 regions of a node, then **1 in 8** | `BITINO_POOL_TIME_EVERY`: chunk timing and the caller's weight update after the region; 1 times every region (as on 2026-11-19) |
+| chunk clock | AArch64 `cntvct_el0`; 32-bit ARM: `CNTVCT` (MRRC) when `steady_clock` is a system call | `BITINO_POOL_CLOCK=steady` keeps `steady_clock` on 32-bit ARM |
 | `SessionOptions::auto_threads` | **true** | per-node thread counts tuned in the first runs of a session (below); `BITINO_AUTO_THREADS=0` or `bitino_bench --no-auto-threads` turns it off |
 | `BITINO_POOL_STATS` | 0 | 1: per-thread busy time, items and chunks, region wall time and the caller's tail wait; `bitino_bench` writes them to `config.pool_stats` (per run) |
 | serial threshold while hot | grain / **4** | `BITINO_POOL_HOT_SERIAL_DIV`: a kernel's grain (items below which it runs on the caller) was sized for an OS wake-up per dispatch |
@@ -239,6 +242,77 @@ full-integer model, stage `int8_full`; speedup = master's 1-thread median / medi
 recu-resnet20 int8_full 0.397 → 0.398, shuaiz-bireal20 0.408 → 0.404, siman-resnet20 0.499 → 0.494; Moto (cpu 7,
 5 rounds): rbnn 1.991 → 1.988, QuickNet 38.96 → 38.83, QuickNet int8_full 36.40 → 36.40, bnas-a 50.10 → 50.09 ms.
 
+## Moto e13 / Redmi 9A regressions of the heterogeneous pool (2026-11-20)
+
+After the 2026-11-19 merge a few models were 3-6 % slower than with the old equal-chunk pool on the two low-end phones
+(suite runs `threads_20261119_1700_*` vs `*-v2`): Bi-ViT / BiBERT at 4-8 threads on both, QuickNet-Small at 4 threads
+on the moto. Causes, each isolated with the pool's environment knobs on the phone (interleaved A/B, same binary):
+
+1. **Redmi 9A: the chunk clock was a system call.** 32-bit builds timed chunks with `steady_clock`; a 32-bit process on
+   the Redmi's arm64 4.19 kernel has no compat vDSO, so each read is a syscall: 427 ns on its Cortex-A53 against ~10 ns
+   for the virtual counter (`CNTVCT`, MRRC p15 c14). Two reads per chunk over ~500 regions per Bi-ViT run made
+   4 threads 4.5 % slower (72.4 vs 69.3 ms; with `BITINO_POOL_WEIGHTED=0`, no timing: 69.7). Fix: on 32-bit ARM the
+   pool reads `CNTVCT` when `steady_clock` costs more than 150 ns and a counter read works (probed once under a
+   temporary SIGILL handler; cores without the generic timer or kernels that deny EL0 access keep `steady_clock`).
+2. **Timing on the caller's critical path.** Even with a cheap clock, every region ended with the caller reading every
+   thread's slot and updating the weights (cache-line transfers on the A53s). Now one clock read per chunk (chained
+   from the end of the previous chunk; reset when a worker runs on into the next job, which before charged the gap
+   between jobs to its first chunk), and a weight row is timed in its first 16 regions, then in one region of 8.
+3. **Equal chunks had doubled.** The merge raised the minimum chunk from n / (8 x threads) to n / (16 x threads) for
+   both modes, so the tuner's "equal chunks" candidate (and `BITINO_POOL_WEIGHTED=0`) was no longer the old pool.
+   On the moto at 8 threads Bi-ViT-Small int8_full took 47.3 ms with 16 equal chunks per thread, 44.6 with 8 (= the old
+   pool). Equal-chunk regions use 8 again; weighted claims keep 16 (8 was 2-3 % slower on the OnePlus for ReActNet-18
+   and QuickNet at 8 threads).
+4. **Symmetric cores.** Regions whose active threads measure within 20 % of each other (one cluster) take equal chunks
+   without the skip rule. Small effect (within noise on the Redmi at 4 threads), kept because factoring and skipping
+   on equal cores only act on measurement noise.
+
+Not fixed: **QuickNet-Small at 4 threads on the moto** stays ~3 % above the old pool. Per-node profiles put the
+difference in the memory-bound float nodes (final 1024x1000 Dense 0.48 -> 0.72 ms, the 1x1 float conv and the stem
+conv), not in the pool: with every pool knob set to the old behaviour the Dense stays slow, and with the old
+`bconv2d.neon_opt` (32 per-task patch buffers instead of one per thread) it is fast again. Rotating 8 patch buffers per
+thread in the new kernel (more memory traffic) brought the Dense back to 0.59 ms, so the likely mechanism is the
+moto's traffic-driven DDR frequency scaling (not readable without root): the per-thread buffers keep the binary convs
+in cache, DDR stays at a lower clock and the next memory-bound nodes pay. Adding traffic on purpose was not done.
+Limiting the small-tile rule to layers with small weights did not help the moto and cost the OnePlus 2 %.
+
+### Measured (2026-11-20, `scripts/device_threads_bench.sh`, old pool / v2 / fixed interleaved by model)
+
+Same script and cores as the suites (3 repeats x 30 iterations, 1/2/4/8 threads, float `all` and `int8_full`); the
+three binaries per model back to back: old pool = master before the 2026-11-19 merge (afca4612), v2 = master after it
+(dbc9fd36), fixed = this change (also with the run-time threshold fold, `docs/operators.md`, which only changes the
+RBNN / SiMaN float models). Raw data: the development log (not published).
+Medians over all rows of the phone (fixed / v2): OnePlus 2t 0.995, 4t 0.992, 8t 0.982 (worst 1.013, ReActNet-18
+float 8t); moto 0.998 / 0.994 / 0.993 (worst 1.068, SiMaN ResNet-20 int8_full 4t, 1.6 ms; an interleaved A/B of that
+row gave +3.5 %, a per-node profile +1.2 % spread over tiny inline nodes); Redmi 0.982 / 0.975 / 0.974 (worst 1.021).
+
+The rows that regressed with v2, ms old / v2 / fixed:
+
+| phone | model | stage | threads | old | v2 | fixed |
+|---|---|---|---|---|---|---|
+| Redmi 9A | Bi-ViT DeiT-Tiny | all | 4 | 69.3 | 72.5 | 69.7 |
+| Redmi 9A | Bi-ViT DeiT-Tiny | int8_full | 4 | 54.4 | 57.9 | 55.2 |
+| Redmi 9A | Bi-ViT DeiT-Small | all | 4 / 8 | 154 / 113 | 160 / 117 | 155 / 113 |
+| Redmi 9A | BiBERT MRPC | all | 8 | 110 | 115 | 112 |
+| Redmi 9A | BiBERT SST-2 | all | 4 / 8 | 92.2 / 62.6 | 95.5 / 65.1 | 93.0 / 63.1 |
+| Redmi 9A | BRILLsson QuickNet | all | 8 | 5.85 | 5.82 | 5.77 |
+| moto e13 | Bi-ViT DeiT-Small | int8_full | 8 | 44.4 | 47.4 | 44.2 |
+| moto e13 | Bi-ViT DeiT-Tiny | int8_full | 8 | 19.5 | 20.0 | 19.2 |
+| moto e13 | BiBERT MRPC | all | 8 | 53.0 | 52.9 | 53.5 |
+| moto e13 | QuickNet-Small | all | 4 | 8.54 | 8.88 | 8.81 |
+| OnePlus Open | Bi-ViT DeiT-Tiny | int8_full | 4 | 6.93 | 7.04 | 6.75 |
+| OnePlus Open | BiBERT MRPC | all | 4 | 21.5 | 21.9 | 21.5 |
+
+The 8-thread gains of the merge stay (e.g. OnePlus ReActNet-18 4.66 / 3.92 / 3.98 ms, BNext-Tiny 11.6 / 9.71 / 9.47,
+Bi-ViT DeiT-Tiny 9.16 / 7.33 / 7.24). Outputs: `scripts/thread_identity.sh` on all three phones (9 models x all / neon /
+int8_full x 1/2/4/8 threads against master's 1-thread output): 108 / 108 identical each; host, ASan and the phones'
+`bitino_tests` pass.
+
+CIFAR ResNet-20s with the run-time threshold fold (stage `all`, ms v2 -> fixed): OnePlus RBNN 0.382 -> 0.351 (4t),
+0.368 -> 0.330 (8t), 1 thread 0.489 -> 0.464 (6 interleaved rounds x 200 iterations, cpu 7; SiMaN 0.494 -> 0.469,
+Bi-Real-20 0.494 -> 0.468); moto RBNN 1.21 -> 1.15 (4t), 1.09 -> 1.02 (8t), SiMaN 1.09 -> 0.987 (8t); Redmi RBNN
+Bi-Real-20 4.66 -> 4.44 (4t).
+
 ## Not done
 
 * A static work split weighted for 1 X2 + 3 A710 (e.g. 40/20/20/20): the dynamic chunks already give the X2 its
@@ -249,6 +323,9 @@ recu-resnet20 int8_full 0.397 → 0.398, shuaiz-bireal20 0.408 → 0.404, siman-
 * 8 threads: the A510s are much slower than the X2; 8 threads were slower than 4 in every run (ReActNet-18 log2,
   threads-only A/B: 6.4–8.0 ms vs 4.9–5.0 ms). (2026-11-19: fixed by the weighted claims, above.)
 * Serial nodes of small CIFAR models: RBNN's per-tensor mean centering (ReduceMean over the whole 32x32x16 tensor,
-  then AddBroadcast) and the 16K-element elementwise nodes stay on the caller (one 16384-element block each): about a
-  third of ResNet-20's time at 4 threads. Folding `x - mean >= 0` into the binary conv's threshold (`x >= mean`,
-  exact in IEEE arithmetic) would remove the AddBroadcast pass; not done (a graph rewrite, not threading).
+  then AddBroadcast) and the 16K-element elementwise nodes stay on the caller (one 16384-element block each).
+  (2026-11-20: the AddBroadcast is folded into a run-time threshold, below. The mean stays serial: its float sum
+  order is part of the result, and the `float_fast` sum already runs four independent accumulator chains, so
+  splitting them over threads gives each thread the same latency-bound chain. In `int8_full` the centering is a
+  requantizing `I8AddB`, which a fold would have to turn into a per-mean-code integer threshold table inside the
+  int8 binary kernels: not done.)

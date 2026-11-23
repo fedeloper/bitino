@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Converter for the slice-S12 CIFAR-10 ResNet-20s: AdaBin (official PyTorch, huawei-noah/Efficient-Computing)
 and FDA-BNN (MindSpore model zoo checkpoint; reference = the cited PyTorch port tools/fdabnn_reference.py,
 cross-checked against the official MindSpore code run by tools/fdabnn_mindspore_reference.py when available).

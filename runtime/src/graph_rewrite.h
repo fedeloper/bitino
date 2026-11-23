@@ -13,6 +13,11 @@
 //    bisection over the ordered floats (monotone for s != 0); channels with
 //    s < 0 are binarized negated and the consumers' weights of that channel
 //    flipped (a BConv2D only without groups and with pad_value 0). Finite x.
+//  * fold_runtime_thresholds (with fold_thresholds): AddBroadcast(x, b), b a single f32 value computed at run time
+//    (RBNN / SiMaN: minus the mean of the sample), whose output only feeds the binarized f32 input 0 of BConv2D /
+//    BDense nodes (ge / gt, no threshold input, no w_zero) is replaced by an internal BinarizeThreshold node
+//    computing the threshold vector t[C] = -b (ge: -FLT_MAX for b = +inf, NaN for b = -inf or NaN), and the
+//    consumers binarize x against t. Exact for every x and b, infinities and NaN included (graph_rewrite.cc).
 //  * fuse_elementwise: maximal trees of elementwise nodes (ChannelAffine, Add,
 //    Mul, Activation relu/relu6/hardtanh/prelu/leaky_relu/sign/sign_zero,
 //    ChannelGate) whose inner results have exactly one consumer become one
@@ -56,6 +61,9 @@ namespace bitino {
 
 struct RewriteOptions {
   bool fold_thresholds = true;
+  // With fold_thresholds: AddBroadcast(x, b) of a run-time scalar b feeding only binarizations -> runtime threshold
+  // (fold_runtime_thresholds; environment BITINO_RUNTIME_THRESHOLDS=0 turns it off for A/B runs).
+  bool runtime_thresholds = true;
   bool fuse_elementwise = true;
   // Host a fused tree in the BConv2D / BDense node producing one of its operands
   // (attribute "epilogue", kernels/float_opt/eltwise_program.h) when every other
@@ -75,6 +83,7 @@ struct RewriteOptions {
 
 struct RewriteStats {
   int thresholds_folded = 0;  // ChannelAffine nodes removed
+  int runtime_thresholds = 0;  // AddBroadcast nodes replaced by BinarizeThreshold (a run-time threshold)
   int fused_nodes = 0;        // FusedElementwise nodes created
   int absorbed_nodes = 0;     // original nodes replaced by them
   int hosted_epilogues = 0;   // fused trees moved into the BConv2D / BDense producing an operand

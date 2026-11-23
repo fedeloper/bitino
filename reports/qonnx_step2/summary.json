@@ -1,0 +1,3677 @@
+{
+ "schema": "bitino.qonnx_step2.v1",
+ "networks": {
+  "brillsson-binarydensenet28": {
+   "model_id": "brillsson-binarydensenet28",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_speechcommands",
+   "preprocess": "brillsson_logmel",
+   "export": {
+    "checkpoint_sha256": "fd13a2e8ff01aa80f98284d597217627bab08b0104ad3d7df7f512b8f5ebecc3",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "69895ed21c765fd8e946629cd2343edf45365d70a29a52fc086797627d3082be",
+    "onnx_bytes": 20681156,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.37683696466598526,
+    "writer": {
+     "carriers": 56,
+     "latent_weights": 23,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 23
+    },
+    "const_order": false,
+    "output_widths": [
+     1024,
+     576
+    ],
+    "ir_nodes": 90,
+    "onnx_nodes": 243
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 27,
+     "Cast": 56,
+     "Mul": 28,
+     "Add": 28,
+     "Relu": 5,
+     "MaxPool": 5,
+     "qonnx.custom_op.general:BipolarQuant": 46,
+     "Pad": 23,
+     "Concat": 23,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "399860f025f41e419375b02305a934c84c4c8a53476d84cf7b631e9fecf44f73",
+    "graph_sha256": "44fecf62800a788515d596265948ad9c1859e83fce3277056fb30893175c85ec"
+   },
+   "recipe_expected": {
+    "data_sha256": "399860f025f41e419375b02305a934c84c4c8a53476d84cf7b631e9fecf44f73",
+    "graph_sha256": "44fecf62800a788515d596265948ad9c1859e83fce3277056fb30893175c85ec"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "399860f025f41e419375b02305a934c84c4c8a53476d84cf7b631e9fecf44f73",
+    "graph_sha256": "44fecf62800a788515d596265948ad9c1859e83fce3277056fb30893175c85ec",
+    "bytes": 4310080
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_speechcommands",
+    "graph_outputs": [
+     "quant_dense_1:out",
+     "global_max_pooling2d_1:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 47,
+      "deviating": 81,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 5.925826554066365e-07,
+      "max_abs_pre_at_first_flip": 6.324644346022978e-07,
+      "without_flip": 77,
+      "max_rel_delta_without_flip": 3.187728407337706e-08,
+      "max_abs_delta_without_flip": 1.3408070671516725e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.6334796916691947,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 47,
+    "binarization_flip_samples": 6,
+    "max_abs_pre_at_flip_f32": 1.9073486328125e-06,
+    "max_abs_pre_at_flip_f64": 6.324644346022978e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.7937431335449219,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9993439445556641
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 0.6334797400183172,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9996418887824234
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 28,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 28,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 5,
+    "binarizer (ge) of a float tensor": 23,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 23,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 23,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 23,
+    "Concat (channels) -> Concat": 23,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 182.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "brillsson-meliusnet22": {
+   "model_id": "brillsson-meliusnet22",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_speechcommands",
+   "preprocess": "brillsson_logmel",
+   "export": {
+    "checkpoint_sha256": "e652bb9d46d607b24ae53ea9a008f0761778e7d58f69f2fab18f90866ae6cd13",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "aaf55564a8d4c4adef8a538a940a01729ca5de8d35b6f470130cd8d18cd044ed",
+    "onnx_bytes": 28013885,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.658540805501451,
+    "writer": {
+     "carriers": 82,
+     "latent_weights": 34,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 34
+    },
+    "const_order": false,
+    "output_widths": [
+     1024,
+     512
+    ],
+    "ir_nodes": 146,
+    "onnx_nodes": 371
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 40,
+     "Cast": 82,
+     "Mul": 41,
+     "Add": 58,
+     "Relu": 7,
+     "MaxPool": 5,
+     "qonnx.custom_op.general:BipolarQuant": 68,
+     "Pad": 51,
+     "Concat": 17,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "graph_sha256": "ce218357492d7b8cea4c3936c817396e566245138d543eb003ee7dc95007c169"
+   },
+   "recipe_expected": {
+    "data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "graph_sha256": "ce218357492d7b8cea4c3936c817396e566245138d543eb003ee7dc95007c169"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "f1283652a2f22dc874f053b261727dbbf5b066ae35c42ca142233695c09cc04c",
+    "graph_sha256": "ce218357492d7b8cea4c3936c817396e566245138d543eb003ee7dc95007c169",
+    "bytes": 4176384
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_speechcommands",
+    "graph_outputs": [
+     "quant_dense_1:out",
+     "global_max_pooling2d_1:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 123,
+      "deviating": 5,
+      "with_flip": 5,
+      "max_rel_pre_at_first_flip": 3.8216622658506673e-07,
+      "max_abs_pre_at_first_flip": 3.5472370996103564e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.6585413288055537,
+    "semantic_f64_top1": 0.984375,
+    "samples_le_1e-6": 123,
+    "binarization_flip_samples": 10,
+    "max_abs_pre_at_flip_f32": 2.384185791015625e-07,
+    "max_abs_pre_at_flip_f64": 3.5472370996103564e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.802720308303833,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9994981086540138
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 0.486204035535474,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9997156194655491
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 6,
+    "affine -> ChannelAffine": 41,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 41,
+    "Relu -> Activation(relu)": 7,
+    "MaxPool -> MaxPool2D": 5,
+    "binarizer (ge) of a float tensor": 34,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 34,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 34,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 34,
+    "Concat (channels) -> Concat": 17,
+    "Pad -> Pad": 17,
+    "Add of runtime tensors -> Add": 17,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 321.7,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "brillsson-quicknet": {
+   "model_id": "brillsson-quicknet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_speechcommands",
+   "preprocess": "brillsson_logmel",
+   "export": {
+    "checkpoint_sha256": "534d511b7a3729e8149f5e27df1a42a0f51f6ba44fc0becb1cc78632bd0283c6",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "492b9bcc4fb0fad881f278c0b0aa4bb953d54830fbb4dfa24f4f4e975bac6eeb",
+    "onnx_bytes": 53063827,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.4523634104733656,
+    "writer": {
+     "carriers": 44,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 16,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1024,
+     512
+    ],
+    "ir_nodes": 73,
+    "onnx_nodes": 203
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 25,
+     "Cast": 44,
+     "Mul": 22,
+     "Add": 38,
+     "Relu": 20,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "MaxPool": 4,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "graph_sha256": "fd0eac90bffba6c08dd810c8ca2d5b7dc4676958e856c1622c3d7dddc6238651"
+   },
+   "recipe_expected": {
+    "data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "graph_sha256": "fd0eac90bffba6c08dd810c8ca2d5b7dc4676958e856c1622c3d7dddc6238651"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "021ce1d5f2a109e1aa47960dbc759f24a839aadcc188f0044c77bd0b555c3ea5",
+    "graph_sha256": "fd0eac90bffba6c08dd810c8ca2d5b7dc4676958e856c1622c3d7dddc6238651",
+    "bytes": 4443520
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_speechcommands",
+    "graph_outputs": [
+     "quant_dense_1:out",
+     "global_max_pooling2d_1:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 1,
+      "deviating": 127,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 2.1426080926785647e-07,
+      "max_abs_pre_at_first_flip": 1.4450586149905575e-07,
+      "without_flip": 126,
+      "max_rel_delta_without_flip": 4.489080316874269e-08,
+      "max_abs_delta_without_flip": 1.6464635010926543e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.3020060718768791,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 1,
+    "binarization_flip_samples": 1,
+    "max_abs_pre_at_flip_f32": 3.5762786865234375e-07,
+    "max_abs_pre_at_flip_f64": 1.4450586149905575e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.4523649215698242,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9998010235100854
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 5.432249921000221e-07,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999992
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 9,
+    "affine -> ChannelAffine": 22,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 22,
+    "Relu -> Activation(relu)": 20,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Add of runtime tensors -> Add": 16,
+    "MaxPool -> MaxPool2D": 4,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 206.5,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-alexnet": {
+   "model_id": "larq-zoo-binary-alexnet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "7fc065c47c5c1d92389e0bb988ce6df6a4fa09d803b866e2ba648069d6652d63",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "9281e531829a2a5096fb15d1dac4f1a5887c744688884cd6e7f7f5338c9101bc",
+    "onnx_bytes": 247492567,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.2890625,
+    "source_f32_vs_f64_max_abs": 1.8810134488843975,
+    "writer": {
+     "carriers": 16,
+     "latent_weights": 8,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 1,
+     "explicit_binary_pads": 4
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 22,
+    "onnx_nodes": 66
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "qonnx.custom_op.general:BipolarQuant": 15,
+     "Conv": 8,
+     "MaxPool": 3,
+     "Cast": 16,
+     "Mul": 8,
+     "Add": 8,
+     "Pad": 4,
+     "Transpose": 1,
+     "Reshape": 2,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "2232e146633b6082e519d41a75c090ee87a3d74a24335d32786acadf12d43967",
+    "graph_sha256": "5e2ade63e3b3f929d1a0565b4277a6dd07de563c5927f8b37ec705789aec1d42"
+   },
+   "recipe_expected": {
+    "data_sha256": "2232e146633b6082e519d41a75c090ee87a3d74a24335d32786acadf12d43967",
+    "graph_sha256": "5e2ade63e3b3f929d1a0565b4277a6dd07de563c5927f8b37ec705789aec1d42"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "2232e146633b6082e519d41a75c090ee87a3d74a24335d32786acadf12d43967",
+    "graph_sha256": "5e2ade63e3b3f929d1a0565b4277a6dd07de563c5927f8b37ec705789aec1d42",
+    "bytes": 7915200
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "flatten:out",
+     "activation:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 128,
+      "deviating": 0,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 7.09186156910846e-07,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 1,
+    "max_abs_pre_at_flip_f32": 1.1920928955078125e-07,
+    "max_abs_pre_at_flip_f64": null,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 1.9073486328125e-06,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999787
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 0.0,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999998
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "MaxPool -> MaxPool2D": 3,
+    "affine -> ChannelAffine": 8,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 8,
+    "binarizer (ge) of a float tensor": 7,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 4,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 7,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 7,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 576.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-densenet28": {
+   "model_id": "larq-zoo-binary-densenet28",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "21fe3ca03eed244df9c41a2219876fcf03e73800932ec96a3e2a76af4747ac53",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "0b25c3376543d002f9dfd40235f9727ca6782c4a24dcc3393d5aff6b0c4b3972",
+    "onnx_bytes": 20650210,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.609375,
+    "source_f32_vs_f64_max_abs": 4.86999278842859,
+    "writer": {
+     "carriers": 56,
+     "latent_weights": 23,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 23
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 91,
+    "onnx_nodes": 244
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 27,
+     "Cast": 56,
+     "Mul": 28,
+     "Add": 28,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 46,
+     "Pad": 23,
+     "Concat": 23,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "f5e628281f976342c0267298060899fe5eb9df54e14e0d682c6835a127dab96f",
+    "graph_sha256": "bfbbd63590e2cd174989322921162d411221e432dcc10f4a91cfe43bd090c330"
+   },
+   "recipe_expected": {
+    "data_sha256": "f5e628281f976342c0267298060899fe5eb9df54e14e0d682c6835a127dab96f",
+    "graph_sha256": "bfbbd63590e2cd174989322921162d411221e432dcc10f4a91cfe43bd090c330"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "f5e628281f976342c0267298060899fe5eb9df54e14e0d682c6835a127dab96f",
+    "graph_sha256": "bfbbd63590e2cd174989322921162d411221e432dcc10f4a91cfe43bd090c330",
+    "bytes": 4279168
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 7,
+      "max_rel_pre_at_first_flip": 3.2133502530087674e-07,
+      "max_abs_pre_at_first_flip": 2.537324803597585e-07,
+      "without_flip": 121,
+      "max_rel_delta_without_flip": 6.58806885998262e-08,
+      "max_abs_delta_without_flip": 5.2488379509441074e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 2.0393997095657497,
+    "semantic_f64_top1": 0.9921875,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 30,
+    "max_abs_pre_at_flip_f32": 3.814697265625e-06,
+    "max_abs_pre_at_flip_f64": 2.537324803597585e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.578941345214844,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2,
+     "cosine_min": 0.9999768120889669
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 4.870000295643663,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9999806635015788
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 28,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 28,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 23,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 23,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 23,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 23,
+    "Concat (channels) -> Concat": 23,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 1067.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-densenet37": {
+   "model_id": "larq-zoo-binary-densenet37",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "8056a5d52c3ed86a934893987d09a06f59a5166aa9bddcaedb050f111d0a7d76",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "9b756295eb9ed99cf60c8ff496257fdbdc262aa6d73d72510061f2fb9be59bc9",
+    "onnx_bytes": 35000656,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.671875,
+    "source_f32_vs_f64_max_abs": 5.904928684794953,
+    "writer": {
+     "carriers": 74,
+     "latent_weights": 32,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 32
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 118,
+    "onnx_nodes": 325
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 36,
+     "Cast": 74,
+     "Mul": 37,
+     "Add": 37,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 64,
+     "Pad": 32,
+     "Concat": 32,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "2dde4d2048c38c3c2c814c9f7467c6cb59c6606ff094f320c6a7a0255f6ee420",
+    "graph_sha256": "4f608bec898eb9a2e96ba3494b66ac31ff8afd698cce33aef4102b0452b4c23a"
+   },
+   "recipe_expected": {
+    "data_sha256": "2dde4d2048c38c3c2c814c9f7467c6cb59c6606ff094f320c6a7a0255f6ee420",
+    "graph_sha256": "4f608bec898eb9a2e96ba3494b66ac31ff8afd698cce33aef4102b0452b4c23a"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "2dde4d2048c38c3c2c814c9f7467c6cb59c6606ff094f320c6a7a0255f6ee420",
+    "graph_sha256": "4f608bec898eb9a2e96ba3494b66ac31ff8afd698cce33aef4102b0452b4c23a",
+    "bytes": 5431296
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 1,
+      "deviating": 127,
+      "with_flip": 11,
+      "max_rel_pre_at_first_flip": 1.8504082017565504e-06,
+      "max_abs_pre_at_first_flip": 1.6505856592630153e-06,
+      "without_flip": 116,
+      "max_rel_delta_without_flip": 4.2324453916411336e-08,
+      "max_abs_delta_without_flip": 4.893585170862025e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+      "passed": false
+     }
+    },
+    "semantic_f64_max_abs": 4.232289533871807,
+    "semantic_f64_top1": 0.9765625,
+    "samples_le_1e-6": 1,
+    "binarization_flip_samples": 40,
+    "max_abs_pre_at_flip_f32": 5.7220458984375e-06,
+    "max_abs_pre_at_flip_f64": 1.6505856592630153e-06,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.9765625,
+     "n_top1_disagreements": 3
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 5.904914855957031,
+     "top1_agreement": 0.96875,
+     "n_top1_disagreements": 4,
+     "cosine_min": 0.9999830349499573
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.5973790076606775,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999790348405339
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 37,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 37,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Concat (channels) -> Concat": 32,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 1316.1,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-densenet37-dilated": {
+   "model_id": "larq-zoo-binary-densenet37-dilated",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "15c1bcd79b8dc22971382fbf79acf364a3f51049d0e584a11533e6fdbb7363d3",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "87c57c212b8eff2193610f4721713bad34d4ca46f7d8221f084cd7d71764fe2d",
+    "onnx_bytes": 35000310,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.6640625,
+    "source_f32_vs_f64_max_abs": 3.279683387240354,
+    "writer": {
+     "carriers": 74,
+     "latent_weights": 32,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 32
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 116,
+    "onnx_nodes": 323
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 36,
+     "Cast": 74,
+     "Mul": 37,
+     "Add": 37,
+     "Relu": 5,
+     "MaxPool": 2,
+     "qonnx.custom_op.general:BipolarQuant": 64,
+     "Pad": 32,
+     "Concat": 32,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "9f966d4b22fa32445562cb36eb7d36a6ff1ba54cd246d679610ba826a69f6076",
+    "graph_sha256": "edacaa0b189dba906f86faeb1f81a5e6cbbaa4e16e61d4930263161c5b6f9f46"
+   },
+   "recipe_expected": {
+    "data_sha256": "9f966d4b22fa32445562cb36eb7d36a6ff1ba54cd246d679610ba826a69f6076",
+    "graph_sha256": "edacaa0b189dba906f86faeb1f81a5e6cbbaa4e16e61d4930263161c5b6f9f46"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "9f966d4b22fa32445562cb36eb7d36a6ff1ba54cd246d679610ba826a69f6076",
+    "graph_sha256": "edacaa0b189dba906f86faeb1f81a5e6cbbaa4e16e61d4930263161c5b6f9f46",
+    "bytes": 5430976
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 59,
+      "max_rel_pre_at_first_flip": 1.2715040003270119e-05,
+      "max_abs_pre_at_first_flip": 9.887364285532385e-06,
+      "without_flip": 69,
+      "max_rel_delta_without_flip": 2.542372579022256e-07,
+      "max_abs_delta_without_flip": 1.9402514865873854e-05,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 2.1177405399794367,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 88,
+    "max_abs_pre_at_flip_f32": 6.67572021484375e-06,
+    "max_abs_pre_at_flip_f64": 9.887364285532385e-06,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.090362548828125,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2,
+     "cosine_min": 0.9999750410475134
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.8849366551104367,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999897797819502
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 37,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 37,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 2,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Concat (channels) -> Concat": 32,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 2125.8,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-densenet45": {
+   "model_id": "larq-zoo-binary-densenet45",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "d00a0d26fbd2dba1bfba8c0306c770f3aeea5c370e99f963bb239bd916f72c37",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "2773ea443958db403ccbf18bf51bfea577e03719b095e6d928ab563f0c293887",
+    "onnx_bytes": 55835352,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.6171875,
+    "source_f32_vs_f64_max_abs": 4.2167646913696615,
+    "writer": {
+     "carriers": 90,
+     "latent_weights": 40,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 40
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 142,
+    "onnx_nodes": 397
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 44,
+     "Cast": 90,
+     "Mul": 45,
+     "Add": 45,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 80,
+     "Pad": 40,
+     "Concat": 40,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "0892a677236fa6b5604fa7019f4b0f7c3e26ac6e8ba51f6c1e306d5414122250",
+    "graph_sha256": "bd3c229da9633c307cd29ac41d10586d0e7121e1897317e8c8d0b5ba51fa111a"
+   },
+   "recipe_expected": {
+    "data_sha256": "0892a677236fa6b5604fa7019f4b0f7c3e26ac6e8ba51f6c1e306d5414122250",
+    "graph_sha256": "bd3c229da9633c307cd29ac41d10586d0e7121e1897317e8c8d0b5ba51fa111a"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "0892a677236fa6b5604fa7019f4b0f7c3e26ac6e8ba51f6c1e306d5414122250",
+    "graph_sha256": "bd3c229da9633c307cd29ac41d10586d0e7121e1897317e8c8d0b5ba51fa111a",
+    "bytes": 7762880
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 19,
+      "max_rel_pre_at_first_flip": 1.9029967467564295e-06,
+      "max_abs_pre_at_first_flip": 1.2596301530720666e-06,
+      "without_flip": 109,
+      "max_rel_delta_without_flip": 8.005642271694042e-08,
+      "max_abs_delta_without_flip": 5.927976900466092e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (3) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 3.3879019346901487,
+    "semantic_f64_top1": 0.984375,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 47,
+    "max_abs_pre_at_flip_f32": 7.867813110351562e-06,
+    "max_abs_pre_at_flip_f64": 1.2596301530720666e-06,
+    "qonnx_f32_vs_f64_top1_disagreements": 3,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.356231689453125,
+     "top1_agreement": 0.9609375,
+     "n_top1_disagreements": 5,
+     "cosine_min": 0.9999557895006642
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.281880885079268,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9999199657775241
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 45,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 45,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 40,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 40,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 40,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 40,
+    "Concat (channels) -> Concat": 40,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 1636.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-binary-resnet-e18": {
+   "model_id": "larq-zoo-binary-resnet-e18",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "bde4a64d42c164a7b10a28debbe1ad5b287c499bc0247ecb00449e6e89f3bf5b",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "d7bfbafa2a6d5fd01306af73f6890541ec25d7f1cc26b85251df9f2281cb1e3d",
+    "onnx_bytes": 46832269,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.546875,
+    "source_f32_vs_f64_max_abs": 4.059133963855125,
+    "writer": {
+     "carriers": 42,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 67,
+    "onnx_nodes": 178
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 20,
+     "Cast": 42,
+     "Mul": 21,
+     "Add": 37,
+     "Relu": 2,
+     "MaxPool": 1,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "AveragePool": 4,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "1705b13a82aa1b3d384f31fa0289ce7ebfcf1493e346d744486a77d05195dd24",
+    "graph_sha256": "e8a85ef7a5ed9da421ef9c0c84bbfb9820ce6799a613b69df3bf3c78f6ade25d"
+   },
+   "recipe_expected": {
+    "data_sha256": "1705b13a82aa1b3d384f31fa0289ce7ebfcf1493e346d744486a77d05195dd24",
+    "graph_sha256": "e8a85ef7a5ed9da421ef9c0c84bbfb9820ce6799a613b69df3bf3c78f6ade25d"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "1705b13a82aa1b3d384f31fa0289ce7ebfcf1493e346d744486a77d05195dd24",
+    "graph_sha256": "e8a85ef7a5ed9da421ef9c0c84bbfb9820ce6799a613b69df3bf3c78f6ade25d",
+    "bytes": 4211072
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_2:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 2,
+      "deviating": 126,
+      "with_flip": 5,
+      "max_rel_pre_at_first_flip": 2.946039192500389e-07,
+      "max_abs_pre_at_first_flip": 5.079976972410805e-07,
+      "without_flip": 121,
+      "max_rel_delta_without_flip": 7.505545517969747e-08,
+      "max_abs_delta_without_flip": 3.1383092817804936e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 3.755240555053895,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 2,
+    "binarization_flip_samples": 13,
+    "max_abs_pre_at_flip_f32": 5.364418029785156e-06,
+    "max_abs_pre_at_flip_f64": 5.079976972410805e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.850536346435547,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2,
+     "cosine_min": 0.9992990313412591
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.752604512519831,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9997248781115208
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 21,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 21,
+    "Relu -> Activation(relu)": 2,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Add of runtime tensors -> Add": 16,
+    "AveragePool -> AvgPool2D": 4,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 606.4,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-birealnet": {
+   "model_id": "larq-zoo-birealnet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "6e6efac1584fcd60dd024198c87f42eb53b5ec719a5ca1f527e1fe7e8b997117",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "aacb9311e44f3133624af1cb9d9ed02f9829aa48521102a2decad38e254fcb23",
+    "onnx_bytes": 46848715,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.578125,
+    "source_f32_vs_f64_max_abs": 3.390233956233077,
+    "writer": {
+     "carriers": 40,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 64,
+    "onnx_nodes": 188
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 20,
+     "Cast": 40,
+     "Mul": 36,
+     "Add": 36,
+     "MaxPool": 1,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "AveragePool": 4,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "4160cf568d937c9e6c47be2435ff9e7c8f39a4b17f058a4b6ca2eb55fe349195",
+    "graph_sha256": "958d4265766604c61cbfd2155541a62d7ee9f7f45265945e23136e0afc0955cc"
+   },
+   "recipe_expected": {
+    "data_sha256": "4160cf568d937c9e6c47be2435ff9e7c8f39a4b17f058a4b6ca2eb55fe349195",
+    "graph_sha256": "958d4265766604c61cbfd2155541a62d7ee9f7f45265945e23136e0afc0955cc"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "4160cf568d937c9e6c47be2435ff9e7c8f39a4b17f058a4b6ca2eb55fe349195",
+    "graph_sha256": "958d4265766604c61cbfd2155541a62d7ee9f7f45265945e23136e0afc0955cc",
+    "bytes": 4210176
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 5,
+      "max_rel_pre_at_first_flip": 2.383270692725816e-07,
+      "max_abs_pre_at_first_flip": 1.5714689993728825e-07,
+      "without_flip": 123,
+      "max_rel_delta_without_flip": 4.3160645162875137e-07,
+      "max_abs_delta_without_flip": 4.56041776519811e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 2.4573555228921418,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 19,
+    "max_abs_pre_at_flip_f32": 1.0728836059570312e-06,
+    "max_abs_pre_at_flip_f64": 1.5714689993728825e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.390202760696411,
+     "top1_agreement": 0.96875,
+     "n_top1_disagreements": 4,
+     "cosine_min": 0.9793628632456048
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.1242588663237,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9892413862724637
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 20,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 20,
+    "MaxPool -> MaxPool2D": 1,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 16,
+    "affine -> binary epilogue post_mul": 16,
+    "Add of runtime tensors -> Add": 16,
+    "AveragePool -> AvgPool2D": 4,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 588.7,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-dorefanet": {
+   "model_id": "larq-zoo-dorefanet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "645d7839d574faa3eeeca28f3115773d75da3ab67ff6876b4de12d10245ecf6a",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "025282f21ec018684abf42971b43325f0f9b6389f1914f471de94c6f90eb318e",
+    "onnx_bytes": 249742360,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.4765625,
+    "source_f32_vs_f64_max_abs": 3.2863746911069427,
+    "writer": {
+     "carriers": 18,
+     "latent_weights": 6,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 1,
+     "explicit_binary_pads": 0
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 20,
+    "onnx_nodes": 75
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 5,
+     "Clip": 7,
+     "Mul": 18,
+     "Round": 6,
+     "qonnx.custom_op.general:BipolarQuant": 6,
+     "Cast": 18,
+     "Add": 6,
+     "MaxPool": 3,
+     "Transpose": 1,
+     "Reshape": 1,
+     "Gemm": 3,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "15076b42a514ecd7c570030ee5046970cee595e370260dc8f1ae4648710936c4",
+    "graph_sha256": "c9629b80d35f107f0080f33cd33a24449e5724ac7a113673d676dd2775417cf6"
+   },
+   "recipe_expected": {
+    "data_sha256": "15076b42a514ecd7c570030ee5046970cee595e370260dc8f1ae4648710936c4",
+    "graph_sha256": "c9629b80d35f107f0080f33cd33a24449e5724ac7a113673d676dd2775417cf6"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "15076b42a514ecd7c570030ee5046970cee595e370260dc8f1ae4648710936c4",
+    "graph_sha256": "c9629b80d35f107f0080f33cd33a24449e5724ac7a113673d676dd2775417cf6",
+    "bytes": 23920960
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_1:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 100,
+      "deviating": 28,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 28,
+      "max_rel_delta_without_flip": 1.646751739408206e-08,
+      "max_abs_delta_without_flip": 1.3367060063274039e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 1.3367060063274039e-06,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 100,
+    "binarization_flip_samples": 0,
+    "max_abs_pre_at_flip_f32": null,
+    "max_abs_pre_at_flip_f64": null,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.2863731384277344,
+     "top1_agreement": 0.96875,
+     "n_top1_disagreements": 4,
+     "cosine_min": 0.9999614659985127
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 5.684341886080802e-14,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999996
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "Round(Mul(Clip(x, 0, 1), n)) -> DoReFa levels (QBConv2D / QBDense input)": 6,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 4,
+    "Conv(Round(Clip(x, 0, 1) * n), \u00b1alpha) -> QBConv2D": 4,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 6,
+    "affine -> binary epilogue post_mul": 6,
+    "affine -> ChannelAffine": 6,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 6,
+    "MaxPool -> MaxPool2D": 3,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Gemm(Round(Clip(x, 0, 1) * n), \u00b1alpha) -> QBDense": 2,
+    "Clip -> Activation(hardtanh)": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 1685.1,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-meliusnet22": {
+   "model_id": "larq-zoo-meliusnet22",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "c1ba85e8389ae326009665ec13331e49fc3df4d0f925fa8553e224f7362c18ed",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "d2d9ccb3e96e5360a73f5c2fa61cbf2f6f2f8bb06daa243534b129ee443f5937",
+    "onnx_bytes": 27966824,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.6640625,
+    "source_f32_vs_f64_max_abs": 11.858486389992208,
+    "writer": {
+     "carriers": 82,
+     "latent_weights": 34,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 34
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 147,
+    "onnx_nodes": 372
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 40,
+     "Cast": 82,
+     "Mul": 41,
+     "Add": 58,
+     "Relu": 7,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 68,
+     "Pad": 51,
+     "Concat": 17,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "graph_sha256": "fccc078e1ea4574d7cc914ae1b092e06c1a66b431bcd4903832927ead6ecdfb6"
+   },
+   "recipe_expected": {
+    "data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "graph_sha256": "fccc078e1ea4574d7cc914ae1b092e06c1a66b431bcd4903832927ead6ecdfb6"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "1a65fa2286c6aaad0af8ed62677f56508e3b07d29c024f8a7bcc8c84b0f36408",
+    "graph_sha256": "fccc078e1ea4574d7cc914ae1b092e06c1a66b431bcd4903832927ead6ecdfb6",
+    "bytes": 4129152
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "head_dense:out",
+     "head_softmax:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 14,
+      "max_rel_pre_at_first_flip": 6.871223504798777e-07,
+      "max_abs_pre_at_first_flip": 5.459067438096099e-07,
+      "without_flip": 114,
+      "max_rel_delta_without_flip": 6.069328359934e-08,
+      "max_abs_delta_without_flip": 8.878786246668824e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (2) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 10.288721606540435,
+    "semantic_f64_top1": 0.9921875,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 56,
+    "max_abs_pre_at_flip_f32": 3.814697265625e-06,
+    "max_abs_pre_at_flip_f64": 5.459067438096099e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 2,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 11.858505249023438,
+     "top1_agreement": 0.9765625,
+     "n_top1_disagreements": 3,
+     "cosine_min": 0.9999924286604653
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 10.288721388405662,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999889226154973
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 6,
+    "affine -> ChannelAffine": 41,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 41,
+    "Relu -> Activation(relu)": 7,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 34,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 34,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 34,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 34,
+    "Concat (channels) -> Concat": 17,
+    "Pad -> Pad": 17,
+    "Add of runtime tensors -> Add": 17,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 1108.7,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-quicknet": {
+   "model_id": "larq-zoo-quicknet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "8aba9e4e5f8d342faef04a0b2ae8e562da57dbb7d15162e8b3e091c951ba756c",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "2d0857ce704c74e9c673290a7a12f92f0b864f93feb15ff2bb6ae89674b74f52",
+    "onnx_bytes": 53015267,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.65625,
+    "source_f32_vs_f64_max_abs": 2.439090880325786,
+    "writer": {
+     "carriers": 44,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 16,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 75,
+    "onnx_nodes": 205
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 25,
+     "Cast": 44,
+     "Mul": 22,
+     "Add": 38,
+     "Relu": 21,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "MaxPool": 3,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "91139ed28107cf41c4161d8b5864d017bddc96d5065d35d4035716a570368d70",
+    "graph_sha256": "acd0c57fcaf29aa1ec298575d17ff6933b6462bfd7dc1f3549c51a8225f2b599"
+   },
+   "recipe_expected": {
+    "data_sha256": "91139ed28107cf41c4161d8b5864d017bddc96d5065d35d4035716a570368d70",
+    "graph_sha256": "acd0c57fcaf29aa1ec298575d17ff6933b6462bfd7dc1f3549c51a8225f2b599"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "91139ed28107cf41c4161d8b5864d017bddc96d5065d35d4035716a570368d70",
+    "graph_sha256": "acd0c57fcaf29aa1ec298575d17ff6933b6462bfd7dc1f3549c51a8225f2b599",
+    "bytes": 4394880
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "quant_dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 112,
+      "deviating": 16,
+      "with_flip": 7,
+      "max_rel_pre_at_first_flip": 2.3031381714622418e-07,
+      "max_abs_pre_at_first_flip": 2.9268639423207787e-07,
+      "without_flip": 9,
+      "max_rel_delta_without_flip": 5.617949374201705e-08,
+      "max_abs_delta_without_flip": 1.2433658032051653e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 1.818759742657782,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 112,
+    "binarization_flip_samples": 27,
+    "max_abs_pre_at_flip_f32": 2.7418136596679688e-06,
+    "max_abs_pre_at_flip_f64": 2.9268639423207787e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 2.605532646179199,
+     "top1_agreement": 0.9765625,
+     "n_top1_disagreements": 3,
+     "cosine_min": 0.9854958464507088
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 1.6638602196215375,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9977184945106146
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 9,
+    "affine -> ChannelAffine": 22,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 22,
+    "Relu -> Activation(relu)": 21,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Add of runtime tensors -> Add": 16,
+    "MaxPool -> MaxPool2D": 3,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 388.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-quicknet-large": {
+   "model_id": "larq-zoo-quicknet-large",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "c5158e8a59147b31370becd937825f4db8a5cdf308314874f678f596629be45c",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "0231a9c9f47119b1166246eb3e948f6158ae765b0875952024b5d33e8335c720",
+    "onnx_bytes": 93507907,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.71875,
+    "source_f32_vs_f64_max_abs": 4.474301904423072,
+    "writer": {
+     "carriers": 76,
+     "latent_weights": 32,
+     "pm1_weights": 0,
+     "relu_groups": 32,
+     "transposes": 0,
+     "explicit_binary_pads": 32
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 123,
+    "onnx_nodes": 365
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 41,
+     "Cast": 76,
+     "Mul": 38,
+     "Add": 70,
+     "Relu": 37,
+     "qonnx.custom_op.general:BipolarQuant": 64,
+     "Pad": 32,
+     "MaxPool": 3,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "graph_sha256": "25afd44519904ad3face2403824fc11e34ea19123cf64d0ee53176df7c0760c6"
+   },
+   "recipe_expected": {
+    "data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "graph_sha256": "25afd44519904ad3face2403824fc11e34ea19123cf64d0ee53176df7c0760c6"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "cbb4533ac6327f2d5bfc7f33770c4890bfc04c916c918381db13f7aa09e26d8f",
+    "graph_sha256": "25afd44519904ad3face2403824fc11e34ea19123cf64d0ee53176df7c0760c6",
+    "bytes": 5707328
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "quant_dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 113,
+      "deviating": 15,
+      "with_flip": 15,
+      "max_rel_pre_at_first_flip": 4.411759406608543e-07,
+      "max_abs_pre_at_first_flip": 3.968352757510729e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (5) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 3.076735715800858,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 113,
+    "binarization_flip_samples": 42,
+    "max_abs_pre_at_flip_f32": 4.76837158203125e-06,
+    "max_abs_pre_at_flip_f64": 3.968352757510729e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 5,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.474300742149353,
+     "top1_agreement": 0.953125,
+     "n_top1_disagreements": 6,
+     "cosine_min": 0.9708871987456141
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.076735654089447,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9831320204468594
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 9,
+    "affine -> ChannelAffine": 38,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 38,
+    "Relu -> Activation(relu)": 37,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Add of runtime tensors -> Add": 32,
+    "MaxPool -> MaxPool2D": 3,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 824.5,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-quicknet-small": {
+   "model_id": "larq-zoo-quicknet-small",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "1ac3b07df7f5a911dd0b49febb2486428ddf1ca130297c403815dfae5a1c71a2",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "0e1952cd7fe72f32ae48cc383870c6e4abb976a71aafc798db40db043e6466be",
+    "onnx_bytes": 50697679,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.59375,
+    "source_f32_vs_f64_max_abs": 3.2265152167898314,
+    "writer": {
+     "carriers": 44,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 16,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 75,
+    "onnx_nodes": 205
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 25,
+     "Cast": 44,
+     "Mul": 22,
+     "Add": 38,
+     "Relu": 21,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "MaxPool": 3,
+     "AveragePool": 1,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "graph_sha256": "00ad15ff932deb4a1108f82c8429875c993d1003beff4766b13078ffe01a29ff"
+   },
+   "recipe_expected": {
+    "data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "graph_sha256": "00ad15ff932deb4a1108f82c8429875c993d1003beff4766b13078ffe01a29ff"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "4fc3f4c1c5c553cdc6ed8be34514773664f669023fc59034f9382c99abee8079",
+    "graph_sha256": "00ad15ff932deb4a1108f82c8429875c993d1003beff4766b13078ffe01a29ff",
+    "bytes": 4224576
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "quant_dense:out",
+     "activation_5:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 85,
+      "deviating": 43,
+      "with_flip": 3,
+      "max_rel_pre_at_first_flip": 3.1573852489504213e-06,
+      "max_abs_pre_at_first_flip": 1.9710366814251756e-06,
+      "without_flip": 40,
+      "max_rel_delta_without_flip": 9.895116704199626e-08,
+      "max_abs_delta_without_flip": 1.7914097742988133e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 1.842296342791434,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 85,
+    "binarization_flip_samples": 20,
+    "max_abs_pre_at_flip_f32": 1.1920928955078125e-06,
+    "max_abs_pre_at_flip_f64": 1.9710366814251756e-06,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 1.9697599411010742,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9917778377492128
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.010479154852419e-07,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999996
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 9,
+    "affine -> ChannelAffine": 22,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 22,
+    "Relu -> Activation(relu)": 21,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Add of runtime tensors -> Add": 16,
+    "MaxPool -> MaxPool2D": 3,
+    "AveragePool -> AvgPool2D": 1,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 354.4,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-quicknet-xl-legacy": {
+   "model_id": "larq-zoo-quicknet-xl-legacy",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "19a41e753dbd4fbc3cbdaecd3627fb536ef55d64702996aae3875a8de3cf8073",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "f6dacfa791718b79fc36c72d910d2fb70c4e24576ed6519714476f98dbe11396",
+    "onnx_bytes": 88391689,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.640625,
+    "source_f32_vs_f64_max_abs": 5.095899135517115,
+    "writer": {
+     "carriers": 72,
+     "latent_weights": 32,
+     "pm1_weights": 0,
+     "relu_groups": 51,
+     "transposes": 0,
+     "explicit_binary_pads": 32
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 203,
+    "onnx_nodes": 494
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 37,
+     "Relu": 52,
+     "Cast": 72,
+     "Mul": 54,
+     "Add": 68,
+     "qonnx.custom_op.general:BipolarQuant": 64,
+     "Pad": 32,
+     "MaxPool": 3,
+     "AveragePool": 19,
+     "Reshape": 37,
+     "Gemm": 37,
+     "Sigmoid": 18,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "d7bd798ce336449a8057e35dcfe043ef9a2931c95569dfd700fe6acbbf531fd3",
+    "graph_sha256": "922f596950055a8418a9efa70968383fc4c58d4a3caac0f0756a028e219fe666"
+   },
+   "recipe_expected": {
+    "data_sha256": "d7bd798ce336449a8057e35dcfe043ef9a2931c95569dfd700fe6acbbf531fd3",
+    "graph_sha256": "922f596950055a8418a9efa70968383fc4c58d4a3caac0f0756a028e219fe666"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "d7bd798ce336449a8057e35dcfe043ef9a2931c95569dfd700fe6acbbf531fd3",
+    "graph_sha256": "922f596950055a8418a9efa70968383fc4c58d4a3caac0f0756a028e219fe666",
+    "bytes": 6588992
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense_36:out",
+     "activation_1:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 123,
+      "deviating": 5,
+      "with_flip": 5,
+      "max_rel_pre_at_first_flip": 9.989746282182271e-08,
+      "max_abs_pre_at_first_flip": 9.453503224676751e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 2.9134967918995116,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 123,
+    "binarization_flip_samples": 25,
+    "max_abs_pre_at_flip_f32": 7.3909759521484375e-06,
+    "max_abs_pre_at_flip_f64": 9.453503224676751e-08,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 4.837913513183594,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9988086191689044
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 3.126373827644292,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9989904965276576
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "Relu -> Activation(relu)": 52,
+    "affine -> ChannelAffine": 36,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 36,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Add of runtime tensors -> Add": 32,
+    "MaxPool -> MaxPool2D": 3,
+    "AveragePool -> AvgPool2D": 19,
+    "Reshape/Flatten -> Reshape": 19,
+    "Gemm (float) -> Dense": 37,
+    "Reshape [N, C] -> [N, C, 1, 1] of a gate -> no IR node": 18,
+    "Mul(x, Sigmoid(g [N, C, 1, 1])) -> ChannelGate(sigmoid)": 18,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 934.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-real-to-binary-net": {
+   "model_id": "larq-zoo-real-to-binary-net",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "e8fd16ca1ab9810ac3835f24f5c62758a57bc32a615f73aaa50d382d2b9617e1",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "3c898a5addb896371036ade1a0a0383011c333c3721a7e4d7655b7f997af9ddc",
+    "onnx_bytes": 48060892,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.6484375,
+    "source_f32_vs_f64_max_abs": 5.218976989439504,
+    "writer": {
+     "carriers": 40,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 16,
+     "transposes": 0,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 161,
+    "onnx_nodes": 317
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 20,
+     "Cast": 40,
+     "Mul": 36,
+     "Add": 36,
+     "PRelu": 17,
+     "MaxPool": 1,
+     "AveragePool": 20,
+     "Reshape": 33,
+     "Gemm": 33,
+     "Relu": 16,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "Sigmoid": 16,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "02549d58fc7649c06768f813b522c760be80287332263d0597dc49bd51071faa",
+    "graph_sha256": "ae950704fbdea7d03d42f2ebd4c354828fec976cb5dc790802d5b86763ffd9ec"
+   },
+   "recipe_expected": {
+    "data_sha256": "02549d58fc7649c06768f813b522c760be80287332263d0597dc49bd51071faa",
+    "graph_sha256": "ae950704fbdea7d03d42f2ebd4c354828fec976cb5dc790802d5b86763ffd9ec"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "02549d58fc7649c06768f813b522c760be80287332263d0597dc49bd51071faa",
+    "graph_sha256": "ae950704fbdea7d03d42f2ebd4c354828fec976cb5dc790802d5b86763ffd9ec",
+    "bytes": 5439040
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "r2b_bnn_block_10_logits:out",
+     "r2b_bnn_block_10_probs:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 0,
+      "deviating": 128,
+      "with_flip": 7,
+      "max_rel_pre_at_first_flip": 3.507592194512289e-07,
+      "max_abs_pre_at_first_flip": 2.572815560597519e-07,
+      "without_flip": 121,
+      "max_rel_delta_without_flip": 2.5945970361872094e-07,
+      "max_abs_delta_without_flip": 3.947428401929187e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (4) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 2.400495905095113,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 0,
+    "binarization_flip_samples": 56,
+    "max_abs_pre_at_flip_f32": 4.76837158203125e-06,
+    "max_abs_pre_at_flip_f64": 2.572815560597519e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 4,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 3.036996841430664,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9967087926762007
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.400496488249413,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9994082600994415
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 20,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 20,
+    "PRelu -> Activation(prelu)": 17,
+    "MaxPool -> MaxPool2D": 1,
+    "AveragePool -> AvgPool2D": 20,
+    "Reshape/Flatten -> Reshape": 17,
+    "Gemm (float) -> Dense": 33,
+    "Relu -> Activation(relu)": 16,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Reshape [N, C] -> [N, C, 1, 1] of a gate -> no IR node": 16,
+    "Mul(x, Sigmoid(g [N, C, 1, 1])) -> ChannelGate(sigmoid)": 16,
+    "Add of runtime tensors -> Add": 16,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 762.8,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larq-zoo-xnornet": {
+   "model_id": "larq-zoo-xnornet",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_larq_zoo.py",
+   "eval_dir": "eval128",
+   "preprocess": "larq_zoo",
+   "export": {
+    "checkpoint_sha256": "e6ba24f785655260ae76a2ef1fab520e3528243d9c8fac430299cd81dbeabe10",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "81cbf3c4e6019b642806d7f6921d90254c99a55f4ef38c9b744df518726d0f11",
+    "onnx_bytes": 249716229,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": 0.34375,
+    "source_f32_vs_f64_max_abs": 1.3979874841751894e-05,
+    "writer": {
+     "carriers": 22,
+     "latent_weights": 6,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 0,
+     "explicit_binary_pads": 4
+    },
+    "const_order": false,
+    "output_widths": [
+     1000,
+     1000
+    ],
+    "ir_nodes": 23,
+    "onnx_nodes": 75
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 7,
+     "Cast": 22,
+     "Mul": 14,
+     "Add": 8,
+     "Relu": 2,
+     "MaxPool": 3,
+     "qonnx.custom_op.general:BipolarQuant": 12,
+     "Pad": 4,
+     "Reshape": 1,
+     "Gemm": 1,
+     "Softmax": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "56aaf0d1b44dcce2efb6312e242500cb0213b3997905f4cd37b4c938fb2104d8",
+    "graph_sha256": "e98edd168c9f9a7341767414a7a73fcb56da407da3e43169e7ac917e57db3fe1"
+   },
+   "recipe_expected": {
+    "data_sha256": "56aaf0d1b44dcce2efb6312e242500cb0213b3997905f4cd37b4c938fb2104d8",
+    "graph_sha256": "e98edd168c9f9a7341767414a7a73fcb56da407da3e43169e7ac917e57db3fe1"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "56aaf0d1b44dcce2efb6312e242500cb0213b3997905f4cd37b4c938fb2104d8",
+    "graph_sha256": "e98edd168c9f9a7341767414a7a73fcb56da407da3e43169e7ac917e57db3fe1",
+    "bytes": 23894464
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128",
+    "graph_outputs": [
+     "dense:out",
+     "activation_2:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 59,
+      "deviating": 69,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 69,
+      "max_rel_delta_without_flip": 6.228538512092001e-08,
+      "max_abs_delta_without_flip": 1.4896446636214478e-06,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 1.4896446636214478e-06,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 59,
+    "binarization_flip_samples": 0,
+    "max_abs_pre_at_flip_f32": null,
+    "max_abs_pre_at_flip_f64": null,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 1.52587890625e-05,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999761
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.4868995751603507e-14,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999998
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 1,
+    "affine -> ChannelAffine": 8,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 8,
+    "Relu -> Activation(relu)": 2,
+    "MaxPool -> MaxPool2D": 3,
+    "binarizer (ge) of a float tensor": 6,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 4,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 6,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 6,
+    "Mul of the binary operator's naming group -> epilogue post_mul": 6,
+    "affine -> binary epilogue post_mul": 6,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1,
+    "Softmax -> Softmax": 1,
+    "2 graph outputs -> 2 IR outputs": 1
+   },
+   "seconds": 608.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larqface-binarydensenet28-msceleb": {
+   "model_id": "larqface-binarydensenet28-msceleb",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_lfw",
+   "preprocess": "insightface",
+   "export": {
+    "checkpoint_sha256": "74cd838d9e8d2427d89a175f2f121f8d0c5079cbc20e3a1b91a4cecaa80133c3",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "ecbfe1f2159d8494b014c6c024b5c0afbce522c7ebd1b2a5aa7188475c810f75",
+    "onnx_bytes": 21008734,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.15133919674100227,
+    "writer": {
+     "carriers": 60,
+     "latent_weights": 23,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 1,
+     "explicit_binary_pads": 23
+    },
+    "const_order": false,
+    "output_widths": [
+     128
+    ],
+    "ir_nodes": 91,
+    "onnx_nodes": 251
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 27,
+     "Cast": 60,
+     "Mul": 30,
+     "Add": 30,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 46,
+     "Pad": 23,
+     "Concat": 23,
+     "Transpose": 1,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "558ff1cb8afdd6996ca49c6d2f6751058122311d50c7c32de4af49fc75ee3d33",
+    "graph_sha256": "86c36b0c2222dad2b7c121201d32f0d327be2cbeace579a040eac56549446a42"
+   },
+   "recipe_expected": {
+    "data_sha256": "558ff1cb8afdd6996ca49c6d2f6751058122311d50c7c32de4af49fc75ee3d33",
+    "graph_sha256": "86c36b0c2222dad2b7c121201d32f0d327be2cbeace579a040eac56549446a42"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "558ff1cb8afdd6996ca49c6d2f6751058122311d50c7c32de4af49fc75ee3d33",
+    "graph_sha256": "86c36b0c2222dad2b7c121201d32f0d327be2cbeace579a040eac56549446a42",
+    "bytes": 4631744
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_lfw",
+    "graph_outputs": [
+     "pre_embedding:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 126,
+      "deviating": 2,
+      "with_flip": 2,
+      "max_rel_pre_at_first_flip": 2.7777682827925168e-08,
+      "max_abs_pre_at_first_flip": 8.607427659512723e-09,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.12226021271667564,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 126,
+    "binarization_flip_samples": 7,
+    "max_abs_pre_at_flip_f32": 3.5762786865234375e-07,
+    "max_abs_pre_at_flip_f64": 8.607427659512723e-09,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.15084591507911682,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9968627751638794
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 0.12226016604658618,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9981257667287488
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 30,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 30,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 23,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 23,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 23,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 23,
+    "Concat (channels) -> Concat": 23,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 456.2,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larqface-binarydensenet37-msceleb": {
+   "model_id": "larqface-binarydensenet37-msceleb",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_lfw",
+   "preprocess": "insightface",
+   "export": {
+    "checkpoint_sha256": "390e0f6304cd194f2f4b8eef1d90c77d85b20af0fc1b30e9a2d50dd5634cc9dd",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "39263f5718951cfe8a8f639711a5da060c33b37c8dbe39eb00254919f4e967e7",
+    "onnx_bytes": 35399116,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.20445005572627206,
+    "writer": {
+     "carriers": 78,
+     "latent_weights": 32,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 1,
+     "explicit_binary_pads": 32
+    },
+    "const_order": false,
+    "output_widths": [
+     128
+    ],
+    "ir_nodes": 118,
+    "onnx_nodes": 332
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 36,
+     "Cast": 78,
+     "Mul": 39,
+     "Add": 39,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 64,
+     "Pad": 32,
+     "Concat": 32,
+     "Transpose": 1,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "1432fe7f183c5f6c4c20e48fb32aa2a1b8f39cda94a43531656a2d5b64db768e",
+    "graph_sha256": "09ccbff8a2500cbaf088f4ee99a4bac2f11668569c9ad72c5401096105d44d9a"
+   },
+   "recipe_expected": {
+    "data_sha256": "1432fe7f183c5f6c4c20e48fb32aa2a1b8f39cda94a43531656a2d5b64db768e",
+    "graph_sha256": "09ccbff8a2500cbaf088f4ee99a4bac2f11668569c9ad72c5401096105d44d9a"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "1432fe7f183c5f6c4c20e48fb32aa2a1b8f39cda94a43531656a2d5b64db768e",
+    "graph_sha256": "09ccbff8a2500cbaf088f4ee99a4bac2f11668569c9ad72c5401096105d44d9a",
+    "bytes": 5823296
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_lfw",
+    "graph_outputs": [
+     "pre_embedding:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 128,
+      "deviating": 0,
+      "with_flip": 0,
+      "max_rel_pre_at_first_flip": null,
+      "max_abs_pre_at_first_flip": null,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (0) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 3.10260286462416e-07,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 128,
+    "binarization_flip_samples": 6,
+    "max_abs_pre_at_flip_f32": 1.0728836059570312e-06,
+    "max_abs_pre_at_flip_f64": null,
+    "qonnx_f32_vs_f64_top1_disagreements": 0,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.19126738607883453,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9880946744363625
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 6.756468880902977e-08,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999988
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 39,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 39,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 32,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 32,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 32,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 32,
+    "Concat (channels) -> Concat": 32,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 581.9,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larqface-binarydensenet45-msceleb": {
+   "model_id": "larqface-binarydensenet45-msceleb",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_lfw",
+   "preprocess": "insightface",
+   "export": {
+    "checkpoint_sha256": "75c89c4cbf31e68ff6490e33e8dd4fb3ab1105fb67a34ac7165dad69610ecd9a",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "17851ee5a7eeb4f04d3a4aa4db9dc067fbb698b83645d54f8066a75952de8f97",
+    "onnx_bytes": 56333652,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.22788768977235271,
+    "writer": {
+     "carriers": 94,
+     "latent_weights": 40,
+     "pm1_weights": 0,
+     "relu_groups": 0,
+     "transposes": 1,
+     "explicit_binary_pads": 40
+    },
+    "const_order": false,
+    "output_widths": [
+     128
+    ],
+    "ir_nodes": 142,
+    "onnx_nodes": 404
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 44,
+     "Cast": 94,
+     "Mul": 47,
+     "Add": 47,
+     "Relu": 5,
+     "MaxPool": 4,
+     "qonnx.custom_op.general:BipolarQuant": 80,
+     "Pad": 40,
+     "Concat": 40,
+     "Transpose": 1,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "8f1e36f0acfc168ae35eecf79eb22483cb13257bcb02efe9bb7df7336fab4320",
+    "graph_sha256": "8ca700953a1032b72cc11d95fd9a4625cc270b1ca6c93fc0f04994494ac30090"
+   },
+   "recipe_expected": {
+    "data_sha256": "8f1e36f0acfc168ae35eecf79eb22483cb13257bcb02efe9bb7df7336fab4320",
+    "graph_sha256": "8ca700953a1032b72cc11d95fd9a4625cc270b1ca6c93fc0f04994494ac30090"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "8f1e36f0acfc168ae35eecf79eb22483cb13257bcb02efe9bb7df7336fab4320",
+    "graph_sha256": "8ca700953a1032b72cc11d95fd9a4625cc270b1ca6c93fc0f04994494ac30090",
+    "bytes": 8253376
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_lfw",
+    "graph_outputs": [
+     "pre_embedding:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 127,
+      "deviating": 1,
+      "with_flip": 1,
+      "max_rel_pre_at_first_flip": 7.309816179413946e-08,
+      "max_abs_pre_at_first_flip": 1.6371032529605145e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.031651009313436104,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 127,
+    "binarization_flip_samples": 11,
+    "max_abs_pre_at_flip_f32": 4.76837158203125e-07,
+    "max_abs_pre_at_flip_f64": 1.6371032529605145e-08,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.23325341939926147,
+     "top1_agreement": 0.984375,
+     "n_top1_disagreements": 2,
+     "cosine_min": 0.9944947264325918
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 0.1473047092085744,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9989227368251448
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 4,
+    "affine -> ChannelAffine": 47,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 47,
+    "Relu -> Activation(relu)": 5,
+    "MaxPool -> MaxPool2D": 4,
+    "binarizer (ge) of a float tensor": 40,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 40,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 40,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 40,
+    "Concat (channels) -> Concat": 40,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 800.1,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larqface-binaryfacenet-msceleb": {
+   "model_id": "larqface-binaryfacenet-msceleb",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_lfw",
+   "preprocess": "insightface",
+   "export": {
+    "checkpoint_sha256": "3420129cf1f2dfe2d27819dee49b9fd98e2173d1100bd0f553753acac51d4ff6",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "10a74d47aea714bd77aa34c702425352beda1849ea9b4df289f12b321fdd8a2a",
+    "onnx_bytes": 2185682,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.26723950410132646,
+    "writer": {
+     "carriers": 32,
+     "latent_weights": 0,
+     "pm1_weights": 19,
+     "relu_groups": 0,
+     "transposes": 20,
+     "explicit_binary_pads": 3
+    },
+    "const_order": true,
+    "output_widths": [
+     128
+    ],
+    "ir_nodes": 245,
+    "onnx_nodes": 363
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 24,
+     "Cast": 32,
+     "Mul": 55,
+     "Add": 50,
+     "PRelu": 23,
+     "MaxPool": 57,
+     "Concat": 19,
+     "Transpose": 20,
+     "Reshape": 21,
+     "Tanh": 19,
+     "Greater": 19,
+     "Where": 19,
+     "Sigmoid": 1,
+     "Pad": 3,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 1,
+   "published": {
+    "data_sha256": "8c7586372e6bafd90794639639d1560511ad356cf8a2a2861b99be6f915283e1",
+    "graph_sha256": "bfb30307edc98765a069468d881f97654f56fee46f59fdddf34277a989e33ab5"
+   },
+   "recipe_expected": {
+    "data_sha256": "8c7586372e6bafd90794639639d1560511ad356cf8a2a2861b99be6f915283e1",
+    "graph_sha256": "bfb30307edc98765a069468d881f97654f56fee46f59fdddf34277a989e33ab5"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "8c7586372e6bafd90794639639d1560511ad356cf8a2a2861b99be6f915283e1",
+    "graph_sha256": "bfb30307edc98765a069468d881f97654f56fee46f59fdddf34277a989e33ab5",
+    "bytes": 1532096
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_lfw",
+    "graph_outputs": [
+     "pre_embedding:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 126,
+      "deviating": 2,
+      "with_flip": 2,
+      "max_rel_pre_at_first_flip": 7.756961791021533e-08,
+      "max_abs_pre_at_first_flip": 1.721342535176973e-08,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (22) + 1",
+      "passed": false
+     }
+    },
+    "semantic_f64_max_abs": 0.08235981370874174,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 126,
+    "binarization_flip_samples": 24,
+    "max_abs_pre_at_flip_f32": 4.072351345030256e-09,
+    "max_abs_pre_at_flip_f64": 1.7848314826096612e-08,
+    "qonnx_f32_vs_f64_top1_disagreements": 22,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 0.8359375,
+     "n_top1_disagreements": 21
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.14048314094543457,
+     "top1_agreement": 0.9921875,
+     "n_top1_disagreements": 1,
+     "cosine_min": 0.9988643721124713
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 2.351781055454083e-07,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999943
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 5,
+    "affine -> ChannelAffine": 16,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 16,
+    "PRelu -> Activation(prelu)": 23,
+    "MaxPool -> MaxPool2D": 57,
+    "affine (shift 0) -> ChannelAffine(scale)": 38,
+    "Concat (channels) -> Concat": 19,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 20,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 20,
+    "Tanh -> Activation(tanh)": 19,
+    "Add of runtime tensors -> AddBroadcast": 19,
+    "binarizer (gt) of a float tensor": 19,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 19,
+    "Mul(x, Sigmoid(g [N, C, 1, 1])) -> ChannelGate(sigmoid)": 1,
+    "explicit Pad(0) of a binarized tensor -> binary pad_value": 3,
+    "Add of the binary operator's naming group -> epilogue post_add": 8,
+    "affine -> binary epilogue post_mul/post_add": 8,
+    "Add of runtime tensors -> Add": 7,
+    "Reshape/Flatten -> Reshape": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 496.3,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  },
+  "larqface-quicknet-msceleb": {
+   "model_id": "larqface-quicknet-msceleb",
+   "published_file": "model.bitino",
+   "legacy_converter": "tools/convert_keras_embedding.py",
+   "eval_dir": "eval128_lfw",
+   "preprocess": "insightface",
+   "export": {
+    "checkpoint_sha256": "f7984c0f15924d867dfaafc815d01fef17229bd7ef3eea5e09c15f6162f150cb",
+    "exporter": "tools/export_keras_qonnx.py@c58aecd894b334b415b75f5da73ac5ffe9b0fb6d direct writer (no tf2onnx)",
+    "onnx_sha256": "f00bc469ab2fe664c28b8cf2270ba5af37cacbd4bf32e5938b649a955ce71ce2",
+    "onnx_bytes": 53333687,
+    "import_args": [
+     "--naming",
+     "exporter",
+     "--constant-order",
+     "first-use",
+     "--affine",
+     "keep",
+     "--cleanup",
+     "none",
+     "--bit-outputs",
+     "none"
+    ],
+    "source_top1": null,
+    "source_f32_vs_f64_max_abs": 0.12509610603329824,
+    "writer": {
+     "carriers": 48,
+     "latent_weights": 16,
+     "pm1_weights": 0,
+     "relu_groups": 16,
+     "transposes": 1,
+     "explicit_binary_pads": 16
+    },
+    "const_order": false,
+    "output_widths": [
+     128
+    ],
+    "ir_nodes": 74,
+    "onnx_nodes": 211
+   },
+   "check_qonnx": {
+    "returncode": 0,
+    "passed": true,
+    "warnings": [],
+    "errors": [],
+    "op_counts": {
+     "Conv": 25,
+     "Cast": 48,
+     "Mul": 24,
+     "Add": 40,
+     "Relu": 20,
+     "qonnx.custom_op.general:BipolarQuant": 32,
+     "Pad": 16,
+     "MaxPool": 3,
+     "Transpose": 1,
+     "Reshape": 1,
+     "Gemm": 1
+    }
+   },
+   "import_returncode": 0,
+   "published": {
+    "data_sha256": "591f66ea358461198ad5a9746a1b2342e1f48416619e6268b44b7c44175984e4",
+    "graph_sha256": "01d1129aeddfc28237af1054e35e14d0a36b1d5fced5baa4db620f7f96aa19b7"
+   },
+   "recipe_expected": {
+    "data_sha256": "591f66ea358461198ad5a9746a1b2342e1f48416619e6268b44b7c44175984e4",
+    "graph_sha256": "01d1129aeddfc28237af1054e35e14d0a36b1d5fced5baa4db620f7f96aa19b7"
+   },
+   "published_matches_recipe": true,
+   "reimported": {
+    "data_sha256": "591f66ea358461198ad5a9746a1b2342e1f48416619e6268b44b7c44175984e4",
+    "graph_sha256": "01d1129aeddfc28237af1054e35e14d0a36b1d5fced5baa4db620f7f96aa19b7",
+    "bytes": 4708160
+   },
+   "data_identical": true,
+   "graph_identical": true,
+   "recipe_identical": true,
+   "outputs_check_set": {
+    "n_samples": 128,
+    "eval_set": "eval128_lfw",
+    "graph_outputs": [
+     "pre_embedding:out"
+    ],
+    "numpy_f32_bit_identical": true,
+    "cpp_reference_bit_identical": true,
+    "cpp_optimized_bit_identical": true,
+    "cpp_vs_numpy_reimported_bit_identical": true
+   },
+   "verification": {
+    "acceptance": {
+     "rule": "Level 3 (docs/numerical-correctness.md) + C++ reference stage bit-exact with numpy",
+     "passed": true,
+     "level3": {
+      "rule": "deviation > 1e-6: first flip at |pre| <= 0.001 x median |pre| of its binarizer, or no flip and max |delta| <= 1e-05 x max |output|",
+      "samples_le_1e-6": 124,
+      "deviating": 4,
+      "with_flip": 4,
+      "max_rel_pre_at_first_flip": 2.52930604874014e-07,
+      "max_abs_pre_at_first_flip": 2.4944571919149894e-07,
+      "without_flip": 0,
+      "max_rel_delta_without_flip": null,
+      "max_abs_delta_without_flip": null,
+      "flip_list_complete": true,
+      "passed": true
+     },
+     "level4_informational": {
+      "criterion": "numpy executor (fp32) top-1 agreement vs fp64 >= 0.98 and disagreements <= source fp32 noise floor (1) + 1",
+      "passed": true
+     }
+    },
+    "semantic_f64_max_abs": 0.11741126497971976,
+    "semantic_f64_top1": 1.0,
+    "samples_le_1e-6": 124,
+    "binarization_flip_samples": 8,
+    "max_abs_pre_at_flip_f32": 1.1920928955078125e-06,
+    "max_abs_pre_at_flip_f64": 2.4944571919149894e-07,
+    "qonnx_f32_vs_f64_top1_disagreements": 1,
+    "numpy_f32_vs_qonnx_f64": {
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0
+    },
+    "export_check_source_f32_vs_qonnx_f32": {
+     "max_abs_error": 0.12228605151176453,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9988093047538175
+    },
+    "export_check_source_f64_vs_qonnx_f64": {
+     "max_abs_error": 9.142508572423935e-08,
+     "top1_agreement": 1.0,
+     "n_top1_disagreements": 0,
+     "cosine_min": 0.9999999999999982
+    },
+    "cpp_host_reference_exact_vs_numpy": [
+     true
+    ]
+   },
+   "import_rules": {
+    "Conv (float) -> Conv2D": 9,
+    "affine -> ChannelAffine": 24,
+    "Mul + Add by per-channel constants -> one ChannelAffine (keep)": 24,
+    "Relu -> Activation(relu)": 20,
+    "binarizer (ge) of a float tensor": 16,
+    "explicit Pad(1) of a binarized tensor -> binary pad_value": 16,
+    "BipolarQuant(W, scale[o]) weights -> bits + signed alpha": 16,
+    "Conv(Bin(x), \u00b1alpha) -> BConv2D": 16,
+    "Add of runtime tensors -> Add": 16,
+    "MaxPool -> MaxPool2D": 3,
+    "Transpose(NCHW -> NHWC) before a flatten -> no IR node": 1,
+    "Reshape of an NHWC-ordered tensor (Keras flatten / reshape) -> Reshape": 1,
+    "Gemm (float) -> Dense": 1
+   },
+   "seconds": 226.1,
+   "status": "PASS: data + graph SHA-256 identical (names included; manifest not compared), outputs bit-identical, Level 3 passed"
+  }
+ }
+}

@@ -194,18 +194,40 @@ class OnnxF64:
         self.input_name = self.inputs[0]
         self.output_names = [o.name for o in model.graph.output]
         self.output_name = self.output_names[0]
+        # float64 carriers (docs/qonnx-profile.md R7): a DOUBLE initializer (or Constant) read through
+        # Cast(to=FLOAT) keeps its float64 value in a float64 evaluation; a float32 evaluation sees fl32(c)
+        self.double_consts = {k for k, v in self.init.items() if v.dtype == np.float64}
+        for nd in self.nodes:
+            if nd.op_type == "Constant":
+                v = attrs(nd).get("value")
+                if isinstance(v, np.ndarray) and v.dtype == np.float64:
+                    self.double_consts.add(nd.output[0])
 
     def input_shape(self, name: str | None = None) -> list:
         name = name or self.input_name
         vi = next(i for i in self.model.graph.input if i.name == name)
         return [d.dim_value for d in vi.type.tensor_type.shape.dim]
 
-    def run(self, x, ft=np.float64, keep: bool = False, outputs: list | None = None) -> dict:
+    def run(self, x, ft=np.float64, keep=False, outputs: list | None = None, shapes: dict | None = None) -> dict:
+        """keep: True = return every tensor; a set of names = return those plus the outputs, freeing every other
+        intermediate after its last use (peak memory); False = the outputs only."""
         env = {k: (v.astype(ft) if v.dtype.kind == "f" else v) for k, v in self.init.items()}
         feeds = x if isinstance(x, dict) else {self.input_name: x}
         for k, v in feeds.items():
-            env[k] = np.asarray(v, ft)
-        for nd in self.nodes:
+            v = np.asarray(v)
+            env[k] = v if v.dtype.kind in "iub" else v.astype(ft)      # token ids stay integer
+        free_after: dict = {}
+        if keep is not True and keep is not False:
+            retain = set(keep) | set(outputs or self.output_names) | set(self.init) | set(feeds)
+            last: dict = {}
+            for j, nd in enumerate(self.nodes):
+                for i in nd.input:
+                    if i:
+                        last[i] = j
+            for t, j in last.items():
+                if t not in retain:
+                    free_after.setdefault(j, []).append(t)
+        for j, nd in enumerate(self.nodes):
             try:
                 ys = self._node(nd, [env[i] if i else None for i in nd.input], ft)
             except KeyError as e:
@@ -217,7 +239,11 @@ class OnnxF64:
             for o, y in zip(nd.output, ys):
                 if o:
                     env[o] = y
-        if keep:
+                    if shapes is not None:
+                        shapes[o] = tuple(np.shape(y))
+            for t in free_after.get(j, ()):
+                env.pop(t, None)
+        if keep is not False:          # True or a set of names (possibly empty: the retained constants)
             return env
         return {o: env[o] for o in (outputs or self.output_names)}
 
@@ -246,6 +272,8 @@ class OnnxF64:
             return [x, np.ones(np.shape(x), bool)]
         if op == "Cast":
             dt = _np_dtype(a["to"])
+            if ft == np.float64 and dt == np.float32 and nd.input[0] in self.double_consts:
+                return [np.asarray(x, np.float64)]          # R7 float64 carrier: read at its float64 value
             return [f(np.asarray(x).astype(dt))]
         if op in ("Add", "Sub", "Mul", "Div"):
             u, v = ins
@@ -275,6 +303,18 @@ class OnnxF64:
             return [fn(ins[0], ins[1])]
         if op == "Not":
             return [np.logical_not(x)]
+        if op in ("And", "Or", "Xor"):
+            fn = {"And": np.logical_and, "Or": np.logical_or, "Xor": np.logical_xor}[op]
+            return [fn(np.asarray(ins[0], bool), np.asarray(ins[1], bool))]
+        if op == "IsNaN":
+            return [np.isnan(np.asarray(x))]
+        if op == "BitShift":
+            u, n = np.asarray(ins[0]), np.asarray(ins[1])
+            if u.dtype.kind != "u" or n.dtype.kind != "u":
+                raise NotImplementedError(f"BitShift {nd.name}: unsigned integer operands only (ONNX)")
+            d = a.get("direction", "RIGHT")
+            d = d.decode() if isinstance(d, bytes) else d
+            return [(np.right_shift(u, n) if d == "RIGHT" else np.left_shift(u, n)).astype(u.dtype)]
         if op == "Where":
             c, u, v = ins
             r = np.where(c, u, v)
@@ -406,6 +446,11 @@ class OnnxF64:
             return [np.asarray(x, np.float64).mean(axis=tuple(range(2, np.ndim(x))), keepdims=True).astype(ft)]
         if op == "GlobalMaxPool":
             return [np.asarray(x).max(axis=tuple(range(2, np.ndim(x))), keepdims=True).astype(ft)]
+        if op in ("ReduceSum", "ReduceMax", "ReduceMin") and np.asarray(x).dtype.kind in "iu":
+            ax = _axes(a, ins)
+            kd = bool(a.get("keepdims", 1))
+            fn = {"ReduceSum": np.sum, "ReduceMax": np.max, "ReduceMin": np.min}[op]
+            return [np.asarray(fn(np.asarray(x), axis=tuple(ax) if ax else None, keepdims=kd)).astype(np.asarray(x).dtype)]
         if op in ("ReduceMean", "ReduceSum", "ReduceMax", "ReduceMin"):
             ax = _axes(a, ins)
             kd = bool(a.get("keepdims", 1))

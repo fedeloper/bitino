@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Convert an NNCF-binarized ResNet-18 (OpenVINO NNCF zoo, XNOR / DoReFa) to .bitino and validate it.
 
 Runs in the reference venv .cache/venv-nncf (Python 3.10, nncf 2.9.0, torch 2.1.2+cpu = NNCF 2.9's

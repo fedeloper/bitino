@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Converter for the BNAS checkpoints (yonseivnl/bnas, ECCV 2020; adapter bitino.adapters.torch_bnas):
 BNAS-A (CIFAR-10, src/model.py NetworkCIFAR) and BNAS-D/E/H (ImageNet, src/model_imagenet.py NetworkImageNet).
 The reference is the official model code (read only, run with python3 -I) with the official BinOp

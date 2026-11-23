@@ -322,6 +322,12 @@ inline bool opts_t48_off() {
   const char* e = std::getenv("BITINO_BCONV_T48");
   return e && std::string(e) == "0";
 }
+// BITINO_BCONV_TILES_PER_THREAD (default 8): with several threads the pixel tile is halved (down to 16 pixels)
+// until there are this many tiles per thread; 0 keeps the 1-thread tile (tests / A/B).
+inline int64_t opts_tiles_per_thread() {
+  const char* e = std::getenv("BITINO_BCONV_TILES_PER_THREAD");
+  return e && *e ? std::max(0, std::atoi(e)) : 8;
+}
 // BITINO_BCONV_DW1=0: binary depthwise 1x1 layers through the general grouped path (tests / A/B).
 inline bool opts_dw1_off() {
   const char* e = std::getenv("BITINO_BCONV_DW1");
@@ -1192,8 +1198,9 @@ class BConv2DNeonOpt : public Kernel {
     // down to 16 pixels until there are ~8 tiles per thread, so the pool can balance cores of different speeds
     // before output channels are split (which builds a tile's patch rows once per channel chunk). Every pixel and
     // channel is computed the same way whatever its tile (integer dots, per-element epilogue).
+    const int64_t tpt = opts_tiles_per_thread();
     if (threads > 1)
-      while (mt_ / 2 >= std::max<int64_t>(16, tp) && (mt_ / 2) % tp == 0 && (pixels_ + mt_ - 1) / mt_ < 8 * threads) mt_ /= 2;
+      while (mt_ / 2 >= std::max<int64_t>(16, tp) && (mt_ / 2) % tp == 0 && (pixels_ + mt_ - 1) / mt_ < tpt * threads) mt_ /= 2;
     n_ptiles_ = (pixels_ + mt_ - 1) / mt_;
     plan_chunks(threads);
     items_ = n_ptiles_ * static_cast<int64_t>(chunks_.size());

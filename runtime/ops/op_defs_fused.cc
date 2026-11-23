@@ -86,6 +86,20 @@ void infer_pack_bits(const Node& node, const std::vector<const TensorInfo*>& ins
   outs[0]->shape = ins[0]->shape;
 }
 
+// BinarizeThreshold (internal, created by the fold_runtime_thresholds rewrite, src/graph_rewrite.h): b f32 with one
+// value -> t f32 [channels], every entry the threshold that binarizes x as x + b was binarized: t = -b, except for
+// "ge" with b = +inf (t = -FLT_MAX: x + inf >= 0 for every x but -inf and NaN) and b = -inf or NaN (t = NaN: never).
+void infer_binarize_threshold(const Node& node, const std::vector<const TensorInfo*>& ins, std::vector<TensorInfo*>& outs) {
+  BF_CHECK(!ins.empty() && ins[0] && ins[0]->dtype == DType::kF32 && num_elements(ins[0]->shape) == 1,
+           "BinarizeThreshold: one f32 value as input");
+  const std::string m = node.attrs.get_string("input_binarize", "ge");
+  BF_CHECK(m == "ge" || m == "gt", "BinarizeThreshold: input_binarize must be ge or gt");
+  const int64_t c = node.attrs.get_int("channels", 0);
+  BF_CHECK(c > 0, "BinarizeThreshold: channels must be > 0");
+  outs[0]->dtype = DType::kF32;
+  outs[0]->shape = Shape{c};
+}
+
 // AvgPool2DPrelu (internal, created by the pool_prelu rewrite, src/graph_rewrite.h): x f32 NHWC, slope f32 [C];
 // output 0 = AvgPool2D(prelu(x, slope)), optional output 1 = AvgPool2D(x), same pool attributes.
 void infer_avgpool_prelu(const Node& node, const std::vector<const TensorInfo*>& ins, std::vector<TensorInfo*>& outs) {
@@ -106,6 +120,7 @@ void register_fused_ops(OpRegistry& reg) {
   reg.add_op({"FusedElementwise", infer_fused_elementwise});
   reg.add_op({"AvgPool2DPrelu", infer_avgpool_prelu});
   reg.add_op({"PackBits", infer_pack_bits});
+  reg.add_op({"BinarizeThreshold", infer_binarize_threshold});
 }
 
 }  // namespace bitino

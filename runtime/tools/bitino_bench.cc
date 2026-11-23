@@ -477,6 +477,7 @@ int main(int argc, char** argv) {
     cfg["plan_rewrites"] = Json(Json::Object{{"fused_nodes", Json(session.fused_nodes())},
                                              {"absorbed_nodes", Json(session.absorbed_nodes())},
                                              {"folded_thresholds", Json(session.folded_thresholds())},
+                                             {"runtime_thresholds", Json(session.runtime_thresholds())},
                                              {"hosted_epilogues", Json(session.hosted_epilogues())},
                                              {"bit_outputs", Json(session.bit_outputs())},
                                              {"shared_binarizations", Json(session.shared_binarizations())},

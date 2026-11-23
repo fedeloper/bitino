@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# LEGACY CROSS-CHECK (QONNX step 6, docs/qonnx-standard.md): this IR-emitting converter is no longer the build path of
+# the published files. They are built by tools/build_from_qonnx.py (checkpoint -> canonical QONNX file ->
+# bitino.qonnx_import); this converter is kept unchanged to cross-check that route (tools/qonnx_legacy_crosscheck.py).
 """Shared converter for PyTorch binary CNNs: BNext (hpi-xnor/BNext), RBONN (SteveTsui/RBONN), the
 SNN ReActNet-ResNet-18 (yikaiw/SNN), the IR-Net family (ReCU, RBNN, SiMaN, BiPer), the bitorch model hub
 (ResNetE-18, BinaryDenseNet-28, MeliusNet-22), SA-BNN ResNet-18 (anonymous Drive birealnet.py) and the
